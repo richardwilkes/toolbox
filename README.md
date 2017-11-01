@@ -23,6 +23,12 @@ causes, if any.
 ## desktop
 Desktop integration utilities.
 
+## formats/json
+Easier manipulation of JSON data.
+
+## formats/xlsx
+Extract text from Excel spreadsheets.
+
 ## i18n
 Internationalization support for applications. Provides the tool `go-i18n` for
 generating a template for a localization file from source code.
@@ -115,9 +121,6 @@ HTTP-related utilities.
 
 ## xio/term
 Terminal utilities.
-
-## xjson
-Easier manipulation of JSON data.
 
 ## xmath
 Math utilities.

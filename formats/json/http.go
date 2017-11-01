@@ -1,4 +1,4 @@
-package xjson
+package json
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 )
 
 // GetRequest calls http.Get with the URL and returns the response body as a
-// new JSON object.
-func GetRequest(url string) (statusCode int, body *JSON, err error) {
+// new Data object.
+func GetRequest(url string) (statusCode int, body *Data, err error) {
 	var resp *http.Response
 	if resp, err = http.Get(url); err == nil {
 		defer func() {
@@ -16,16 +16,16 @@ func GetRequest(url string) (statusCode int, body *JSON, err error) {
 			}
 		}()
 		statusCode = resp.StatusCode
-		body = MustParseJSONStream(resp.Body)
+		body = MustParseStream(resp.Body)
 	} else {
-		body = &JSON{}
+		body = &Data{}
 	}
 	return
 }
 
-// PostRequest calls http.Post with the URL and the contents of this JSON
-// object and returns the response body as a new JSON object.
-func (j *JSON) PostRequest(url string) (statusCode int, body *JSON, err error) {
+// PostRequest calls http.Post with the URL and the contents of this Data
+// object and returns the response body as a new Data object.
+func (j *Data) PostRequest(url string) (statusCode int, body *Data, err error) {
 	var resp *http.Response
 	if resp, err = http.Post(url, "application/json", bytes.NewBuffer(j.Bytes())); err == nil {
 		defer func() {
@@ -34,9 +34,9 @@ func (j *JSON) PostRequest(url string) (statusCode int, body *JSON, err error) {
 			}
 		}()
 		statusCode = resp.StatusCode
-		body = MustParseJSONStream(resp.Body)
+		body = MustParseStream(resp.Body)
 	} else {
-		body = &JSON{}
+		body = &Data{}
 	}
 	return
 }
