@@ -3,7 +3,7 @@ package xmath
 import (
 	"math"
 
-	"github.com/richardwilkes/gokit/xmath/geom"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 )
 
 // Matrix2D provides a 2D matrix.

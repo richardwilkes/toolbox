@@ -3,8 +3,8 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/gokit/atexit"
-	"github.com/richardwilkes/gokit/i18n"
+	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/i18n"
 )
 
 type helpCmd struct {

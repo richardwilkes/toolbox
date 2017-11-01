@@ -21,4 +21,4 @@ VERSION=`./bootstrap_genversion --major 1 --minor 1 --patch 1`
 rm bootstrap_genversion
 
 touch main.go
-go install -v -ldflags "-X github.com/richardwilkes/gokit/cmdline.AppVersion=$VERSION -X github.com/richardwilkes/gokit/cmdline.GitVersion=$GIT_VERSION"
+go install -v -ldflags "-X github.com/richardwilkes/toolbox/cmdline.AppVersion=$VERSION -X github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION"

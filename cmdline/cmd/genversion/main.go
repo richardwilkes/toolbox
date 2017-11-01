@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/richardwilkes/gokit/cmdline"
-	"github.com/richardwilkes/gokit/i18n"
+	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/i18n"
 )
 
 func main() {

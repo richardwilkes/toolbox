@@ -7,7 +7,7 @@ import (
 
 	"strings"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -114,9 +114,9 @@ func TestFormat(t *testing.T) {
 	assert.Equal(t, "test", fmt.Sprintf("%s", err))
 	assert.Equal(t, `"test"`, fmt.Sprintf("%q", err))
 	result := fmt.Sprintf("%v", err)
-	assert.Contains(t, result, "[github.com/richardwilkes/gokit/errs_test.TestFormat]")
+	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
 	assert.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", err)
-	assert.Contains(t, result, "[github.com/richardwilkes/gokit/errs_test.TestFormat]")
+	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
 	assert.Contains(t, result, "[runtime.goexit]")
 }

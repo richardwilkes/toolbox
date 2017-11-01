@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/gokit/txt"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/stretchr/testify/assert"
 )
 

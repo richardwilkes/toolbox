@@ -9,10 +9,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/richardwilkes/gokit/atexit"
-	"github.com/richardwilkes/gokit/errs"
-	"github.com/richardwilkes/gokit/i18n"
-	"github.com/richardwilkes/gokit/xio/term"
+	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xio/term"
 )
 
 // CmdLine holds information about the command line.

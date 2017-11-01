@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 func ExampleNewWithCause() {
@@ -12,7 +12,7 @@ func ExampleNewWithCause() {
 	fmt.Println(errs.NewWithCause("This is a wrapped error", err))
 	// Output:
 	// This is a wrapped error
-	//     [github.com/richardwilkes/gokit/errs_test.ExampleNewWithCause] example_test.go:12
-	//     [main.main] github.com/richardwilkes/gokit/errs/_test/_testmain.go:76
+	//     [github.com/richardwilkes/toolbox/errs_test.ExampleNewWithCause] example_test.go:12
+	//     [main.main] github.com/richardwilkes/toolbox/errs/_test/_testmain.go:76
 	//   Caused by: fake error
 }

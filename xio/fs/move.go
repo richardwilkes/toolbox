@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/richardwilkes/gokit/errs"
-	"github.com/richardwilkes/gokit/xio"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/xio"
 )
 
 // MoveFile moves a file in the file system or across volumes, using rename if

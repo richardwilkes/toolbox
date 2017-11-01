@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // DigitToValue converts a unicode digit into a numeric value.

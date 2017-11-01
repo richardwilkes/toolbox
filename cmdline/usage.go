@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/kardianos/osext"
-	"github.com/richardwilkes/gokit/i18n"
-	"github.com/richardwilkes/gokit/xio/term"
+	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/xio/term"
 )
 
 var (

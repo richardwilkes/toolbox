@@ -13,11 +13,11 @@ if which genversion 2>&1 > /dev/null; then
         GIT_VERSION=Unknown
     fi
     touch main.go
-    go install -v -ldflags "-X github.com/richardwilkes/gokit/cmdline.AppVersion=$VERSION -X github.com/richardwilkes/gokit/cmdline.GitVersion=$GIT_VERSION"
+    go install -v -ldflags "-X github.com/richardwilkes/toolbox/cmdline.AppVersion=$VERSION -X github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION"
 else
     echo You must install genversion first:
     echo ""
-    echo "    go get -u github.com/richardwilkes/gokit"
-    echo "    cd $GOPATH/src/github.com/richardwilkes/gokit"
+    echo "    go get -u github.com/richardwilkes/toolbox"
+    echo "    cd $GOPATH/src/github.com/richardwilkes/toolbox"
     echo "    ./install.sh"
 fi

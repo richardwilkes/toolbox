@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // OpenBrowser opens 'url' with the user's preferred browser.

@@ -1,8 +1,8 @@
 package cmdline
 
 import (
-	"github.com/richardwilkes/gokit/errs"
-	"github.com/richardwilkes/gokit/i18n"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
 )
 
 // Value represents a value that can be set for an Option.

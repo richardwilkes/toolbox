@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/richardwilkes/gokit/xio/fs/safe"
+	"github.com/richardwilkes/toolbox/xio/fs/safe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

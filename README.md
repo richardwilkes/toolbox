@@ -1,9 +1,9 @@
-# gokit
-Toolkit for Go.
+# toolbox
+Toolbox for Go.
 
 To install this package and the tools it provides:
 ```
-go get -u github.com/richardwilkes/gokit/...
+go get -u github.com/richardwilkes/toolbox/...
 ```
 
 ## atexit
@@ -39,7 +39,7 @@ Simple asynchronous logging.
 ```Go
 package main
 
-import "github.com/richardwilkes/gokit/log/jot"
+import "github.com/richardwilkes/toolbox/log/jot"
 
 func main() {
     defer jot.Flush()
@@ -62,7 +62,7 @@ You can easily add rolling log files by using Nate Finch's lumberjack package:
 package main
 
 import (
-    "github.com/richardwilkes/gokit/log/jot"
+    "github.com/richardwilkes/toolbox/log/jot"
     "gopkg.in/natefinch/lumberjack.v2"
 )
 

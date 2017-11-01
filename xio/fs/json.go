@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/richardwilkes/gokit/errs"
-	"github.com/richardwilkes/gokit/xio"
-	"github.com/richardwilkes/gokit/xio/fs/safe"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xio/fs/safe"
 )
 
 // LoadJSON data from the specified path.

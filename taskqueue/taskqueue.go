@@ -4,7 +4,7 @@ package taskqueue
 import (
 	"runtime"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Logger provides a way to log panics caused by workers in a queue.

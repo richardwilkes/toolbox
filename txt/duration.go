@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // ParseDuration parses the duration string, as produced by FormatDuration().

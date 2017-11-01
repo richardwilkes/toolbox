@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/gokit/log/logadapter"
+	"github.com/richardwilkes/toolbox/log/logadapter"
 )
 
 const (

@@ -1,6 +1,6 @@
 package logadapter
 
-import "github.com/richardwilkes/gokit/atexit"
+import "github.com/richardwilkes/toolbox/atexit"
 
 // Discarder discards all data given to it.
 type Discarder struct {

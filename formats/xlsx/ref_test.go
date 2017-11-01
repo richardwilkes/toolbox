@@ -3,7 +3,7 @@ package xlsx_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/gokit/formats/xlsx"
+	"github.com/richardwilkes/toolbox/formats/xlsx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

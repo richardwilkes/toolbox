@@ -3,7 +3,7 @@ package txt_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/gokit/txt"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/stretchr/testify/assert"
 )
 

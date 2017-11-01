@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // ----- bool -----

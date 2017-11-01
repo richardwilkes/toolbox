@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/gokit/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 type limiter struct {

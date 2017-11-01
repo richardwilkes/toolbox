@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/gokit/rate"
+	"github.com/richardwilkes/toolbox/rate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

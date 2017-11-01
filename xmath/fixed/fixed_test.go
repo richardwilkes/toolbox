@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/richardwilkes/gokit/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

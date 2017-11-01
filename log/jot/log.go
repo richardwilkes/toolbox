@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/gokit/atexit"
-	"github.com/richardwilkes/gokit/xio/term"
+	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/xio/term"
 )
 
 // Log levels

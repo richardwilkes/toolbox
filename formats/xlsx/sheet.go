@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/gokit/errs"
-	"github.com/richardwilkes/gokit/txt"
-	"github.com/richardwilkes/gokit/xio"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/xio"
 )
 
 // Sheet holds the data contained in a single worksheet.
