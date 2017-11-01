@@ -4,12 +4,13 @@ package i18n
 import (
 	"bufio"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/richardwilkes/gokit/log/logadapter"
 )
 
 const (
@@ -18,43 +19,27 @@ const (
 )
 
 var (
-	// Dir is the directory to scan for localization files. This will occur only once, the first
-	// time a call to Text() is made. You must set this to a valid location to have any
-	// localization occur.
+	// Dir is the directory to scan for localization files. This will occur
+	// only once, the first time a call to Text() is made. You must set this
+	// to a valid location to have any localization occur.
 	Dir string
-	// Language is the language that should be used for text returned from calls to Text(). It is
-	// initialized to the value of the LC_ALL environment variable, if set. If not, then it falls
-	// back to the value of the LANG environment variable. You may set this at runtime, forcing a
-	// particular language for all subsequent calls to Text().
+	// Language is the language that should be used for text returned from
+	// calls to Text(). It is initialized to the value of the LC_ALL
+	// environment variable, if set. If not, then it falls back to the value
+	// of the LANG environment variable. You may set this at runtime, forcing
+	// a particular language for all subsequent calls to Text().
 	Language = initLanguage()
-	// Languages is a slice of languages to fall back to should the one specified in the Language
-	// variable not be available. If is initialized to the value of the LANGUAGE environment
-	// variable.
+	// Languages is a slice of languages to fall back to should the one
+	// specified in the Language variable not be available. If is initialized
+	// to the value of the LANGUAGE environment variable.
 	Languages = strings.Split(os.Getenv("LANGUAGE"), ":")
-	// Log is set to use the standard logger by default.
-	Log      = &logger{}
+	// Log is set to discard by default.
+	Log      logadapter.ErrorLogger = &logadapter.Discarder{}
 	once     sync.Once
 	langMap  = make(map[string]map[string]string)
 	hierLock sync.Mutex
 	hierMap  = make(map[string][]string)
 )
-
-// Logger provides a way to log errors discovered when trying to load localizations.
-type Logger interface {
-	Error(v ...interface{})
-	Errorf(fmt string, v ...interface{})
-}
-
-type logger struct {
-}
-
-func (l *logger) Error(v ...interface{}) {
-	log.Print(v...)
-}
-
-func (l *logger) Errorf(fmt string, v ...interface{}) {
-	log.Printf(fmt, v...)
-}
 
 func initLanguage() string {
 	var locale string
@@ -64,7 +49,8 @@ func initLanguage() string {
 	return locale
 }
 
-// Text returns a localized version of the text if one exists, or the original text if not.
+// Text returns a localized version of the text if one exists, or the original
+// text if not.
 func Text(text string) string {
 	once.Do(func() {
 		if fi, err := ioutil.ReadDir(Dir); err == nil {
