@@ -3,9 +3,7 @@ Toolkit for Go.
 
 To install this package and the tools it provides:
 ```
-go get -u github.com/richardwilkes/gokit
-cd $GOPATH/src/github.com/richardwilkes/gokit
-./install.sh
+go get -u github.com/richardwilkes/gokit/...
 ```
 
 ## atexit
