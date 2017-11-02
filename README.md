@@ -114,6 +114,9 @@ Safe, atomic saving of files.
 ## xio/network
 Network-related utilities.
 
+## xio/network/natpmp
+Implementation of NAT-PMP. See https://tools.ietf.org/html/rfc6886
+
 ## xio/network/xhttp
 HTTP-related utilities.
 
