@@ -109,6 +109,11 @@ func (fxd Fixed) Trunc() Fixed {
 	return fxd / Fixed(multiplier) * Fixed(multiplier)
 }
 
+// Int64 returns the truncated equivalent integer to this fixed-point value.
+func (fxd Fixed) Int64() int64 {
+	return int64(fxd / Fixed(multiplier))
+}
+
 // Float64 returns the floating-point equivalent to this fixed-point value.
 func (fxd Fixed) Float64() float64 {
 	return float64(fxd) / float64(multiplier)
