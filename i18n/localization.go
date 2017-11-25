@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/richardwilkes/toolbox/log/logadapter"
+	"github.com/richardwilkes/toolbox/xio/fs"
 )
 
 const (
@@ -20,8 +21,10 @@ const (
 
 var (
 	// Dir is the directory to scan for localization files. This will occur
-	// only once, the first time a call to Text() is made. You must set this
-	// to a valid location to have any localization occur.
+	// only once, the first time a call to Text() is made. If you do not set
+	// this prior to the first call, a directory in the same location as the
+	// executable with "_i18n" appended to the executable name (sans any
+	// extension) will be used.
 	Dir string
 	// Language is the language that should be used for text returned from
 	// calls to Text(). It is initialized to the value of the LC_ALL
@@ -53,13 +56,30 @@ func initLanguage() string {
 // text if not.
 func Text(text string) string {
 	once.Do(func() {
-		if fi, err := ioutil.ReadDir(Dir); err == nil {
-			for _, one := range fi {
-				if !one.IsDir() {
-					name := one.Name()
-					if filepath.Ext(name) == Extension {
-						load(name)
-					}
+		if Dir == "" {
+			path, err := os.Executable()
+			if err != nil {
+				return
+			}
+			path, err = filepath.EvalSymlinks(path)
+			if err != nil {
+				return
+			}
+			path, err = filepath.Abs(fs.TrimExtension(path) + "_i18n")
+			if err != nil {
+				return
+			}
+			Dir = path
+		}
+		fi, err := ioutil.ReadDir(Dir)
+		if err != nil {
+			return
+		}
+		for _, one := range fi {
+			if !one.IsDir() {
+				name := one.Name()
+				if filepath.Ext(name) == Extension {
+					load(name)
 				}
 			}
 		}
