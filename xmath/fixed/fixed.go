@@ -55,6 +55,15 @@ func Parse(str string) (Fixed, error) {
 	if str == "" {
 		return 0, errs.New("Empty string is not valid")
 	}
+	if strings.ContainsRune(str, 'E') {
+		// Given a floating-point value with an exponent, which technically
+		// isn't valid input, but we'll try to convert it anyway.
+		f, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return 0, err
+		}
+		return New(f), nil
+	}
 	parts := strings.SplitN(str, ".", 2)
 	var value, fraction int64
 	var neg bool
