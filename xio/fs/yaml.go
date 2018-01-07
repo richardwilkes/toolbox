@@ -23,7 +23,7 @@ func LoadYAML(path string, data interface{}) error {
 }
 
 // SaveYAML data to the specified path.
-func SaveYAML(path string, data interface{}, format bool) error {
+func SaveYAML(path string, data interface{}) error {
 	out, err := yaml.Marshal(data)
 	if err != nil {
 		return errs.Wrap(err)

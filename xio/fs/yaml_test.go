@@ -22,7 +22,7 @@ func TestLoadSaveYAML(t *testing.T) {
 	f, err := ioutil.TempFile("", "yamltest")
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
-	require.NoError(t, fs.SaveYAML(f.Name(), value, false))
+	require.NoError(t, fs.SaveYAML(f.Name(), value))
 	var value2 data
 	require.NoError(t, fs.LoadYAML(f.Name(), &value2))
 	require.NoError(t, os.Remove(f.Name()))
