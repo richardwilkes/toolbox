@@ -14,12 +14,12 @@ function properly, use `atexit.Exit(result)` rather than `os.Exit(result)`.
 Command line handling. Provides the tool `genversion` for generating version
 numbers with an embedded date.
 
+## desktop
+Desktop integration utilities.
+
 ## errs
 Errors that contain stack traces with source locations, along with nested
 causes, if any.
-
-## desktop
-Desktop integration utilities.
 
 ## formats/json
 Easier manipulation of JSON data.
@@ -99,8 +99,14 @@ well as an implementation that wraps another logger and prefixes all output.
 Rate limiting which supports a hierarchy of limiters, each capped by their
 parent.
 
+## taskqueue
+Provides a simple asynchronous task queue.
+
 ## txt
 Text utilities.
+
+## vcs/git
+git repository access
 
 ## xio
 io utilities.
