@@ -1,8 +1,8 @@
 package fs
 
 import (
-	"bytes"
 	"path/filepath"
+	"strings"
 )
 
 // SanitizeName sanitizes a file name by replacing invalid characters.
@@ -16,7 +16,7 @@ func SanitizeName(name string) string {
 	if name == ".." {
 		return "@2"
 	}
-	var buffer bytes.Buffer
+	var buffer strings.Builder
 	for _, r := range name {
 		switch r {
 		case '@':
@@ -45,7 +45,7 @@ func UnsanitizeName(name string) string {
 	if name == "@2" {
 		return ".."
 	}
-	var buffer bytes.Buffer
+	var buffer strings.Builder
 	found := false
 	for _, r := range name {
 		if found {

@@ -1,7 +1,6 @@
 package errs
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"runtime"
@@ -49,7 +48,7 @@ func (d *detail) Format(state fmt.State, verb rune) {
 }
 
 func (d *detail) detail(includeMessage, trimRuntime bool) string {
-	var buffer bytes.Buffer
+	var buffer strings.Builder
 	if includeMessage {
 		buffer.WriteString(d.message)
 	}

@@ -1,7 +1,6 @@
 package cmdline
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -206,16 +205,16 @@ func (v Version) Format(includeVersionWord, includeBuildDateTime bool) string {
 		}
 		return i18n.Text("Development")
 	}
-	buffer := &bytes.Buffer{}
+	var buffer strings.Builder
 	if includeVersionWord {
 		buffer.WriteString(i18n.Text("Version "))
 	}
-	fmt.Fprintf(buffer, "%d.%d", v.Major(), v.Minor())
+	fmt.Fprintf(&buffer, "%d.%d", v.Major(), v.Minor())
 	if v.Patch() != 0 {
-		fmt.Fprintf(buffer, ".%d", v.Patch())
+		fmt.Fprintf(&buffer, ".%d", v.Patch())
 	}
 	if includeBuildDateTime && !v.IsWhenUnset() {
-		fmt.Fprintf(buffer, "-%04d%02d%02d%02d%02d%02d", v.Year(), v.Month(), v.Day(), v.Hour(), v.Minute(), v.Second())
+		fmt.Fprintf(&buffer, "-%04d%02d%02d%02d%02d%02d", v.Year(), v.Month(), v.Day(), v.Hour(), v.Minute(), v.Second())
 	}
 	return buffer.String()
 }

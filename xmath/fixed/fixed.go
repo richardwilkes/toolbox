@@ -1,7 +1,6 @@
 package fixed
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -83,7 +82,7 @@ func Parse(str string) (Fixed, error) {
 		value *= int64(multiplier)
 	}
 	if len(parts) > 1 {
-		var buffer bytes.Buffer
+		var buffer strings.Builder
 		buffer.WriteString("1")
 		buffer.WriteString(parts[1])
 		for buffer.Len() < precision+1 {

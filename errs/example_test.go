@@ -13,6 +13,6 @@ func ExampleNewWithCause() {
 	// Output:
 	// This is a wrapped error
 	//     [github.com/richardwilkes/toolbox/errs_test.ExampleNewWithCause] example_test.go:12
-	//     [main.main] github.com/richardwilkes/toolbox/errs/_test/_testmain.go:76
+	//     [main.main] _testmain.go:74
 	//   Caused by: fake error
 }

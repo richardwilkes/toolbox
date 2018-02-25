@@ -1,11 +1,11 @@
 package txt
 
-import "bytes"
+import "strings"
 
 // CollapseSpaces removes leading and trailing spaces and reduces any runs of
 // two or more spaces to a single space.
 func CollapseSpaces(in string) string {
-	var buffer bytes.Buffer
+	var buffer strings.Builder
 	lastWasSpace := false
 	for i, r := range in {
 		if r == ' ' {
@@ -20,8 +20,9 @@ func CollapseSpaces(in string) string {
 			lastWasSpace = false
 		}
 	}
-	if lastWasSpace && buffer.Len() > 0 {
-		buffer.Truncate(buffer.Len() - 1)
+	str := buffer.String()
+	if lastWasSpace && len(str) > 0 {
+		str = str[:len(str)-1]
 	}
-	return buffer.String()
+	return str
 }

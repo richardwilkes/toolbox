@@ -3,9 +3,9 @@
 package errs
 
 import (
-	"bytes"
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 // Error holds the detailed error message.
@@ -125,7 +125,7 @@ func (d *Error) Message() string {
 	case 1:
 		return d.errors[0].message
 	default:
-		var buffer bytes.Buffer
+		var buffer strings.Builder
 		buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", len(d.errors)))
 		for _, one := range d.errors {
 			buffer.WriteString("\n- ")
