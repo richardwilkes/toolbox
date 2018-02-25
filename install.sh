@@ -10,6 +10,9 @@
 
 ROOT=`pwd`
 
+find . -iname "*_gen.go" -exec rm \{\} \;
+go generate -tags gen ./...
+
 cd $ROOT/cmdline/cmd/genversion
 ./install.sh
 
