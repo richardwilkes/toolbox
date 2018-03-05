@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/collection"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/term"
@@ -76,17 +77,17 @@ func (cl *CmdLine) Parse(args []string) []string {
 	var remainingArgs []string
 	options := cl.availableOptions()
 	max := len(args)
-	seen := make(map[string]bool)
+	seen := collection.StringSet{}
 	for i := 0; i < max; i++ {
 		arg := args[i]
 		switch state {
 		case LookForOptionState:
 			if strings.HasPrefix(arg, "@") {
 				path := arg[1:]
-				if seen[path] {
+				if seen.Contains(path) {
 					cl.FatalMsg(fmt.Sprintf(i18n.Text("Recursive loading of arguments from a file is not permitted: %s"), path))
 				}
-				seen[path] = true
+				seen.Add(path)
 				insert, err := cl.loadArgsFromFile(path)
 				cl.FatalIfError(err)
 				args = append(args[:i], append(insert, args[i+1:]...)...)
