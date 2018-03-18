@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
@@ -125,6 +126,34 @@ func (fxd Fixed) Int64() int64 {
 // Float64 returns the floating-point equivalent to this fixed-point value.
 func (fxd Fixed) Float64() float64 {
 	return float64(fxd) / float64(multiplier)
+}
+
+// Comma returns the same as String(), but with commas for values of 1000 and
+// greater.
+func (fxd Fixed) Comma() string {
+	integer := fxd / Fixed(multiplier)
+	fraction := fxd % Fixed(multiplier)
+	if fraction == 0 {
+		return humanize.Comma(int64(integer))
+	}
+	if fraction < 0 {
+		fraction = -fraction
+	}
+	fraction += Fixed(multiplier)
+	fstr := fmt.Sprintf("%d", fraction)
+	for i := len(fstr) - 1; i > 0; i-- {
+		if fstr[i] != '0' {
+			fstr = fstr[1 : i+1]
+			break
+		}
+	}
+	var neg string
+	if integer == 0 && fxd < 0 {
+		neg = "-"
+	} else {
+		neg = ""
+	}
+	return fmt.Sprintf("%s%s.%s", neg, humanize.Comma(int64(integer)), fstr)
 }
 
 func (fxd Fixed) String() string {
