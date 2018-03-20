@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/richardwilkes/toolbox/xio"
 )
 
 // File provides safe, atomic saving of files. Instead of truncating and
@@ -21,12 +23,25 @@ type File struct {
 // Create creates a temporary file in the same directory as filename,
 // which will be renamed to the given filename when calling Commit.
 func Create(filename string) (*File, error) {
+	return CreateWithMode(filename, 0644)
+}
+
+// CreateWithMode creates a temporary file in the same directory as filename,
+// which will be renamed to the given filename when calling Commit.
+func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	filename = filepath.Clean(filename)
 	if len(filename) == 0 || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
 	}
 	f, err := ioutil.TempFile(filepath.Dir(filename), "safe")
 	if err != nil {
+		return nil, err
+	}
+	if err = f.Chmod(mode); err != nil {
+		xio.CloseIgnoringErrors(f)
+		if rerr := os.Remove(f.Name()); rerr != nil && err == nil {
+			err = rerr // Won't happen, but here to quiet the linter
+		}
 		return nil, err
 	}
 	return &File{
