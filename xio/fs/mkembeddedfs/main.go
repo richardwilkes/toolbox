@@ -190,7 +190,9 @@ import (
 type FileSystem interface {
 	http.FileSystem
 	ContentAsBytes(path string) ([]byte, bool)
+	MustContentAsBytes(path string) []byte
 	ContentAsString(path string) (string, bool)
+	MustContentAsString(path string) string
 }
 
 // Get returns either the embedded file system or a live filesystem rooted at
@@ -238,11 +240,25 @@ func (f *fs) ContentAsBytes(path string) ([]byte, bool) {
 	return nil, false
 }
 
+func (f *fs) MustContentAsBytes(path string) []byte {
+	if d, ok := f.ContentAsBytes(path); ok {
+		return d
+	}
+	panic(path + " does not exist")
+}
+
 func (f *fs) ContentAsString(path string) (string, bool) {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return string(d), true
 	}
 	return "", false
+}
+
+func (f *fs) MustContentAsString(path string) string {
+	if s, ok := f.ContentAsString(path); ok {
+		return s
+	}
+	panic(path + " does not exist")
 }
 
 type livefs struct {
@@ -261,11 +277,25 @@ func (f *livefs) ContentAsBytes(path string) ([]byte, bool) {
 	return nil, false
 }
 
+func (f *livefs) MustContentAsBytes(path string) []byte {
+	if d, ok := f.ContentAsBytes(path); ok {
+		return d
+	}
+	panic(path + " does not exist")
+}
+
 func (f *livefs) ContentAsString(path string) (string, bool) {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return string(d), true
 	}
 	return "", false
+}
+
+func (f *livefs) MustContentAsString(path string) string {
+	if s, ok := f.ContentAsString(path); ok {
+		return s
+	}
+	panic(path + " does not exist")
 }
 
 type file struct {
