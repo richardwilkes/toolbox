@@ -244,7 +244,7 @@ func (f *fs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	panic(path + " does not exist")
+	panic(path + " does not exist") // @allow
 }
 
 func (f *fs) ContentAsString(path string) (string, bool) {
@@ -258,7 +258,7 @@ func (f *fs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	panic(path + " does not exist")
+	panic(path + " does not exist") // @allow
 }
 
 type livefs struct {
@@ -281,7 +281,7 @@ func (f *livefs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	panic(path + " does not exist")
+	panic(path + " does not exist") // @allow
 }
 
 func (f *livefs) ContentAsString(path string) (string, bool) {
@@ -295,7 +295,7 @@ func (f *livefs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	panic(path + " does not exist")
+	panic(path + " does not exist") // @allow
 }
 
 type file struct {
