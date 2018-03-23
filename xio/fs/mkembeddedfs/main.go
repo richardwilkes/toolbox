@@ -143,7 +143,7 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 			for i := 0; i < n; i++ {
 				switch count {
 				case 0:
-				case 17:
+				case 16:
 					buffer.WriteString("\n\t\t\t\t")
 					count = 0
 				default:
