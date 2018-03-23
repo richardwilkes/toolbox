@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -29,10 +28,9 @@ type data struct {
 }
 
 type tmplInput struct {
-	Tag        string
-	Pkg        string
-	DirModTime int64
-	Files      []*data
+	Tag   string
+	Pkg   string
+	Files []*data
 }
 
 func main() {
@@ -42,10 +40,7 @@ func main() {
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cl := cmdline.New(true)
 	cl.UsageSuffix = "<one or more file paths to include>"
-	cfg := tmplInput{
-		Pkg:        "main",
-		DirModTime: time.Now().UnixNano(),
-	}
+	cfg := tmplInput{Pkg: "main"}
 	var strip, ignore string
 	var output = "efs.go"
 	cl.NewStringOption(&cfg.Pkg).SetSingle('p').SetName("pkg").SetUsage("The package name for the output file")
@@ -186,6 +181,8 @@ import (
 	"time"
 )
 
+var dirModTime = time.Now()
+
 // FileSystem defines the methods available for a live or embedded filesystem.
 type FileSystem interface {
 	http.FileSystem
@@ -205,8 +202,7 @@ func Get(localRoot string) FileSystem {
 }
 
 type fs struct {
-	dirModTime time.Time
-	files      map[string]file
+	files map[string]file
 }
 
 func (f *fs) Open(path string) (http.File, error) {
@@ -224,7 +220,7 @@ func (f *fs) Open(path string) (http.File, error) {
 		}
 		return &file{
 			name:    filepath.Base(path),
-			modTime: f.dirModTime,
+			modTime: dirModTime,
 			isDir:   true,
 			files:   files,
 		}, nil
@@ -351,7 +347,6 @@ func (f *file) Sys() interface{} {
 }
 
 var efs = fs{
-	dirModTime: time.Unix(0, {{.DirModTime}}),
 	files: map[string]file{
 {{range .Files}}		"{{.Path}}": {
 			name:    "{{.Name}}",
