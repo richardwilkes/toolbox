@@ -193,10 +193,12 @@ type FileSystem interface {
 }
 
 // Get returns either the embedded file system or a live filesystem rooted at
-// localRoot if localRoot isn't the empty string.
+// localRoot if localRoot isn't the empty string and points to a directory.
 func Get(localRoot string) FileSystem {
 	if localRoot != "" {
-		return &livefs{dir: localRoot}
+		if fi, err := os.Stat(localRoot); err == nil && fi.IsDir() {
+			return &livefs{dir: localRoot}
+		}
 	}
 	return &efs
 }
