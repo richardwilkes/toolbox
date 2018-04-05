@@ -186,6 +186,7 @@ var dirModTime = time.Now()
 // FileSystem defines the methods available for a live or embedded filesystem.
 type FileSystem interface {
 	http.FileSystem
+	IsLive() bool
 	ContentAsBytes(path string) ([]byte, bool)
 	MustContentAsBytes(path string) []byte
 	ContentAsString(path string) (string, bool)
@@ -205,6 +206,10 @@ func Get(localRoot string) FileSystem {
 
 type fs struct {
 	files map[string]file
+}
+
+func (f *fs) IsLive() bool {
+	return false
 }
 
 func (f *fs) Open(path string) (http.File, error) {
@@ -261,6 +266,10 @@ func (f *fs) MustContentAsString(path string) string {
 
 type livefs struct {
 	dir string
+}
+
+func (f *livefs) IsLive() bool {
+	return true
 }
 
 func (f *livefs) Open(path string) (http.File, error) {
