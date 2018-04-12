@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -30,6 +30,7 @@ type data struct {
 type tmplInput struct {
 	Tag   string
 	Pkg   string
+	Var   string
 	Files []*data
 }
 
@@ -40,13 +41,17 @@ func main() {
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cl := cmdline.New(true)
 	cl.UsageSuffix = "<one or more file paths to include>"
-	cfg := tmplInput{Pkg: "main"}
+	cfg := tmplInput{
+		Pkg: "main",
+		Var: "EFS",
+	}
 	var strip, ignore string
 	var output = "efs.go"
 	cl.NewStringOption(&cfg.Pkg).SetSingle('p').SetName("pkg").SetUsage("The package name for the output file")
 	cl.NewStringOption(&strip).SetSingle('s').SetName("strip").SetUsage("A prefix to remove from stored file paths")
 	cl.NewStringOption(&ignore).SetSingle('i').SetName("ignore").SetUsage("A regular expression for file paths to ignore")
 	cl.NewStringOption(&output).SetSingle('o').SetName("output").SetUsage("The output file path")
+	cl.NewStringOption(&cfg.Var).SetSingle('n').SetName("name").SetUsage("The variable name to use for the embedded filesystem")
 	cl.NewStringOption(&cfg.Tag).SetSingle('t').SetName("tag").SetUsage("A build tag to guard the output file with")
 	paths := cl.Parse(os.Args[1:])
 	if len(paths) == 0 {
@@ -54,6 +59,9 @@ func main() {
 	}
 	if output == "" {
 		fail("The output file path may not be empty")
+	}
+	if cfg.Var == "" {
+		fail("The variable name may not be empty")
 	}
 	c := collector{paths: collection.NewStringSet()}
 	if ignore != "" {
@@ -101,7 +109,7 @@ func (c *collector) walk(path string, info os.FileInfo, err error) error {
 	}
 	if info.IsDir() {
 		name := info.Name()
-		if name == ".git" || name == ".svn" {
+		if name == ".git" || name == ".svn" || name == ".DS_Store" {
 			return filepath.SkipDir
 		}
 		return nil
@@ -144,7 +152,7 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 				switch count {
 				case 0:
 				case 16:
-					buffer.WriteString("\n\t\t\t\t")
+					buffer.WriteString("\n\t\t")
 					count = 0
 				default:
 					buffer.WriteByte(' ')
@@ -172,201 +180,17 @@ var pkgTemplate = `// Code generated - DO NOT EDIT.
 package {{.Pkg}}
 
 import (
-	"bytes"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
+
+	"github.com/richardwilkes/toolbox/xio/fs/embedded"
 )
 
-var dirModTime = time.Now()
-
-// FileSystem defines the methods available for a live or embedded filesystem.
-type FileSystem interface {
-	http.FileSystem
-	IsLive() bool
-	ContentAsBytes(path string) ([]byte, bool)
-	MustContentAsBytes(path string) []byte
-	ContentAsString(path string) (string, bool)
-	MustContentAsString(path string) string
-}
-
-// Get returns either the embedded file system or a live filesystem rooted at
-// localRoot if localRoot isn't the empty string and points to a directory.
-func Get(localRoot string) FileSystem {
-	if localRoot != "" {
-		if fi, err := os.Stat(localRoot); err == nil && fi.IsDir() {
-			return &livefs{dir: localRoot}
-		}
-	}
-	return &efs
-}
-
-type fs struct {
-	files map[string]file
-}
-
-func (f *fs) IsLive() bool {
-	return false
-}
-
-func (f *fs) Open(path string) (http.File, error) {
-	path = filepath.Clean("/" + path)
-	one, ok := f.files[path]
-	if !ok {
-		var files []os.FileInfo
-		for k, v := range f.files {
-			if strings.HasPrefix(k, path) {
-				files = append(files, &v)
-			}
-		}
-		if len(files) == 0 {
-			return nil, os.ErrNotExist
-		}
-		return &file{
-			name:    filepath.Base(path),
-			modTime: dirModTime,
-			isDir:   true,
-			files:   files,
-		}, nil
-	}
-	one.Reader = bytes.NewReader(one.data)
-	return &one, nil
-}
-
-func (f *fs) ContentAsBytes(path string) ([]byte, bool) {
-	if one, ok := f.files[filepath.Clean("/"+path)]; ok {
-		return one.data, true
-	}
-	return nil, false
-}
-
-func (f *fs) MustContentAsBytes(path string) []byte {
-	if d, ok := f.ContentAsBytes(path); ok {
-		return d
-	}
-	panic(path + " does not exist") // @allow
-}
-
-func (f *fs) ContentAsString(path string) (string, bool) {
-	if d, ok := f.ContentAsBytes(path); ok {
-		return string(d), true
-	}
-	return "", false
-}
-
-func (f *fs) MustContentAsString(path string) string {
-	if s, ok := f.ContentAsString(path); ok {
-		return s
-	}
-	panic(path + " does not exist") // @allow
-}
-
-type livefs struct {
-	dir string
-}
-
-func (f *livefs) IsLive() bool {
-	return true
-}
-
-func (f *livefs) Open(path string) (http.File, error) {
-	path = filepath.Join(f.dir, filepath.FromSlash(filepath.Clean("/"+path)))
-	return os.Open(path)
-}
-
-func (f *livefs) ContentAsBytes(path string) ([]byte, bool) {
-	if d, err := ioutil.ReadFile(filepath.Join(f.dir, filepath.FromSlash(filepath.Clean("/"+path)))); err == nil {
-		return d, true
-	}
-	return nil, false
-}
-
-func (f *livefs) MustContentAsBytes(path string) []byte {
-	if d, ok := f.ContentAsBytes(path); ok {
-		return d
-	}
-	panic(path + " does not exist") // @allow
-}
-
-func (f *livefs) ContentAsString(path string) (string, bool) {
-	if d, ok := f.ContentAsBytes(path); ok {
-		return string(d), true
-	}
-	return "", false
-}
-
-func (f *livefs) MustContentAsString(path string) string {
-	if s, ok := f.ContentAsString(path); ok {
-		return s
-	}
-	panic(path + " does not exist") // @allow
-}
-
-type file struct {
-	*bytes.Reader
-	name    string
-	size    int64
-	modTime time.Time
-	isDir   bool
-	files   []os.FileInfo
-	data    []byte
-}
-
-func (f *file) Close() error {
-	return nil
-}
-
-func (f *file) Readdir(count int) ([]os.FileInfo, error) {
-	if f.isDir {
-		return f.files, nil
-	}
-	return nil, os.ErrNotExist
-}
-
-func (f *file) Stat() (os.FileInfo, error) {
-	return f, nil
-}
-
-func (f *file) Name() string {
-	return f.name
-}
-
-func (f *file) Size() int64 {
-	return f.size
-}
-
-func (f *file) Mode() os.FileMode {
-	if f.isDir {
-		return 0555
-	}
-	return 0444
-}
-
-func (f *file) ModTime() time.Time {
-	return f.modTime
-}
-
-func (f *file) IsDir() bool {
-	return f.isDir
-}
-
-func (f *file) Sys() interface{} {
-	return nil
-}
-
-var efs = fs{
-	files: map[string]file{
-{{range .Files}}		"{{.Path}}": {
-			name:    "{{.Name}}",
-			size:    {{.Size}},
-			modTime: time.Unix(0, {{.ModTime}}),
-			data: []byte{
-				{{.Data}}
-			},
-		},
-{{end}}	},
-}
+// {{.Var}} holds an embedded filesystem.
+var {{.Var}} = embedded.NewEFS(map[string]embedded.File{
+{{- range .Files}}
+	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), []byte{
+		{{.Data}}
+	}),
+{{- end}}
+})
 `
