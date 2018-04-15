@@ -5,14 +5,12 @@ dependencies:
 - import: github.com/dustin/go-humanize
   commit: bb3d318650d48840a39aa21a027c6630e198e626
 - import: github.com/jackpal/gateway
-  commit: 5795ac81146e01d3fab7bcf21c043c3d6a32b006
-- import: github.com/kardianos/osext
-  commit: ae77be60afb1dcacde03767a8c37337fad28ac14
+  commit: cbcf4e3f3baee7952fc386c8b2534af4d267c875
 - import: github.com/pkg/term
   commit: b1f72af2d63057363398bec5873d16a98b453312
 - import: github.com/pmezard/go-difflib
   tag: v1.0.0
 - import: github.com/stretchr/testify
-  commit: 20dae5818099126a2cc52f93c075869b49dc4e1c
+  commit: c679ae2cc0cb27ec3293fea7e254e47386f05d69
 - import: gopkg.in/yaml.v2
-  tag: v2.1.1
+  tag: v2.2.1
