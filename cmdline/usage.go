@@ -2,11 +2,11 @@ package cmdline
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/kardianos/osext"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/term"
 )
@@ -35,7 +35,7 @@ var (
 )
 
 func init() {
-	if path, err := osext.Executable(); err == nil {
+	if path, err := os.Executable(); err == nil {
 		path = filepath.Base(path)
 		if path != "." {
 			AppCmdName = path
