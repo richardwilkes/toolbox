@@ -25,7 +25,8 @@ func (f *efs) Open(path string) (http.File, error) {
 		var files []os.FileInfo
 		for k, v := range f.files {
 			if strings.HasPrefix(k, path) {
-				files = append(files, &v)
+				fv := v
+				files = append(files, &fv)
 			}
 		}
 		if len(files) == 0 {
