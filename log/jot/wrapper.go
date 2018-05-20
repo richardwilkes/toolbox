@@ -1,6 +1,10 @@
 package jot
 
-import "io"
+import (
+	"io"
+
+	"github.com/richardwilkes/toolbox/log/logadapter"
+)
 
 // Logger wraps the various jot function calls into a struct that can be
 // passed around, typically for the sake of satisfying one or more logging
@@ -78,6 +82,18 @@ func (lgr *Logger) Fatal(status int, v ...interface{}) {
 // handled in the manner of fmt.Printf.
 func (lgr *Logger) Fatalf(status int, format string, v ...interface{}) {
 	Fatalf(status, format, v...)
+}
+
+// Time starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Print.
+func (lgr *Logger) Time(v ...interface{}) logadapter.Timing {
+	return Time(v...)
+}
+
+// Timef starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Printf.
+func (lgr *Logger) Timef(format string, v ...interface{}) logadapter.Timing {
+	return Timef(format, v...)
 }
 
 // Flush waits for all current log entries to be written before returning.

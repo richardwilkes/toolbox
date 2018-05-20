@@ -1,6 +1,10 @@
 package logadapter
 
-import "github.com/richardwilkes/toolbox/atexit"
+import (
+	"time"
+
+	"github.com/richardwilkes/toolbox/atexit"
+)
 
 // Discarder discards all data given to it.
 type Discarder struct {
@@ -56,4 +60,32 @@ func (d *Discarder) Fatal(status int, v ...interface{}) {
 // fmt.Printf.
 func (d *Discarder) Fatalf(status int, format string, v ...interface{}) {
 	atexit.Exit(status)
+}
+
+type discarderTiming struct {
+	started time.Time
+}
+
+func (d *discarderTiming) End() time.Duration {
+	return time.Since(d.started)
+}
+
+func (d *discarderTiming) EndWithMsg(v ...interface{}) time.Duration {
+	return time.Since(d.started)
+}
+
+func (d *discarderTiming) EndWithMsgf(format string, v ...interface{}) time.Duration {
+	return time.Since(d.started)
+}
+
+// Time starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Print.
+func (d *Discarder) Time(v ...interface{}) Timing {
+	return &discarderTiming{started: time.Now()}
+}
+
+// Timef starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Printf.
+func (d *Discarder) Timef(format string, v ...interface{}) Timing {
+	return &discarderTiming{started: time.Now()}
 }

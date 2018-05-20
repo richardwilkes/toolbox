@@ -1,5 +1,7 @@
 package logadapter
 
+import "time"
+
 // DebugLogger defines an API to use for logging debugging messages, which
 // actual logging implementations can implement directly or provide an
 // adapter to use.
@@ -60,6 +62,32 @@ type FatalLogger interface {
 	Fatalf(status int, format string, v ...interface{})
 }
 
+// Timing is used to record the duration between two events. One of End(),
+// EndWithMsg(), or EndWithMsgf() should be called when the event has
+// finished.
+type Timing interface {
+	// End finishes timing an event and logs an informational message.
+	End() time.Duration
+	// EndWithMsg finishes timing an event and logs an informational message.
+	// Arguments are handled in the manner of fmt.Print.
+	EndWithMsg(v ...interface{}) time.Duration
+	// EndWithMsgf finishes timing an event and logs an informational message.
+	// Arguments are handled in the manner of fmt.Printf.
+	EndWithMsgf(format string, v ...interface{}) time.Duration
+}
+
+// TimingLogger defines an API to use for logging timed data, which actual
+// logging implementations can implement directly or provide an adapter to
+// use.
+type TimingLogger interface {
+	// Time starts timing an event and logs an informational message.
+	// Arguments are handled in the manner of fmt.Print.
+	Time(v ...interface{}) Timing
+	// Timef starts timing an event and logs an informational message.
+	// Arguments are handled in the manner of fmt.Printf.
+	Timef(format string, v ...interface{}) Timing
+}
+
 // Logger defines an API to use for logging, which actual logging
 // implementations can implement directly or provide an adapter to use.
 type Logger interface {
@@ -68,4 +96,5 @@ type Logger interface {
 	WarnLogger
 	ErrorLogger
 	FatalLogger
+	TimingLogger
 }

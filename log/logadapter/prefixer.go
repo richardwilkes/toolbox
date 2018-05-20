@@ -67,3 +67,15 @@ func (p *Prefixer) Fatal(status int, v ...interface{}) {
 func (p *Prefixer) Fatalf(status int, format string, v ...interface{}) {
 	p.Logger.Fatalf(status, "%s%s", p.Prefix, fmt.Sprintf(format, v...))
 }
+
+// Time starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Print.
+func (p *Prefixer) Time(v ...interface{}) Timing {
+	return p.Logger.Timef("%s%s", p.Prefix, fmt.Sprint(v...))
+}
+
+// Timef starts timing an event and logs an informational message.
+// Arguments are handled in the manner of fmt.Printf.
+func (p *Prefixer) Timef(format string, v ...interface{}) Timing {
+	return p.Logger.Timef("%s%s", p.Prefix, fmt.Sprintf(format, v...))
+}
