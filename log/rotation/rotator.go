@@ -44,9 +44,9 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			if err = os.MkdirAll(filepath.Dir(r.path), 0755); err != nil {
 				return 0, errs.Wrap(err)
 			}
-			file, err := os.Create(r.path)
-			if err != nil {
-				return 0, errs.Wrap(err)
+			file, ferr := os.Create(r.path)
+			if ferr != nil {
+				return 0, errs.Wrap(ferr)
 			}
 			r.file = file
 			r.size = 0

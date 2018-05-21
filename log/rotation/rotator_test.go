@@ -35,8 +35,8 @@ func TestRotator(t *testing.T) {
 	assert.NoError(t, err)
 	require.NoError(t, r.Close())
 	for _, f := range logFiles {
-		fi, err := os.Stat(f)
-		require.NoError(t, err)
+		fi, ferr := os.Stat(f)
+		require.NoError(t, ferr)
 		assert.True(t, fi.Size() <= maxSize)
 	}
 
