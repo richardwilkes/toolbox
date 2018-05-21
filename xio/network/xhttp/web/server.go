@@ -104,13 +104,12 @@ func (s *Server) Run() error {
 	s.addresses = network.AddressesForHost(host)
 	s.Logger.Infof("Listening for %v", s)
 	if s.Protocol() == ProtocolHTTPS {
-		if err = s.WebServer.ServeTLS(listener, s.CertFile, s.KeyFile); err != nil {
-			return errs.Wrap(err)
-		}
+		err = s.WebServer.ServeTLS(listener, s.CertFile, s.KeyFile)
 	} else {
-		if err = s.WebServer.Serve(listener); err != nil {
-			return errs.Wrap(err)
-		}
+		err = s.WebServer.Serve(listener)
+	}
+	if err != nil && err != http.ErrServerClosed {
+		return errs.Wrap(err)
 	}
 	return nil
 }
