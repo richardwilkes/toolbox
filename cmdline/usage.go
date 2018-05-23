@@ -47,16 +47,21 @@ func init() {
 	AppName = AppCmdName
 }
 
+// Copyright returns the copyright notice.
+func Copyright() string {
+	var dot string
+	if !strings.HasSuffix(CopyrightHolder, ".") {
+		dot = "."
+	}
+	return fmt.Sprintf(i18n.Text("Copyright (c) %[1]s by %[2]s%s All rights reserved."), CopyrightYears, CopyrightHolder, dot)
+}
+
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
 	version := NewVersionFromString(AppVersion)
 	term.WrapText(cl, "", AppName)
 	term.WrapText(cl, "  ", version.Format(true, false))
-	var dot string
-	if !strings.HasSuffix(CopyrightHolder, ".") {
-		dot = "."
-	}
-	term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("Copyright (c) %[1]s by %[2]s%s All rights reserved."), CopyrightYears, CopyrightHolder, dot))
+	term.WrapText(cl, "  ", Copyright())
 	if License != "" {
 		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("License: %s"), License))
 	}
