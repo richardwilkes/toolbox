@@ -80,7 +80,10 @@ func (s *Server) Run() error {
 				s.Logger.Error(errs.Newf("recovered from panic in handler\n%+v", err))
 				sw.WriteHeader(http.StatusInternalServerError)
 			}
-			s.Logger.Infof("%d | %sms | %s bytes | %s %s", sw.Status(), humanize.Comma(int64(time.Since(started)/time.Millisecond)), humanize.Comma(int64(sw.BytesWritten())), req.Method, req.URL)
+			since := time.Since(started)
+			millis := int64(since / time.Millisecond)
+			micros := int64(since/time.Microsecond) - millis*1000
+			s.Logger.Infof("%d | %s.%03dms | %s bytes | %s %s", sw.Status(), humanize.Comma(millis), micros, humanize.Comma(int64(sw.BytesWritten())), req.Method, req.URL)
 		}()
 		handler.ServeHTTP(sw, req)
 	})
