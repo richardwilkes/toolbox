@@ -6,6 +6,7 @@ import "net/http"
 // retrieve the status code and number of bytes written.
 type StatusResponseWriter struct {
 	Original http.ResponseWriter
+	Head     bool
 	status   int
 	written  int
 }
@@ -31,6 +32,9 @@ func (w *StatusResponseWriter) Header() http.Header {
 
 // Write implements http.ResponseWriter.
 func (w *StatusResponseWriter) Write(data []byte) (int, error) {
+	if w.Head {
+		return len(data), nil
+	}
 	n, err := w.Original.Write(data)
 	w.written += n
 	return n, err
