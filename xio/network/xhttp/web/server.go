@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -74,7 +75,12 @@ func (s *Server) Run() error {
 	handler := s.WebServer.Handler
 	s.WebServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		started := time.Now()
-		sw := &xhttp.StatusResponseWriter{Original: w}
+		req.URL.Path = path.Clean(req.URL.Path)
+		req = req.WithContext(context.WithValue(req.Context(), routeKey, &route{path: req.URL.Path}))
+		sw := &xhttp.StatusResponseWriter{
+			Original: w,
+			Head:     req.Method == http.MethodHead,
+		}
 		defer func() {
 			if err := recover(); err != nil {
 				s.Logger.Error(errs.Newf("recovered from panic in handler\n%+v", err))
@@ -83,7 +89,14 @@ func (s *Server) Run() error {
 			since := time.Since(started)
 			millis := int64(since / time.Millisecond)
 			micros := int64(since/time.Microsecond) - millis*1000
-			s.Logger.Infof("%d | %s.%03dms | %s bytes | %s %s", sw.Status(), humanize.Comma(millis), micros, humanize.Comma(int64(sw.BytesWritten())), req.Method, req.URL)
+			written := sw.BytesWritten()
+			var bytes string
+			if written != 1 {
+				bytes = "bytes"
+			} else {
+				bytes = "byte"
+			}
+			s.Logger.Infof("%d | %s.%03dms | %s %s | %s %s", sw.Status(), humanize.Comma(millis), micros, humanize.Comma(int64(written)), bytes, req.Method, req.URL)
 		}()
 		handler.ServeHTTP(sw, req)
 	})
