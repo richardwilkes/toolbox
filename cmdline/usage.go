@@ -53,7 +53,7 @@ func Copyright() string {
 	if !strings.HasSuffix(CopyrightHolder, ".") {
 		dot = "."
 	}
-	return fmt.Sprintf(i18n.Text("Copyright (c) %[1]s by %[2]s%s All rights reserved."), CopyrightYears, CopyrightHolder, dot)
+	return fmt.Sprintf(i18n.Text("Copyright © %[1]s by %[2]s%s All rights reserved."), CopyrightYears, CopyrightHolder, dot)
 }
 
 // DisplayUsage displays the program usage information.
