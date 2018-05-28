@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -178,6 +179,17 @@ func (j *Data) Bool(path string) bool {
 	return false
 }
 
+// BoolRelaxed extracts a bool from the path. Returns false if the path isn't
+// present or can't be converted to a boolean type.
+func (j *Data) BoolRelaxed(path string) bool {
+	if b, ok := j.Path(path).obj.(bool); ok {
+		return b
+	} else {
+		return strings.ToLower(j.Str(path)) == "true"
+	}
+	return false
+}
+
 // Float64 extracts an float64 from the path. Returns 0 if the path isn't
 // present or isn't a numeric type.
 func (j *Data) Float64(path string) float64 {
@@ -189,11 +201,41 @@ func (j *Data) Float64(path string) float64 {
 	return 0
 }
 
+// Float64Relaxed extracts an float64 from the path. Returns 0 if the path
+// isn't present or can't be converted to a numeric type.
+func (j *Data) Float64Relaxed(path string) float64 {
+	if n, ok := j.Path(path).obj.(json.Number); ok {
+		if f, err := n.Float64(); err == nil {
+			return f
+		}
+	} else {
+		if f, err := strconv.ParseFloat(j.Str(path), 64); err == nil {
+			return f
+		}
+	}
+	return 0
+}
+
 // Int64 extracts an int64 from the path. Returns 0 if the path isn't present
 // or isn't a numeric type.
 func (j *Data) Int64(path string) int64 {
 	if n, ok := j.Path(path).obj.(json.Number); ok {
 		if i, err := n.Int64(); err == nil {
+			return i
+		}
+	}
+	return 0
+}
+
+// Int64Relaxed extracts an int64 from the path. Returns 0 if the path isn't
+// present or can't be converted to a numeric type.
+func (j *Data) Int64Relaxed(path string) int64 {
+	if n, ok := j.Path(path).obj.(json.Number); ok {
+		if i, err := n.Int64(); err == nil {
+			return i
+		}
+	} else {
+		if i, err := strconv.ParseInt(j.Str(path), 10, 64); err == nil {
 			return i
 		}
 	}
