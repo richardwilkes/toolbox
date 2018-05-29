@@ -31,6 +31,7 @@ type Server struct {
 	ShutdownGracePeriod time.Duration
 	Logger              logadapter.Logger
 	WebServer           *http.Server
+	ShutdownCallback    func()
 	addresses           []string
 	port                int
 }
@@ -141,5 +142,8 @@ func (s *Server) Shutdown() {
 	defer cancel()
 	if err := s.WebServer.Shutdown(ctx); err != nil {
 		s.Logger.Warn(errs.NewfWithCause(err, "Unable to shutdown %s gracefully", s.Protocol()))
+	}
+	if s.ShutdownCallback != nil {
+		s.ShutdownCallback()
 	}
 }
