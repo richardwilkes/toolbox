@@ -2,30 +2,57 @@ package embedded
 
 import (
 	"bytes"
+	"compress/gzip"
+	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
 // File holds the data for an embedded file.
 type File struct {
 	*bytes.Reader
-	name    string
-	size    int64
-	modTime time.Time
-	isDir   bool
-	files   []os.FileInfo
-	data    []byte
+	name       string
+	size       int64
+	modTime    time.Time
+	isDir      bool
+	files      []os.FileInfo
+	lock       sync.Mutex
+	compressed bool
+	data       []byte
 }
 
 // NewFile creates a new embedded file.
-func NewFile(name string, modTime time.Time, data []byte) File {
-	return File{
-		name:    filepath.Base(name),
-		size:    int64(len(data)),
-		modTime: modTime,
-		data:    data,
+func NewFile(name string, modTime time.Time, uncompressedSize int64, compressedData []byte) *File {
+	return &File{
+		name:       filepath.Base(name),
+		size:       uncompressedSize,
+		modTime:    modTime,
+		compressed: true,
+		data:       compressedData,
 	}
+}
+
+func (f *File) uncompressData() error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	if f.compressed {
+		r, err := gzip.NewReader(bytes.NewReader(f.data))
+		if err != nil {
+			return err
+		}
+		buffer := make([]byte, int(f.size))
+		if _, err = io.ReadFull(r, buffer); err != nil {
+			return err
+		}
+		if err = r.Close(); err != nil {
+			return err
+		}
+		f.compressed = false
+		f.data = buffer
+	}
+	return nil
 }
 
 // Close the file. Does nothing and always returns nil. Implements the

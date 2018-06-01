@@ -22,7 +22,7 @@ type EFS struct {
 }
 
 // NewEFS creates a new embedded filesystem.
-func NewEFS(files map[string]File) *EFS {
+func NewEFS(files map[string]*File) *EFS {
 	return &EFS{
 		efs: &efs{
 			files:      files,

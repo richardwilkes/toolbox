@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -145,9 +146,18 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 		one.ModTime = fi.ModTime().UnixNano()
 		var buffer bytes.Buffer
 		count := 0
+		r, w := io.Pipe()
+		go func() {
+			gw := gzip.NewWriter(w)
+			_, cerr := io.Copy(gw, f)
+			failIfErr(cerr)
+			failIfErr(gw.Close())
+			failIfErr(f.Close())
+			failIfErr(w.Close())
+		}()
 		for {
 			var n int
-			n, err = f.Read(in)
+			n, err = r.Read(in)
 			for i := 0; i < n; i++ {
 				switch count {
 				case 0:
@@ -167,7 +177,6 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 				break
 			}
 		}
-		failIfErr(f.Close())
 		one.Data = buffer.String()
 	}
 	return all, nil
@@ -186,9 +195,9 @@ import (
 )
 
 // {{.Var}} holds an embedded filesystem.
-var {{.Var}} = embedded.NewEFS(map[string]embedded.File{
+var {{.Var}} = embedded.NewEFS(map[string]*embedded.File{
 {{- range .Files}}
-	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), []byte{
+	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), {{.Size}}, []byte{
 		{{.Data}}
 	}),
 {{- end}}

@@ -10,7 +10,7 @@ import (
 )
 
 type efs struct {
-	files      map[string]File
+	files      map[string]*File
 	dirModTime time.Time
 }
 
@@ -25,8 +25,7 @@ func (f *efs) Open(path string) (http.File, error) {
 		var files []os.FileInfo
 		for k, v := range f.files {
 			if strings.HasPrefix(k, path) {
-				fv := v
-				files = append(files, &fv)
+				files = append(files, v)
 			}
 		}
 		if len(files) == 0 {
@@ -39,12 +38,19 @@ func (f *efs) Open(path string) (http.File, error) {
 			files:   files,
 		}, nil
 	}
-	one.Reader = bytes.NewReader(one.data)
-	return &one, nil
+	if err := one.uncompressData(); err != nil {
+		return nil, err
+	}
+	fcopy := *one
+	fcopy.Reader = bytes.NewReader(fcopy.data)
+	return &fcopy, nil
 }
 
 func (f *efs) ContentAsBytes(path string) ([]byte, bool) {
 	if one, ok := f.files[filepath.Clean("/"+path)]; ok {
+		if err := one.uncompressData(); err != nil {
+			return nil, false
+		}
 		return one.data, true
 	}
 	return nil, false
