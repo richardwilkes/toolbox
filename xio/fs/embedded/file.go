@@ -24,13 +24,13 @@ type File struct {
 }
 
 // NewFile creates a new embedded file.
-func NewFile(name string, modTime time.Time, uncompressedSize int64, compressedData []byte) *File {
+func NewFile(name string, modTime time.Time, size int64, compressed bool, data []byte) *File {
 	return &File{
 		name:       filepath.Base(name),
-		size:       uncompressedSize,
+		size:       size,
 		modTime:    modTime,
-		compressed: true,
-		data:       compressedData,
+		compressed: compressed,
+		data:       data,
 	}
 }
 

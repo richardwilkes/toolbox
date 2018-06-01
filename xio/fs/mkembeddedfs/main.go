@@ -20,12 +20,13 @@ import (
 )
 
 type data struct {
-	FSPath  string
-	Path    string
-	Name    string
-	Size    int64
-	ModTime int64
-	Data    string
+	FSPath     string
+	Path       string
+	Name       string
+	Size       int64
+	ModTime    int64
+	Compressed bool
+	Data       string
 }
 
 type tmplInput struct {
@@ -135,7 +136,6 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 		})
 	}
 	sort.Slice(all, func(i, j int) bool { return txt.NaturalLess(all[i].Path, all[j].Path, false) })
-	in := make([]byte, 4096)
 	for _, one := range all {
 		f, err := os.Open(one.FSPath)
 		failIfErr(err)
@@ -144,38 +144,35 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 		one.Name = fi.Name()
 		one.Size = fi.Size()
 		one.ModTime = fi.ModTime().UnixNano()
+		var raw bytes.Buffer
+		_, err = raw.ReadFrom(f)
+		failIfErr(err)
+		failIfErr(f.Close())
+		var compressed bytes.Buffer
+		gw := gzip.NewWriter(&compressed)
+		_, err = io.Copy(gw, bytes.NewBuffer(raw.Bytes()))
+		failIfErr(err)
+		failIfErr(gw.Close())
+		var data []byte
+		if compressed.Len() < raw.Len() {
+			one.Compressed = true
+			data = compressed.Bytes()
+		} else {
+			data = raw.Bytes()
+		}
 		var buffer bytes.Buffer
 		count := 0
-		r, w := io.Pipe()
-		go func() {
-			gw := gzip.NewWriter(w)
-			_, cerr := io.Copy(gw, f)
-			failIfErr(cerr)
-			failIfErr(gw.Close())
-			failIfErr(f.Close())
-			failIfErr(w.Close())
-		}()
-		for {
-			var n int
-			n, err = r.Read(in)
-			for i := 0; i < n; i++ {
-				switch count {
-				case 0:
-				case 16:
-					buffer.WriteString("\n\t\t")
-					count = 0
-				default:
-					buffer.WriteByte(' ')
-				}
-				fmt.Fprintf(&buffer, "0x%02x,", in[i])
-				count++
+		for i := 0; i < len(data); i++ {
+			switch count {
+			case 0:
+			case 16:
+				buffer.WriteString("\n\t\t")
+				count = 0
+			default:
+				buffer.WriteByte(' ')
 			}
-			if err != nil {
-				if err != io.EOF {
-					failIfErr(err)
-				}
-				break
-			}
+			fmt.Fprintf(&buffer, "0x%02x,", data[i])
+			count++
 		}
 		one.Data = buffer.String()
 	}
@@ -197,7 +194,7 @@ import (
 // {{.Var}} holds an embedded filesystem.
 var {{.Var}} = embedded.NewEFS(map[string]*embedded.File{
 {{- range .Files}}
-	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), {{.Size}}, []byte{
+	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), {{.Size}}, {{.Compressed}}, []byte{
 		{{.Data}}
 	}),
 {{- end}}
