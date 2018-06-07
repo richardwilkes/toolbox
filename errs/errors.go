@@ -153,6 +153,14 @@ func (d *Error) Detail(trimRuntime bool) string {
 	}
 }
 
+// StackTrace returns just the stack trace portion of the message.
+func (d *Error) StackTrace(trimRuntime bool) string {
+	if len(d.errors) == 0 {
+		return ""
+	}
+	return d.errors[0].detail(false, trimRuntime)
+}
+
 // ErrorOrNil returns an error interface if this Error represents one or more
 // errors, or nil if it is empty.
 func (d *Error) ErrorOrNil() error {
