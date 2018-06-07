@@ -187,10 +187,8 @@ func (j *Data) Bool(path string) bool {
 func (j *Data) BoolRelaxed(path string) bool {
 	if b, ok := j.Path(path).obj.(bool); ok {
 		return b
-	} else {
-		return strings.ToLower(j.Str(path)) == "true"
 	}
-	return false
+	return strings.ToLower(j.Str(path)) == "true"
 }
 
 // Float64 extracts an float64 from the path. Returns 0 if the path isn't
