@@ -41,9 +41,13 @@ func (f *efs) Open(path string) (http.File, error) {
 	if err := one.uncompressData(); err != nil {
 		return nil, err
 	}
-	fcopy := *one
-	fcopy.Reader = bytes.NewReader(fcopy.data)
-	return &fcopy, nil
+	return &File{
+		Reader:  bytes.NewReader(one.data),
+		name:    one.name,
+		size:    one.size,
+		modTime: one.modTime,
+		data:    one.data,
+	}, nil
 }
 
 func (f *efs) ContentAsBytes(path string) ([]byte, bool) {
