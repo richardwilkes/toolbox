@@ -30,10 +30,11 @@ type data struct {
 }
 
 type tmplInput struct {
-	Tag   string
-	Pkg   string
-	Var   string
-	Files []*data
+	Tag            string
+	Pkg            string
+	Var            string
+	Files          []*data
+	NoEmbedModTime bool
 }
 
 func main() {
@@ -55,6 +56,7 @@ func main() {
 	cl.NewStringOption(&output).SetSingle('o').SetName("output").SetUsage("The output file path")
 	cl.NewStringOption(&cfg.Var).SetSingle('n').SetName("name").SetUsage("The variable name to use for the embedded filesystem")
 	cl.NewStringOption(&cfg.Tag).SetSingle('t').SetName("tag").SetUsage("A build tag to guard the output file with")
+	cl.NewBoolOption(&cfg.NoEmbedModTime).SetSingle('N').SetName("no-modtime").SetUsage("Don't embed the modification time of files")
 	paths := cl.Parse(os.Args[1:])
 	if len(paths) == 0 {
 		fail("Must specify at least one input path to process")
@@ -182,7 +184,7 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 var pkgTemplate = `// Code generated - DO NOT EDIT.
 {{if .Tag}}
 // {{/**/}}+build {{.Tag}}
-{{end}}
+{{end}}{{$nomodtime := .NoEmbedModTime}}
 package {{.Pkg}}
 
 import (
@@ -194,7 +196,7 @@ import (
 // {{.Var}} holds an embedded filesystem.
 var {{.Var}} = embedded.NewEFS(map[string]*embedded.File{
 {{- range .Files}}
-	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, time.Unix(0, {{.ModTime}}), {{.Size}}, {{.Compressed}}, []byte{
+	{{printf "%q" .Path}}: embedded.NewFile({{printf "%q" .Name}}, {{if $nomodtime}}time.Now(){{else}}time.Unix(0, {{.ModTime}}){{end}}, {{.Size}}, {{.Compressed}}, []byte{
 		{{.Data}}
 	}),
 {{- end}}
