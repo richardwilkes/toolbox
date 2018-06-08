@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -22,21 +21,10 @@ func (f *efs) Open(path string) (http.File, error) {
 	path = filepath.Clean("/" + path)
 	one, ok := f.files[path]
 	if !ok {
-		var files []os.FileInfo
-		for k, v := range f.files {
-			if strings.HasPrefix(k, path) {
-				files = append(files, v)
-			}
-		}
-		if len(files) == 0 {
-			return nil, os.ErrNotExist
-		}
-		return &File{
-			name:    filepath.Base(path),
-			modTime: f.dirModTime,
-			isDir:   true,
-			files:   files,
-		}, nil
+		return nil, os.ErrNotExist
+	}
+	if one.isDir {
+		return one, nil
 	}
 	if err := one.uncompressData(); err != nil {
 		return nil, err
