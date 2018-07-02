@@ -58,3 +58,48 @@ func FormatDuration(duration time.Duration, includeMillis bool) string {
 	}
 	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
+
+// DurationToCode turns a time.Duration into more human-readable text required
+// for code than a simple number of nanoseconds.
+func DurationToCode(duration time.Duration) string {
+	var buffer strings.Builder
+	if duration >= time.Hour {
+		fmt.Fprintf(&buffer, "%d * time.Hour", duration/time.Hour)
+		duration -= (duration / time.Hour) * time.Hour
+	}
+	if duration >= time.Minute {
+		if buffer.Len() > 0 {
+			buffer.WriteString(" + ")
+		}
+		fmt.Fprintf(&buffer, "%d * time.Minute", duration/time.Minute)
+		duration -= (duration / time.Minute) * time.Minute
+	}
+	if duration >= time.Second {
+		if buffer.Len() > 0 {
+			buffer.WriteString(" + ")
+		}
+		fmt.Fprintf(&buffer, "%d * time.Second", duration/time.Second)
+		duration -= (duration / time.Second) * time.Second
+	}
+	if duration >= time.Millisecond {
+		if buffer.Len() > 0 {
+			buffer.WriteString(" + ")
+		}
+		fmt.Fprintf(&buffer, "%d * time.Millisecond", duration/time.Millisecond)
+		duration -= (duration / time.Millisecond) * time.Millisecond
+	}
+	if duration >= time.Microsecond {
+		if buffer.Len() > 0 {
+			buffer.WriteString(" + ")
+		}
+		fmt.Fprintf(&buffer, "%d * time.Microsecond", duration/time.Microsecond)
+		duration -= (duration / time.Microsecond) * time.Microsecond
+	}
+	if duration != 0 {
+		if buffer.Len() > 0 {
+			buffer.WriteString(" + ")
+		}
+		fmt.Fprintf(&buffer, "%d", duration)
+	}
+	return buffer.String()
+}
