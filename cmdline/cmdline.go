@@ -67,13 +67,13 @@ func (cl *CmdLine) NewOption(value Value) *Option {
 // that weren't used for option content.
 func (cl *CmdLine) Parse(args []string) []string {
 	const (
-		LookForOptionState = iota
-		SetOptionValueState
-		CollectRemainingState
+		lookForOptionState = iota
+		setOptionValueState
+		collectRemainingState
 	)
 	var current *Option
 	var currentArg string
-	state := LookForOptionState
+	state := lookForOptionState
 	var remainingArgs []string
 	options := cl.availableOptions()
 	max := len(args)
@@ -81,7 +81,7 @@ func (cl *CmdLine) Parse(args []string) []string {
 	for i := 0; i < max; i++ {
 		arg := args[i]
 		switch state {
-		case LookForOptionState:
+		case lookForOptionState:
 			if strings.HasPrefix(arg, "@") {
 				path := arg[1:]
 				if seen.Contains(path) {
@@ -95,9 +95,10 @@ func (cl *CmdLine) Parse(args []string) []string {
 				i--
 				continue
 			}
-			if arg == "--" {
-				state = CollectRemainingState
-			} else if strings.HasPrefix(arg, "--") {
+			switch {
+			case arg == "--":
+				state = collectRemainingState
+			case strings.HasPrefix(arg, "--"):
 				var value string
 				arg = arg[2:]
 				sep := strings.Index(arg, "=")
@@ -106,35 +107,37 @@ func (cl *CmdLine) Parse(args []string) []string {
 					arg = arg[:sep]
 				}
 				option := options[arg]
-				if option == nil {
+				switch {
+				case option == nil:
 					cl.FatalMsg(fmt.Sprintf(i18n.Text("Invalid option: --%s"), arg))
-				} else if option.isBool() {
+				case option.isBool():
 					if sep != -1 {
 						cl.FatalMsg(fmt.Sprintf(i18n.Text("Option --%[1]s does not allow an argument: %[2]s"), arg, value))
 					} else {
 						cl.setOrFail(option, "--"+arg, "true")
 					}
-				} else if sep != -1 {
+				case sep != -1:
 					cl.setOrFail(option, "--"+arg, value)
-				} else {
-					state = SetOptionValueState
+				default:
+					state = setOptionValueState
 					current = option
 					currentArg = "--" + arg
 				}
-			} else if strings.HasPrefix(arg, "-") {
+			case strings.HasPrefix(arg, "-"):
 				arg = arg[1:]
 				for j, ch := range arg {
 					if option := options[string(ch)]; option != nil {
-						if option.isBool() {
+						switch {
+						case option.isBool():
 							cl.setOrFail(option, "-"+arg, "true")
-						} else if j == len(arg)-1 {
-							state = SetOptionValueState
+						case j == len(arg)-1:
+							state = setOptionValueState
 							current = option
 							currentArg = "-" + arg[j:j+1]
-						} else if arg[j+1:j+2] == "=" {
+						case arg[j+1:j+2] == "=":
 							cl.setOrFail(option, "-"+arg, arg[j+2:])
 							break
-						} else {
+						default:
 							cl.setOrFail(option, "-"+arg, arg[j+1:])
 							break
 						}
@@ -143,18 +146,18 @@ func (cl *CmdLine) Parse(args []string) []string {
 						break
 					}
 				}
-			} else {
+			default:
 				remainingArgs = append(remainingArgs, arg)
-				state = CollectRemainingState
+				state = collectRemainingState
 			}
-		case SetOptionValueState:
+		case setOptionValueState:
 			cl.setOrFail(current, currentArg, arg)
-			state = LookForOptionState
-		case CollectRemainingState:
+			state = lookForOptionState
+		case collectRemainingState:
 			remainingArgs = append(remainingArgs, arg)
 		}
 	}
-	if state == SetOptionValueState {
+	if state == setOptionValueState {
 		cl.FatalMsg(fmt.Sprintf(i18n.Text("Option %s requires an argument"), currentArg))
 	}
 	if cl.showHelp {

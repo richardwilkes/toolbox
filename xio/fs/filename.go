@@ -48,7 +48,8 @@ func UnsanitizeName(name string) string {
 	var buffer strings.Builder
 	found := false
 	for _, r := range name {
-		if found {
+		switch {
+		case found:
 			switch r {
 			case '3':
 				buffer.WriteByte('@')
@@ -63,9 +64,9 @@ func UnsanitizeName(name string) string {
 				buffer.WriteRune(r)
 			}
 			found = false
-		} else if r == '@' {
+		case r == '@':
 			found = true
-		} else {
+		default:
 			buffer.WriteRune(r)
 		}
 	}

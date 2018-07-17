@@ -40,7 +40,8 @@ func (r *Rotator) Write(b []byte) (int, error) {
 	defer r.lock.Unlock()
 	if r.file == nil {
 		fi, err := os.Stat(r.path)
-		if os.IsNotExist(err) {
+		switch {
+		case os.IsNotExist(err):
 			if err = os.MkdirAll(filepath.Dir(r.path), 0755); err != nil {
 				return 0, errs.Wrap(err)
 			}
@@ -50,9 +51,9 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			}
 			r.file = file
 			r.size = 0
-		} else if err != nil {
+		case err != nil:
 			return 0, errs.Wrap(err)
-		} else {
+		default:
 			file, err := os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666)
 			if err != nil {
 				return 0, errs.Wrap(err)

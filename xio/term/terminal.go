@@ -13,7 +13,7 @@ const (
 
 // WrapText prints the 'prefix' to 'out' and then wraps 'text' in the
 // remaining space.
-func WrapText(out io.Writer, prefix string, text string) {
+func WrapText(out io.Writer, prefix, text string) {
 	fmt.Fprint(out, prefix)
 	avail, _ := Size()
 	avail -= 1 + len(prefix)

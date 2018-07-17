@@ -97,7 +97,7 @@ func Text(text string) string {
 	return text
 }
 
-func lookup(text string, language string) string {
+func lookup(text, language string) string {
 	for _, lang := range hierarchy(language) {
 		if translations := langMap[lang]; translations != nil {
 			if str, ok := translations[text]; ok {
@@ -167,7 +167,7 @@ func load(name string) {
 	}
 }
 
-func extract(line string, label string, lineNum int, path string) string {
+func extract(line, label string, lineNum int, path string) string {
 	str, err := strconv.Unquote(strings.TrimSpace(line[2:]))
 	if err != nil {
 		Log.Errorf("%s malformed on line %d of %s\n", label, lineNum, path)

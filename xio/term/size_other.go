@@ -3,6 +3,6 @@
 package term
 
 // Size returns the number of columns and rows comprising the terminal.
-func Size() (columns int, rows int) {
+func Size() (columns, rows int) {
 	return defColumns, defRows
 }

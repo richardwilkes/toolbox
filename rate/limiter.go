@@ -12,7 +12,7 @@ type limiter struct {
 	parent     *limiter
 	children   []*limiter
 	last       int
-	cap        int
+	capacity   int
 	used       int
 	closed     bool
 }
@@ -31,16 +31,16 @@ type request struct {
 	done    chan error
 }
 
-// New creates a new top-level rate limiter. 'cap' is the number of units
+// New creates a new top-level rate limiter. 'capacity' is the number of units
 // (bytes, for example) allowed to be used in a particular time 'period'.
-func New(cap int, period time.Duration) Limiter {
+func New(capacity int, period time.Duration) Limiter {
 	c := &controller{
 		ticker: time.NewTicker(period),
 		done:   make(chan bool),
 	}
 	l := &limiter{
 		controller: c,
-		cap:        cap,
+		capacity:   capacity,
 	}
 	c.root = l
 	go func() {
@@ -55,15 +55,15 @@ func New(cap int, period time.Duration) Limiter {
 						req.done <- errs.New("Limiter is closed")
 						continue
 					}
-					if req.amount > req.limiter.cap {
-						req.done <- errs.Newf("Amount (%d) is greater than cap (%d)", req.amount, req.limiter.cap)
+					if req.amount > req.limiter.capacity {
+						req.done <- errs.Newf("Amount (%d) is greater than capacity (%d)", req.amount, req.limiter.capacity)
 						continue
 					}
-					if c.root.cap-c.root.used > 0 {
-						available := req.limiter.cap - req.limiter.used
+					if c.root.capacity-c.root.used > 0 {
+						available := req.limiter.capacity - req.limiter.used
 						p := req.limiter.parent
 						for p != nil {
-							pa := p.cap - p.used
+							pa := p.capacity - p.used
 							if pa < available {
 								available = pa
 							}
@@ -99,7 +99,7 @@ func New(cap int, period time.Duration) Limiter {
 	return l
 }
 
-func (l *limiter) New(cap int) Limiter {
+func (l *limiter) New(capacity int) Limiter {
 	l.controller.lock.Lock()
 	defer l.controller.lock.Unlock()
 	if l.closed {
@@ -108,7 +108,7 @@ func (l *limiter) New(cap int) Limiter {
 	child := &limiter{
 		controller: l.controller,
 		parent:     l,
-		cap:        cap,
+		capacity:   capacity,
 	}
 	l.children = append(l.children, child)
 	return child
@@ -117,22 +117,22 @@ func (l *limiter) New(cap int) Limiter {
 func (l *limiter) Cap(applyParentCaps bool) int {
 	l.controller.lock.RLock()
 	defer l.controller.lock.RUnlock()
-	cap := l.cap
+	capacity := l.capacity
 	if applyParentCaps {
 		p := l.parent
 		for p != nil {
-			if p.cap < cap {
-				cap = p.cap
+			if p.capacity < capacity {
+				capacity = p.capacity
 			}
 			p = p.parent
 		}
 	}
-	return cap
+	return capacity
 }
 
-func (l *limiter) SetCap(cap int) {
+func (l *limiter) SetCap(capacity int) {
 	l.controller.lock.Lock()
-	l.cap = cap
+	l.capacity = capacity
 	l.controller.lock.Unlock()
 }
 
@@ -158,16 +158,16 @@ func (l *limiter) Use(amount int) <-chan error {
 		done <- errs.New("Limiter is closed")
 		return done
 	}
-	if amount > l.cap {
-		cap := l.cap
+	if amount > l.capacity {
+		capacity := l.capacity
 		l.controller.lock.Unlock()
-		done <- errs.Newf("Amount (%d) is greater than cap (%d)", amount, cap)
+		done <- errs.Newf("Amount (%d) is greater than capacity (%d)", amount, capacity)
 		return done
 	}
-	available := l.cap - l.used
+	available := l.capacity - l.used
 	p := l.parent
 	for p != nil {
-		pa := p.cap - p.used
+		pa := p.capacity - p.used
 		if pa < available {
 			available = pa
 		}

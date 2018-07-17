@@ -69,12 +69,13 @@ func (r *Rect) Intersect(other Rect) {
 func (r *Rect) Union(other Rect) {
 	e1 := r.IsEmpty()
 	e2 := other.IsEmpty()
-	if e1 && e2 {
+	switch {
+	case e1 && e2:
 		r.Width = 0
 		r.Height = 0
-	} else if e1 {
+	case e1:
 		*r = other
-	} else if !e2 {
+	case !e2:
 		x := math.Min(r.X, other.X)
 		y := math.Min(r.Y, other.Y)
 		r.Width = math.Max(r.X+r.Width, other.X+other.Width) - x

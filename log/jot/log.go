@@ -45,13 +45,14 @@ func init() {
 		minLevel := DEBUG
 		out := term.NewANSI(os.Stderr)
 		for rec := range logChannel {
-			if rec.writer != nil {
+			switch {
+			case rec.writer != nil:
 				out = term.NewANSI(rec.writer)
-			} else if rec.response != nil {
+			case rec.response != nil:
 				rec.response <- true
-			} else if rec.setMinLevel {
+			case rec.setMinLevel:
 				minLevel = rec.level
-			} else if rec.level >= minLevel {
+			case rec.level >= minLevel:
 				color := levelColors[rec.level]
 				if color != 0 {
 					out.Foreground(color, levelStyles[rec.level])
@@ -80,7 +81,7 @@ func init() {
 func write(out io.Writer, text string) {
 	// The extra code here is just to quiet the linter about not checking
 	// for an error.
-	if _, err := out.Write(([]byte)(text)); err != nil {
+	if _, err := out.Write([]byte(text)); err != nil {
 		return
 	}
 }
