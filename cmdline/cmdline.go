@@ -125,6 +125,7 @@ func (cl *CmdLine) Parse(args []string) []string {
 				}
 			case strings.HasPrefix(arg, "-"):
 				arg = arg[1:]
+			outer:
 				for j, ch := range arg {
 					if option := options[string(ch)]; option != nil {
 						switch {
@@ -136,10 +137,10 @@ func (cl *CmdLine) Parse(args []string) []string {
 							currentArg = "-" + arg[j:j+1]
 						case arg[j+1:j+2] == "=":
 							cl.setOrFail(option, "-"+arg, arg[j+2:])
-							break
+							break outer
 						default:
 							cl.setOrFail(option, "-"+arg, arg[j+1:])
-							break
+							break outer
 						}
 					} else {
 						cl.FatalMsg(fmt.Sprintf(i18n.Text("Invalid option: -%s"), arg[j:]))
