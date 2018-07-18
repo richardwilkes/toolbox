@@ -11,18 +11,19 @@ var routeKey routeCtxKey = 1
 
 type route struct {
 	path string
+	last string
 }
 
 func (r *route) shift() string {
 	i := strings.Index(r.path[1:], "/") + 1
 	if i <= 0 {
-		p := r.path[1:]
+		r.last = r.path[1:]
 		r.path = "/"
-		return p
+	} else {
+		r.last = r.path[1:i]
+		r.path = r.path[i:]
 	}
-	p := r.path[1:i]
-	r.path = r.path[i:]
-	return p
+	return r.last
 }
 
 // PathHeadThenShift returns the head segment of the request's adjusted path,
@@ -34,4 +35,24 @@ func PathHeadThenShift(req *http.Request) string {
 		return req.URL.Path
 	}
 	return r.shift()
+}
+
+// LastPathHead returns the last result obtained from a call to
+// PathHeadThenShift() for the request.
+func LastPathHead(req *http.Request) string {
+	r, ok := req.Context().Value(routeKey).(*route)
+	if !ok {
+		return req.URL.Path
+	}
+	return r.last
+}
+
+// HasMorePathSegments returns true if more path segments will be returned
+// from future calls to PathHeadThenShift() for the request.
+func HasMorePathSegments(req *http.Request) bool {
+	r, ok := req.Context().Value(routeKey).(*route)
+	if !ok {
+		return false
+	}
+	return r.path != "/"
 }
