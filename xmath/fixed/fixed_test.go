@@ -75,7 +75,7 @@ func TestText(t *testing.T) {
 		data, err := f1.MarshalText()
 		assert.NoError(t, err)
 		var f2 fixed.Fixed
-		err = f2.UnmarshalText([]byte(data))
+		err = f2.UnmarshalText(data)
 		assert.NoError(t, err)
 		require.Equal(t, f1, f2)
 	}
