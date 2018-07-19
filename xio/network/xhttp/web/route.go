@@ -26,6 +26,10 @@ func (r *route) shift() string {
 	return r.last
 }
 
+func (r *route) remaining() string {
+	return r.path[1:]
+}
+
 // PathHeadThenShift returns the head segment of the request's adjusted path,
 // then shifts it left by one segment. This does not adjust the path stored in
 // req.URL.Path.
@@ -55,4 +59,13 @@ func HasMorePathSegments(req *http.Request) bool {
 		return false
 	}
 	return r.path != "/"
+}
+
+// RemainingPath returns the remaining path for a request.
+func RemainingPath(req *http.Request) string {
+	r, ok := req.Context().Value(routeKey).(*route)
+	if !ok {
+		return req.URL.Path
+	}
+	return r.remaining()
 }
