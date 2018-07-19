@@ -20,7 +20,7 @@ const (
 
 var (
 	precision  int
-	multiplier int
+	multiplier int64
 )
 
 // Fixed holds a fixed-point value that contains up to N decimal places, where
@@ -42,12 +42,23 @@ func init() {
 // pre-existing value will quietly generate bad results.
 func SetDigitsAfterDecimal(digits int) {
 	precision = digits
-	multiplier = int(math.Pow(10, float64(precision)))
+	multiplier = int64(math.Pow(10, float64(precision)))
 }
 
 // New creates a new fixed-point value.
+// Deprecated: Use FromFloat64() instead.
 func New(value float64) Fixed {
+	return FromFloat64(value)
+}
+
+// FromFloat64 creates a new fixed-point value from a float64.
+func FromFloat64(value float64) Fixed {
 	return Fixed(value * float64(multiplier))
+}
+
+// FromInt creates a new fixed-point value from an int.
+func FromInt(value int) Fixed {
+	return Fixed(int64(value) * multiplier)
 }
 
 // Parse a string to extract a fixed-point value from it.
@@ -80,7 +91,7 @@ func Parse(str string) (Fixed, error) {
 			neg = true
 			value = -value
 		}
-		value *= int64(multiplier)
+		value *= multiplier
 	}
 	if len(parts) > 1 {
 		var buffer strings.Builder
@@ -92,7 +103,7 @@ func Parse(str string) (Fixed, error) {
 		if fraction, err = strconv.ParseInt(buffer.String(), 10, 64); err != nil {
 			return 0, errs.Wrap(err)
 		}
-		value += fraction - int64(multiplier)
+		value += fraction - multiplier
 	}
 	if neg {
 		value = -value
