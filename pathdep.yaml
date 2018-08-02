@@ -3,14 +3,14 @@ dependencies:
 - import: github.com/davecgh/go-spew
   commit: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
 - import: github.com/dustin/go-humanize
-  commit: 02af3965c54e8cacf948b97fef38925c4120652c
+  commit: 9f541cc9db5d55bce703bd99987c9d5cb8eea45e
 - import: github.com/jackpal/gateway
   commit: cbcf4e3f3baee7952fc386c8b2534af4d267c875
 - import: github.com/pkg/term
-  commit: cda20d4ac917ad418d86e151eff439648b06185b
+  commit: bffc007b7fd5a70e20e28f5b7649bb84671ef436
 - import: github.com/pmezard/go-difflib
   tag: v1.0.0
 - import: github.com/stretchr/testify
-  commit: c679ae2cc0cb27ec3293fea7e254e47386f05d69
+  tag: v1.2.2
 - import: gopkg.in/yaml.v2
   tag: v2.2.1
