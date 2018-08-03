@@ -1,6 +1,9 @@
 package txt
 
-import "unicode"
+import (
+	"unicode"
+	"unicode/utf8"
+)
 
 // ToCamelCase converts a string to CamelCase.
 func ToCamelCase(in string) string {
@@ -33,4 +36,16 @@ func ToSnakeCase(in string) string {
 		out = append(out, unicode.ToLower(runes[i]))
 	}
 	return string(out)
+}
+
+// FirstLetterToUpper converts the first character to upper case.
+func FirstLetterToUpper(in string) string {
+	if in == "" {
+		return in
+	}
+	r, size := utf8.DecodeRuneInString(in)
+	if r == utf8.RuneError {
+		return in
+	}
+	return string(unicode.ToUpper(r)) + in[size:]
 }
