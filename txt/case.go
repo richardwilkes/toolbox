@@ -38,8 +38,8 @@ func ToSnakeCase(in string) string {
 	return string(out)
 }
 
-// FirstLetterToUpper converts the first character to upper case.
-func FirstLetterToUpper(in string) string {
+// FirstToUpper converts the first character to upper case.
+func FirstToUpper(in string) string {
 	if in == "" {
 		return in
 	}
