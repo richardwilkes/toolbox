@@ -8,6 +8,26 @@ import (
 	"strings"
 )
 
+var (
+	_ ErrorWrapper = &Error{}
+	_ StackError   = &Error{}
+)
+
+// ErrorWrapper contains methods for interacting with the wrapped errors.
+type ErrorWrapper interface {
+	error
+	Count() int
+	WrappedErrors() []error
+}
+
+// StackError contains methods with the stack trace and message.
+type StackError interface {
+	error
+	Message() string
+	Detail(trimRuntime bool) string
+	StackTrace(trimRuntime bool) string
+}
+
 // Error holds the detailed error message.
 type Error struct {
 	errors []detail
