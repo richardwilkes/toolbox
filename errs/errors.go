@@ -9,20 +9,23 @@ import (
 )
 
 var (
-	_ ErrorInterface = &Error{}
+	_ ErrorWrapper = &Error{}
+	_ StackError   = &Error{}
 )
 
-// ErrorInterface is the interface Error implements, using this interface
-// allows Error to be wrapped.
-type ErrorInterface interface {
+// ErrorWrapper contains methods for interacting with the wrapped errors.
+type ErrorWrapper interface {
+	error
 	Count() int
+	WrappedErrors() []error
+}
+
+// StackError contains methods with the stack trace and message.
+type StackError interface {
+	error
 	Message() string
-	Error() string
 	Detail(trimRuntime bool) string
 	StackTrace(trimRuntime bool) string
-	ErrorOrNil() error
-	WrappedErrors() []error
-	Format(state fmt.State, verb rune)
 }
 
 // Error holds the detailed error message.
