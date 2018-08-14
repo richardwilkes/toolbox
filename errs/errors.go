@@ -8,6 +8,23 @@ import (
 	"strings"
 )
 
+var (
+	_ ErrorInterface = &Error{}
+)
+
+// ErrorInterface is the interface Error implements, using this interface
+// allows Error to be wrapped.
+type ErrorInterface interface {
+	Count() int
+	Message() string
+	Error() string
+	Detail(trimRuntime bool) string
+	StackTrace(trimRuntime bool) string
+	ErrorOrNil() error
+	WrappedErrors() []error
+	Format(state fmt.State, verb rune)
+}
+
 // Error holds the detailed error message.
 type Error struct {
 	errors []detail
