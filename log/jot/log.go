@@ -203,6 +203,13 @@ func Fatalf(status int, format string, v ...interface{}) {
 	atexit.Exit(status)
 }
 
+// FatalIfErr calls 'Fatal(1, err)' if 'err' is not nil.
+func FatalIfErr(err error) {
+	if err != nil {
+		Fatal(1, err)
+	}
+}
+
 // Flush waits for all current log entries to be written before returning.
 func Flush() {
 	rec := &record{response: make(chan bool)}
