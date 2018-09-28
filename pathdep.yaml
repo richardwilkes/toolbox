@@ -1,7 +1,7 @@
 version: "1.0"
 dependencies:
 - import: github.com/davecgh/go-spew
-  commit: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
+  commit: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
 - import: github.com/dustin/go-humanize
   commit: 9f541cc9db5d55bce703bd99987c9d5cb8eea45e
 - import: github.com/jackpal/gateway
