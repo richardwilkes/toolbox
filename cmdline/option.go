@@ -1,6 +1,9 @@
 package cmdline
 
 import (
+	"fmt"
+
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -48,7 +51,8 @@ func (op *Option) SetName(name string) *Option {
 	if len(name) > 1 {
 		op.name = name
 	} else {
-		panic("Name must be 2+ characters")
+		fmt.Println("Name must be 2+ characters")
+		atexit.Exit(1)
 	}
 	return op
 }

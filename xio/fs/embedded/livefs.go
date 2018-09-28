@@ -1,10 +1,13 @@
 package embedded
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/richardwilkes/toolbox/atexit"
 )
 
 type livefs struct {
@@ -34,7 +37,9 @@ func (f *livefs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	panic(path + " does not exist") // @allow
+	fmt.Println(path + " does not exist")
+	atexit.Exit(1)
+	return nil
 }
 
 func (f *livefs) ContentAsString(path string) (string, bool) {
@@ -48,5 +53,7 @@ func (f *livefs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	panic(path + " does not exist") // @allow
+	fmt.Println(path + " does not exist")
+	atexit.Exit(1)
+	return ""
 }

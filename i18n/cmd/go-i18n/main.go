@@ -10,6 +10,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -43,7 +44,8 @@ func main() {
 					fmt.Println(path)
 					var file *ast.File
 					if file, err = parser.ParseFile(fset, path, nil, 0); err != nil {
-						panic(err)
+						fmt.Fprintln(os.Stderr, err)
+						atexit.Exit(1)
 					}
 					const (
 						LookForPackageState = iota
@@ -95,7 +97,7 @@ func main() {
 	out, err := os.Create(outPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
-		os.Exit(1)
+		atexit.Exit(1)
 	}
 	fmt.Fprintf(out, "# Generated on %v\n", time.Now())
 	var keys []string
@@ -109,4 +111,5 @@ func main() {
 	if err := out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
+	atexit.Exit(0)
 }

@@ -86,6 +86,7 @@ func main() {
 	failIfErr(err)
 	failIfErr(tmpl.Execute(f, &cfg))
 	failIfErr(f.Close())
+	atexit.Exit(0)
 }
 
 func fail(msg string) {

@@ -3,6 +3,8 @@ package xmath
 import (
 	"fmt"
 	"math"
+
+	"github.com/richardwilkes/toolbox/atexit"
 )
 
 const (
@@ -415,11 +417,14 @@ func bitIndexForMask(mask uint64) int {
 			return i
 		}
 	}
-	panic(fmt.Sprintf("Unable to determine bit index for mask %064b", mask))
+	fmt.Printf("Unable to determine bit index for mask %064b\n", mask)
+	atexit.Exit(1)
+	return 0
 }
 
 func validateBitSetIndex(index int) {
 	if index < 0 {
-		panic(fmt.Sprintf("Index must be positive (was %d)", index))
+		fmt.Printf("Index must be positive (was %d)\n", index)
+		atexit.Exit(1)
 	}
 }

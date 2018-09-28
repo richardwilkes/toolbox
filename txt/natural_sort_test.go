@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"os"
 	"strconv"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 	if f := flag.Lookup("test.bench"); f != nil && f.Value.String() != "" {
 		initBenchSet()
 	}
-	os.Exit(m.Run())
+	atexit.Exit(m.Run())
 }
 
 func TestNaturalLess(t *testing.T) {

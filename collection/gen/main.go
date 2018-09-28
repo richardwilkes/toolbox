@@ -4,11 +4,13 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/log/jot"
 )
 
 //go:generate go run main.go
@@ -17,7 +19,7 @@ const codeGenNotice = "// Code generated - DO NOT EDIT.\n"
 
 func main() {
 	data, err := ioutil.ReadFile("set.go.tmpl")
-	failOnErr(err)
+	jot.FatalIfErr(err)
 	tmpl := template.Must(template.New("gen").Funcs(template.FuncMap{"lower": strings.ToLower}).Parse(string(data)))
 	for _, one := range []string{
 		"Byte",
@@ -39,18 +41,12 @@ func main() {
 		"Uint64",
 	} {
 		f, err := os.Create("../" + strings.ToLower(one) + "set_gen.go")
-		failOnErr(err)
+		jot.FatalIfErr(err)
 		w := bufio.NewWriter(f)
 		w.WriteString(codeGenNotice)
-		failOnErr(tmpl.Execute(w, one))
-		failOnErr(w.Flush())
-		failOnErr(f.Close())
+		jot.FatalIfErr(tmpl.Execute(w, one))
+		jot.FatalIfErr(w.Flush())
+		jot.FatalIfErr(f.Close())
 	}
-}
-
-func failOnErr(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(0)
-	}
+	atexit.Exit(0)
 }

@@ -2,10 +2,13 @@ package embedded
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/richardwilkes/toolbox/atexit"
 )
 
 type efs struct {
@@ -52,7 +55,9 @@ func (f *efs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	panic(path + " does not exist") // @allow
+	fmt.Println(path + " does not exist")
+	atexit.Exit(1)
+	return nil
 }
 
 func (f *efs) ContentAsString(path string) (string, bool) {
@@ -66,5 +71,7 @@ func (f *efs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	panic(path + " does not exist") // @allow
+	fmt.Println(path + " does not exist")
+	atexit.Exit(1)
+	return ""
 }
