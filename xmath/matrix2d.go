@@ -87,7 +87,7 @@ func (m *Matrix2D) Multiply(other *Matrix2D) {
 // TransformDistance returns the result of transforming the distance vector
 // (size.Width and size.Height) by this matrix. This is similar to
 // TransformPoint(), except that the translation components of the
-// ransformation are ignored.
+// transformation are ignored.
 func (m *Matrix2D) TransformDistance(size geom.Size) geom.Size {
 	x := m.XX*size.Width + m.XY*size.Height
 	size.Height = m.YX*size.Width + m.YY*size.Height
