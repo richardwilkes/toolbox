@@ -1,4 +1,4 @@
-package netutil
+package desktop
 
 import (
 	"os/exec"
