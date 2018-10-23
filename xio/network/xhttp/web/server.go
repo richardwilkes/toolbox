@@ -54,6 +54,11 @@ func (s *Server) Port() int {
 	return s.port
 }
 
+// LocalBaseURL returns the local base URL that will reach the server.
+func (s *Server) LocalBaseURL() string {
+	return fmt.Sprintf("%s://127.0.0.1:%d", s.Protocol(), s.port)
+}
+
 func (s *Server) String() string {
 	var buffer strings.Builder
 	buffer.WriteString(s.Protocol())
@@ -69,6 +74,13 @@ func (s *Server) String() string {
 
 // Run the server. Does not return until the server is shutdown.
 func (s *Server) Run() error {
+	return s.RunWithNotifyAtStart(nil)
+}
+
+// RunWithNotifyAtStart runs the server and sends a notification on startChan
+// when the server is ready for connections. Does not return until the server
+// is shutdown.
+func (s *Server) RunWithNotifyAtStart(startedChan chan bool) error {
 	atexit.Register(s.Shutdown)
 	if s.Logger == nil {
 		s.Logger = &logadapter.Discarder{}
@@ -120,6 +132,9 @@ func (s *Server) Run() error {
 	}
 	s.addresses = network.AddressesForHost(host)
 	s.Logger.Infof("Listening for %v", s)
+	go func() {
+		startedChan <- true
+	}()
 	if s.Protocol() == ProtocolHTTPS {
 		err = s.WebServer.ServeTLS(listener, s.CertFile, s.KeyFile)
 	} else {
