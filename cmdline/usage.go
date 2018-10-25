@@ -32,6 +32,9 @@ var (
 	// GitVersion holds the git revision and clean/dirty status and should be
 	// set by the build system.
 	GitVersion string
+	// BuildNumber holds the build number and should be set by the build
+	// system.
+	BuildNumber string
 )
 
 func init() {
@@ -64,6 +67,9 @@ func (cl *CmdLine) DisplayUsage() {
 	term.WrapText(cl, "  ", Copyright())
 	if License != "" {
 		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("License: %s"), License))
+	}
+	if BuildNumber != "" {
+		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("Build %s"), BuildNumber))
 	}
 	if !version.IsDevelopment() && !version.IsWhenUnset() {
 		when := version.When().Local()
