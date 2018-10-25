@@ -106,6 +106,12 @@ type collector struct {
 }
 
 func (c *collector) walk(path string, info os.FileInfo, err error) error {
+	if info == nil {
+		if err == nil {
+			err = fmt.Errorf("Unable to walk to %q", path)
+		}
+		return err
+	}
 	if c.ignoreRegex != nil && c.ignoreRegex.MatchString(path) {
 		if info.IsDir() {
 			return filepath.SkipDir
