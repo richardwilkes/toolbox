@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -125,7 +126,7 @@ func (c *collector) walk(path string, info os.FileInfo, err error) error {
 		}
 		return nil
 	}
-	c.paths.Add(path)
+	c.paths.Add(filepath.ToSlash(path))
 	return nil
 }
 
@@ -141,7 +142,7 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 		paths.Add(one)
 		all = append(all, &data{
 			FSPath: fsPath,
-			Path:   filepath.Clean("/" + one),
+			Path:   path.Clean("/" + one),
 		})
 	}
 	sort.Slice(all, func(i, j int) bool { return txt.NaturalLess(all[i].Path, all[j].Path, false) })
