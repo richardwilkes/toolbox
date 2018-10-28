@@ -28,7 +28,7 @@ func AppLogDir() string {
 	return path
 }
 
-// AppLogDir returns the application data directory.
+// AppDataDir returns the application data directory.
 func AppDataDir() string {
 	var path string
 	if u, err := user.Current(); err == nil {
