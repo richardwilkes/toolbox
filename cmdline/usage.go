@@ -35,6 +35,13 @@ var (
 	// BuildNumber holds the build number and should be set by the build
 	// system.
 	BuildNumber string
+	// AppIdentifier holds the uniform type identifier (UTI) for the
+	// application. This should contain only alphanumeric (A-Z,a-z,0-9),
+	// hyphen (-), and period (.) characters. The string should also be in
+	// reverse-DNS format. For example, if your company’s domain is Ajax.com
+	// and you create an application named Hello, you could assign the string
+	// com.Ajax.Hello as your AppIdentifier.
+	AppIdentifier string
 )
 
 func init() {
