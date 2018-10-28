@@ -1,6 +1,10 @@
 package rotation
 
 import (
+	"os/user"
+	"path/filepath"
+	"runtime"
+
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
 )
@@ -11,9 +15,25 @@ const (
 	DefaultMaxBackups = 1
 )
 
-// DefaultPath returns the default path that will be used.
+// DefaultPath returns the default path that will be used. This will use
+// cmdline.AppIdentifier (if set) to better isolate the log location.
 func DefaultPath() string {
-	return cmdline.AppCmdName + ".log"
+	var path string
+	if u, err := user.Current(); err == nil {
+		path = u.HomeDir
+		switch runtime.GOOS {
+		case "darwin":
+			path = filepath.Join(path, "Library", "Logs")
+		case "windows":
+			path = filepath.Join(path, "AppData")
+		default:
+			path = filepath.Join(path, ".logs")
+		}
+		if cmdline.AppIdentifier != "" {
+			path = filepath.Join(path, cmdline.AppIdentifier)
+		}
+	}
+	return filepath.Join(path, cmdline.AppCmdName+".log")
 }
 
 // Path specifies the file to write logs to. Backup log files will be retained
