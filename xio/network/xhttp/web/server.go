@@ -32,6 +32,7 @@ type Server struct {
 	Logger              logadapter.Logger
 	WebServer           *http.Server
 	ShutdownCallback    func()
+	StartedChan         chan interface{} // If not nil, will be closed once the server is ready to accept connections
 	addresses           []string
 	port                int
 }
@@ -74,13 +75,6 @@ func (s *Server) String() string {
 
 // Run the server. Does not return until the server is shutdown.
 func (s *Server) Run() error {
-	return s.RunWithNotifyAtStart(nil)
-}
-
-// RunWithNotifyAtStart runs the server and sends a notification on startChan
-// when the server is ready for connections. Does not return until the server
-// is shutdown.
-func (s *Server) RunWithNotifyAtStart(startedChan chan bool) error {
 	atexit.Register(s.Shutdown)
 	if s.Logger == nil {
 		s.Logger = &logadapter.Discarder{}
@@ -133,7 +127,9 @@ func (s *Server) RunWithNotifyAtStart(startedChan chan bool) error {
 	s.addresses = network.AddressesForHost(host)
 	s.Logger.Infof("Listening for %v", s)
 	go func() {
-		startedChan <- true
+		if s.StartedChan != nil {
+			close(s.StartedChan)
+		}
 	}()
 	if s.Protocol() == ProtocolHTTPS {
 		err = s.WebServer.ServeTLS(listener, s.CertFile, s.KeyFile)
