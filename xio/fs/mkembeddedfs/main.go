@@ -119,14 +119,16 @@ func (c *collector) walk(path string, info os.FileInfo, err error) error {
 		}
 		return nil
 	}
-	if info.IsDir() {
-		name := info.Name()
-		if name == ".git" || name == ".svn" || name == ".DS_Store" {
+	name := info.Name()
+	if name == ".git" || name == ".svn" || name == ".DS_Store" {
+		if info.IsDir() {
 			return filepath.SkipDir
 		}
 		return nil
 	}
-	c.paths.Add(filepath.ToSlash(path))
+	if !info.IsDir() {
+		c.paths.Add(filepath.ToSlash(path))
+	}
 	return nil
 }
 
