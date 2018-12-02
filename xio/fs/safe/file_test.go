@@ -28,6 +28,7 @@ func TestAbortNonExisting(t *testing.T) {
 }
 
 func removeAll(t *testing.T, path string) {
+	t.Helper()
 	require.NoError(t, os.RemoveAll(path))
 }
 

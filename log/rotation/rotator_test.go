@@ -2,7 +2,9 @@ package rotation_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/log/rotation"
@@ -16,12 +18,15 @@ const (
 )
 
 func TestRotator(t *testing.T) {
-	logFiles := []string{"test.log"}
+	tmpdir, err := ioutil.TempDir("", "rotator_test_")
+	require.NoError(t, err)
+	defer cleanup(t, tmpdir)
+
+	logFiles := []string{filepath.Join(tmpdir, "test.log")}
 	for i := 1; i <= maxBackups; i++ {
 		logFiles = append(logFiles, fmt.Sprintf("%s-%d", logFiles[0], i))
 	}
 
-	cleanup(t, logFiles)
 	r, err := rotation.New(rotation.Path(logFiles[0]), rotation.MaxSize(maxSize), rotation.MaxBackups(maxBackups))
 	require.NoError(t, err)
 	_, err = os.Stat(logFiles[0])
@@ -45,15 +50,9 @@ func TestRotator(t *testing.T) {
 	_, err = fmt.Fprintln(r, "hello")
 	assert.NoError(t, err)
 	require.NoError(t, r.Close())
-
-	cleanup(t, logFiles)
 }
 
-func cleanup(t *testing.T, logFiles []string) {
+func cleanup(t *testing.T, path string) {
 	t.Helper()
-	for _, f := range logFiles {
-		if err := os.Remove(f); err != nil && !os.IsNotExist(err) {
-			t.Fatal("Unable to remove " + f)
-		}
-	}
+	require.NoError(t, os.RemoveAll(path))
 }
