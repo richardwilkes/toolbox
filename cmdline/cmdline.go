@@ -42,7 +42,7 @@ func New(includeDefaultOptions bool) *CmdLine {
 	cl := &CmdLine{cmds: make(map[string]Cmd), out: term.NewANSI(os.Stderr)}
 	help := cl.NewBoolOption(&cl.showHelp).SetSingle('h').SetName("help")
 	if includeDefaultOptions {
-		help.SetUsage(i18n.Text("Display this help information and exit"))
+		help.SetUsage(i18n.Text("Display this help information and exit."))
 		cl.NewBoolOption(&cl.showVersion).SetSingle('v').SetName("version").SetUsage(i18n.Text("Display short version information and exit"))
 		cl.NewBoolOption(&cl.showLongVersion).SetSingle('V').SetName("Version").SetUsage(i18n.Text("Display the full version information and exit"))
 	}

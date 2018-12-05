@@ -17,7 +17,7 @@ func (c *helpCmd) Name() string {
 
 // Usage implements the Cmd interface.
 func (c *helpCmd) Usage() string {
-	return i18n.Text("Display help information for a command and exit")
+	return i18n.Text("Display help information for a command and exit.")
 }
 
 // Run implements the Cmd interface.
