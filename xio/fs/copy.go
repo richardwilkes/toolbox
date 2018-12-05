@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/richardwilkes/toolbox/xio"
 )
 
 // Copy src to dst. src may be a directory, file, or symlink.
@@ -26,23 +28,27 @@ func copy(src, dst string, info os.FileInfo) error {
 	return fileCopy(src, dst, info)
 }
 
-func fileCopy(src, dst string, info os.FileInfo) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+func fileCopy(src, dst string, info os.FileInfo) (err error) {
+	if err = os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return err
 	}
-	f, err := os.Create(dst)
-	if err != nil {
+	var f *os.File
+	if f, err = os.Create(dst); err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if lerr := f.Close(); lerr != nil && err == nil {
+			err = lerr
+		}
+	}()
 	if err = os.Chmod(f.Name(), info.Mode()); err != nil {
 		return err
 	}
-	s, err := os.Open(src)
-	if err != nil {
+	var s *os.File
+	if s, err = os.Open(src); err != nil {
 		return err
 	}
-	defer s.Close()
+	defer xio.CloseIgnoringErrors(s)
 	_, err = io.Copy(f, s)
 	return err
 }
