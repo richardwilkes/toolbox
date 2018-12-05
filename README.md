@@ -14,6 +14,9 @@ function properly, use `atexit.Exit(result)` rather than `os.Exit(result)`.
 Command line handling. Provides the tool `genversion` for generating version
 numbers with an embedded date.
 
+## collection
+Provides type-safe sets for the various primitive types.
+
 ## desktop
 Desktop integration utilities.
 
@@ -56,37 +59,9 @@ func main() {
 }
 ```
 
-You can easily add rolling log files by using Nate Finch's lumberjack package:
-
-```Go
-package main
-
-import (
-    "github.com/richardwilkes/toolbox/log/jot"
-    "gopkg.in/natefinch/lumberjack.v2"
-)
-
-func main() {
-    defer jot.Flush()
-    jot.SetWriter(&lumberjack.Logger{
-        Filename:   "test.log",
-        MaxSize:    1, // megabytes
-        MaxBackups: 4,
-        MaxAge:     7, // days
-        LocalTime:  true,
-    })
-    jot.Debug("Debug level")
-    jot.Debugf("Debug level with %s", "args")
-    jot.Info("Info level")
-    jot.Infof("Info level with %s", "args")
-    jot.Warn("Warning level")
-    jot.Warnf("Warning level with %s", "args")
-    jot.Error("Error level")
-    jot.Errorf("Error level with %s", "args")
-    jot.Fatal(1, "Fatal level")
-    jot.Fatalf(1, "Fatal level with %s", "args")    // Will never be reached due to previous line
-}
-```
+## log/jotrotate
+Provides a pre-canned way to add jot logging with file rotation, along with
+command-line options for controlling it.
 
 ## log/logadapter
 This package defines an API to use for logging, which actual logging
@@ -94,6 +69,9 @@ implementations can implement directly or provide an adapter to use.
 
 It also provides an implementation that just discards data given to it as
 well as an implementation that wraps another logger and prefixes all output.
+
+## log/rotation
+Provides file rotation when files hit a given size.
 
 ## rate
 Rate limiting which supports a hierarchy of limiters, each capped by their
@@ -114,8 +92,26 @@ io utilities.
 ## xio/fs
 Filesystem utilities.
 
+## xio/fs/embedded
+Provides an implementation of an embedded filesystem.
+
+## xio/fs/embedded/htmltmpl
+Provides convenience utilities for using html templates in an embedded filesystem.
+
+## xio/fs/embedded/texttmpl
+Provides convenience utilities for using text templates in an embedded filesystem.
+
+## xio/fs/mkembeddedfs
+Tool for generating the embedded filesystem.
+
+## xio/fs/paths
+Platform-specific standard paths.
+
 ## xio/fs/safe
 Safe, atomic saving of files.
+
+## xio/fs/zip
+Simple zip extraction.
 
 ## xio/network
 Network-related utilities.
@@ -146,3 +142,6 @@ encoding/decoding:
 
 ## xmath/geom
 Geometry primitives.
+
+## xmath/rand
+Randomizer based upon the crypto/rand package.
