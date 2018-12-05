@@ -20,9 +20,13 @@ func (f *efs) IsLive() bool {
 	return false
 }
 
+func (f *efs) actualPath(path string) string {
+	fmt.Println(filepath.ToSlash(filepath.Clean("/" + path)))
+	return filepath.ToSlash(filepath.Clean("/" + path))
+}
+
 func (f *efs) Open(path string) (http.File, error) {
-	path = filepath.Clean("/" + path)
-	one, ok := f.files[path]
+	one, ok := f.files[f.actualPath(path)]
 	if !ok {
 		return nil, os.ErrNotExist
 	}
@@ -42,7 +46,7 @@ func (f *efs) Open(path string) (http.File, error) {
 }
 
 func (f *efs) ContentAsBytes(path string) ([]byte, bool) {
-	if one, ok := f.files[filepath.Clean("/"+path)]; ok {
+	if one, ok := f.files[f.actualPath(path)]; ok {
 		if err := one.uncompressData(); err != nil {
 			return nil, false
 		}

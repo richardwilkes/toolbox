@@ -42,17 +42,17 @@ func NewEFS(files map[string]*File) *EFS {
 	for k, v := range files {
 		dir, _ := filepath.Split(k)
 		dir = filepath.Clean(dir)
-		di, ok := dirs[dir]
+		di, ok := dirs[filepath.ToSlash(dir)]
 		if !ok {
 			di = &dinfo{
 				f: &File{
-					name:    filepath.Base(dir),
+					name:    filepath.ToSlash(filepath.Base(dir)),
 					modTime: now,
 					isDir:   true,
 				},
 				m: collection.NewStringSet(),
 			}
-			dirs[dir] = di
+			dirs[filepath.ToSlash(dir)] = di
 		}
 		di.f.files = append(di.f.files, v)
 		// Ensure parents are present
@@ -62,17 +62,17 @@ func NewEFS(files map[string]*File) *EFS {
 				break
 			}
 			dir = filepath.Clean(dir)
-			p, ok := dirs[dir]
+			p, ok := dirs[filepath.ToSlash(dir)]
 			if !ok {
 				p = &dinfo{
 					f: &File{
-						name:    filepath.Base(dir),
+						name:    filepath.ToSlash(filepath.Base(dir)),
 						modTime: now,
 						isDir:   true,
 					},
 					m: collection.NewStringSet(),
 				}
-				dirs[dir] = p
+				dirs[filepath.ToSlash(dir)] = p
 			}
 			if p.m.Contains(path) {
 				break
