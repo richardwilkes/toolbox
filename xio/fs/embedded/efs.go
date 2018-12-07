@@ -2,13 +2,12 @@ package embedded
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/log/jot"
 )
 
 type efs struct {
@@ -21,7 +20,6 @@ func (f *efs) IsLive() bool {
 }
 
 func (f *efs) actualPath(path string) string {
-	fmt.Println(filepath.ToSlash(filepath.Clean("/" + path)))
 	return filepath.ToSlash(filepath.Clean("/" + path))
 }
 
@@ -59,8 +57,7 @@ func (f *efs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	fmt.Println(path + " does not exist")
-	atexit.Exit(1)
+	jot.Fatal(1, path+" does not exist")
 	return nil
 }
 
@@ -75,7 +72,6 @@ func (f *efs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	fmt.Println(path + " does not exist")
-	atexit.Exit(1)
+	jot.Fatal(1, path+" does not exist")
 	return ""
 }
