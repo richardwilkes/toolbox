@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/richardwilkes/toolbox/xio"
 )
@@ -37,12 +38,14 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = f.Chmod(mode); err != nil {
-		xio.CloseIgnoringErrors(f)
-		if rerr := os.Remove(f.Name()); rerr != nil && err == nil {
-			err = rerr // Won't happen, but here to quiet the linter
+	if runtime.GOOS != "windows" { // Windows doesn't support changing the mode
+		if err = f.Chmod(mode); err != nil {
+			xio.CloseIgnoringErrors(f)
+			if rerr := os.Remove(f.Name()); rerr != nil && err == nil {
+				err = rerr // Won't happen, but here to quiet the linter
+			}
+			return nil, err
 		}
-		return nil, err
 	}
 	return &File{
 		File:         f,
