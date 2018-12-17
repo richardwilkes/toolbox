@@ -3,10 +3,10 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
+	"go/format"
 	"html/template"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/atexit"
@@ -40,13 +40,12 @@ func main() {
 		"Uint32",
 		"Uint64",
 	} {
-		f, err := os.Create("../" + strings.ToLower(one) + "set_gen.go")
+		var buffer bytes.Buffer
+		buffer.WriteString(codeGenNotice)
+		jot.FatalIfErr(tmpl.Execute(&buffer, one))
+		d, err := format.Source(buffer.Bytes())
 		jot.FatalIfErr(err)
-		w := bufio.NewWriter(f)
-		w.WriteString(codeGenNotice)
-		jot.FatalIfErr(tmpl.Execute(w, one))
-		jot.FatalIfErr(w.Flush())
-		jot.FatalIfErr(f.Close())
+		jot.FatalIfErr(ioutil.WriteFile("../"+strings.ToLower(one)+"set_gen.go", d, 0644))
 	}
 	atexit.Exit(0)
 }

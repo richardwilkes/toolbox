@@ -5,7 +5,9 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"go/format"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -83,10 +85,11 @@ func main() {
 
 	tmpl := template.Must(template.New("").Parse(pkgTemplate))
 
-	f, err := os.Create(output)
+	var buffer bytes.Buffer
+	failIfErr(tmpl.Execute(&buffer, &cfg))
+	d, err := format.Source(buffer.Bytes())
 	failIfErr(err)
-	failIfErr(tmpl.Execute(f, &cfg))
-	failIfErr(f.Close())
+	failIfErr(ioutil.WriteFile(output, d, 0644))
 	atexit.Exit(0)
 }
 
