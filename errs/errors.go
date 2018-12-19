@@ -36,6 +36,9 @@ type Error struct {
 // Wrap an error and turn it into a detailed error. If error is already a
 // detailed error or nil, it will be returned as-is.
 func Wrap(cause error) error {
+	if cause == nil {
+		return nil
+	}
 	return WrapTyped(cause)
 }
 
