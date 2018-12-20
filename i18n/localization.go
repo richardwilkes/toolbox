@@ -27,11 +27,10 @@ var (
 	// extension) will be used.
 	Dir string
 	// Language is the language that should be used for text returned from
-	// calls to Text(). It is initialized to the value of the LC_ALL
-	// environment variable, if set. If not, then it falls back to the value
-	// of the LANG environment variable. You may set this at runtime, forcing
-	// a particular language for all subsequent calls to Text().
-	Language = initLanguage()
+	// calls to Text(). It is initialized to the result of calling Locale().
+	// You may set this at runtime, forcing a particular language for all
+	// subsequent calls to Text().
+	Language = Locale()
 	// Languages is a slice of languages to fall back to should the one
 	// specified in the Language variable not be available. If is initialized
 	// to the value of the LANGUAGE environment variable.
@@ -43,14 +42,6 @@ var (
 	hierLock sync.Mutex
 	hierMap  = make(map[string][]string)
 )
-
-func initLanguage() string {
-	var locale string
-	if locale = os.Getenv("LC_ALL"); locale == "" {
-		locale = os.Getenv("LANG")
-	}
-	return locale
-}
 
 // Text returns a localized version of the text if one exists, or the original
 // text if not.
