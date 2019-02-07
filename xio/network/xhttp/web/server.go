@@ -31,6 +31,7 @@ type Server struct {
 	ShutdownGracePeriod time.Duration
 	Logger              logadapter.Logger
 	WebServer           *http.Server
+	Ports               []int
 	ShutdownCallback    func()
 	StartedChan         chan interface{} // If not nil, will be closed once the server is ready to accept connections
 	addresses           []string
@@ -107,12 +108,21 @@ func (s *Server) Run() error {
 		}()
 		handler.ServeHTTP(sw, req)
 	})
-	address := s.WebServer.Addr
-	host, _, err := net.SplitHostPort(address)
-	if err != nil {
-		address = address + ":0"
+	var ln net.Listener
+	host, _, err := net.SplitHostPort(s.WebServer.Addr)
+	if err == nil {
+		ln, err = net.Listen("tcp", s.WebServer.Addr)
+	} else {
+		ports := s.Ports
+		if len(ports) == 0 {
+			ports = []int{0}
+		}
+		for _, one := range ports {
+			if ln, err = net.Listen("tcp", net.JoinHostPort(s.WebServer.Addr, strconv.Itoa(one))); err == nil {
+				break
+			}
+		}
 	}
-	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		return errs.Wrap(err)
 	}
