@@ -25,6 +25,28 @@ func ToCamelCase(in string) string {
 	return string(out)
 }
 
+// ToCamelCaseWithExceptions converts a string to CamelCase, but forces
+// certain words to all caps.
+func ToCamelCaseWithExceptions(in string, exceptions *AllCaps) string {
+	out := ToCamelCase(in)
+	pos := 0
+	runes := []rune(out)
+	rr := RuneReader{}
+	for {
+		rr.Src = runes[pos:]
+		rr.Pos = 0
+		matches := exceptions.regex.FindReaderIndex(&rr)
+		if len(matches) == 0 {
+			break
+		}
+		for i := matches[0] + 1; i < matches[1]; i++ {
+			runes[pos+i] = unicode.ToUpper(runes[pos+i])
+		}
+		pos += matches[0] + 1
+	}
+	return string(runes)
+}
+
 // ToSnakeCase converts a string to snake_case.
 func ToSnakeCase(in string) string {
 	runes := []rune(in)
