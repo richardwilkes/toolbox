@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"math"
 	"sort"
 	"strconv"
@@ -29,10 +30,24 @@ func Load(path string) ([]Sheet, error) {
 		return nil, errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(r)
+	return load(&r.Reader)
+}
+
+// Read sheets from an .xlsx stream.
+func Read(in io.ReaderAt, size int64) ([]Sheet, error) {
+	r, err := zip.NewReader(in, size)
+	if err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return load(r)
+}
+
+func load(r *zip.Reader) ([]Sheet, error) {
 	var sheets []Sheet //nolint:prealloc
 	var sheetNames []string
 	var strs []string
 	var files []*zip.File
+	var err error
 	for _, f := range r.File {
 		switch {
 		case f.Name == "docProps/app.xml":
