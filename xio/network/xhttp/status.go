@@ -9,5 +9,5 @@ import (
 // it with the standard text for that code as the body.
 func WriteHTTPStatus(w http.ResponseWriter, statusCode int) {
 	w.WriteHeader(statusCode)
-	fmt.Fprintf(w, http.StatusText(statusCode))
+	fmt.Fprint(w, http.StatusText(statusCode))
 }

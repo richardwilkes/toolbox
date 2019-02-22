@@ -38,15 +38,16 @@ func Extract(zr *zip.Reader, dst string) error {
 		}
 		fi := f.FileInfo()
 		mode := fi.Mode()
-		if mode&os.ModeSymlink != 0 {
+		switch {
+		case mode&os.ModeSymlink != 0:
 			if err := extractSymLink(f, path); err != nil {
 				return err
 			}
-		} else if fi.IsDir() {
+		case fi.IsDir():
 			if err := os.MkdirAll(path, mode.Perm()); err != nil {
 				return errs.Wrap(err)
 			}
-		} else {
+		default:
 			if err := extractFile(f, path); err != nil {
 				return err
 			}

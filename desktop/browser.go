@@ -4,6 +4,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
@@ -11,11 +12,11 @@ import (
 func OpenBrowser(url string) error {
 	var cmd string
 	switch runtime.GOOS {
-	case "darwin":
+	case toolbox.MacOS:
 		cmd = "open"
-	case "linux":
+	case toolbox.LinuxOS:
 		cmd = "xdg-open"
-	case "windows":
+	case toolbox.WindowsOS:
 		cmd = "explorer"
 	default:
 		return errs.New("Unsupported platform")

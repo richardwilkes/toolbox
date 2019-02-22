@@ -76,7 +76,7 @@ func (j *Data) path(path ...string) *Data {
 	}
 	obj := j.obj
 	for i := 0; i < len(path); i++ {
-		if m, ok := obj.(map[string]interface{}); ok {
+		if m, ok := obj.(map[string]interface{}); ok { //nolint:gocritic
 			obj = m[path[i]]
 		} else if a, ok := obj.([]interface{}); ok {
 			t := make([]interface{}, 0)
@@ -188,7 +188,7 @@ func (j *Data) BoolRelaxed(path string) bool {
 	if b, ok := j.Path(path).obj.(bool); ok {
 		return b
 	}
-	return strings.ToLower(j.Str(path)) == "true"
+	return strings.EqualFold(j.Str(path), "true")
 }
 
 // Float64 extracts an float64 from the path. Returns 0 if the path isn't

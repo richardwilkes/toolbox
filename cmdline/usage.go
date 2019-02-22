@@ -133,62 +133,64 @@ func (cl *CmdLine) displayOptions() {
 	hasShort := false
 	largest := 0
 	for _, option := range cl.options {
-		if option.usage != "" {
-			if option.single != 0 {
-				hasShort = true
-			}
-			length := len([]rune(option.name))
+		if option.usage == "" {
+			continue
+		}
+		if option.single != 0 {
+			hasShort = true
+		}
+		length := len([]rune(option.name))
+		if length > 0 {
+			length += 2
+		}
+		if !option.isBool() {
 			if length > 0 {
-				length += 2
+				length++
 			}
-			if !option.isBool() {
-				if length > 0 {
-					length++
-				}
-				length += 2 + len([]rune(option.arg))
-			}
-			if length > largest {
-				largest = length
-			}
+			length += 2 + len([]rune(option.arg))
+		}
+		if length > largest {
+			largest = length
 		}
 	}
 	largest += 2
 	for _, option := range cl.options {
-		if option.usage != "" {
-			var sn string
-			if hasShort {
-				if option.single != 0 {
-					sn = "-" + string(option.single)
-					if option.name != "" {
-						sn += ", "
-					} else {
-						sn += "  "
-					}
-				} else {
-					sn = "    "
-				}
-			}
-			var ln string
-			if option.name != "" {
-				ln = "--" + option.name
-			}
-			if !option.isBool() {
-				if ln != "" {
-					ln += " "
-				}
-				ln += "<" + option.arg + ">"
-			}
-			prefix := "  " + sn + ln + strings.Repeat(" ", largest-len([]rune(ln)))
-			usage := option.usage
-			if !strings.HasSuffix(usage, ".") {
-				usage += "."
-			}
-			if !option.isBool() && option.def != "" {
-				usage += i18n.Text(" Default: ")
-				usage += option.def
-			}
-			term.WrapText(cl, prefix, usage)
+		if option.usage == "" {
+			continue
 		}
+		var sn string
+		if hasShort {
+			if option.single != 0 {
+				sn = "-" + string(option.single)
+				if option.name != "" {
+					sn += ", "
+				} else {
+					sn += "  "
+				}
+			} else {
+				sn = "    "
+			}
+		}
+		var ln string
+		if option.name != "" {
+			ln = "--" + option.name
+		}
+		if !option.isBool() {
+			if ln != "" {
+				ln += " "
+			}
+			ln += "<" + option.arg + ">"
+		}
+		prefix := "  " + sn + ln + strings.Repeat(" ", largest-len([]rune(ln)))
+		usage := option.usage
+		if !strings.HasSuffix(usage, ".") {
+			usage += "."
+		}
+		if !option.isBool() && option.def != "" {
+			usage += i18n.Text(" Default: ")
+			usage += option.def
+		}
+		term.WrapText(cl, prefix, usage)
 	}
 }
 

@@ -24,7 +24,7 @@ func (c *helpCmd) Usage() string {
 func (c *helpCmd) Run(cmdLine *CmdLine, args []string) error {
 	cmdLine = cmdLine.parent
 	if len(args) > 0 {
-		if "help" != args[0] {
+		if args[0] != "help" {
 			const helpFlag = "-h"
 			if helpFlag != args[0] {
 				for name, cmd := range cmdLine.cmds {

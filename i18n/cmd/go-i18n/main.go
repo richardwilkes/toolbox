@@ -100,7 +100,7 @@ func main() {
 		atexit.Exit(1)
 	}
 	fmt.Fprintf(out, "# Generated on %v\n", time.Now())
-	var keys []string
+	keys := make([]string, 0, len(kv))
 	for key := range kv {
 		keys = append(keys, key)
 	}

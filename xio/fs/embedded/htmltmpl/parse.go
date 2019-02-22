@@ -44,10 +44,8 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, path string, filter f
 				}
 			}
 		}
-	} else {
-		if tmpl, err = load(tmpl, fs, path); err != nil {
-			return nil, err
-		}
+	} else if tmpl, err = load(tmpl, fs, path); err != nil {
+		return nil, err
 	}
 	return tmpl, nil
 }

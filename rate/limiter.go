@@ -215,7 +215,7 @@ func (l *limiter) Close() {
 			l.controller.done <- true
 		} else {
 			for i, child := range l.parent.children {
-				if child == l {
+				if child == l { //nolint:gocritic
 					j := len(l.parent.children) - 1
 					l.parent.children[i] = l.parent.children[j]
 					l.parent.children[j] = nil

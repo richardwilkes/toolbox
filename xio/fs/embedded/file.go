@@ -11,7 +11,7 @@ import (
 )
 
 // File holds the data for an embedded file.
-type File struct {
+type File struct { //nolint:maligned
 	*bytes.Reader
 	name       string
 	size       int64

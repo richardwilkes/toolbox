@@ -188,7 +188,7 @@ func (repo *Repo) TagsFromCommit(rev string) ([]string, error) {
 }
 
 func (repo *Repo) referenceList(content string, re *regexp.Regexp) []string {
-	var out []string
+	var out []string //nolint:prealloc
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
 		out = append(out, m[1])
 	}

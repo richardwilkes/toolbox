@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -24,21 +25,21 @@ type File struct {
 // Create creates a temporary file in the same directory as filename,
 // which will be renamed to the given filename when calling Commit.
 func Create(filename string) (*File, error) {
-	return CreateWithMode(filename, 0644)
+	return CreateWithMode(filename, 0644) //nolint:gocritic
 }
 
 // CreateWithMode creates a temporary file in the same directory as filename,
 // which will be renamed to the given filename when calling Commit.
 func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	filename = filepath.Clean(filename)
-	if len(filename) == 0 || filename[len(filename)-1] == filepath.Separator {
+	if filename == "" || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
 	}
 	f, err := ioutil.TempFile(filepath.Dir(filename), "safe")
 	if err != nil {
 		return nil, err
 	}
-	if runtime.GOOS != "windows" { // Windows doesn't support changing the mode
+	if runtime.GOOS != toolbox.WindowsOS { // Windows doesn't support changing the mode
 		if err = f.Chmod(mode); err != nil {
 			xio.CloseIgnoringErrors(f)
 			if rerr := os.Remove(f.Name()); rerr != nil && err == nil {

@@ -29,7 +29,7 @@ func Load(path string) ([]Sheet, error) {
 		return nil, errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(r)
-	var sheets []Sheet
+	var sheets []Sheet //nolint:prealloc
 	var sheetNames []string
 	var strs []string
 	var files []*zip.File
@@ -120,39 +120,40 @@ func loadSheet(f *zip.File, strs []string) (*Sheet, error) {
 		Cells: make(map[Ref]Cell),
 	}
 	for _, one := range data.Cells {
-		if one.Value != nil {
-			ref := ParseRef(one.Label)
-			cell := Cell{Value: *one.Value}
-			switch one.Type {
-			case "s": // String
-				v, err := strconv.Atoi(cell.Value)
-				if err != nil {
-					return nil, errs.Wrap(err)
-				}
-				if v < 0 || v >= len(strs) {
-					return nil, errs.New("String index out of bounds")
-				}
-				cell.Type = String
-				cell.Value = strs[v]
-			case "b": // Boolean
-				cell.Type = Boolean
-			default: // Number
-				cell.Type = Number
-			}
-			if sheet.Min.Row > ref.Row {
-				sheet.Min.Row = ref.Row
-			}
-			if sheet.Min.Col > ref.Col {
-				sheet.Min.Col = ref.Col
-			}
-			if sheet.Max.Row < ref.Row {
-				sheet.Max.Row = ref.Row
-			}
-			if sheet.Max.Col < ref.Col {
-				sheet.Max.Col = ref.Col
-			}
-			sheet.Cells[ref] = cell
+		if one.Value == nil {
+			continue
 		}
+		ref := ParseRef(one.Label)
+		cell := Cell{Value: *one.Value}
+		switch one.Type {
+		case "s": // String
+			v, err := strconv.Atoi(cell.Value)
+			if err != nil {
+				return nil, errs.Wrap(err)
+			}
+			if v < 0 || v >= len(strs) {
+				return nil, errs.New("String index out of bounds")
+			}
+			cell.Type = String
+			cell.Value = strs[v]
+		case "b": // Boolean
+			cell.Type = Boolean
+		default: // Number
+			cell.Type = Number
+		}
+		if sheet.Min.Row > ref.Row {
+			sheet.Min.Row = ref.Row
+		}
+		if sheet.Min.Col > ref.Col {
+			sheet.Min.Col = ref.Col
+		}
+		if sheet.Max.Row < ref.Row {
+			sheet.Max.Row = ref.Row
+		}
+		if sheet.Max.Col < ref.Col {
+			sheet.Max.Col = ref.Col
+		}
+		sheet.Cells[ref] = cell
 	}
 	if sheet.Min.Row > sheet.Max.Row {
 		sheet.Min.Row = sheet.Max.Row

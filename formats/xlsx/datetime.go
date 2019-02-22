@@ -34,7 +34,7 @@ func julianDateToGregorianTime(part1, part2 float64) time.Time {
 	return time.Date(year, time.Month(month), day, hours, minutes, seconds, nanoseconds, time.UTC)
 }
 
-func shiftJulianToNoon(julianDays, julianFraction float64) (float64, float64) {
+func shiftJulianToNoon(julianDays, julianFraction float64) (julianDaysResult, julianFractionResult float64) {
 	switch {
 	case -0.5 < julianFraction && julianFraction < 0.5:
 		julianFraction += 0.5
@@ -51,7 +51,7 @@ func shiftJulianToNoon(julianDays, julianFraction float64) (float64, float64) {
 func fliegelAndVanFlandernAlgorithm(jd int) (day, month, year int) {
 	l := jd + 68569
 	n := (4 * l) / 146097
-	l = l - (146097*n+3)/4
+	l -= (146097*n + 3) / 4
 	i := (4000 * (l + 1)) / 1461001
 	l = l - (1461*i)/4 + 31
 	j := (80 * l) / 2447

@@ -86,7 +86,7 @@ func NewEFS(files map[string]*File) *EFS {
 	// For each dir, sort its file list and add it to our "all" list
 	for k, v := range dirs {
 		sort.Slice(v.f.files, func(i, j int) bool {
-			return txt.NaturalLess(v.f.files[i].Name(), v.f.files[j].Name(), true)
+			return txt.NaturalLess(v.f.files[i].Name(), v.f.files[j].Name(), true) //nolint:scopelint
 		})
 		all[k] = v.f
 	}

@@ -109,14 +109,14 @@ type collector struct {
 	paths       collection.StringSet
 }
 
-func (c *collector) walk(path string, info os.FileInfo, err error) error {
+func (c *collector) walk(p string, info os.FileInfo, err error) error {
 	if info == nil {
 		if err == nil {
-			err = fmt.Errorf("Unable to walk to %q", path)
+			err = fmt.Errorf("Unable to walk to %q", p)
 		}
 		return err
 	}
-	if c.ignoreRegex != nil && c.ignoreRegex.MatchString(path) {
+	if c.ignoreRegex != nil && c.ignoreRegex.MatchString(p) {
 		if info.IsDir() {
 			return filepath.SkipDir
 		}
@@ -130,15 +130,16 @@ func (c *collector) walk(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	if !info.IsDir() {
-		c.paths.Add(filepath.ToSlash(path))
+		c.paths.Add(filepath.ToSlash(p))
 	}
 	return nil
 }
 
 func (c *collector) prepare(strip string) ([]*data, error) {
-	var all []*data
 	paths := collection.NewStringSet()
-	for _, one := range c.paths.Values() {
+	values := c.paths.Values()
+	all := make([]*data, 0, len(values))
+	for _, one := range values {
 		fsPath := one
 		one = strings.TrimPrefix(one, strip)
 		if paths.Contains(one) {

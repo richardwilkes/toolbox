@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
 )
 
@@ -14,9 +15,9 @@ func AppLogDir() string {
 	if u, err := user.Current(); err == nil {
 		path = u.HomeDir
 		switch runtime.GOOS {
-		case "darwin":
+		case toolbox.MacOS:
 			path = filepath.Join(path, "Library", "Logs")
-		case "windows":
+		case toolbox.WindowsOS:
 			path = filepath.Join(path, "AppData")
 		default:
 			path = filepath.Join(path, ".logs")
@@ -34,9 +35,9 @@ func AppDataDir() string {
 	if u, err := user.Current(); err == nil {
 		path = u.HomeDir
 		switch runtime.GOOS {
-		case "darwin":
+		case toolbox.MacOS:
 			path = filepath.Join(path, "Library", "Application Support")
-		case "windows":
+		case toolbox.WindowsOS:
 			path = filepath.Join(path, "AppData")
 		default:
 			path = filepath.Join(path, ".appdata")
