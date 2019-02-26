@@ -126,7 +126,7 @@ func (val *%sArrayValue) String() string {
 `)
 }
 
-func writeString(out *os.File, text string) {
+func writeString(out io.StringWriter, text string) {
 	_, err := out.WriteString(text)
 	jot.FatalIfErr(err)
 }
