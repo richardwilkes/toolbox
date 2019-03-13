@@ -71,3 +71,15 @@ func FirstToUpper(in string) string {
 	}
 	return string(unicode.ToUpper(r)) + in[size:]
 }
+
+// FirstToLower converts the first character to lower case.
+func FirstToLower(in string) string {
+	if in == "" {
+		return in
+	}
+	r, size := utf8.DecodeRuneInString(in)
+	if r == utf8.RuneError {
+		return in
+	}
+	return string(unicode.ToLower(r)) + in[size:]
+}
