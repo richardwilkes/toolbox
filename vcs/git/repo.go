@@ -58,7 +58,7 @@ func (repo *Repo) CheckLocal() bool {
 
 // Init initializes a git repository at the local location.
 func (repo *Repo) Init() error {
-	if _, err := exec.Command("git", "init", repo.local).CombinedOutput(); err != nil {
+	if _, err := exec.Command("git", "init", repo.local).CombinedOutput(); err != nil { //nolint:gosec
 		return errs.NewWithCause(i18n.Text("Unable to initialize repository"), err)
 	}
 	return nil
@@ -66,7 +66,7 @@ func (repo *Repo) Init() error {
 
 // Clone a repository.
 func (repo *Repo) Clone() error {
-	if _, err := exec.Command("git", "clone", repo.remote, repo.local).CombinedOutput(); err != nil {
+	if _, err := exec.Command("git", "clone", repo.remote, repo.local).CombinedOutput(); err != nil { //nolint:gosec
 		return errs.NewWithCause(i18n.Text("Unable to clone repository"), err)
 	}
 	return nil

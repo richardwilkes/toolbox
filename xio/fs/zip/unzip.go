@@ -32,7 +32,7 @@ func Extract(zr *zip.Reader, dst string) error {
 	}
 	rootWithTrailingSep := fmt.Sprintf("%s%c", root, filepath.Separator)
 	for _, f := range zr.File {
-		path := filepath.Join(root, f.Name)
+		path := filepath.Join(root, f.Name) //nolint:gosec
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", f.Name)
 		}

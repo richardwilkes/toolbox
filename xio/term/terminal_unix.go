@@ -14,7 +14,7 @@ func IsTerminal(f io.Writer) bool {
 	var termios syscall.Termios
 	switch v := f.(type) {
 	case *os.File:
-		_, _, errno := syscall.Syscall6(syscall.SYS_IOCTL, v.Fd(), ioctlReadTermios, uintptr(unsafe.Pointer(&termios)), 0, 0, 0)
+		_, _, errno := syscall.Syscall6(syscall.SYS_IOCTL, v.Fd(), ioctlReadTermios, uintptr(unsafe.Pointer(&termios)), 0, 0, 0) //nolint:gosec
 		return errno == 0
 	default:
 		return false
