@@ -102,7 +102,8 @@ Provides convenience utilities for using html templates in an embedded filesyste
 Provides convenience utilities for using text templates in an embedded filesystem.
 
 ## xio/fs/mkembeddedfs
-Tool for generating the embedded filesystem.
+Tool for generating the embedded filesystem. Note: this utility has been
+deprecated in favor of using `embedded.NewFileSystemFromEmbeddedZip()` instead
 
 ## xio/fs/paths
 Platform-specific standard paths.
@@ -121,6 +122,9 @@ Implementation of NAT-PMP. See https://tools.ietf.org/html/rfc6886
 
 ## xio/network/xhttp
 HTTP-related utilities.
+
+## xio/network/xhttp/web
+Web server with some standardized logging and handler wrapping.
 
 ## xio/term
 Terminal utilities.
