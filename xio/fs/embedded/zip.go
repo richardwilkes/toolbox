@@ -19,6 +19,12 @@ import (
 // a zip file appended to the end of the executable. If no such data can be
 // found, then 'fallbackLiveFSRoot' is used to return a FileSystem based upon
 // the local disk.
+//
+// To create an embedded zip file, first create your zip file as normal,
+// e.g. `zip -9 -r path/to/zipfile path/to/dir/to/zip`. Build your executable
+// as normal, e.g. `go build -o path/to/exe main.go`. Finally, concatenate
+// the zip file to the end of your executable,
+// e.g. `cat path/to/zipfile >> path/to/exe`.
 func NewFileSystemFromEmbeddedZip(fallbackLiveFSRoot string) FileSystem {
 	if efs, err := NewEFSFromEmbeddedZip(); err == nil {
 		return efs.PrimaryFileSystem()
