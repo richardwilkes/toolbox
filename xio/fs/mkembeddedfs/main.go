@@ -42,10 +42,11 @@ type tmplInput struct {
 
 func main() {
 	cmdline.AppName = "Make Embedded Go FileSystem"
-	cmdline.AppVersion = "1.0"
-	cmdline.CopyrightYears = "2018"
+	cmdline.AppVersion = "1.0.1"
+	cmdline.CopyrightYears = "2018-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cl := cmdline.New(true)
+	cl.Description = "*** This utility has been deprecated in favor of using embedded.NewFileSystemFromEmbeddedZip() instead ***"
 	cl.UsageSuffix = "<one or more file paths to include>"
 	cfg := tmplInput{
 		Pkg: "main",

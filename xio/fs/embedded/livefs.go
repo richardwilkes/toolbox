@@ -1,17 +1,22 @@
 package embedded
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/log/jot"
 )
 
 type livefs struct {
 	base string
+}
+
+// NewLiveFS creates a new live filesystem with a root at the specified
+// location on the regular filesystem.
+func NewLiveFS(localRoot string) FileSystem {
+	return &livefs{base: localRoot}
 }
 
 func (f *livefs) IsLive() bool {
@@ -37,8 +42,7 @@ func (f *livefs) MustContentAsBytes(path string) []byte {
 	if d, ok := f.ContentAsBytes(path); ok {
 		return d
 	}
-	fmt.Println(path + " does not exist")
-	atexit.Exit(1)
+	jot.Fatal(1, path+" does not exist")
 	return nil
 }
 
@@ -53,7 +57,6 @@ func (f *livefs) MustContentAsString(path string) string {
 	if s, ok := f.ContentAsString(path); ok {
 		return s
 	}
-	fmt.Println(path + " does not exist")
-	atexit.Exit(1)
+	jot.Fatal(1, path+" does not exist")
 	return ""
 }

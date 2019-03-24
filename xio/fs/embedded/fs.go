@@ -98,14 +98,19 @@ func NewEFS(files map[string]*File) *EFS {
 	}
 }
 
+// PrimaryFileSystem returns the primary filesystem this EFS represents.
+func (efs *EFS) PrimaryFileSystem() FileSystem {
+	return efs.efs
+}
+
 // FileSystem returns either the embedded filesystem or a live filesystem
 // rooted at localRoot if localRoot isn't an empty string and points to a
 // directory.
 func (efs *EFS) FileSystem(localRoot string) FileSystem {
 	if localRoot != "" {
 		if fi, err := os.Stat(localRoot); err == nil && fi.IsDir() {
-			return &livefs{base: localRoot}
+			return NewLiveFS(localRoot)
 		}
 	}
-	return efs.efs
+	return efs.PrimaryFileSystem()
 }
