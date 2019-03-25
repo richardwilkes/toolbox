@@ -42,7 +42,7 @@ type tmplInput struct {
 
 func main() {
 	cmdline.AppName = "Make Embedded Go FileSystem"
-	cmdline.AppVersion = "1.0.1"
+	cmdline.AppVersion = "1.0.2"
 	cmdline.CopyrightYears = "2018-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cl := cmdline.New(true)
