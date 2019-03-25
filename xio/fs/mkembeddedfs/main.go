@@ -46,7 +46,6 @@ func main() {
 	cmdline.CopyrightYears = "2018-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cl := cmdline.New(true)
-	cl.Description = "*** This utility has been deprecated in favor of using embedded.NewFileSystemFromEmbeddedZip() instead ***"
 	cl.UsageSuffix = "<one or more file paths to include>"
 	cfg := tmplInput{
 		Pkg: "main",
