@@ -44,12 +44,12 @@ func (s *Size) GrowToInteger() {
 }
 
 // ConstrainForHint ensures this size is no larger than the hint. Hint values
-// less than zero are ignored.
+// less than one are ignored.
 func (s *Size) ConstrainForHint(hint Size) {
-	if hint.Width >= 0 && s.Width > hint.Width {
+	if hint.Width >= 1 && s.Width > hint.Width {
 		s.Width = hint.Width
 	}
-	if hint.Height >= 0 && s.Height > hint.Height {
+	if hint.Height >= 1 && s.Height > hint.Height {
 		s.Height = hint.Height
 	}
 }
