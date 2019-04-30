@@ -1,3 +1,4 @@
+// Package json provides manipulation of JSON data.
 package json
 
 import (

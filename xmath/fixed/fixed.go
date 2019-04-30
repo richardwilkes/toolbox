@@ -1,3 +1,5 @@
+// Package fixed provides simple fixed-point values that can be added,
+// subtracted, multiplied and divided.
 package fixed
 
 import (
@@ -73,7 +75,7 @@ func Parse(str string) (Fixed, error) {
 		if err != nil {
 			return 0, err
 		}
-		return New(f), nil
+		return FromFloat64(f), nil
 	}
 	parts := strings.SplitN(str, ".", 2)
 	var value, fraction int64
@@ -214,7 +216,7 @@ func (fxd *Fixed) UnmarshalText(text []byte) error {
 func (fxd *Fixed) MarshalJSON() ([]byte, error) {
 	f := fxd.Float64()
 	str := fxd.String()
-	if New(f) == *fxd && fmt.Sprint(f) == str {
+	if FromFloat64(f) == *fxd && fmt.Sprint(f) == str {
 		return json.Marshal(f)
 	}
 	return json.Marshal(str)
@@ -235,7 +237,7 @@ func (fxd *Fixed) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	case float64:
-		f = New(v)
+		f = FromFloat64(v)
 	default:
 		return errs.New("Invalid type")
 	}
@@ -249,7 +251,7 @@ func (fxd *Fixed) UnmarshalJSON(data []byte) error {
 func (fxd Fixed) MarshalYAML() (interface{}, error) {
 	f := fxd.Float64()
 	str := fxd.String()
-	if New(f) == fxd && fmt.Sprint(f) == str {
+	if FromFloat64(f) == fxd && fmt.Sprint(f) == str {
 		return f, nil
 	}
 	return str, nil

@@ -1,3 +1,4 @@
+// Package zip provides simple zip extraction.
 package zip
 
 import (

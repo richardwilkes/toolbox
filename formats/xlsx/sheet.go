@@ -1,3 +1,4 @@
+// Package xlsx provides the ability to extract text from Excel spreadsheets.
 package xlsx
 
 import (

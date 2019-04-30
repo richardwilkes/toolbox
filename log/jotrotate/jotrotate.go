@@ -1,3 +1,5 @@
+// Package jotrotate provides a pre-canned way to add jot logging with file
+// rotation, along with command-line options for controlling it.
 package jotrotate
 
 import (

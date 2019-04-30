@@ -1,3 +1,4 @@
+// Package term provides terminal utilities.
 package term
 
 import (

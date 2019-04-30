@@ -1,3 +1,4 @@
+// Package jot provides simple asynchronous logging.
 package jot
 
 import (

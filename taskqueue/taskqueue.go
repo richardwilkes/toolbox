@@ -1,4 +1,4 @@
-// Package taskqueue provides a queue for executing tasks asynchronously.
+// Package taskqueue provides a simple asynchronous task queue.
 package taskqueue
 
 import (

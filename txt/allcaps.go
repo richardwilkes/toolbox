@@ -1,3 +1,4 @@
+// Package txt provides various text utilities.
 package txt
 
 import (

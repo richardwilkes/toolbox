@@ -1,3 +1,4 @@
+// Package xmath provides math-related utilities.
 package xmath
 
 import (

@@ -1,3 +1,4 @@
+// Package paths provides platform-specific standard paths.
 package paths
 
 import (

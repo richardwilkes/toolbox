@@ -1,3 +1,5 @@
+// Package web provides a web server with some standardized logging and
+// handler wrapping.
 package web
 
 import (

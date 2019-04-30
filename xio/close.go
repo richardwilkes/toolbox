@@ -1,3 +1,4 @@
+// Package xio provides i/o utilities.
 package xio
 
 import "io"

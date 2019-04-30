@@ -1,3 +1,4 @@
+// Package desktop provides desktop integration utilities.
 package desktop
 
 import (

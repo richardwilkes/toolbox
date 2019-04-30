@@ -1,3 +1,4 @@
+// Package git provides simple git repository access.
 package git
 
 import (

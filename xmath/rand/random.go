@@ -1,3 +1,4 @@
+// Package rand provides a Randomizer based upon the crypto/rand package.
 package rand
 
 import (

@@ -1,3 +1,4 @@
+// Package xhttp provides HTTP-related utilities.
 package xhttp
 
 import (

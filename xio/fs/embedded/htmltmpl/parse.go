@@ -1,3 +1,5 @@
+// Package htmltmpl provides convenience utilities for using html templates in
+// an embedded filesystem.
 package htmltmpl
 
 import (

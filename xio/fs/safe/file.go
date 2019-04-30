@@ -1,3 +1,4 @@
+// Package safe provides safe, atomic saving of files.
 package safe
 
 import (
@@ -42,9 +43,7 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if runtime.GOOS != toolbox.WindowsOS { // Windows doesn't support changing the mode
 		if err = f.Chmod(mode); err != nil {
 			xio.CloseIgnoringErrors(f)
-			if rerr := os.Remove(f.Name()); rerr != nil && err == nil {
-				err = rerr // Won't happen, but here to quiet the linter
-			}
+			os.Remove(f.Name()) //nolint: errcheck
 			return nil, err
 		}
 	}
@@ -79,9 +78,7 @@ func (f *File) Commit() error {
 		err = os.Rename(name, f.originalName)
 	}
 	if err != nil {
-		if rerr := os.Remove(name); rerr != nil && err == nil {
-			err = rerr
-		}
+		os.Remove(name) //nolint: errcheck
 	}
 	return err
 }

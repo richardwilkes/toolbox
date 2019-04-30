@@ -1,3 +1,5 @@
+// Package logadapter defines an API to use for logging, which actual logging
+// implementations can implement directly or provide an adapter to use.
 package logadapter
 
 import "time"

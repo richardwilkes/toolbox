@@ -1,3 +1,4 @@
+// Package geom provides geometry primitives.
 package geom
 
 import (

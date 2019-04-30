@@ -1,3 +1,4 @@
+// Package embedded provides an implementation of an embedded filesystem.
 package embedded
 
 import (

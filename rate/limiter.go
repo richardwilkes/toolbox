@@ -1,3 +1,5 @@
+// Package rate provides rate limiting which supports a hierarchy of limiters,
+// each capped by their parent.
 package rate
 
 import (

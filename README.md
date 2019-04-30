@@ -25,7 +25,7 @@ Errors that contain stack traces with source locations, along with nested
 causes, if any.
 
 ## formats/json
-Easier manipulation of JSON data.
+Manipulation of JSON data.
 
 ## formats/xlsx
 Extract text from Excel spreadsheets.

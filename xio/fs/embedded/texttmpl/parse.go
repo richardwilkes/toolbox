@@ -1,3 +1,5 @@
+// Package texttmpl provides convenience utilities for using text templates in
+// an embedded filesystem.
 package texttmpl
 
 import (

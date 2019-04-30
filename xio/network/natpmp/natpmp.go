@@ -1,4 +1,5 @@
-// Package natpmp implements https://tools.ietf.org/html/rfc6886
+// Package natpmp provides an implementation of NAT-PMP.
+// See https://tools.ietf.org/html/rfc6886
 package natpmp
 
 import (

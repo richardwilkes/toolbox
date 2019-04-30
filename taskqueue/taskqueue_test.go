@@ -83,5 +83,5 @@ func TestRecoveryWithBadLogger(t *testing.T) {
 
 func boom() {
 	var bad *int
-	*bad = 1
+	*bad = 1 //nolint:govet
 }

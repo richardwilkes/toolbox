@@ -1,3 +1,4 @@
+// Package rotation provides file rotation when files hit a given size.
 package rotation
 
 import (
