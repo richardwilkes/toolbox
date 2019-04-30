@@ -1,3 +1,4 @@
+// Package fs provides filesystem-related utilities.
 package fs
 
 import (
