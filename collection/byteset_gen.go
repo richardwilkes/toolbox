@@ -1,4 +1,6 @@
 // Code generated - DO NOT EDIT.
+
+// Package collection provides type-safe sets for primitive types.
 package collection
 
 import (

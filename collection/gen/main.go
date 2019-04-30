@@ -1,5 +1,3 @@
-// +build gen
-
 package main
 
 import (
@@ -15,13 +13,11 @@ import (
 
 //go:generate go run main.go
 
-const codeGenNotice = "// Code generated - DO NOT EDIT.\n"
-
 func main() {
 	data, err := ioutil.ReadFile("set.go.tmpl")
 	jot.FatalIfErr(err)
 	tmpl := template.Must(template.New("gen").Funcs(template.FuncMap{"lower": strings.ToLower}).Parse(string(data)))
-	for _, one := range []string{
+	for i, one := range []string{
 		"Byte",
 		"Complex64",
 		"Complex128",
@@ -41,7 +37,10 @@ func main() {
 		"Uint64",
 	} {
 		var buffer bytes.Buffer
-		buffer.WriteString(codeGenNotice)
+		buffer.WriteString("// Code generated - DO NOT EDIT.\n\n")
+		if i == 0 {
+			buffer.WriteString("// Package collection provides type-safe sets for primitive types.\n")
+		}
 		jot.FatalIfErr(tmpl.Execute(&buffer, one))
 		d, err := format.Source(buffer.Bytes())
 		jot.FatalIfErr(err)
