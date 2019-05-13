@@ -36,6 +36,14 @@ func TestConversion(t *testing.T) {
 	assert.Equal(t, "-1", fixed.FromFloat64(-1.00009).String())
 	assert.Equal(t, "0.0004", fixed.FromFloat64(0.000405).String())
 	assert.Equal(t, "-0.0004", fixed.FromFloat64(-0.000405).String())
+
+	v, err := fixed.Parse("33.0")
+	assert.NoError(t, err)
+	assert.Equal(t, v, fixed.FromInt(33))
+
+	v, err = fixed.Parse("33.00000000000000000000")
+	assert.NoError(t, err)
+	assert.Equal(t, v, fixed.FromInt(33))
 }
 
 func TestAddSub(t *testing.T) {

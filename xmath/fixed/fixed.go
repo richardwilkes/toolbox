@@ -102,7 +102,11 @@ func Parse(str string) (Fixed, error) {
 		for buffer.Len() < precision+1 {
 			buffer.WriteString("0")
 		}
-		if fraction, err = strconv.ParseInt(buffer.String(), 10, 64); err != nil {
+		frac := buffer.String()
+		if len(frac) > precision+1 {
+			frac = frac[:precision+1]
+		}
+		if fraction, err = strconv.ParseInt(frac, 10, 64); err != nil {
 			return 0, errs.Wrap(err)
 		}
 		value += fraction - multiplier
