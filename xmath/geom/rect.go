@@ -44,6 +44,15 @@ func (r *Rect) IsEmpty() bool {
 	return r.Width <= 0 || r.Height <= 0
 }
 
+// Intersects returns true if this rect and the other rect intersect.
+func (r *Rect) Intersects(other Rect) bool {
+	if !r.IsEmpty() && !other.IsEmpty() {
+		return math.Min(r.X+r.Width, other.X+other.Width)-math.Max(r.X, other.X) > 0 &&
+			math.Min(r.Y+r.Height, other.Y+other.Height)-math.Max(r.Y, other.Y) > 0
+	}
+	return false
+}
+
 // Intersect this Rect with another Rect, storing the result into this Rect.
 func (r *Rect) Intersect(other Rect) {
 	if r.IsEmpty() || other.IsEmpty() {
