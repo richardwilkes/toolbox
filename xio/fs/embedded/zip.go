@@ -2,10 +2,6 @@ package embedded
 
 import (
 	"archive/zip"
-	"debug/elf"
-	"debug/macho"
-	"debug/pe"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,11 +16,11 @@ import (
 // found, then 'fallbackLiveFSRoot' is used to return a FileSystem based upon
 // the local disk.
 //
-// To create an embedded zip file, first create your zip file as normal,
-// e.g. `zip -9 -r path/to/zipfile path/to/dir/to/zip`. Build your executable
-// as normal, e.g. `go build -o path/to/exe main.go`. Finally, concatenate
-// the zip file to the end of your executable,
-// e.g. `cat path/to/zipfile >> path/to/exe`.
+// To create an embedded zip file, first create your zip file as normal, e.g.
+// `zip -9 -r path/to/zipfile path/to/zip`. Build your executable as normal,
+// e.g. `go build -o path/to/exe main.go`, then concatenate the zip file to
+// the end of your executable, e.g. `cat path/to/zipfile >> path/to/exe`.
+// Finally, run `zip -A path/to/exe` on your executable to fix up the offsets.
 func NewFileSystemFromEmbeddedZip(fallbackLiveFSRoot string) FileSystem {
 	if efs, err := NewEFSFromEmbeddedZip(); err == nil {
 		return efs.PrimaryFileSystem()
@@ -48,12 +44,7 @@ func NewEFSFromEmbeddedZip() (*EFS, error) {
 	if err != nil {
 		return nil, errs.Wrap(err)
 	}
-	start := findZipStart(exeFile)
-	if start == -1 {
-		return nil, errs.New("unknown executable type")
-	}
-	section := io.NewSectionReader(exeFile, start, fi.Size()-start)
-	r, err := zip.NewReader(section, section.Size())
+	r, err := zip.NewReader(exeFile, fi.Size())
 	if err != nil {
 		return nil, errs.Wrap(err)
 	}
@@ -84,64 +75,4 @@ func NewEFSFromZip(zr *zip.Reader) (*EFS, error) {
 		files[name] = NewFile(filepath.Base(name), f.Modified, int64(f.UncompressedSize64), false, data)
 	}
 	return NewEFS(files), nil
-}
-
-func findZipStart(r io.ReaderAt) int64 {
-	if start := findZipStartForMacho(r); start != -1 {
-		return start
-	}
-	if start := findZipStartForPE(r); start != -1 {
-		return start
-	}
-	return findZipStartForElf(r)
-}
-
-func findZipStartForMacho(r io.ReaderAt) int64 {
-	f, err := macho.NewFile(r)
-	if err != nil {
-		return -1
-	}
-	var max int64
-	for _, load := range f.Loads {
-		if segment, ok := load.(*macho.Segment); ok {
-			end := int64(segment.Offset + segment.Filesz)
-			if end > max {
-				max = end
-			}
-		}
-	}
-	return max
-}
-
-func findZipStartForPE(r io.ReaderAt) int64 {
-	f, err := pe.NewFile(r)
-	if err != nil {
-		return -1
-	}
-	var max int64
-	for _, section := range f.Sections {
-		end := int64(section.Offset + section.Size)
-		if end > max {
-			max = end
-		}
-	}
-	return max
-}
-
-func findZipStartForElf(r io.ReaderAt) int64 {
-	f, err := elf.NewFile(r)
-	if err != nil {
-		return -1
-	}
-	var max int64
-	for _, section := range f.Sections {
-		if section.Type == elf.SHT_NOBITS {
-			continue
-		}
-		end := int64(section.Offset + section.Size)
-		if end > max {
-			max = end
-		}
-	}
-	return max
 }
