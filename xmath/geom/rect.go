@@ -12,6 +12,20 @@ type Rect struct {
 	Size
 }
 
+// NewRect creates a new Rect.
+func NewRect(x, y, width, height float64) Rect {
+	return Rect{
+		Point: NewPoint(x, y),
+		Size:  NewSize(width, height),
+	}
+}
+
+// NewRectPtr creates a new *Rect.
+func NewRectPtr(x, y, width, height float64) *Rect {
+	r := NewRect(x, y, width, height)
+	return &r
+}
+
 // Align modifies this rectangle to align with integer coordinates that would
 // encompass the original rectangle.
 func (r *Rect) Align() {
@@ -30,22 +44,22 @@ func (r *Rect) CopyAndZeroLocation() Rect {
 }
 
 // CenterX returns the center x-coordinate of the rectangle.
-func (r *Rect) CenterX() float64 {
+func (r Rect) CenterX() float64 {
 	return r.X + r.Width/2
 }
 
 // CenterY returns the center y-coordinate of the rectangle.
-func (r *Rect) CenterY() float64 {
+func (r Rect) CenterY() float64 {
 	return r.Y + r.Height/2
 }
 
 // IsEmpty returns true if either the width or height is zero or less.
-func (r *Rect) IsEmpty() bool {
+func (r Rect) IsEmpty() bool {
 	return r.Width <= 0 || r.Height <= 0
 }
 
 // Intersects returns true if this rect and the other rect intersect.
-func (r *Rect) Intersects(other Rect) bool {
+func (r Rect) Intersects(other Rect) bool {
 	if !r.IsEmpty() && !other.IsEmpty() {
 		return math.Min(r.X+r.Width, other.X+other.Width)-math.Max(r.X, other.X) > 0 &&
 			math.Min(r.Y+r.Height, other.Y+other.Height)-math.Max(r.Y, other.Y) > 0
@@ -129,7 +143,7 @@ func (r *Rect) Inset(insets Insets) {
 }
 
 // ContainsPoint returns true if the coordinates are within the Rect.
-func (r *Rect) ContainsPoint(pt Point) bool {
+func (r Rect) ContainsPoint(pt Point) bool {
 	if r.IsEmpty() {
 		return false
 	}
@@ -137,7 +151,7 @@ func (r *Rect) ContainsPoint(pt Point) bool {
 }
 
 // ContainsRect returns true if this Rect fully contains the passed in Rect.
-func (r *Rect) ContainsRect(in Rect) bool {
+func (r Rect) ContainsRect(in Rect) bool {
 	if r.IsEmpty() || in.IsEmpty() {
 		return false
 	}
