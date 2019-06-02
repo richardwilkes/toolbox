@@ -10,6 +10,20 @@ type Size struct {
 	Width, Height float64
 }
 
+// NewSize creates a new Size.
+func NewSize(width, height float64) Size {
+	return Size{
+		Width:  width,
+		Height: height,
+	}
+}
+
+// NewSizePtr creates a new *Size.
+func NewSizePtr(x, y float64) *Size {
+	s := NewSize(x, y)
+	return &s
+}
+
 // Add modifies this Size by adding the supplied Size.
 func (s *Size) Add(size Size) {
 	s.Width += size.Width

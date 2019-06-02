@@ -10,6 +10,20 @@ type Point struct {
 	X, Y float64
 }
 
+// NewPoint creates a new Point.
+func NewPoint(x, y float64) Point {
+	return Point{
+		X: x,
+		Y: y,
+	}
+}
+
+// NewPointPtr creates a new *Point.
+func NewPointPtr(x, y float64) *Point {
+	p := NewPoint(x, y)
+	return &p
+}
+
 // Align modifies this Point to align with integer coordinates.
 func (p *Point) Align() {
 	p.X = math.Floor(p.X)
