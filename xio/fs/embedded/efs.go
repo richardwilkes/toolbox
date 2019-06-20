@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/toolbox/log/jot"
@@ -20,7 +21,10 @@ func (f *efs) IsLive() bool {
 }
 
 func (f *efs) actualPath(path string) string {
-	return filepath.ToSlash(filepath.Clean("/" + path))
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return filepath.ToSlash(filepath.Clean(path))
 }
 
 func (f *efs) Open(path string) (http.File, error) {

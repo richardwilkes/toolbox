@@ -3,6 +3,7 @@ package embedded
 import (
 	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 type subfs struct {
@@ -13,9 +14,12 @@ type subfs struct {
 // NewSubFileSystem creates a new FileSystem rooted at 'base' within an
 // existing FileSystem.
 func NewSubFileSystem(parent FileSystem, base string) FileSystem {
+	if !strings.HasPrefix(base, "/") {
+		base = "/" + base
+	}
 	return &subfs{
 		parent: parent,
-		base:   filepath.Clean("/" + base),
+		base:   filepath.Clean(base),
 	}
 }
 
@@ -24,7 +28,10 @@ func (f *subfs) IsLive() bool {
 }
 
 func (f *subfs) adjustPath(path string) string {
-	return filepath.Join(f.base, filepath.Clean("/"+path))
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return filepath.Join(f.base, filepath.Clean(path))
 }
 
 func (f *subfs) Open(path string) (http.File, error) {
