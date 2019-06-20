@@ -67,11 +67,10 @@ func NewEFSFromZip(zr *zip.Reader) (*EFS, error) {
 		if err != nil {
 			return nil, errs.Wrap(err)
 		}
-		name := f.Name
+		name := filepath.ToSlash(filepath.Clean(f.Name))
 		if !strings.HasPrefix(name, "/") {
 			name = "/" + name
 		}
-		name = filepath.Clean(name)
 		files[name] = NewFile(filepath.Base(name), f.Modified, int64(f.UncompressedSize64), false, data)
 	}
 	return NewEFS(files), nil

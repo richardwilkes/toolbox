@@ -21,10 +21,11 @@ func (f *efs) IsLive() bool {
 }
 
 func (f *efs) actualPath(path string) string {
+	path = filepath.ToSlash(filepath.Clean(path))
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
-	return filepath.ToSlash(filepath.Clean(path))
+	return path
 }
 
 func (f *efs) Open(path string) (http.File, error) {
