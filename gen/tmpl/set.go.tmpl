@@ -1,52 +1,53 @@
-package collection{{$t := lower .}}
+package collection
+{{- $u := first_to_upper .}}
 
 import (
 	"encoding/json"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
-// {{.}}Set holds a set of {{$t}} values.
-type {{.}}Set map[{{$t}}]bool
+// {{$u}}Set holds a set of {{.}} values.
+type {{$u}}Set map[{{.}}]bool
 
-// New{{.}}Set creates a new set from its input values.
-func New{{.}}Set(values ...{{$t}}) {{.}}Set {
-	s := {{.}}Set{}
+// New{{$u}}Set creates a new set from its input values.
+func New{{$u}}Set(values ...{{.}}) {{$u}}Set {
+	s := {{$u}}Set{}
 	s.Add(values...)
 	return s
 }
 
 // Empty returns true if there are no values in the set.
-func (s {{.}}Set) Empty() bool {
+func (s {{$u}}Set) Empty() bool {
 	return len(s) == 0
 }
 
 // Clear the set.
-func (s {{.}}Set) Clear() {
+func (s {{$u}}Set) Clear() {
 	for k := range s {
 		delete(s, k)
 	}
 }
 
 // Add values to the set.
-func (s {{.}}Set) Add(values ...{{$t}}) {
+func (s {{$u}}Set) Add(values ...{{.}}) {
 	for _, v := range values {
 		s[v] = true
 	}
 }
 
 // Contains returns true if the value exists within the set.
-func (s {{.}}Set) Contains(value {{$t}}) bool {
+func (s {{$u}}Set) Contains(value {{.}}) bool {
 	_, ok := s[value]
 	return ok
 }
 
 // Clone returns a copy of the set.
-func (s {{.}}Set) Clone() {{.}}Set {
+func (s {{$u}}Set) Clone() {{$u}}Set {
 	if s == nil {
 		return nil
 	}
-	clone := {{.}}Set{}
+	clone := {{$u}}Set{}
 	for value := range s {
 		clone[value] = true
 	}
@@ -54,8 +55,8 @@ func (s {{.}}Set) Clone() {{.}}Set {
 }
 
 // Values returns all values in the set.
-func (s {{.}}Set) Values() []{{$t}} {
-	values := make([]{{$t}}, 0, len(s))
+func (s {{$u}}Set) Values() []{{.}} {
+	values := make([]{{.}}, 0, len(s))
 	for v := range s {
 		values = append(values, v)
 	}
@@ -63,13 +64,13 @@ func (s {{.}}Set) Values() []{{$t}} {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (s {{.}}Set) MarshalJSON() ([]byte, error) {
+func (s {{$u}}Set) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.Values())
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
-func (s {{.}}Set) UnmarshalJSON(data []byte) error {
-	var values []{{$t}}
+func (s {{$u}}Set) UnmarshalJSON(data []byte) error {
+	var values []{{.}}
 	if err := json.Unmarshal(data, &values); err != nil {
 		return err
 	}
@@ -79,13 +80,13 @@ func (s {{.}}Set) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML implements the yaml.Marshaler interface.
-func (s {{.}}Set) MarshalYAML() (interface{}, error) {
+func (s {{$u}}Set) MarshalYAML() (interface{}, error) {
 	return yaml.Marshal(s.Values())
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (s {{.}}Set) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var values []{{$t}}
+func (s {{$u}}Set) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var values []{{.}}
 	if err := unmarshal(&values); err != nil {
 		return err
 	}

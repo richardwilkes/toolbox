@@ -1,8 +1,6 @@
 // Package cmdline provides command line option handling.
 package cmdline
 
-//go:generate go run cmd/genvalues/main.go
-
 import (
 	"bufio"
 	"fmt"

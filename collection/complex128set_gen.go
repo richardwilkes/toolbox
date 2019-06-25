@@ -1,11 +1,11 @@
-// Code generated - DO NOT EDIT.
+// Code created from "set.go.tmpl" - don't edit by hand
 
 package collection
 
 import (
 	"encoding/json"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Complex128Set holds a set of complex128 values.
