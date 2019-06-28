@@ -25,6 +25,11 @@ type cmdlineInfo struct {
 	NeedConversion bool
 }
 
+type fixedTestInfo struct {
+	Bits   int
+	Digits int
+}
+
 var (
 	setTypes = []string{
 		"byte",
@@ -62,6 +67,8 @@ var (
 		{"string", "str, error(nil)", false},
 		{"time.Duration", "time.ParseDuration(str)", false},
 	}
+	fixed64Digits  = []int{2, 3, 4, 6}
+	fixed128Digits = []int{2, 3, 4, 6, 16}
 )
 
 func main() {
@@ -71,6 +78,10 @@ func main() {
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"first_to_upper": txt.FirstToUpper,
 		"name":           toName,
+		"wrap_comment":   wrapCommentWithLength,
+		"repeat":         strings.Repeat,
+		"add":            add,
+		"sub":            sub,
 	})
 	tmpls, err := tmpl.ParseGlob("tmpl/*.go.tmpl")
 	jot.FatalIfErr(errs.Wrap(err))
@@ -80,6 +91,14 @@ func main() {
 	for _, one := range cmdlineTypes {
 		jot.FatalIfErr(writeGoTemplate(tmpls, "values.go.tmpl", "../cmdline/"+toName(one.Type)+"_value_gen.go", one))
 	}
+	for _, one := range fixed64Digits {
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed64.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen.go", one), one))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen_test.go", one), &fixedTestInfo{Bits: 64, Digits: one}))
+	}
+	for _, one := range fixed128Digits {
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed128.go.tmpl", fmt.Sprintf("../xmath/fixed/F128d%d_gen.go", one), one))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl", fmt.Sprintf("../xmath/fixed/F128d%d_gen_test.go", one), &fixedTestInfo{Bits: 128, Digits: one}))
+	}
 	atexit.Exit(0)
 }
 
@@ -88,6 +107,18 @@ func toName(in string) string {
 		return strings.ToLower(in[i+1:])
 	}
 	return in
+}
+
+func wrapCommentWithLength(in string, length int) string {
+	return txt.Wrap("// ", in, length)
+}
+
+func add(left, right int) int {
+	return left + right
+}
+
+func sub(left, right int) int {
+	return left - right
 }
 
 func collectGenFiles() []string {
@@ -103,7 +134,7 @@ func collectGenFiles() []string {
 				}
 				return nil
 			}
-			if strings.HasSuffix(name, "_gen.go") {
+			if strings.HasSuffix(name, "_gen.go") || strings.HasSuffix(name, "_gen_test.go") {
 				result = append(result, path)
 			}
 		}

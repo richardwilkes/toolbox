@@ -1,5 +1,3 @@
-// Package fixed provides simple fixed-point values that can be added,
-// subtracted, multiplied and divided.
 package fixed
 
 import (
@@ -9,15 +7,15 @@ import (
 	"strconv"
 	"strings"
 
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
 const (
 	// Max holds the maximum fixed-point value.
-	Max = Fixed(1<<63 - 1)
+	Max = Fixed(math.MaxInt64)
 	// Min holds the minimum fixed-point value.
-	Min = Fixed(-1 << 63)
+	Min = Fixed(math.MinInt64)
 )
 
 var (
@@ -30,6 +28,8 @@ var (
 // truncated, not rounded. Values can be added and subtracted directly. For
 // multiplication and division, the provided Mul() and Div() methods should be
 // used.
+//
+// Deprecated: Use one of the F64d... types instead.
 type Fixed int64
 
 func init() {
@@ -42,28 +42,37 @@ func init() {
 // this value invalidate any fixed-point values there were created prior to
 // the call -- there is no enforcement of this, however, so use of a
 // pre-existing value will quietly generate bad results.
+//
+// Deprecated.
 func SetDigitsAfterDecimal(digits int) {
 	precision = digits
 	multiplier = int64(math.Pow(10, float64(precision)))
 }
 
 // New creates a new fixed-point value.
+//
 // Deprecated: Use FromFloat64() instead.
 func New(value float64) Fixed {
 	return FromFloat64(value)
 }
 
 // FromFloat64 creates a new fixed-point value from a float64.
+//
+// Deprecated: Use one of the F64d... types instead.
 func FromFloat64(value float64) Fixed {
 	return Fixed(value * float64(multiplier))
 }
 
 // FromInt creates a new fixed-point value from an int.
+//
+// Deprecated: Use one of the F64d... types instead.
 func FromInt(value int) Fixed {
 	return Fixed(int64(value) * multiplier)
 }
 
 // Parse a string to extract a fixed-point value from it.
+//
+// Deprecated: Use one of the F64d... types instead.
 func Parse(str string) (Fixed, error) {
 	if str == "" {
 		return 0, errs.New("Empty string is not valid")
