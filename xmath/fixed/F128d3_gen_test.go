@@ -87,20 +87,8 @@ func TestTrunc128d3(t *testing.T) {
 	assert.Equal(t, fixed.F128d3FromInt64(-3), fixed.F128d3FromInt64(-3).Trunc())
 }
 
-func TestText128d3(t *testing.T) {
-	for i := int64(-20000); i < 20001; i++ {
-		f1 := fixed.F128d3FromInt64(i)
-		data, err := f1.MarshalText()
-		assert.NoError(t, err)
-		var f2 fixed.F128d3
-		err = f2.UnmarshalText(data)
-		assert.NoError(t, err)
-		require.Equal(t, f1, f2)
-	}
-}
-
 func TestYAML128d3(t *testing.T) {
-	for i := int64(-20000); i < 20001; i++ {
+	for i := int64(-25000); i < 25001; i += 13 {
 		e1 := embedded128d3{Field: fixed.F128d3FromInt64(i)}
 		data, err := yaml.Marshal(&e1)
 		assert.NoError(t, err)
@@ -112,7 +100,7 @@ func TestYAML128d3(t *testing.T) {
 }
 
 func TestJSON128d3(t *testing.T) {
-	for i := int64(-20000); i < 20001; i++ {
+	for i := int64(-25000); i < 25001; i += 13 {
 		e1 := embedded128d3{Field: fixed.F128d3FromInt64(i)}
 		data, err := json.Marshal(&e1)
 		assert.NoError(t, err)

@@ -77,20 +77,8 @@ func TestTrunc(t *testing.T) {
 	assert.Equal(t, fixed.FromInt(-3), fixed.FromInt(-3).Trunc())
 }
 
-func TestText(t *testing.T) {
-	for i := -20000; i < 20001; i++ {
-		f1 := fixed.Fixed(i)
-		data, err := f1.MarshalText()
-		assert.NoError(t, err)
-		var f2 fixed.Fixed
-		err = f2.UnmarshalText(data)
-		assert.NoError(t, err)
-		require.Equal(t, f1, f2)
-	}
-}
-
 func TestYAML(t *testing.T) {
-	for i := -20000; i < 20001; i++ {
+	for i := -25000; i < 25001; i += 13 {
 		e1 := embedded{Field: fixed.Fixed(i)}
 		data, err := yaml.Marshal(&e1)
 		assert.NoError(t, err)
@@ -102,7 +90,7 @@ func TestYAML(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
-	for i := -20000; i < 20001; i++ {
+	for i := -25000; i < 25001; i += 13 {
 		e1 := embedded{Field: fixed.Fixed(i)}
 		data, err := json.Marshal(&e1)
 		assert.NoError(t, err)

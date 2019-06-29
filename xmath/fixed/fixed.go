@@ -1,7 +1,6 @@
 package fixed
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -209,74 +208,13 @@ func (fxd Fixed) String() string {
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.
-func (fxd *Fixed) MarshalText() ([]byte, error) {
+func (fxd Fixed) MarshalText() ([]byte, error) {
 	return []byte(fxd.String()), nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (fxd *Fixed) UnmarshalText(text []byte) error {
 	f, err := Parse(string(text))
-	if err != nil {
-		return err
-	}
-	*fxd = f
-	return nil
-}
-
-// MarshalJSON implements the json.Marshaler interface. Note that this
-// intentionally generates a string where necessary to ensure the correct
-// value is retained.
-func (fxd *Fixed) MarshalJSON() ([]byte, error) {
-	f := fxd.Float64()
-	str := fxd.String()
-	if FromFloat64(f) == *fxd && fmt.Sprint(f) == str {
-		return json.Marshal(f)
-	}
-	return json.Marshal(str)
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (fxd *Fixed) UnmarshalJSON(data []byte) error {
-	var dv interface{}
-	err := json.Unmarshal(data, &dv)
-	if err != nil {
-		return errs.Wrap(err)
-	}
-	var f Fixed
-	switch v := dv.(type) {
-	case string:
-		f, err = Parse(v)
-		if err != nil {
-			return err
-		}
-	case float64:
-		f = FromFloat64(v)
-	default:
-		return errs.New("Invalid type")
-	}
-	*fxd = f
-	return nil
-}
-
-// MarshalYAML implements the yaml.Marshaler interface. Note that this
-// intentionally generates a string where necessary to ensure the correct
-// value is retained.
-func (fxd Fixed) MarshalYAML() (interface{}, error) {
-	f := fxd.Float64()
-	str := fxd.String()
-	if FromFloat64(f) == fxd && fmt.Sprint(f) == str {
-		return f, nil
-	}
-	return str, nil
-}
-
-// UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (fxd *Fixed) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err != nil {
-		return errs.Wrap(err)
-	}
-	f, err := Parse(str)
 	if err != nil {
 		return err
 	}

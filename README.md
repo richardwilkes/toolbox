@@ -133,26 +133,11 @@ Terminal utilities.
 Math utilities.
 
 ## xmath/fixed
-Fixed-point values that can be added, subtracted, multiplied and divided. The
-values implement these interfaces for convenient encoding/decoding:
-
-- encoding.TextMarshaler
-- encoding.TextUnmarshaler
-- json.Marshaler
-- json.Unmarshaler
-- yaml.Marshaler
-- yaml.Unmarshaler
+Fixed-point types of varying sizes. More can be added by adjusting the types
+created in the generator.
 
 ## xmath/num
-128-bit int and uint types. The values implement these interfaces for
-convenient encoding/decoding:
-
-- encoding.TextMarshaler
-- encoding.TextUnmarshaler
-- json.Marshaler
-- json.Unmarshaler
-- yaml.Marshaler
-- yaml.Unmarshaler
+128-bit int and uint types.
 
 ## xmath/geom
 Geometry primitives.

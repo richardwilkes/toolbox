@@ -178,55 +178,13 @@ func (f F64d4) String() string {
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.
-func (f *F64d4) MarshalText() ([]byte, error) {
+func (f F64d4) MarshalText() ([]byte, error) {
 	return []byte(f.String()), nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (f *F64d4) UnmarshalText(text []byte) error {
 	f1, err := F64d4FromString(string(text))
-	if err != nil {
-		return err
-	}
-	*f = f1
-	return nil
-}
-
-// MarshalJSON implements the json.Marshaler interface. Note that this
-// intentionally generates a string to ensure the correct value is retained.
-func (f *F64d4) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + f.String() + `"`), nil
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (f *F64d4) UnmarshalJSON(data []byte) error {
-	if data[0] == '"' {
-		if data[len(data)-1] != '"' {
-			return fmt.Errorf("invalid JSON %q", string(data))
-		}
-		data = data[1 : len(data)-1]
-	}
-	v, err := F64d4FromString(string(data))
-	if err != nil {
-		return err
-	}
-	*f = v
-	return nil
-}
-
-// MarshalYAML implements the yaml.Marshaler interface. Note that this
-// intentionally generates a string to ensure the correct value is retained.
-func (f F64d4) MarshalYAML() (interface{}, error) {
-	return f.String(), nil
-}
-
-// UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (f *F64d4) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err != nil {
-		return errs.Wrap(err)
-	}
-	f1, err := F64d4FromString(str)
 	if err != nil {
 		return err
 	}
