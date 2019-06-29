@@ -849,10 +849,10 @@ func divmod128bin(u, by Uint128, uLeading0, byLeading0 uint) (q, r Uint128) {
 			u = u.Sub(by)
 			q.lo |= 1
 		}
-		by = by.RightShift(1)
 		if shift <= 0 {
 			break
 		}
+		by = by.RightShift(1)
 		q = q.LeftShift(1)
 		shift--
 	}
