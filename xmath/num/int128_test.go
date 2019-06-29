@@ -1,10 +1,13 @@
 package num_test
 
 import (
+	"encoding/json"
 	"math"
 	"math/big"
 	"strconv"
 	"testing"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/richardwilkes/toolbox/xmath/num"
 	"github.com/stretchr/testify/assert"
@@ -376,4 +379,32 @@ func TestInt128Div(t *testing.T) {
 	assert.Equal(t, num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(123, 0)))
 	assert.Equal(t, num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(122, 0)))
 	assert.Equal(t, num.Int128FromBigInt(result), num.Int128FromBigInt(left).Div(num.Int128From64(10000)))
+}
+
+func TestInt128Json(t *testing.T) {
+	for i, one := range table {
+		if !one.IsInt128 {
+			continue
+		}
+		in := num.Int128FromStringNoCheck(one.ValueAsStr)
+		data, err := json.Marshal(in)
+		assert.NoError(t, err, indexFmt, i)
+		var out num.Int128
+		assert.NoError(t, json.Unmarshal(data, &out), indexFmt, i)
+		assert.Equal(t, in, out, indexFmt, i)
+	}
+}
+
+func TestInt128Yaml(t *testing.T) {
+	for i, one := range table {
+		if !one.IsInt128 {
+			continue
+		}
+		in := num.Int128FromStringNoCheck(one.ValueAsStr)
+		data, err := yaml.Marshal(in)
+		assert.NoError(t, err, indexFmt, i)
+		var out num.Int128
+		assert.NoError(t, yaml.Unmarshal(data, &out), indexFmt, i)
+		assert.Equal(t, in, out, indexFmt, i)
+	}
 }
