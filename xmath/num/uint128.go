@@ -539,7 +539,7 @@ func (u Uint128) Mul64(n uint64) (dest Uint128) {
 
 // Div returns u / n. If n == 0, a divide by zero panic will occur.
 func (u Uint128) Div(n Uint128) Uint128 {
-	var byLoLeading0, byHiLeading0, byLeading0 uint
+	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
 			panic(divByZero)
@@ -551,16 +551,16 @@ func (u Uint128) Div(n Uint128) Uint128 {
 			u.lo /= n.lo
 			return u
 		}
-		byLoLeading0 = uint(bits.LeadingZeros64(n.lo))
-		byHiLeading0 = 64
-		byLeading0 = byLoLeading0 + 64
+		nLoLeading0 = uint(bits.LeadingZeros64(n.lo))
+		nHiLeading0 = 64
+		nLeading0 = nLoLeading0 + 64
 	} else {
-		byHiLeading0 = uint(bits.LeadingZeros64(n.hi))
-		byLeading0 = byHiLeading0
+		nHiLeading0 = uint(bits.LeadingZeros64(n.hi))
+		nLeading0 = nHiLeading0
 	}
-	byTrailing0 := n.TrailingZeros()
-	if (byLeading0 + byTrailing0) == 127 { // Only one bit set in divisor, so use right shift
-		return u.RightShift(byTrailing0)
+	nTrailing0 := n.TrailingZeros()
+	if (nLeading0 + nTrailing0) == 127 { // Only one bit set in divisor, so use right shift
+		return u.RightShift(nTrailing0)
 	}
 	if cmp := u.Cmp(n); cmp < 0 {
 		return Uint128{} // nothing but remainder
@@ -568,11 +568,11 @@ func (u Uint128) Div(n Uint128) Uint128 {
 		return Uint128{lo: 1}
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
-		q, _ := divmod128by128(u, n, byHiLeading0, byLoLeading0)
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
+		q, _ := u.divmod128by128(n, nHiLeading0, nLoLeading0)
 		return q
 	}
-	q, _ := divmod128bin(u, n, uLeading0, byLeading0)
+	q, _ := u.divmod128bin(n, uLeading0, nLeading0)
 	return q
 }
 
@@ -588,11 +588,11 @@ func (u Uint128) Div64(n uint64) Uint128 {
 		u.lo /= n
 		return u
 	}
-	byLoLeading0 := uint(bits.LeadingZeros64(n))
-	byLeading0 := byLoLeading0 + 64
-	byTrailing0 := uint(bits.TrailingZeros64(n))
-	if byLeading0+byTrailing0 == 127 { // Only one bit set in divisor, so use right shift
-		return u.RightShift(byTrailing0)
+	nLoLeading0 := uint(bits.LeadingZeros64(n))
+	nLeading0 := nLoLeading0 + 64
+	nTrailing0 := uint(bits.TrailingZeros64(n))
+	if nLeading0+nTrailing0 == 127 { // Only one bit set in divisor, so use right shift
+		return u.RightShift(nTrailing0)
 	}
 	if cmp := u.Cmp64(n); cmp < 0 {
 		return Uint128{} // nothing but remainder
@@ -600,24 +600,26 @@ func (u Uint128) Div64(n uint64) Uint128 {
 		return Uint128{lo: 1}
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
 		if u.hi < n {
-			u.lo, _ = divmod128by64(u.hi, u.lo, n, byLoLeading0)
+			u.lo, _ = u.divmod128by64(n, nLoLeading0)
 			u.hi = 0
 		} else {
-			u.lo, _ = divmod128by64(u.hi%n, u.lo, n, byLoLeading0)
-			u.hi /= n
+			hi := u.hi / n
+			u.hi %= n
+			u.lo, _ = u.divmod128by64(n, nLoLeading0)
+			u.hi = hi
 		}
 		return u
 	}
-	q, _ := divmod128bin(u, Uint128{lo: n}, uLeading0, byLeading0)
+	q, _ := u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
 	return q
 }
 
 // DivMod returns both the result of u / n as well u % n. If n == 0, a divide
 // by zero panic will occur.
 func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
-	var byLoLeading0, byHiLeading0, byLeading0 uint
+	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
 			panic(divByZero)
@@ -630,16 +632,16 @@ func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
 			r.lo = u.lo % n.lo
 			return q, r
 		}
-		byLoLeading0 = uint(bits.LeadingZeros64(n.lo))
-		byHiLeading0 = 64
-		byLeading0 = byLoLeading0 + 64
+		nLoLeading0 = uint(bits.LeadingZeros64(n.lo))
+		nHiLeading0 = 64
+		nLeading0 = nLoLeading0 + 64
 	} else {
-		byHiLeading0 = uint(bits.LeadingZeros64(n.hi))
-		byLeading0 = byHiLeading0
+		nHiLeading0 = uint(bits.LeadingZeros64(n.hi))
+		nLeading0 = nHiLeading0
 	}
-	byTrailing0 := n.TrailingZeros()
-	if (byLeading0 + byTrailing0) == 127 { // Only one bit set in divisor, so use right shift
-		q = u.RightShift(byTrailing0)
+	nTrailing0 := n.TrailingZeros()
+	if (nLeading0 + nTrailing0) == 127 { // Only one bit set in divisor, so use right shift
+		q = u.RightShift(nTrailing0)
 		r = n.Dec().And(u)
 		return q, r
 	}
@@ -650,10 +652,10 @@ func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
 		return q, r
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
-		return divmod128by128(u, n, byHiLeading0, byLoLeading0)
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
+		return u.divmod128by128(n, nHiLeading0, nLoLeading0)
 	}
-	return divmod128bin(u, n, uLeading0, byLeading0)
+	return u.divmod128bin(n, uLeading0, nLeading0)
 }
 
 // DivMod64 returns both the result of u / n as well u % n. If n == 0, a
@@ -670,11 +672,11 @@ func (u Uint128) DivMod64(n uint64) (q, r Uint128) {
 		r.lo = u.lo % n
 		return q, r
 	}
-	byLoLeading0 := uint(bits.LeadingZeros64(n))
-	byLeading0 := byLoLeading0 + 64
-	byTrailing0 := uint(bits.TrailingZeros64(n))
-	if byLeading0+byTrailing0 == 127 { // Only one bit set in divisor, so use right shift
-		q = u.RightShift(byTrailing0)
+	nLoLeading0 := uint(bits.LeadingZeros64(n))
+	nLeading0 := nLoLeading0 + 64
+	nTrailing0 := uint(bits.TrailingZeros64(n))
+	if nLeading0+nTrailing0 == 127 { // Only one bit set in divisor, so use right shift
+		q = u.RightShift(nTrailing0)
 		r = u.And64(n - 1)
 		return q, r
 	}
@@ -685,21 +687,22 @@ func (u Uint128) DivMod64(n uint64) (q, r Uint128) {
 		return q, r
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
 		if u.hi < n {
-			q.lo, r.lo = divmod128by64(u.hi, u.lo, n, byLoLeading0)
+			q.lo, r.lo = u.divmod128by64(n, nLoLeading0)
 		} else {
 			q.hi = u.hi / n
-			q.lo, r.lo = divmod128by64(u.hi%n, u.lo, n, byLoLeading0)
+			u.hi %= n
+			q.lo, r.lo = u.divmod128by64(n, nLoLeading0)
 		}
 		return q, r
 	}
-	return divmod128bin(u, Uint128{lo: n}, uLeading0, byLeading0)
+	return u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
 }
 
 // Mod returns u % n. If n == 0, a divide by zero panic will occur.
 func (u Uint128) Mod(n Uint128) Uint128 {
-	var byLoLeading0, byHiLeading0, byLeading0 uint
+	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
 			panic(divByZero)
@@ -711,15 +714,15 @@ func (u Uint128) Mod(n Uint128) Uint128 {
 			u.lo %= n.lo
 			return u
 		}
-		byLoLeading0 = uint(bits.LeadingZeros64(n.lo))
-		byHiLeading0 = 64
-		byLeading0 = byLoLeading0 + 64
+		nLoLeading0 = uint(bits.LeadingZeros64(n.lo))
+		nHiLeading0 = 64
+		nLeading0 = nLoLeading0 + 64
 	} else {
-		byHiLeading0 = uint(bits.LeadingZeros64(n.hi))
-		byLeading0 = byHiLeading0
+		nHiLeading0 = uint(bits.LeadingZeros64(n.hi))
+		nLeading0 = nHiLeading0
 	}
-	byTrailing0 := n.TrailingZeros()
-	if (byLeading0 + byTrailing0) == 127 { // Only one bit set in divisor, so use right shift
+	nTrailing0 := n.TrailingZeros()
+	if (nLeading0 + nTrailing0) == 127 { // Only one bit set in divisor, so use right shift
 		return n.Dec().And(u)
 	}
 	if cmp := u.Cmp(n); cmp < 0 {
@@ -728,11 +731,11 @@ func (u Uint128) Mod(n Uint128) Uint128 {
 		return Uint128{}
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
-		_, r := divmod128by128(u, n, byHiLeading0, byLoLeading0)
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
+		_, r := u.divmod128by128(n, nHiLeading0, nLoLeading0)
 		return r
 	}
-	_, r := divmod128bin(u, n, uLeading0, byLeading0)
+	_, r := u.divmod128bin(n, uLeading0, nLeading0)
 	return r
 }
 
@@ -748,10 +751,10 @@ func (u Uint128) Mod64(n uint64) Uint128 {
 		u.lo %= n
 		return u
 	}
-	byLoLeading0 := uint(bits.LeadingZeros64(n))
-	byLeading0 := byLoLeading0 + 64
-	byTrailing0 := uint(bits.TrailingZeros64(n))
-	if byLeading0+byTrailing0 == 127 { // Only one bit set in divisor, so use right shift
+	nLoLeading0 := uint(bits.LeadingZeros64(n))
+	nLeading0 := nLoLeading0 + 64
+	nTrailing0 := uint(bits.TrailingZeros64(n))
+	if nLeading0+nTrailing0 == 127 { // Only one bit set in divisor, so use right shift
 		return u.And64(n - 1)
 	}
 	if cmp := u.Cmp64(n); cmp < 0 {
@@ -760,30 +763,30 @@ func (u Uint128) Mod64(n uint64) Uint128 {
 		return Uint128{}
 	}
 	uLeading0 := u.LeadingZeros()
-	if byLeading0-uLeading0 > divBinaryShiftThreshold {
+	if nLeading0-uLeading0 > divBinaryShiftThreshold {
 		if u.hi >= n {
 			u.hi %= n
 		}
-		_, r := divmod128by64(u.hi, u.lo, n, byLoLeading0)
+		_, r := u.divmod128by64(n, nLoLeading0)
 		return Uint128{lo: r}
 	}
-	_, r := divmod128bin(u, Uint128{lo: n}, uLeading0, byLeading0)
+	_, r := u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
 	return r
 }
 
 // divmod128by64 was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func divmod128by64(u1, u0, v uint64, vLeading0 uint) (q, r uint64) {
-	v <<= vLeading0
-	vn1 := v >> 32
-	vn0 := v & 0xffffffff
-	if vLeading0 > 0 {
-		u1 = (u1 << vLeading0) | (u0 >> (64 - vLeading0))
-		u0 <<= vLeading0
+func (u Uint128) divmod128by64(n uint64, nLeading0 uint) (q, r uint64) {
+	n <<= nLeading0
+	vn1 := n >> 32
+	vn0 := n & 0xffffffff
+	if nLeading0 > 0 {
+		u.hi = (u.hi << nLeading0) | (u.lo >> (64 - nLeading0))
+		u.lo <<= nLeading0
 	}
-	un1 := u0 >> 32
-	un0 := u0 & 0xffffffff
-	q1 := u1 / vn1
-	rhat := u1 % vn1
+	un1 := u.lo >> 32
+	un0 := u.lo & 0xffffffff
+	q1 := u.hi / vn1
+	rhat := u.hi % vn1
 	left := q1 * vn0
 	right := (rhat << 32) + un1
 loop1:
@@ -796,7 +799,7 @@ loop1:
 			goto loop1
 		}
 	}
-	un21 := (u1 << 32) + (un1 - (q1 * v))
+	un21 := (u.hi << 32) + (un1 - (q1 * n))
 	q0 := un21 / vn1
 	rhat = un21 % vn1
 	left = q0 * vn0
@@ -811,48 +814,48 @@ loop2:
 			goto loop2
 		}
 	}
-	return (q1 << 32) | q0, ((un21 << 32) + (un0 - (q0 * v))) >> vLeading0
+	return (q1 << 32) | q0, ((un21 << 32) + (un0 - (q0 * n))) >> nLeading0
 }
 
 // divmod128by128 was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func divmod128by128(m, v Uint128, vHiLeading0, vLoLeading0 uint) (q, r Uint128) {
-	if v.hi == 0 {
-		if m.hi < v.lo {
-			q.lo, r.lo = divmod128by64(m.hi, m.lo, v.lo, vLoLeading0)
+func (u Uint128) divmod128by128(n Uint128, nHiLeading0, nLoLeading0 uint) (q, r Uint128) {
+	if n.hi == 0 {
+		if u.hi < n.lo {
+			q.lo, r.lo = u.divmod128by64(n.lo, nLoLeading0)
 			return q, r
 		}
-		q.hi = m.hi / v.lo
-		q.lo, r.lo = divmod128by64(m.hi%v.lo, m.lo, v.lo, vLoLeading0)
+		q.hi = u.hi / n.lo
+		u.hi %= n.lo
+		q.lo, r.lo = u.divmod128by64(n.lo, nLoLeading0)
 		r.hi = 0
 		return q, r
 	}
-	u1 := m.RightShift(1)
-	q.lo, _ = divmod128by64(u1.hi, u1.lo, v.LeftShift(vHiLeading0).hi, vLoLeading0)
-	q.lo >>= 63 - vHiLeading0
+	q.lo, _ = u.RightShift(1).divmod128by64(n.LeftShift(nHiLeading0).hi, nLoLeading0)
+	q.lo >>= 63 - nHiLeading0
 	if q.lo != 0 {
 		q.lo--
 	}
-	r = m.Sub(q.Mul(v))
-	if r.Cmp(v) >= 0 {
+	r = u.Sub(q.Mul(n))
+	if r.Cmp(n) >= 0 {
 		q = q.Inc()
-		r = r.Sub(v)
+		r = r.Sub(n)
 	}
 	return q, r
 }
 
 // divmod128bin was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func divmod128bin(u, by Uint128, uLeading0, byLeading0 uint) (q, r Uint128) {
+func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint128) {
 	shift := int(byLeading0 - uLeading0)
-	by = by.LeftShift(uint(shift))
+	n = n.LeftShift(uint(shift))
 	for {
-		if u.GreaterOrEqualTo(by) {
-			u = u.Sub(by)
+		if u.GreaterOrEqualTo(n) {
+			u = u.Sub(n)
 			q.lo |= 1
 		}
 		if shift <= 0 {
 			break
 		}
-		by = by.RightShift(1)
+		n = n.RightShift(1)
 		q = q.LeftShift(1)
 		shift--
 	}
