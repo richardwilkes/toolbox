@@ -2,11 +2,9 @@
 package i18n
 
 import (
-	"bufio"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -32,7 +30,7 @@ var (
 	// subsequent calls to Text().
 	Language = Locale()
 	// Languages is a slice of languages to fall back to should the one
-	// specified in the Language variable not be available. If is initialized
+	// specified in the Language variable not be available. It is initialized
 	// to the value of the LANGUAGE environment variable.
 	Languages = strings.Split(os.Getenv("LANGUAGE"), ":")
 	// Log is set to discard by default.
@@ -42,6 +40,12 @@ var (
 	hierLock sync.Mutex
 	hierMap  = make(map[string][]string)
 )
+
+// KeyValue is used to store key-value pairs on disk.
+type KeyValue struct {
+	K string
+	V string
+}
 
 // Text returns a localized version of the text if one exists, or the original
 // text if not.
@@ -121,48 +125,15 @@ func hierarchy(language string) []string {
 }
 
 func load(name string) {
+	var data []KeyValue
 	path := filepath.Join(Dir, name)
-	if file, err := os.Open(path); err == nil {
-		translations := make(map[string]string)
-		langMap[strings.ToLower(name[:len(name)-len(Extension)])] = translations
-		var key string
-		var lineNum int
-		var lastKeyLineNum int
-		in := bufio.NewReader(file)
-		for {
-			var line string
-			line, err = in.ReadString('\n')
-			lineNum++
-			if strings.HasPrefix(line, "k:") {
-				if key != "" {
-					Log.Errorf("value missing for key on line %d of %s\n", lastKeyLineNum, path)
-				}
-				if key = extract(line, "key", lineNum, path); key != "" {
-					lastKeyLineNum = lineNum
-				}
-			} else if strings.HasPrefix(line, "v:") {
-				if key == "" {
-					Log.Errorf("no key for value on line %d of %s\n", lineNum, path)
-				} else if value := extract(line, "value", lineNum, path); value != "" {
-					translations[key] = value
-					key = ""
-				}
-			}
-			if err != nil {
-				break
-			}
-		}
-		if err = file.Close(); err != nil {
-			Log.Error(err)
-		}
+	if err := fs.LoadYAML(path, &data); err != nil {
+		Log.Error("unable to load " + path)
+		return
 	}
-}
-
-func extract(line, label string, lineNum int, path string) string {
-	str, err := strconv.Unquote(strings.TrimSpace(line[2:]))
-	if err != nil {
-		Log.Errorf("%s malformed on line %d of %s\n", label, lineNum, path)
-		return ""
+	translations := make(map[string]string)
+	for _, one := range data {
+		translations[one.K] = one.V
 	}
-	return str
+	langMap[strings.ToLower(name[:len(name)-len(Extension)])] = translations
 }

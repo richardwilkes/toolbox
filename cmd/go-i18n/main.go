@@ -8,15 +8,18 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
-	cmdline.CopyrightYears = "2016-2017"
+	cmdline.CopyrightYears = "2016-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.License = "Mozilla Public License 2.0"
 	cl := cmdline.New(true)
@@ -73,7 +76,12 @@ func main() {
 						case *ast.BasicLit:
 							if state == LookForParameterState {
 								if x.Kind == token.STRING {
-									kv[x.Value] = x.Value
+									v, err := strconv.Unquote(x.Value)
+									if err != nil {
+										fmt.Fprintln(os.Stderr, err)
+									} else {
+										kv[v] = v
+									}
 								}
 							}
 							state = LookForPackageState
@@ -94,19 +102,35 @@ func main() {
 		}
 	}
 
-	out, err := os.Create(outPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
-		atexit.Exit(1)
-	}
-	fmt.Fprintf(out, "# Generated on %v\n", time.Now())
 	keys := make([]string, 0, len(kv))
 	for key := range kv {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+	all := make([]i18n.KeyValue, 0, len(keys))
 	for _, key := range keys {
-		fmt.Fprintf(out, "\nk: %s\nv: %s\n", key, key)
+		all = append(all, i18n.KeyValue{K: key, V: key})
+	}
+	data, err := yaml.Marshal(all)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		atexit.Exit(1)
+	}
+
+	out, err := os.Create(outPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
+		atexit.Exit(1)
+	}
+	fmt.Fprintf(out, `# Generated on %v
+
+# The contents of this file are formatted as YAML.
+# Do NOT modify the 'k' values.
+# Replace the 'v' values with the appropriate translation.
+
+`, time.Now().Format(time.RFC1123))
+	if _, err = out.Write(data); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	}
 	if err := out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

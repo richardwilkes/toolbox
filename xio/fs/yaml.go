@@ -7,7 +7,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs/safe"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // LoadYAML data from the specified path.
