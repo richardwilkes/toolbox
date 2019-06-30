@@ -87,26 +87,38 @@ func TestTrunc128d2(t *testing.T) {
 	assert.Equal(t, fixed.F128d2FromInt64(-3), fixed.F128d2FromInt64(-3).Trunc())
 }
 
-func TestYAML128d2(t *testing.T) {
-	for i := int64(-25000); i < 25001; i += 13 {
-		e1 := embedded128d2{Field: fixed.F128d2FromInt64(i)}
-		data, err := yaml.Marshal(&e1)
-		assert.NoError(t, err)
-		var e2 embedded128d2
-		err = yaml.Unmarshal(data, &e2)
-		assert.NoError(t, err)
-		require.Equal(t, e1, e2)
-	}
-}
-
 func TestJSON128d2(t *testing.T) {
 	for i := int64(-25000); i < 25001; i += 13 {
-		e1 := embedded128d2{Field: fixed.F128d2FromInt64(i)}
-		data, err := json.Marshal(&e1)
-		assert.NoError(t, err)
-		var e2 embedded128d2
-		err = json.Unmarshal(data, &e2)
-		assert.NoError(t, err)
-		require.Equal(t, e1, e2)
+		testJSON128d2(t, fixed.F128d2FromInt64(i))
 	}
+	testJSON128d2(t, fixed.F128d2FromFloat64(18446744073712590000))
+}
+
+func testJSON128d2(t *testing.T, v fixed.F128d2) {
+	t.Helper()
+	e1 := embedded128d2{Field: v}
+	data, err := json.Marshal(&e1)
+	assert.NoError(t, err)
+	var e2 embedded128d2
+	err = json.Unmarshal(data, &e2)
+	assert.NoError(t, err)
+	require.Equal(t, e1, e2)
+}
+
+func TestYAML128d2(t *testing.T) {
+	for i := int64(-25000); i < 25001; i += 13 {
+		testYAML128d2(t, fixed.F128d2FromInt64(i))
+	}
+	testYAML128d2(t, fixed.F128d2FromFloat64(18446744073712590000))
+}
+
+func testYAML128d2(t *testing.T, v fixed.F128d2) {
+	t.Helper()
+	e1 := embedded128d2{Field: v}
+	data, err := yaml.Marshal(&e1)
+	assert.NoError(t, err)
+	var e2 embedded128d2
+	err = yaml.Unmarshal(data, &e2)
+	assert.NoError(t, err)
+	require.Equal(t, e1, e2)
 }

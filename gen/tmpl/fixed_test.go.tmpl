@@ -85,26 +85,46 @@ func TestTrunc{{.Bits}}d{{.Digits}}(t *testing.T) {
     assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt64(-3).Trunc())
 }
 
-func TestYAML{{.Bits}}d{{.Digits}}(t *testing.T) {
-    for i := int64(-25000); i < 25001; i += 13 {
-        e1 := embedded{{.Bits}}d{{.Digits}}{Field: fixed.F{{.Bits}}d{{.Digits}}FromInt64(i)}
-        data, err := yaml.Marshal(&e1)
-        assert.NoError(t, err)
-        var e2 embedded{{.Bits}}d{{.Digits}}
-        err = yaml.Unmarshal(data, &e2)
-        assert.NoError(t, err)
-        require.Equal(t, e1, e2)
-    }
-}
-
 func TestJSON{{.Bits}}d{{.Digits}}(t *testing.T) {
     for i := int64(-25000); i < 25001; i += 13 {
-        e1 := embedded{{.Bits}}d{{.Digits}}{Field: fixed.F{{.Bits}}d{{.Digits}}FromInt64(i)}
-        data, err := json.Marshal(&e1)
-        assert.NoError(t, err)
-        var e2 embedded{{.Bits}}d{{.Digits}}
-        err = json.Unmarshal(data, &e2)
-        assert.NoError(t, err)
-        require.Equal(t, e1, e2)
+        testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(i))
     }
+    {{- if eq .Bits 64}}
+    testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(1844674407371259000))
+    {{- else}}
+    testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromFloat64(18446744073712590000))
+    {{- end}}
+}
+
+func testJSON{{.Bits}}d{{.Digits}}(t *testing.T, v fixed.F{{.Bits}}d{{.Digits}}) {
+    t.Helper()
+    e1 := embedded{{.Bits}}d{{.Digits}}{Field: v}
+    data, err := json.Marshal(&e1)
+    assert.NoError(t, err)
+    var e2 embedded{{.Bits}}d{{.Digits}}
+    err = json.Unmarshal(data, &e2)
+    assert.NoError(t, err)
+    require.Equal(t, e1, e2)
+}
+
+func TestYAML{{.Bits}}d{{.Digits}}(t *testing.T) {
+    for i := int64(-25000); i < 25001; i += 13 {
+        testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(i))
+    }
+    {{- if eq .Bits 64}}
+    testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(1844674407371259000))
+    {{- else}}
+    testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromFloat64(18446744073712590000))
+    {{- end}}
+}
+
+func testYAML{{.Bits}}d{{.Digits}}(t *testing.T, v fixed.F{{.Bits}}d{{.Digits}}) {
+    t.Helper()
+    e1 := embedded{{.Bits}}d{{.Digits}}{Field: v}
+    data, err := yaml.Marshal(&e1)
+    assert.NoError(t, err)
+    var e2 embedded{{.Bits}}d{{.Digits}}
+    err = yaml.Unmarshal(data, &e2)
+    assert.NoError(t, err)
+    require.Equal(t, e1, e2)
 }

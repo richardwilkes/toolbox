@@ -133,9 +133,9 @@ func Int128FromBigInt(v *big.Int) Int128 {
 
 // Int128FromString creates an Int128 from a string.
 func Int128FromString(s string) (Int128, error) {
-	b, ok := new(big.Int).SetString(s, 0)
-	if !ok {
-		return Int128{}, errs.New("invalid input")
+	b, err := parseToBigInt(s)
+	if err != nil {
+		return Int128{}, err
 	}
 	return Int128FromBigInt(b), nil
 }
@@ -672,6 +672,54 @@ func (i Int128) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (i *Int128) UnmarshalText(text []byte) (err error) {
 	v, err := Int128FromString(string(text))
+	if err != nil {
+		return err
+	}
+	*i = v
+	return nil
+}
+
+// Float64 implements json.Number. Intentionally always returns an error, as
+// we never want to emit floating point values into json for Int128.
+func (i Int128) Float64() (float64, error) {
+	return 0, errNoFloat64
+}
+
+// Int64 implements json.Number.
+func (i Int128) Int64() (int64, error) {
+	if !i.IsInt64() {
+		return 0, errDoesNotFitInInt64
+	}
+	return i.AsInt64(), nil
+}
+
+// MarshalJSON implements json.Marshaler.
+func (i Int128) MarshalJSON() ([]byte, error) {
+	return []byte(i.String()), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (i *Int128) UnmarshalJSON(in []byte) error {
+	v, err := Int128FromString(string(in))
+	if err != nil {
+		return err
+	}
+	*i = v
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (i Int128) MarshalYAML() (interface{}, error) {
+	return i.String(), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (i *Int128) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	if err := unmarshal(&str); err != nil {
+		return err
+	}
+	v, err := Int128FromString(str)
 	if err != nil {
 		return err
 	}

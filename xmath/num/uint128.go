@@ -1,11 +1,13 @@
 package num
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"math/bits"
 	"strconv"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
 )
@@ -27,6 +29,8 @@ var (
 	maxRepresentableUint64Float  = math.Nextafter(maxUint64Float, 0)
 	maxRepresentableUint128Float = math.Nextafter(float64(340282366920938463463374607431768211455), 0)
 	wrapUint64Float              = float64(math.MaxUint64) + 1
+	errNoFloat64                 = errors.New("no float64 conversion for json/yaml")
+	errDoesNotFitInInt64         = errors.New("does not fit in int64")
 )
 
 // RandomSource defines the method required of a source of random bits. This
@@ -105,11 +109,34 @@ func Uint128FromBigInt(v *big.Int) Uint128 {
 
 // Uint128FromString creates a Uint128 from a string.
 func Uint128FromString(s string) (Uint128, error) {
-	b, ok := new(big.Int).SetString(s, 0)
-	if !ok {
-		return Uint128{}, errs.New("invalid input")
+	b, err := parseToBigInt(s)
+	if err != nil {
+		return Uint128{}, err
 	}
 	return Uint128FromBigInt(b), nil
+}
+
+func parseToBigInt(s string) (*big.Int, error) {
+	var b *big.Int
+	var ok bool
+	if strings.ContainsAny(s, "Ee") {
+		// Given a floating-point value with an exponent, which technically
+		// isn't valid input, but we'll try to convert it anyway.
+		var f *big.Float
+		f, ok = new(big.Float).SetString(s)
+		if ok && !f.IsInt() {
+			ok = false
+		}
+		if ok {
+			b, _ = f.Int(nil)
+		}
+	} else {
+		b, ok = new(big.Int).SetString(s, 0)
+	}
+	if !ok {
+		return nil, errs.Newf("invalid input: %s", s)
+	}
+	return b, nil
 }
 
 // Uint128FromStringNoCheck creates a Uint128 from a string. Unlike
@@ -900,6 +927,57 @@ func (u Uint128) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (u *Uint128) UnmarshalText(text []byte) (err error) {
 	v, err := Uint128FromString(string(text))
+	if err != nil {
+		return err
+	}
+	*u = v
+	return nil
+}
+
+// Float64 implements json.Number. Intentionally always returns an error, as
+// we never want to emit floating point values into json for Uint128.
+func (u Uint128) Float64() (float64, error) {
+	return 0, errNoFloat64
+}
+
+// Int64 implements json.Number.
+func (u Uint128) Int64() (int64, error) {
+	if u.IsInt128() {
+		i128 := Int128(u)
+		if i128.IsInt64() {
+			return i128.AsInt64(), nil
+		}
+	}
+	return 0, errDoesNotFitInInt64
+}
+
+// MarshalJSON implements json.Marshaler.
+func (u Uint128) MarshalJSON() ([]byte, error) {
+	return []byte(u.String()), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (u *Uint128) UnmarshalJSON(in []byte) error {
+	v, err := Uint128FromString(string(in))
+	if err != nil {
+		return err
+	}
+	*u = v
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (u Uint128) MarshalYAML() (interface{}, error) {
+	return u.String(), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (u *Uint128) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	if err := unmarshal(&str); err != nil {
+		return err
+	}
+	v, err := Uint128FromString(str)
 	if err != nil {
 		return err
 	}

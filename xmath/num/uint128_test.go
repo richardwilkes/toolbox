@@ -32,25 +32,25 @@ var (
 			IsUint128: true,
 		},
 		{
-			Uint64:    1<<64 - 1,
+			ValueAsStr: "18446744073712590000",
+			IsUint128:  true,
+		},
+		{
+			Uint64:    math.MaxUint64,
 			IsUint64:  true,
 			IsUint128: true,
 		},
 		{
 			ValueAsStr: maxUint64PlusOneAsStr,
-			IsUint64:   false,
 			IsUint128:  true,
 		},
 		{
 			ValueAsStr: maxUint128AsStr,
-			IsUint64:   false,
 			IsUint128:  true,
 		},
 		{
 			ValueAsStr:              maxUint128PlusOneAsStr,
 			ExpectedConversionAsStr: maxUint128AsStr,
-			IsUint64:                false,
-			IsUint128:               false,
 		},
 	}
 )

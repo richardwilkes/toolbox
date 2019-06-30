@@ -37,7 +37,7 @@ func F64d{{.}}FromString(str string) (F64d{{.}}, error) {
 	if str == "" {
 		return 0, errs.New("empty string is not valid")
 	}
-	if strings.ContainsRune(str, 'E') {
+	if strings.ContainsAny(str, "Ee") {
 		// Given a floating-point value with an exponent, which technically
 		// isn't valid input, but we'll try to convert it anyway.
 		f, err := strconv.ParseFloat(str, 64)
@@ -108,13 +108,13 @@ func (f F64d{{.}}) Trunc() F64d{{.}} {
 	return f / F64d{{.}}(multiplierF64d{{.}}) * F64d{{.}}(multiplierF64d{{.}})
 }
 
-// Int64 returns the truncated equivalent integer to this value.
-func (f F64d{{.}}) Int64() int64 {
+// AsInt64 returns the truncated equivalent integer to this value.
+func (f F64d{{.}}) AsInt64() int64 {
 	return int64(f / F64d{{.}}(multiplierF64d{{.}}))
 }
 
-// Float64 returns the floating-point equivalent to this value.
-func (f F64d{{.}}) Float64() float64 {
+// AsFloat64 returns the floating-point equivalent to this value.
+func (f F64d{{.}}) AsFloat64() float64 {
 	return float64(f) / float64(multiplierF64d{{.}})
 }
 
@@ -184,5 +184,61 @@ func (f *F64d{{.}}) UnmarshalText(text []byte) error {
 		return err
 	}
 	*f = f1
+	return nil
+}
+
+// Float64 implements json.Number. Intentionally returns an error if the value
+// cannot be represented exactly with a float64, as we never want to emit
+// inexact floating point values into json for fixed-point values.
+func (f F64d{{.}}) Float64() (float64, error) {
+	n := f.AsFloat64()
+	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
+		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
+}
+
+// Int64 implements json.Number. Intentionally returns an error if the value
+// cannot be represented exactly with an int64, as we never want to emit
+// inexact values into json for fixed-point values.
+func (f F64d{{.}}) Int64() (int64, error) {
+	n := f.AsInt64()
+	if F64d{{.}}FromInt64(n) != f {
+		return 0, errDoesNotFitInInt64
+	}
+	return f.AsInt64(), nil
+}
+
+// MarshalJSON implements json.Marshaler.
+func (f F64d{{.}}) MarshalJSON() ([]byte, error) {
+	return []byte(f.String()), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (f *F64d{{.}}) UnmarshalJSON(in []byte) error {
+	v, err := F64d{{.}}FromString(string(in))
+	if err != nil {
+		return err
+	}
+	*f = v
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (f F64d{{.}}) MarshalYAML() (interface{}, error) {
+	return f.String(), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (f *F64d{{.}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	if err := unmarshal(&str); err != nil {
+		return err
+	}
+	v, err := F64d{{.}}FromString(str)
+	if err != nil {
+		return err
+	}
+	*f = v
 	return nil
 }

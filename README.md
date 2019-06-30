@@ -134,10 +134,12 @@ Math utilities.
 
 ## xmath/fixed
 Fixed-point types of varying sizes. More can be added by adjusting the types
-created in the generator.
+created in the generator. These types implement the marshal/unmarshal
+interfaces for JSON and YAML.
 
 ## xmath/num
-128-bit int and uint types.
+128-bit int and uint types. These types implement the marshal/unmarshal
+interfaces for JSON and YAML.
 
 ## xmath/geom
 Geometry primitives.

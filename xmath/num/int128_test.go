@@ -41,6 +41,14 @@ var (
 			IsInt128: true,
 		},
 		{
+			ValueAsStr: "18446744073712590000",
+			IsInt128:   true,
+		},
+		{
+			ValueAsStr: "-18446744073712590000",
+			IsInt128:   true,
+		},
+		{
 			Int64:    math.MaxInt64,
 			IsInt64:  true,
 			IsInt128: true,

@@ -47,7 +47,7 @@ func F128d3FromString(str string) (F128d3, error) {
 	if str == "" {
 		return F128d3{}, errs.New("empty string is not valid")
 	}
-	if strings.ContainsRune(str, 'E') {
+	if strings.ContainsAny(str, "Ee") {
 		// Given a floating-point value with an exponent, which technically
 		// isn't valid input, but we'll try to convert it anyway.
 		f, err := strconv.ParseFloat(str, 64)
@@ -66,7 +66,7 @@ func F128d3FromString(str string) (F128d3, error) {
 		neg = true
 	default:
 		if _, ok := value.SetString(parts[0], 10); !ok {
-			return F128d3{}, errs.New("invalid value")
+			return F128d3{}, errs.Newf("invalid value: %s", str)
 		}
 		if value.Sign() < 0 {
 			neg = true
@@ -86,7 +86,7 @@ func F128d3FromString(str string) (F128d3, error) {
 			frac = frac[:3+1]
 		}
 		if _, ok := fraction.SetString(frac, 10); !ok {
-			return F128d3{}, errs.New("invalid value")
+			return F128d3{}, errs.Newf("invalid value: %s", str)
 		}
 		value.Add(value, fraction).Sub(value, multiplierF128d3BigInt)
 	}
@@ -128,13 +128,13 @@ func (f F128d3) Trunc() F128d3 {
 	return F128d3{data: f.data.Div(multiplierF128d3).Mul(multiplierF128d3)}
 }
 
-// Int64 returns the truncated equivalent integer to this value.
-func (f F128d3) Int64() int64 {
+// AsInt64 returns the truncated equivalent integer to this value.
+func (f F128d3) AsInt64() int64 {
 	return f.data.Div(multiplierF128d3).AsInt64()
 }
 
-// Float64 returns the floating-point equivalent to this value.
-func (f F128d3) Float64() float64 {
+// AsFloat64 returns the floating-point equivalent to this value.
+func (f F128d3) AsFloat64() float64 {
 	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierF128d3BigFloat).Float64()
 	return f64
 }
@@ -210,5 +210,61 @@ func (f *F128d3) UnmarshalText(text []byte) error {
 		return err
 	}
 	*f = f1
+	return nil
+}
+
+// Float64 implements json.Number. Intentionally returns an error if the value
+// cannot be represented exactly with a float64, as we never want to emit
+// inexact floating point values into json for fixed-point values.
+func (f F128d3) Float64() (float64, error) {
+	n := f.AsFloat64()
+	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
+		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
+}
+
+// Int64 implements json.Number. Intentionally returns an error if the value
+// cannot be represented exactly with an int64, as we never want to emit
+// inexact values into json for fixed-point values.
+func (f F128d3) Int64() (int64, error) {
+	n := f.AsInt64()
+	if F128d3FromInt64(n) != f {
+		return 0, errDoesNotFitInInt64
+	}
+	return n, nil
+}
+
+// MarshalJSON implements json.Marshaler.
+func (f F128d3) MarshalJSON() ([]byte, error) {
+	return []byte(f.String()), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (f *F128d3) UnmarshalJSON(in []byte) error {
+	v, err := F128d3FromString(string(in))
+	if err != nil {
+		return err
+	}
+	*f = v
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (f F128d3) MarshalYAML() (interface{}, error) {
+	return f.String(), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (f *F128d3) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	if err := unmarshal(&str); err != nil {
+		return err
+	}
+	v, err := F128d3FromString(str)
+	if err != nil {
+		return err
+	}
+	*f = v
 	return nil
 }
