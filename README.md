@@ -77,6 +77,9 @@ Provides file rotation when files hit a given size.
 Rate limiting which supports a hierarchy of limiters, each capped by their
 parent.
 
+## softref
+Soft references.
+
 ## taskqueue
 Provides a simple asynchronous task queue.
 
