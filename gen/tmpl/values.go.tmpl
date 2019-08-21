@@ -1,69 +1,69 @@
 package cmdline
 
 import (
-    {{- if eq .Type "time.Duration"}}
-    "time"
-    {{- else if ne .Type "string"}}
-    "fmt"
-    "strconv"
-    {{- end}}
+	{{- if eq .Type "time.Duration"}}
+	"time"
+	{{- else if ne .Type "string"}}
+	"fmt"
+	"strconv"
+	{{- end}}
 
-    "github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 type {{name .Type}}Value {{.Type}}
 
 // New{{first_to_upper (name .Type)}}Option creates a new {{.Type}} Option and attaches it to this CmdLine.
 func (cl *CmdLine) New{{first_to_upper (name .Type)}}Option(val *{{.Type}}) *Option {
-    return cl.NewOption((*{{name .Type}}Value)(val))
+	return cl.NewOption((*{{name .Type}}Value)(val))
 }
 
 // Set implements the Value interface.
 func (val *{{name .Type}}Value) Set(str string) error {
-    v, err := {{.Parser}}
-    *val = {{name .Type}}Value(v)
-    return errs.Wrap(err)
+	v, err := {{.Parser}}
+	*val = {{name .Type}}Value(v)
+	return errs.Wrap(err)
 }
 
 // String implements the Value interface.
 func (val *{{name .Type}}Value) String() string {
-    {{- if eq .Type "string"}}
-    return string(*val)
-    {{- else if eq .Type "time.Duration"}}
-    return time.Duration(*val).String()
-    {{- else}}
-    return fmt.Sprintf("%v", *val)
-    {{- end}}
+	{{- if eq .Type "string"}}
+	return string(*val)
+	{{- else if eq .Type "time.Duration"}}
+	return time.Duration(*val).String()
+	{{- else}}
+	return fmt.Sprintf("%v", *val)
+	{{- end}}
 }
 
 type {{name .Type}}ArrayValue []{{.Type}}
 
 // New{{first_to_upper (name .Type)}}ArrayOption creates a new []{{.Type}} Option and attaches it to this CmdLine.
 func (cl *CmdLine) New{{first_to_upper (name .Type)}}ArrayOption(val *[]{{.Type}}) *Option {
-    return cl.NewOption((*{{name .Type}}ArrayValue)(val))
+	return cl.NewOption((*{{name .Type}}ArrayValue)(val))
 }
 
 // Set implements the Value interface.
 func (val *{{name .Type}}ArrayValue) Set(str string) error {
-    v, err := {{.Parser}}
-    *val = append(*val, {{if .NeedConversion}}{{.Type}}(v){{else}}v{{end}})
-    return errs.Wrap(err)
+	v, err := {{.Parser}}
+	*val = append(*val, {{if .NeedConversion}}{{.Type}}(v){{else}}v{{end}})
+	return errs.Wrap(err)
 }
 
 // String implements the Value interface.
 func (val *{{name .Type}}ArrayValue) String() string {
-    var str string
-    for _, v := range *val {
-        if str == "" {
-            str += ", "
-        }
-        {{- if eq .Type "string"}}
-        str += v
-        {{- else if eq .Type "time.Duration"}}
-        str += v.String()
-        {{- else}}
-        str += fmt.Sprintf("%v", v)
-        {{- end}}
-    }
-    return str
+	var str string
+	for _, v := range *val {
+		if str == "" {
+			str += ", "
+		}
+		{{- if eq .Type "string"}}
+		str += v
+		{{- else if eq .Type "time.Duration"}}
+		str += v.String()
+		{{- else}}
+		str += fmt.Sprintf("%v", v)
+		{{- end}}
+	}
+	return str
 }

@@ -212,11 +212,11 @@ func (f *F128d{{.}}) UnmarshalText(text []byte) error {
 // cannot be represented exactly with a float64, as we never want to emit
 // inexact floating point values into json for fixed-point values.
 func (f F128d{{.}}) Float64() (float64, error) {
-    n := f.AsFloat64()
-    if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
-        return 0, errDoesNotFitInFloat64
-    }
-    return n, nil
+	n := f.AsFloat64()
+	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
+		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
 }
 
 // Int64 implements json.Number. Intentionally returns an error if the value
