@@ -36,7 +36,7 @@ func Register(f func()) {
 // Exit runs any registered exit functions in the inverse order they were
 // registered and then exits with the specified status.
 func Exit(status int) {
-	lock.Lock() // Intentionaly don't bother to unlock. Prevents secondary calls to Exit from causing early exits.
+	lock.Lock() // Intentionally don't unlock. Prevents secondary calls to Exit from causing early exits.
 	all := make([]func(), len(funcs))
 	copy(all, funcs)
 	for i := len(all) - 1; i >= 0; i-- {
