@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
-
-	"gopkg.in/yaml.v2"
+	"github.com/richardwilkes/toolbox/txt"
 )
 
 func main() {
@@ -106,34 +106,44 @@ func main() {
 	for key := range kv {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
-	all := make([]i18n.KeyValue, 0, len(keys))
-	for _, key := range keys {
-		all = append(all, i18n.KeyValue{K: key, V: key})
-	}
-	data, err := yaml.Marshal(all)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		atexit.Exit(1)
-	}
-
+	sort.Slice(keys, func(i, j int) bool {
+		return txt.NaturalLess(keys[i], keys[j], true)
+	})
 	out, err := os.Create(outPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
 		atexit.Exit(1)
 	}
 	fmt.Fprintf(out, `# Generated on %v
-
-# The contents of this file are formatted as YAML.
-# Do NOT modify the 'k' values.
+#
+# Key-value pairs are defined as one or more lines prefixed with "k:" for the
+# key, followed by one or more lines prefixed with "v:" for the value. These
+# prefixes are then followed by a quoted string, using escaping rules for Go
+# strings where needed. When two or more lines are present in a row, they will
+# be concatenated together with an intervening \n character.
+#
+# Do NOT modify the 'k' values. They are the values as seen in the code.
+#
 # Replace the 'v' values with the appropriate translation.
-
 `, time.Now().Format(time.RFC1123))
-	if _, err = out.Write(data); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	for _, key := range keys {
+		fmt.Fprintln(out)
+		for _, p := range strings.Split(key, "\n") {
+			if _, err = fmt.Fprintf(out, "k:%q\n", p); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				atexit.Exit(1)
+			}
+		}
+		for _, p := range strings.Split(key, "\n") {
+			if _, err = fmt.Fprintf(out, "v:%q\n", p); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				atexit.Exit(1)
+			}
+		}
 	}
-	if err := out.Close(); err != nil {
+	if err = out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		atexit.Exit(1)
 	}
 	atexit.Exit(0)
 }

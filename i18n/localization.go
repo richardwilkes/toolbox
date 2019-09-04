@@ -2,6 +2,8 @@
 package i18n
 
 import (
+	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/richardwilkes/toolbox/log/logadapter"
+	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs"
 )
 
@@ -40,12 +43,6 @@ var (
 	hierLock sync.Mutex
 	hierMap  = make(map[string][]string)
 )
-
-// KeyValue is used to store key-value pairs on disk.
-type KeyValue struct {
-	K string
-	V string
-}
 
 // Text returns a localized version of the text if one exists, or the original
 // text if not.
@@ -125,15 +122,72 @@ func hierarchy(language string) []string {
 }
 
 func load(name string) {
-	var data []KeyValue
 	path := filepath.Join(Dir, name)
-	if err := fs.LoadYAML(path, &data); err != nil {
+	f, err := os.Open(path)
+	if err != nil {
 		Log.Error("unable to load " + path)
 		return
 	}
+	defer xio.CloseIgnoringErrors(f)
+	lineNum := 1
+	lastKeyLineStart := 1
 	translations := make(map[string]string)
-	for _, one := range data {
-		translations[one.K] = one.V
+	var key, value string
+	var hasKey, hasValue bool
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		line := s.Text()
+		if strings.HasPrefix(line, "k:") {
+			if hasValue {
+				if _, exists := translations[key]; !exists {
+					translations[key] = value
+				} else {
+					Log.Errorf("ignoring duplicate key on line %d of %s", lastKeyLineStart, path)
+				}
+				hasKey = false
+				hasValue = false
+			}
+			var buffer string
+			if _, err = fmt.Scanf("k:%q", &buffer); err != nil {
+				Log.Errorf("ignoring invalid key on line %d of %s", lineNum, path)
+			} else {
+				if hasKey {
+					key += "\n" + buffer
+				} else {
+					key = buffer
+					hasKey = true
+					lastKeyLineStart = lineNum
+				}
+			}
+		} else if strings.HasPrefix(line, "v:") {
+			if hasKey {
+				var buffer string
+				if _, err = fmt.Scanf("v:%q", &buffer); err != nil {
+					Log.Errorf("ignoring invalid value on line %d of %s", lineNum, path)
+				} else {
+					if hasValue {
+						value += "\n" + buffer
+					} else {
+						value = buffer
+						hasValue = true
+					}
+				}
+			} else {
+				Log.Errorf("ignoring value with no previous key on line %d of %s", lineNum, path)
+			}
+		}
+		lineNum++
+	}
+	if hasKey {
+		if hasValue {
+			if _, exists := translations[key]; !exists {
+				translations[key] = value
+			} else {
+				Log.Errorf("ignoring duplicate key on line %d of %s", lastKeyLineStart, path)
+			}
+		} else {
+			Log.Errorf("ignoring key with missing value on line %d of %s", lastKeyLineStart, path)
+		}
 	}
 	langMap[strings.ToLower(name[:len(name)-len(Extension)])] = translations
 }
