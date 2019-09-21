@@ -53,6 +53,16 @@ func (r Rect) CenterY() float64 {
 	return r.Y + r.Height/2
 }
 
+// Right returns the right edge, or X + Width.
+func (r Rect) Right() float64 {
+	return r.X + r.Width
+}
+
+// Bottom returns the bottom edge, or Y + Height.
+func (r Rect) Bottom() float64 {
+	return r.Y + r.Height
+}
+
 // IsEmpty returns true if either the width or height is zero or less.
 func (r Rect) IsEmpty() bool {
 	return r.Width <= 0 || r.Height <= 0
