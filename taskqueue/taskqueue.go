@@ -18,16 +18,23 @@ type Option func(*Queue)
 
 // Queue holds the queue information.
 type Queue struct {
-	in      chan Task
-	done    chan bool
-	depth   int
-	workers int
-	logger  Logger
+	in              chan Task
+	done            chan bool
+	depth           int
+	workers         int
+	recoveryHandler errs.RecoveryHandler
 }
 
-// Log sets the logger for tasks that panic. Defaults to no logger.
+// Log sets the logger for tasks that panic.
+// Deprecated: Use RecoveryHandler instead.
 func Log(logger Logger) Option {
-	return func(q *Queue) { q.logger = logger }
+	return func(q *Queue) { q.recoveryHandler = func(err error) { logger(err) } }
+}
+
+// RecoveryHandler sets the recovery handler to use for tasks that panic.
+// Defaults to none, which silently ignores the panic.
+func RecoveryHandler(recoveryHandler errs.RecoveryHandler) Option {
+	return func(q *Queue) { q.recoveryHandler = recoveryHandler }
 }
 
 // Depth sets the depth of the queue. Calls to Submit() will block when this
@@ -148,21 +155,12 @@ outer:
 
 func (q *Queue) work(tasks <-chan Task, ready chan<- bool) {
 	for task := range tasks {
-		runTask(task, q.logger)
+		q.runTask(task)
 		ready <- true
 	}
 }
 
-func runTask(task Task, logger Logger) {
-	defer recovery(logger)
+func (q *Queue) runTask(task Task) {
+	defer errs.Recovery(q.recoveryHandler)
 	task()
-}
-
-func recovery(logger Logger) {
-	if recovered := recover(); recovered != nil {
-		if logger != nil {
-			defer recovery(nil) // Guard against a bad logging implementaton
-			logger(errs.Newf("recovered from panic: %+v", recovered))
-		}
-	}
 }

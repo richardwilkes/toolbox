@@ -4,15 +4,22 @@ package atexit
 
 import (
 	"fmt"
+	"log" //nolint:depguard
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 var (
-	lock  sync.Mutex
-	funcs []func()
+	// RecoveryHandler will be used to capture any panics caused by functions
+	// that have been installed when run during exit. It may be set to nil to
+	// silently ignore them.
+	RecoveryHandler errs.RecoveryHandler = func(err error) { log.Println(err) }
+	lock            sync.Mutex
+	funcs           []func()
 )
 
 // Register a function to be run at exit.
@@ -46,10 +53,6 @@ func Exit(status int) {
 }
 
 func run(f func()) {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("panic during cleanup: %+v\n", err)
-		}
-	}()
+	defer errs.Recovery(RecoveryHandler)
 	f()
 }
