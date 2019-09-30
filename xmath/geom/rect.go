@@ -63,6 +63,14 @@ func (r Rect) Bottom() float64 {
 	return r.Y + r.Height
 }
 
+// Max returns the bottom right corner of the rectangle.
+func (r Rect) Max() Point {
+	return Point{
+		X: r.X + r.Width,
+		Y: r.Y + r.Height,
+	}
+}
+
 // IsEmpty returns true if either the width or height is zero or less.
 func (r Rect) IsEmpty() bool {
 	return r.Width <= 0 || r.Height <= 0
