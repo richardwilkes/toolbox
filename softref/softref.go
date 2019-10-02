@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/log/logadapter"
 )
 
@@ -33,6 +34,9 @@ type softRef struct {
 	resource Resource
 	count    int
 }
+
+// DefaultPool is a global default soft reference pool.
+var DefaultPool = NewPool(&jot.Logger{})
 
 // NewPool creates a new soft reference pool. 'logger' may be nil.
 func NewPool(logger logadapter.WarnLogger) *Pool {
