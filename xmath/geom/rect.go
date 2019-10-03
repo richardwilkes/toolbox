@@ -43,6 +43,14 @@ func (r *Rect) CopyAndZeroLocation() Rect {
 	return Rect{Size: r.Size}
 }
 
+// Center returns the center of the rectangle.
+func (r Rect) Center() Point {
+	return Point{
+		X: r.CenterX(),
+		Y: r.CenterY(),
+	}
+}
+
 // CenterX returns the center x-coordinate of the rectangle.
 func (r Rect) CenterX() float64 {
 	return r.X + r.Width/2
