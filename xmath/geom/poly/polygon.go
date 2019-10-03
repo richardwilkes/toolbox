@@ -42,6 +42,16 @@ func ApproximateEllipse(bounds geom.Rect, sections int) Polygon {
 	return Polygon{contour}
 }
 
+// Rect creates a new polygon in the shape of a rectangle.
+func Rect(bounds geom.Rect) Polygon {
+	return Polygon{Contour{
+		bounds.Point,
+		geom.Point{X: bounds.X, Y: bounds.Bottom()},
+		geom.Point{X: bounds.Right(), Y: bounds.Bottom()},
+		geom.Point{X: bounds.Right(), Y: bounds.Y},
+	}}
+}
+
 // Add a contour to a polygon.
 func (p *Polygon) Add(c Contour) {
 	*p = append(*p, c)
