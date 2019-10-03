@@ -23,6 +23,25 @@ const (
 // be used with those methods.
 type Polygon []Contour
 
+// ApproximateEllipse creates a polygon that approximates an ellipse.
+// 'sections' indicates how many segments to break the ellipse contour into.
+func ApproximateEllipse(bounds geom.Rect, sections int) Polygon {
+	halfWidth := bounds.Width / 2
+	halfHeight := bounds.Height / 2
+	inc := math.Pi * 2 / float64(sections)
+	center := bounds.Center()
+	contour := make(Contour, sections)
+	var angle float64
+	for i := 0; i < sections; i++ {
+		contour[i] = geom.Point{
+			X: center.X + math.Cos(angle)*halfWidth,
+			Y: center.Y + math.Sin(angle)*halfHeight,
+		}
+		angle += inc
+	}
+	return Polygon{contour}
+}
+
 // Add a contour to a polygon.
 func (p *Polygon) Add(c Contour) {
 	*p = append(*p, c)
