@@ -68,6 +68,9 @@ func (p Polygon) Clone() Polygon {
 
 // Bounds returns the bounding rectangle of this polygon.
 func (p Polygon) Bounds() geom.Rect {
+	if len(p) == 0 {
+		return geom.Rect{}
+	}
 	bb := p[0].Bounds()
 	for _, c := range p[1:] {
 		bb.Union(c.Bounds())
