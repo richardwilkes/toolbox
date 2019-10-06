@@ -193,7 +193,6 @@ func (e *edgeNode) bundleFields(pt geom.Point) {
 	}
 }
 
-// Process each edge at this scanbeam boundary
 func (e *edgeNode) process(op clipOp, pt geom.Point, inPoly *polygonNode) (bPt geom.Point, outPoly *polygonNode) {
 	bPt = pt
 	outPoly = inPoly
