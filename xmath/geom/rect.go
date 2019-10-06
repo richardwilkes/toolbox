@@ -30,10 +30,10 @@ func NewRectPtr(x, y, width, height float64) *Rect {
 // encompass the original rectangle.
 func (r *Rect) Align() {
 	x := math.Floor(r.X)
-	r.Width = math.Ceil(r.X+r.Width) - x
+	r.Width = math.Ceil(r.Right()) - x
 	r.X = x
 	y := math.Floor(r.Y)
-	r.Height = math.Ceil(r.Y+r.Height) - y
+	r.Height = math.Ceil(r.Bottom()) - y
 	r.Y = y
 }
 
@@ -74,8 +74,8 @@ func (r Rect) Bottom() float64 {
 // Max returns the bottom right corner of the rectangle.
 func (r Rect) Max() Point {
 	return Point{
-		X: r.X + r.Width,
-		Y: r.Y + r.Height,
+		X: r.Right(),
+		Y: r.Bottom(),
 	}
 }
 
@@ -87,8 +87,8 @@ func (r Rect) IsEmpty() bool {
 // Intersects returns true if this rect and the other rect intersect.
 func (r Rect) Intersects(other Rect) bool {
 	if !r.IsEmpty() && !other.IsEmpty() {
-		return math.Min(r.X+r.Width, other.X+other.Width)-math.Max(r.X, other.X) > 0 &&
-			math.Min(r.Y+r.Height, other.Y+other.Height)-math.Max(r.Y, other.Y) > 0
+		return r.X < other.Right() && r.Y < other.Bottom() &&
+			r.Right() > other.X && r.Bottom() > other.Y
 	}
 	return false
 }
@@ -101,8 +101,8 @@ func (r *Rect) Intersect(other Rect) {
 	} else {
 		x := math.Max(r.X, other.X)
 		y := math.Max(r.Y, other.Y)
-		w := math.Min(r.X+r.Width, other.X+other.Width) - x
-		h := math.Min(r.Y+r.Height, other.Y+other.Height) - y
+		w := math.Min(r.Right(), other.Right()) - x
+		h := math.Min(r.Bottom(), other.Bottom()) - y
 		if w > 0 && h > 0 {
 			r.X = x
 			r.Y = y
@@ -128,8 +128,8 @@ func (r *Rect) Union(other Rect) {
 	case !e2:
 		x := math.Min(r.X, other.X)
 		y := math.Min(r.Y, other.Y)
-		r.Width = math.Max(r.X+r.Width, other.X+other.Width) - x
-		r.Height = math.Max(r.Y+r.Height, other.Y+other.Height) - y
+		r.Width = math.Max(r.Right(), other.Right()) - x
+		r.Height = math.Max(r.Bottom(), other.Bottom()) - y
 		r.X = x
 		r.Y = y
 	}
@@ -173,7 +173,7 @@ func (r Rect) ContainsPoint(pt Point) bool {
 	if r.IsEmpty() {
 		return false
 	}
-	return r.X <= pt.X && r.Y <= pt.Y && pt.X < r.X+r.Width && pt.Y < r.Y+r.Height
+	return r.X <= pt.X && r.Y <= pt.Y && pt.X < r.Right() && pt.Y < r.Bottom()
 }
 
 // ContainsRect returns true if this Rect fully contains the passed in Rect.
@@ -183,8 +183,8 @@ func (r Rect) ContainsRect(in Rect) bool {
 	}
 	right := r.X + r.Width
 	bottom := r.Y + r.Height
-	inRight := in.X + in.Width - 1
-	inBottom := in.Y + in.Height - 1
+	inRight := in.Right() - 1
+	inBottom := in.Bottom() - 1
 	return r.X <= in.X && r.Y <= in.Y && in.X < right && in.Y < bottom && r.X <= inRight && r.Y <= inBottom && inRight < right && inBottom < bottom
 }
 

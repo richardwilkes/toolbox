@@ -6,11 +6,6 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/geom"
 )
 
-type segment struct {
-	start geom.Point
-	end   geom.Point
-}
-
 // Contour is a sequence of vertices connected by line segments, forming a
 // closed shape.
 type Contour []geom.Point
@@ -22,9 +17,12 @@ func (c Contour) Clone() Contour {
 
 // Bounds returns the bounding rectangle of a contour.
 func (c Contour) Bounds() geom.Rect {
-	minX := math.Inf(1)
+	if len(c) == 0 {
+		return geom.Rect{}
+	}
+	minX := math.MaxFloat64
 	minY := minX
-	maxX := math.Inf(-1)
+	maxX := -math.MaxFloat64
 	maxY := maxX
 	for _, p := range c {
 		if p.X > maxX {
@@ -46,8 +44,8 @@ func (c Contour) Bounds() geom.Rect {
 			Y: minY,
 		},
 		Size: geom.Size{
-			Width:  maxX - minX,
-			Height: maxY - minY,
+			Width:  1 + maxX - minX,
+			Height: 1 + maxY - minY,
 		},
 	}
 }
@@ -73,12 +71,4 @@ func (c Contour) Contains(pt geom.Point) bool {
 		}
 	}
 	return count%2 == 1
-}
-
-func (c Contour) segment(index int) segment {
-	right := 0
-	if index != len(c)-1 {
-		right = index + 1
-	}
-	return segment{c[index], c[right]}
 }
