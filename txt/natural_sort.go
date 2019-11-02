@@ -1,5 +1,7 @@
 package txt
 
+import "sort"
+
 // NaturalLess compares two strings using natural ordering. This means that
 // "a2" < "a12".
 //
@@ -76,4 +78,16 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 		return NaturalLess(s1, s2, false)
 	}
 	return len(s1) < len(s2)
+}
+
+// SortStringsNaturalAscending sorts a slice of strings using NaturalLess in
+// least to most order.
+func SortStringsNaturalAscending(in []string) {
+	sort.Slice(in, func(i, j int) bool { return NaturalLess(in[i], in[j], true) })
+}
+
+// SortStringsNaturalDescending sorts a slice of strings using NaturalLess in
+// most to least order.
+func SortStringsNaturalDescending(in []string) {
+	sort.Slice(in, func(i, j int) bool { return NaturalLess(in[j], in[i], true) })
 }
