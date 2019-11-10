@@ -54,7 +54,9 @@ func init() {
 	if AppCmdName == "" {
 		AppCmdName = "<unknown>"
 	}
-	AppName = AppCmdName
+	if AppName == "" {
+		AppName = AppCmdName
+	}
 }
 
 // Copyright returns the copyright notice.
