@@ -15,7 +15,11 @@ type RecoveryHandler func(error)
 // }
 func Recovery(handler RecoveryHandler) {
 	if recovered := recover(); recovered != nil && handler != nil {
+		err, ok := recovered.(error)
+		if !ok {
+			err = Newf("%+v", recovered)
+		}
 		defer Recovery(nil) // Guard against a bad handler implementation
-		handler(Newf("recovered from panic: %+v", recovered))
+		handler(NewWithCause("recovered from panic", err))
 	}
 }
