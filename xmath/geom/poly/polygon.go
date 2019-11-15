@@ -45,6 +45,25 @@ const (
 // may be self-intersecting.
 type Polygon []Contour
 
+// CalcEllipseSegmentCount returns a suggested number of segments to use when
+// generating an ellipse. 'r' is the largest radius of the ellipse. 'e' is the
+// acceptable error, typically 1 or less.
+func CalcEllipseSegmentCount(r, e float64) int {
+	d := 1 - e/r
+	n := int(math.Ceil(2 * math.Pi / math.Acos(2*d*d-1)))
+	if n < 4 {
+		n = 4
+	}
+	return n
+}
+
+// ApproximateEllipseAuto creates a polygon that approximates an ellipse,
+// automatically choose the number of segments to break the ellipse contour
+// into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
+func ApproximateEllipseAuto(bounds geom.Rect) Polygon {
+	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(math.Max(bounds.Width, bounds.Height)/2, 0.2))
+}
+
 // ApproximateEllipse creates a polygon that approximates an ellipse.
 // 'sections' indicates how many segments to break the ellipse contour into.
 func ApproximateEllipse(bounds geom.Rect, sections int) Polygon {
