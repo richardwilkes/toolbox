@@ -47,6 +47,11 @@ func (d *detail) Format(state fmt.State, verb rune) {
 	}
 }
 
+// StackTrace returns the raw call stack pointers.
+func (d *detail) StackTrace() []uintptr {
+	return d.stack
+}
+
 func (d *detail) detail(includeMessage, trimRuntime bool) string {
 	var buffer strings.Builder
 	if includeMessage {

@@ -207,6 +207,14 @@ func (d *Error) StackTrace(trimRuntime bool) string {
 	return d.errors[0].detail(false, trimRuntime)
 }
 
+// RawStackTrace returns the raw call stack pointers.
+func (d *Error) RawStackTrace() []uintptr {
+	if len(d.errors) == 0 {
+		return nil
+	}
+	return d.errors[0].StackTrace()
+}
+
 // ErrorOrNil returns an error interface if this Error represents one or more
 // errors, or nil if it is empty.
 func (d *Error) ErrorOrNil() error {
@@ -223,6 +231,14 @@ func (d *Error) WrappedErrors() []error {
 		result[i] = one
 	}
 	return result
+}
+
+// Unwrap implements errors.Unwrap and returns the underlying cause, if any.
+func (d *Error) Unwrap() error {
+	if len(d.errors) == 0 {
+		return nil
+	}
+	return d.errors[0].Cause()
 }
 
 // Format implements the fmt.Formatter interface.

@@ -7,6 +7,6 @@ require (
 	github.com/jackpal/gateway v1.0.5
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
 	github.com/stretchr/testify v1.4.0
-	golang.org/x/sys v0.0.0-20191115151921-52ab43148777 // indirect
-	gopkg.in/yaml.v2 v2.2.5
+	golang.org/x/sys v0.0.0-20191204072324-ce4227a45e2e // indirect
+	gopkg.in/yaml.v2 v2.2.7
 )
