@@ -164,7 +164,7 @@ func (s *Server) Shutdown() {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(gracePeriod))
 	defer cancel()
 	if err := s.WebServer.Shutdown(ctx); err != nil {
-		s.Logger.Warn(errs.NewfWithCause(err, "Unable to shutdown %s gracefully", s.Protocol()))
+		s.Logger.Warn(errs.NewWithCausef(err, "Unable to shutdown %s gracefully", s.Protocol()))
 	}
 	if s.ShutdownCallback != nil {
 		s.ShutdownCallback()

@@ -83,7 +83,7 @@ func init() {
 								portType = "UDP"
 							}
 							select {
-							case v.notifyChan <- errs.NewfWithCause(err, "Mapping renewal for %s port %d failed", portType, port):
+							case v.notifyChan <- errs.NewWithCausef(err, "Mapping renewal for %s port %d failed", portType, port):
 							default:
 							}
 						} else if v.external != external {

@@ -76,7 +76,7 @@ func (repo *Repo) Clone() error {
 // Checkout a revision, branch or tag.
 func (repo *Repo) Checkout(revisionBranchOrTag string) error {
 	if _, err := repo.runFromDir("git", "checkout", revisionBranchOrTag); err != nil {
-		return errs.NewfWithCause(err, i18n.Text("Unable to check out '%s'"), revisionBranchOrTag)
+		return errs.NewWithCausef(err, i18n.Text("Unable to check out '%s'"), revisionBranchOrTag)
 	}
 	return nil
 }
