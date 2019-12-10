@@ -34,6 +34,19 @@ linters-settings:
     min-confidence: 0.8
   govet:
     check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - Errorf
+          - Warnf
+          - Infof
+          - Debugf
+          - Fatalf
+          - StartRootSpanf
+          - StartSubSpanf
+          - EndWithMsgf
+          - Newf
+          - NewWithCausef
   maligned:
     suggest-new: true
   misspell:
@@ -81,3 +94,9 @@ issues:
     - "G304: Potential file inclusion via variable"
     - "G104: Errors unhandled"
     - "G204: Subprocess launched with variable"
+  exclude-rules:
+    - path: _gen\.go
+      linters:
+        - unused
+        - deadcode
+        - goconst

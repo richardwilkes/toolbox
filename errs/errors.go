@@ -112,7 +112,15 @@ func NewWithCause(message string, cause error) *Error {
 
 // NewfWithCause creates a new detailed error with an underlying 'cause' and
 // using fmt.Sprintf() to format the message.
+//
+// Deprecated: Use NewWithCausef instead.
 func NewfWithCause(cause error, format string, v ...interface{}) *Error {
+	return NewWithCause(fmt.Sprintf(format, v...), cause)
+}
+
+// NewWithCausef creates a new detailed error with an underlying 'cause' and
+// using fmt.Sprintf() to format the message.
+func NewWithCausef(cause error, format string, v ...interface{}) *Error {
 	return NewWithCause(fmt.Sprintf(format, v...), cause)
 }
 
