@@ -65,7 +65,7 @@ func TestRecovery(t *testing.T) {
 	require.Panics(t, boom)
 	logged := false
 	assert.NotPanics(t, func() {
-		q := taskqueue.New(taskqueue.Log(func(v ...interface{}) { logged = true }))
+		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { logged = true }))
 		q.Submit(boom)
 		q.Shutdown()
 	})
@@ -75,7 +75,7 @@ func TestRecovery(t *testing.T) {
 func TestRecoveryWithBadLogger(t *testing.T) {
 	require.Panics(t, boom)
 	assert.NotPanics(t, func() {
-		q := taskqueue.New(taskqueue.Log(func(v ...interface{}) { boom() }))
+		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { boom() }))
 		q.Submit(boom)
 		q.Shutdown()
 	})
@@ -83,5 +83,6 @@ func TestRecoveryWithBadLogger(t *testing.T) {
 
 func boom() {
 	var bad *int
-	*bad = 1 //nolint:govet
+	// noinspection GoNilness
+	*bad = 1
 }
