@@ -70,22 +70,23 @@ func Copyright() string {
 
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
-	version := NewVersionFromString(AppVersion)
 	term.WrapText(cl, "", AppName)
-	term.WrapText(cl, "  ", version.Format(true, false))
+	var buildInfo string
+	if AppVersion != "" {
+		buildInfo = fmt.Sprintf(i18n.Text("Version %s"), AppVersion)
+	} else {
+		buildInfo = i18n.Text("Development Version")
+	}
+	if BuildNumber != "" {
+		buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
+	}
+	term.WrapText(cl, "  ", buildInfo)
+	if GitVersion != "" {
+		term.WrapText(cl, "  ", "git: "+GitVersion)
+	}
 	term.WrapText(cl, "  ", Copyright())
 	if License != "" {
 		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("License: %s"), License))
-	}
-	if BuildNumber != "" {
-		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("Build %s"), BuildNumber))
-	}
-	if !version.IsDevelopment() && !version.IsWhenUnset() {
-		when := version.When().Local()
-		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("Built on %[1]s at %[2]s"), when.Format("Monday, January 2, 2006"), when.Format("3:04:05 PM MST")))
-	}
-	if GitVersion != "" {
-		term.WrapText(cl, "  ", "git: "+GitVersion)
 	}
 	fmt.Fprintln(cl)
 	if cl.Description != "" {

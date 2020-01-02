@@ -165,7 +165,21 @@ func (cl *CmdLine) Parse(args []string) []string {
 		atexit.Exit(1)
 	}
 	if cl.showVersion || cl.showLongVersion {
-		fmt.Fprintln(cl, NewVersionFromString(AppVersion).Format(false, cl.showLongVersion))
+		var version string
+		if AppVersion != "" {
+			version = AppVersion
+		} else {
+			version = i18n.Text("Development")
+		}
+		if cl.showLongVersion {
+			if BuildNumber != "" {
+				if !strings.HasSuffix(version, "~") {
+					version += "-"
+				}
+				version += BuildNumber
+			}
+		}
+		fmt.Fprintln(cl, version)
 		atexit.Exit(0)
 	}
 	return remainingArgs
