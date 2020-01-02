@@ -28,6 +28,7 @@ linters-settings:
       - experimental
     disabled-checks:
       - sloppyReassign
+      - whyNoLint
   gofmt:
     simplify: true
   golint:
