@@ -19,7 +19,6 @@ import (
 )
 
 func main() {
-	cmdline.CopyrightYears = "2016-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
 	cmdline.License = "Mozilla Public License 2.0"
 	cl := cmdline.New(true)
@@ -35,7 +34,7 @@ func main() {
 		cl.FatalMsg(i18n.Text("At least one path must be specified."))
 	}
 	kv := make(map[string]string)
-	fset := token.NewFileSet()
+	fileSet := token.NewFileSet()
 	for _, pathArg := range args {
 		var err error
 		if pathArg, err = filepath.Abs(pathArg); err == nil {
@@ -46,7 +45,7 @@ func main() {
 				if !fi.IsDir() && filepath.Ext(path) == ".go" {
 					fmt.Println(path)
 					var file *ast.File
-					if file, err = parser.ParseFile(fset, path, nil, 0); err != nil {
+					if file, err = parser.ParseFile(fileSet, path, nil, 0); err != nil {
 						fmt.Fprintln(os.Stderr, err)
 						atexit.Exit(1)
 					}
@@ -76,8 +75,8 @@ func main() {
 						case *ast.BasicLit:
 							if state == LookForParameterState {
 								if x.Kind == token.STRING {
-									v, err := strconv.Unquote(x.Value)
-									if err != nil {
+									var v string
+									if v, err = strconv.Unquote(x.Value); err != nil {
 										fmt.Fprintln(os.Stderr, err)
 									} else {
 										kv[v] = v
@@ -141,6 +140,7 @@ func main() {
 			}
 		}
 	}
+	// noinspection GoNilness
 	if err = out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		atexit.Exit(1)

@@ -41,10 +41,8 @@ type tmplInput struct {
 }
 
 func main() {
-	cmdline.AppName = "Make Embedded Go FileSystem"
-	cmdline.AppVersion = "1.0.2"
-	cmdline.CopyrightYears = "2018-2019"
 	cmdline.CopyrightHolder = "Richard A. Wilkes"
+	cmdline.License = "Mozilla Public License 2.0"
 	cl := cmdline.New(true)
 	cl.UsageSuffix = "<one or more file paths to include>"
 	cfg := tmplInput{
