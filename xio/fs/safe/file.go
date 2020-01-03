@@ -52,6 +52,7 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if runtime.GOOS != toolbox.WindowsOS { // Windows doesn't support changing the mode
 		if err = f.Chmod(mode); err != nil {
 			xio.CloseIgnoringErrors(f)
+			// noinspection GoUnhandledErrorResult
 			os.Remove(f.Name()) //nolint: errcheck
 			return nil, err
 		}
@@ -79,14 +80,15 @@ func (f *File) Commit() error {
 	f.committed = true
 	f.closed = true
 	err := f.Sync()
-	if cerr := f.File.Close(); cerr != nil && err == nil {
-		err = cerr
+	if closeErr := f.File.Close(); closeErr != nil && err == nil {
+		err = closeErr
 	}
 	name := f.Name()
 	if err == nil {
 		err = os.Rename(name, f.originalName)
 	}
 	if err != nil {
+		// noinspection GoUnhandledErrorResult
 		os.Remove(name) //nolint: errcheck
 	}
 	return err
@@ -103,8 +105,8 @@ func (f *File) Close() error {
 	}
 	f.closed = true
 	err := f.File.Close()
-	if rerr := os.Remove(f.Name()); rerr != nil && err == nil {
-		err = rerr
+	if removeErr := os.Remove(f.Name()); removeErr != nil && err == nil {
+		err = removeErr
 	}
 	return err
 }

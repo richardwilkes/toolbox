@@ -564,6 +564,7 @@ func (i Int128) Div(n Int128) Int128 {
 	qSign := 1
 	if i.LessThan(Int128{}) {
 		qSign = -1
+		// noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n.LessThan(Int128{}) {
@@ -582,6 +583,7 @@ func (i Int128) Div64(n int64) Int128 {
 	qSign := 1
 	if i.LessThan(Int128{}) {
 		qSign = -1
+		// noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n < 0 {
@@ -603,6 +605,7 @@ func (i Int128) DivMod(n Int128) (q, r Int128) {
 	if i.LessThan(Int128{}) {
 		qSign = -1
 		rSign = -1
+		// noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n.LessThan(Int128{}) {

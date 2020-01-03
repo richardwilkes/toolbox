@@ -54,8 +54,8 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 	}
 	for _, name := range names {
 		filename := filepath.Join(path, name)
-		fileInfo, err := stat(fs, filename)
-		if err != nil {
+		var fileInfo os.FileInfo
+		if fileInfo, err = stat(fs, filename); err != nil {
 			if err = walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
 				return err
 			}

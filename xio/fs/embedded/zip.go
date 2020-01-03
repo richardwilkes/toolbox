@@ -26,13 +26,13 @@ import (
 // the local disk.
 //
 // To create an embedded zip file, first create your zip file as normal, e.g.
-// `zip -9 -r path/to/zipfile path/to/zip`. Build your executable as normal,
+// `zip -9 -r path/to/zip_file path/to/zip`. Build your executable as normal,
 // e.g. `go build -o path/to/exe main.go`, then concatenate the zip file to
-// the end of your executable, e.g. `cat path/to/zipfile >> path/to/exe`.
+// the end of your executable, e.g. `cat path/to/zip_file >> path/to/exe`.
 // Finally, run `zip -A path/to/exe` on your executable to fix up the offsets.
 func NewFileSystemFromEmbeddedZip(fallbackLiveFSRoot string) FileSystem {
-	if efs, err := NewEFSFromEmbeddedZip(); err == nil {
-		return efs.PrimaryFileSystem()
+	if fs, err := NewEFSFromEmbeddedZip(); err == nil {
+		return fs.PrimaryFileSystem()
 	}
 	return NewLiveFS(fallbackLiveFSRoot)
 }

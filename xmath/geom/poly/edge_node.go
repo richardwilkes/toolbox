@@ -476,7 +476,9 @@ func (e *edgeNode) swapIntersectingEdgeBundles(inter *intersection) *edgeNode {
 		}
 	} else {
 		if e1p != e0 {
-			e1p.next = e0t
+			if e1p != nil {
+				e1p.next = e0t
+			}
 			e0t.prev = e1p
 		}
 		result = e1t

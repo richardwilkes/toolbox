@@ -220,15 +220,15 @@ func (repo *Repo) runFromDir(cmd string, args ...string) ([]byte, error) {
 
 func mergeEnvLists(in, out []string) []string {
 NextVar:
-	for _, inkv := range in {
-		k := strings.SplitAfterN(inkv, "=", 2)[0] + "="
-		for i, outkv := range out {
-			if strings.HasPrefix(outkv, k) {
-				out[i] = inkv
+	for _, ikv := range in {
+		k := strings.SplitAfterN(ikv, "=", 2)[0] + "="
+		for i, okv := range out {
+			if strings.HasPrefix(okv, k) {
+				out[i] = ikv
 				continue NextVar
 			}
 		}
-		out = append(out, inkv)
+		out = append(out, ikv)
 	}
 	return out
 }

@@ -50,15 +50,15 @@ func Extract(zr *zip.Reader, dst string) error {
 		mode := fi.Mode()
 		switch {
 		case mode&os.ModeSymlink != 0:
-			if err := extractSymLink(f, path); err != nil {
+			if err = extractSymLink(f, path); err != nil {
 				return err
 			}
 		case fi.IsDir():
-			if err := os.MkdirAll(path, mode.Perm()); err != nil {
+			if err = os.MkdirAll(path, mode.Perm()); err != nil {
 				return errs.Wrap(err)
 			}
 		default:
-			if err := extractFile(f, path); err != nil {
+			if err = extractFile(f, path); err != nil {
 				return err
 			}
 		}
@@ -99,8 +99,8 @@ func extractFile(f *zip.File, dst string) (err error) {
 		return errs.Wrap(err)
 	}
 	defer func() {
-		if cerr := file.Close(); cerr != nil && err == nil {
-			err = errs.Wrap(cerr)
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			err = errs.Wrap(closeErr)
 		}
 	}()
 	if _, err = io.Copy(file, r); err != nil {

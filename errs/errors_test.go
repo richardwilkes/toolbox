@@ -12,9 +12,8 @@ package errs_test
 import (
 	"errors"
 	"fmt"
-	"testing"
-
 	"strings"
+	"testing"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/stretchr/testify/assert"
@@ -98,12 +97,14 @@ func TestErrorOrNil(t *testing.T) {
 
 func TestErrorOrNilPointer(t *testing.T) {
 	var err *errs.Error
+	// noinspection GoNilness
 	require.Nil(t, err.ErrorOrNil(), "Should have been nil")
 }
 
 func TestWrap(t *testing.T) {
 	notError := errors.New("foo")
 	result := errs.Wrap(notError)
+	require.NotNil(t, result)
 	require.Equal(t, 1, strings.Count(result.Error(), "\n"), "Should have 1 embedded return")
 }
 

@@ -10,8 +10,7 @@
 package cmdline
 
 import (
-	"fmt"
-
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
@@ -51,11 +50,11 @@ func (cl *CmdLine) AddCommand(cmd Cmd) {
 // usually the result from calling Parse().
 func (cl *CmdLine) RunCommand(args []string) error {
 	if len(args) < 1 {
-		cl.FatalMsg(i18n.Text("Must specify a command name"))
+		return errs.New(i18n.Text("Must specify a command name"))
 	}
 	cmd := cl.cmds[args[0]]
 	if cmd == nil {
-		cl.FatalMsg(fmt.Sprintf(i18n.Text("'%[1]s' is not a valid %[2]s command"), args[0], AppCmdName))
+		return errs.Newf(i18n.Text("'%[1]s' is not a valid %[2]s command"), args[0], AppCmdName)
 	}
 	return cmd.Run(cl.newWithCmd(cmd), args[1:])
 }

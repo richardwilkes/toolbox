@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	utable = []*uinfo{
+	uTable = []*uInfo{
 		{
 			IsUint64:  true,
 			IsUint128: true,
@@ -64,7 +64,7 @@ var (
 	}
 )
 
-type uinfo struct {
+type uInfo struct {
 	Uint64                  uint64
 	ValueAsStr              string
 	ExpectedConversionAsStr string
@@ -73,7 +73,7 @@ type uinfo struct {
 }
 
 func init() {
-	for _, d := range utable {
+	for _, d := range uTable {
 		if d.IsUint64 {
 			d.ValueAsStr = strconv.FormatUint(d.Uint64, 10)
 		}
@@ -83,7 +83,7 @@ func init() {
 	}
 }
 
-func bigUintFromStr(t *testing.T, one *uinfo, index int) *big.Int {
+func bigUintFromStr(t *testing.T, one *uInfo, index int) *big.Int {
 	t.Helper()
 	b, ok := new(big.Int).SetString(one.ValueAsStr, 10)
 	require.True(t, ok, indexFmt, index)
@@ -92,7 +92,7 @@ func bigUintFromStr(t *testing.T, one *uinfo, index int) *big.Int {
 }
 
 func TestUint128FromUint64(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint64 {
 			assert.Equal(t, one.ExpectedConversionAsStr, num.Uint128From64(one.Uint64).String(), indexFmt, i)
 		}
@@ -100,13 +100,13 @@ func TestUint128FromUint64(t *testing.T) {
 }
 
 func TestUint128FromBigInt(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		assert.Equal(t, one.ExpectedConversionAsStr, num.Uint128FromBigInt(bigUintFromStr(t, one, i)).String(), indexFmt, i)
 	}
 }
 
 func TestUint128AsBigInt(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint128 {
 			assert.Equal(t, one.ValueAsStr, num.Uint128FromBigInt(bigUintFromStr(t, one, i)).AsBigInt().String(), indexFmt, i)
 		}
@@ -114,7 +114,7 @@ func TestUint128AsBigInt(t *testing.T) {
 }
 
 func TestUint128AsUint64(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint64 {
 			assert.Equal(t, one.Uint64, num.Uint128From64(one.Uint64).AsUint64(), indexFmt, i)
 		}
@@ -122,7 +122,7 @@ func TestUint128AsUint64(t *testing.T) {
 }
 
 func TestUint128IsUint64(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint128 {
 			assert.Equal(t, one.IsUint64, num.Uint128FromBigInt(bigUintFromStr(t, one, i)).IsUint64(), indexFmt, i)
 		}
@@ -131,7 +131,7 @@ func TestUint128IsUint64(t *testing.T) {
 
 func TestUint128Inc(t *testing.T) {
 	big1 := new(big.Int).SetInt64(1)
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint128 {
 			b := bigUintFromStr(t, one, i)
 			v := num.Uint128FromBigInt(b)
@@ -147,7 +147,7 @@ func TestUint128Inc(t *testing.T) {
 
 func TestUint128Dec(t *testing.T) {
 	big1 := new(big.Int).SetInt64(1)
-	for i, one := range utable {
+	for i, one := range uTable {
 		if one.IsUint128 {
 			b := bigUintFromStr(t, one, i)
 			v := num.Uint128FromBigInt(b)
@@ -250,7 +250,7 @@ func TestUint128Div(t *testing.T) {
 }
 
 func TestUint128Json(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if !one.IsUint128 {
 			continue
 		}
@@ -264,7 +264,7 @@ func TestUint128Json(t *testing.T) {
 }
 
 func TestUint128Yaml(t *testing.T) {
-	for i, one := range utable {
+	for i, one := range uTable {
 		if !one.IsUint128 {
 			continue
 		}

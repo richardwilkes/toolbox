@@ -53,19 +53,19 @@ func TestSoftRef(t *testing.T) {
 	assert.False(t, existed)
 	sr4b, existed := p.NewSoftRef(r4)
 	assert.True(t, existed)
-	lookfor(t, "2", ch)
+	lookFor(t, "2", ch)
 	key := sr3.Resource.(*res).key
-	lookfor(t, key, ch)
+	lookFor(t, key, ch)
 	key = sr1.Resource.(*res).key
-	lookfor(t, key, ch)
+	lookFor(t, key, ch)
 	key = sr4a.Resource.(*res).key
 	assert.Equal(t, key, sr4b.Resource.(*res).key)
-	lookforExpectingTimeout(t, ch)
+	lookForExpectingTimeout(t, ch)
 	assert.Equal(t, "4", sr4b.Key) // Keeps refs to r4 alive for the above call
-	lookfor(t, key, ch)
+	lookFor(t, key, ch)
 }
 
-func lookfor(t *testing.T, key string, ch <-chan string) {
+func lookFor(t *testing.T, key string, ch <-chan string) {
 	t.Helper()
 	runtime.GC()
 	select {
@@ -76,7 +76,7 @@ func lookfor(t *testing.T, key string, ch <-chan string) {
 	}
 }
 
-func lookforExpectingTimeout(t *testing.T, ch <-chan string) {
+func lookForExpectingTimeout(t *testing.T, ch <-chan string) {
 	t.Helper()
 	runtime.GC()
 	select {

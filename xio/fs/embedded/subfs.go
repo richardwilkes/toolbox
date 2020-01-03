@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 )
 
-type subfs struct {
+type subFS struct {
 	parent FileSystem
 	base   string
 }
@@ -26,17 +26,17 @@ func NewSubFileSystem(parent FileSystem, base string) FileSystem {
 	if !filepath.IsAbs(base) {
 		base = "/" + base
 	}
-	return &subfs{
+	return &subFS{
 		parent: parent,
 		base:   base,
 	}
 }
 
-func (f *subfs) IsLive() bool {
+func (f *subFS) IsLive() bool {
 	return f.parent.IsLive()
 }
 
-func (f *subfs) adjustPath(path string) string {
+func (f *subFS) adjustPath(path string) string {
 	path = filepath.Clean(path)
 	if !filepath.IsAbs(path) {
 		path = "/" + path
@@ -44,22 +44,22 @@ func (f *subfs) adjustPath(path string) string {
 	return filepath.Join(f.base, path)
 }
 
-func (f *subfs) Open(path string) (http.File, error) {
+func (f *subFS) Open(path string) (http.File, error) {
 	return f.parent.Open(f.adjustPath(path))
 }
 
-func (f *subfs) ContentAsBytes(path string) ([]byte, bool) {
+func (f *subFS) ContentAsBytes(path string) ([]byte, bool) {
 	return f.parent.ContentAsBytes(f.adjustPath(path))
 }
 
-func (f *subfs) MustContentAsBytes(path string) []byte {
+func (f *subFS) MustContentAsBytes(path string) []byte {
 	return f.parent.MustContentAsBytes(f.adjustPath(path))
 }
 
-func (f *subfs) ContentAsString(path string) (string, bool) {
+func (f *subFS) ContentAsString(path string) (string, bool) {
 	return f.parent.ContentAsString(f.adjustPath(path))
 }
 
-func (f *subfs) MustContentAsString(path string) string {
+func (f *subFS) MustContentAsString(path string) string {
 	return f.parent.MustContentAsString(f.adjustPath(path))
 }

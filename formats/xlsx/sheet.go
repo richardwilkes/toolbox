@@ -76,11 +76,12 @@ func load(r *zip.Reader) ([]Sheet, error) {
 		return txt.NaturalLess(files[i].Name, files[j].Name, true)
 	})
 	for i, f := range files {
-		sheet, err := loadSheet(f, strs)
-		if err != nil {
+		var sheet *Sheet
+		if sheet, err = loadSheet(f, strs); err != nil {
 			return nil, err
 		}
 		if i < len(sheetNames) {
+			// noinspection GoNilness
 			sheet.Name = sheetNames[i]
 		} else {
 			sheet.Name = fmt.Sprintf("Sheet%d", i+1)
@@ -152,8 +153,8 @@ func loadSheet(f *zip.File, strs []string) (*Sheet, error) {
 		cell := Cell{Value: *one.Value}
 		switch one.Type {
 		case "s": // String
-			v, err := strconv.Atoi(cell.Value)
-			if err != nil {
+			var v int
+			if v, err = strconv.Atoi(cell.Value); err != nil {
 				return nil, errs.Wrap(err)
 			}
 			if v < 0 || v >= len(strs) {

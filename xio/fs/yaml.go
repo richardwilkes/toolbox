@@ -38,7 +38,7 @@ func SaveYAML(path string, data interface{}) error {
 		return errs.Wrap(err)
 	}
 	return safe.WriteFile(path, func(w io.Writer) error {
-		if _, err := w.Write(out); err != nil {
+		if _, err = w.Write(out); err != nil {
 			return errs.Wrap(err)
 		}
 		return nil

@@ -88,19 +88,20 @@ func (j *Data) path(path ...string) *Data {
 	for i := 0; i < len(path); i++ {
 		if m, ok := obj.(map[string]interface{}); ok { //nolint:gocritic
 			obj = m[path[i]]
-		} else if a, ok := obj.([]interface{}); ok {
-			t := make([]interface{}, 0)
-			for _, one := range a {
-				tj := &Data{obj: one}
-				if result := tj.path(path[i:]...).obj; result != nil {
-					t = append(t, result)
+		} else {
+			var a []interface{}
+			if a, ok = obj.([]interface{}); ok {
+				t := make([]interface{}, 0)
+				for _, one := range a {
+					tj := &Data{obj: one}
+					if result := tj.path(path[i:]...).obj; result != nil {
+						t = append(t, result)
+					}
+				}
+				if len(a) != 0 {
+					return &Data{obj: t}
 				}
 			}
-			if len(a) == 0 {
-				return &Data{}
-			}
-			return &Data{obj: t}
-		} else {
 			return &Data{}
 		}
 	}
@@ -403,7 +404,7 @@ func (j *Data) Delete(path string) bool {
 	for i := 0; i < len(paths); i++ {
 		if m, ok := obj.(map[string]interface{}); ok {
 			if i == len(paths)-1 {
-				if _, ok := m[paths[i]]; ok {
+				if _, ok = m[paths[i]]; ok {
 					delete(m, paths[i])
 					return true
 				}

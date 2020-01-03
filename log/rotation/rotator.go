@@ -55,17 +55,17 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			if err = os.MkdirAll(filepath.Dir(r.path), 0755); err != nil {
 				return 0, errs.Wrap(err)
 			}
-			file, ferr := os.Create(r.path)
-			if ferr != nil {
-				return 0, errs.Wrap(ferr)
+			file, fErr := os.Create(r.path)
+			if fErr != nil {
+				return 0, errs.Wrap(fErr)
 			}
 			r.file = file
 			r.size = 0
 		case err != nil:
 			return 0, errs.Wrap(err)
 		default:
-			file, err := os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666)
-			if err != nil {
+			var file *os.File
+			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666); err != nil {
 				return 0, errs.Wrap(err)
 			}
 			r.file = file

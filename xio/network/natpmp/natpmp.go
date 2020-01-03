@@ -118,7 +118,7 @@ func ExternalAddress() (net.IP, error) {
 	if err != nil {
 		return nil, err
 	}
-	return net.IP(response[8:12]), nil
+	return response[8:12], nil
 }
 
 // MapTCP maps the specified TCP port for external access. It returns the port
@@ -245,8 +245,9 @@ func call(msg []byte, resultSize int) ([]byte, error) {
 		if _, err = conn.Write(msg); err != nil {
 			return nil, errs.Wrap(err)
 		}
-		n, remote, err := conn.ReadFromUDP(result)
-		if err != nil {
+		var n int
+		var remote *net.UDPAddr
+		if n, remote, err = conn.ReadFromUDP(result); err != nil {
 			if err.(net.Error).Timeout() {
 				continue
 			}

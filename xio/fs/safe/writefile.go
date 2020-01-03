@@ -23,8 +23,8 @@ func WriteFile(filename string, writer func(io.Writer) error) (err error) {
 	}
 	w := bufio.NewWriterSize(f, 1<<16)
 	defer func() {
-		if cerr := f.Close(); cerr != nil && err == nil {
-			err = cerr
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = closeErr
 		}
 	}()
 	if err = writer(w); err != nil {

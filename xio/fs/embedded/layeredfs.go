@@ -49,8 +49,8 @@ func (fs *LayeredFS) Open(name string) (http.File, error) {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		if f, err := efs.Open(name); err == nil {
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		if f, err := fileSystem.Open(name); err == nil {
 			return f, nil
 		}
 	}
@@ -62,8 +62,8 @@ func (fs *LayeredFS) IsLive() bool {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		return efs.IsLive()
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		return fileSystem.IsLive()
 	}
 	return fs.fallback.IsLive()
 }
@@ -73,9 +73,10 @@ func (fs *LayeredFS) ContentAsBytes(path string) ([]byte, bool) {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		if d, ok := efs.ContentAsBytes(path); ok {
-			return d, ok
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		var b []byte
+		if b, ok = fileSystem.ContentAsBytes(path); ok {
+			return b, ok
 		}
 	}
 	return fs.fallback.ContentAsBytes(path)
@@ -86,9 +87,10 @@ func (fs *LayeredFS) MustContentAsBytes(path string) []byte {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		if d, ok := efs.ContentAsBytes(path); ok {
-			return d
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		var b []byte
+		if b, ok = fileSystem.ContentAsBytes(path); ok {
+			return b
 		}
 	}
 	return fs.fallback.MustContentAsBytes(path)
@@ -99,9 +101,10 @@ func (fs *LayeredFS) ContentAsString(path string) (string, bool) {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		if d, ok := efs.ContentAsString(path); ok {
-			return d, ok
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		var str string
+		if str, ok = fileSystem.ContentAsString(path); ok {
+			return str, ok
 		}
 	}
 	return fs.fallback.ContentAsString(path)
@@ -113,9 +116,10 @@ func (fs *LayeredFS) MustContentAsString(path string) string {
 	fs.lock.RLock()
 	primary := fs.primary
 	fs.lock.RUnlock()
-	if efs, ok := fs.primaries[primary]; ok {
-		if d, ok := efs.ContentAsString(path); ok {
-			return d
+	if fileSystem, ok := fs.primaries[primary]; ok {
+		var str string
+		if str, ok = fileSystem.ContentAsString(path); ok {
+			return str
 		}
 	}
 	return fs.fallback.MustContentAsString(path)

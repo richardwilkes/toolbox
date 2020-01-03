@@ -144,10 +144,10 @@ func (f F64d2) Comma() string {
 		fraction = -fraction
 	}
 	fraction += F64d2(multiplierF64d2)
-	fstr := strconv.FormatInt(int64(fraction), 10)
-	for i := len(fstr) - 1; i > 0; i-- {
-		if fstr[i] != '0' {
-			fstr = fstr[1 : i+1]
+	fStr := strconv.FormatInt(int64(fraction), 10)
+	for i := len(fStr) - 1; i > 0; i-- {
+		if fStr[i] != '0' {
+			fStr = fStr[1 : i+1]
 			break
 		}
 	}
@@ -157,7 +157,7 @@ func (f F64d2) Comma() string {
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%s.%s", neg, humanize.Comma(int64(integer)), fstr)
+	return fmt.Sprintf("%s%s.%s", neg, humanize.Comma(int64(integer)), fStr)
 }
 
 func (f F64d2) String() string {
@@ -170,10 +170,10 @@ func (f F64d2) String() string {
 		fraction = -fraction
 	}
 	fraction += F64d2(multiplierF64d2)
-	fstr := strconv.FormatInt(int64(fraction), 10)
-	for i := len(fstr) - 1; i > 0; i-- {
-		if fstr[i] != '0' {
-			fstr = fstr[1 : i+1]
+	fStr := strconv.FormatInt(int64(fraction), 10)
+	for i := len(fStr) - 1; i > 0; i-- {
+		if fStr[i] != '0' {
+			fStr = fStr[1 : i+1]
 			break
 		}
 	}
@@ -183,7 +183,7 @@ func (f F64d2) String() string {
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%d.%s", neg, integer, fstr)
+	return fmt.Sprintf("%s%d.%s", neg, integer, fStr)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.

@@ -31,6 +31,6 @@ type Limiter interface {
 	// Closed returns true if the limiter is closed.
 	Closed() bool
 
-	// Closes this limiter and any children it may have.
+	// Close this limiter and any children it may have.
 	Close()
 }

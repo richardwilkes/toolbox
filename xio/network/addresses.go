@@ -61,11 +61,11 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 	// Try up to 3 times in case of transient errors
 	for i := 0; i < 3; i++ {
 		lowest := 1000000
-		for address, iface := range ActiveAddresses() {
-			if iface.Index < lowest {
-				lowest = iface.Index
+		for address, iFace := range ActiveAddresses() {
+			if iFace.Index < lowest {
+				lowest = iFace.Index
 				hostname = address
-				macAddress = iface.HardwareAddr.String()
+				macAddress = iFace.HardwareAddr.String()
 			}
 		}
 		if hostname != "" {
@@ -93,12 +93,12 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 // interface. Numeric addresses are resolved into names where possible.
 func ActiveAddresses() map[string]net.Interface {
 	result := make(map[string]net.Interface)
-	if ifaces, err := net.Interfaces(); err == nil {
-		for _, iface := range ifaces {
+	if iFaces, err := net.Interfaces(); err == nil {
+		for _, iFace := range iFaces {
 			const interesting = net.FlagUp | net.FlagBroadcast
-			if iface.Flags&interesting == interesting {
-				if name := Address(iface); name != "" {
-					result[name] = iface
+			if iFace.Flags&interesting == interesting {
+				if name := Address(iFace); name != "" {
+					result[name] = iFace
 				}
 			}
 		}
@@ -111,8 +111,8 @@ func ActiveAddresses() map[string]net.Interface {
 // addresses are resolved into names where possible. An empty string will be
 // returned if the network interface cannot be resolved into an IPv4 or IPv6
 // address.
-func Address(iface net.Interface) string {
-	if addrs, err := iface.Addrs(); err == nil {
+func Address(iFace net.Interface) string {
+	if addrs, err := iFace.Addrs(); err == nil {
 		var fallback string
 		for _, addr := range addrs {
 			var ip net.IP
@@ -126,7 +126,8 @@ func Address(iface net.Interface) string {
 			}
 			if ip.IsGlobalUnicast() {
 				ipAddr := ip.String()
-				if names, err := net.LookupAddr(ipAddr); err == nil {
+				var names []string
+				if names, err = net.LookupAddr(ipAddr); err == nil {
 					if len(names) > 0 {
 						name := names[0]
 						if strings.HasSuffix(name, ".") {
@@ -164,11 +165,12 @@ func Address(iface net.Interface) string {
 func AddressesForHost(host string) []string {
 	ss := collection.NewStringSet()
 	if host == "" { // All address on machine
-		if ifaces, err := net.Interfaces(); err == nil {
-			for _, iface := range ifaces {
+		if iFaces, err := net.Interfaces(); err == nil {
+			for _, iFace := range iFaces {
 				const interesting = net.FlagUp | net.FlagBroadcast
-				if iface.Flags&interesting == interesting {
-					if addrs, err := iface.Addrs(); err == nil {
+				if iFace.Flags&interesting == interesting {
+					var addrs []net.Addr
+					if addrs, err = iFace.Addrs(); err == nil {
 						for _, addr := range addrs {
 							var ip net.IP
 							switch v := addr.(type) {
@@ -181,7 +183,8 @@ func AddressesForHost(host string) []string {
 							}
 							if ip.IsGlobalUnicast() {
 								ss.Add(ip.String())
-								if names, err := net.LookupAddr(ip.String()); err == nil {
+								var names []string
+								if names, err = net.LookupAddr(ip.String()); err == nil {
 									for _, name := range names {
 										if strings.HasSuffix(name, ".") {
 											name = name[:len(name)-1]

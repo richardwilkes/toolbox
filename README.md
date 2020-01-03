@@ -3,7 +3,7 @@ Toolbox for Go.
 
 To install this package and the tools it provides:
 ```
-go get -u github.com/richardwilkes/toolbox/...
+./build.sh
 ```
 
 ## atexit
@@ -38,8 +38,7 @@ generating a template for a localization file from source code.
 Simple asynchronous logging.
 
 ### Sample usage:
-
-```Go
+```
 package main
 
 import "github.com/richardwilkes/toolbox/log/jot"

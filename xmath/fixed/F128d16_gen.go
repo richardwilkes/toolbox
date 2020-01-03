@@ -151,24 +151,24 @@ func (f F128d16) AsFloat64() float64 {
 // Comma returns the same as String(), but with commas for values of 1000 and
 // greater.
 func (f F128d16) Comma() string {
-	var istr string
+	var iStr string
 	integer := f.data.Div(multiplierF128d16)
 	if integer.IsInt64() {
-		istr = humanize.Comma(integer.AsInt64())
+		iStr = humanize.Comma(integer.AsInt64())
 	} else {
-		istr = humanize.BigComma(integer.AsBigInt())
+		iStr = humanize.BigComma(integer.AsBigInt())
 	}
 	fraction := f.data.Sub(integer.Mul(multiplierF128d16))
 	if fraction.IsZero() {
-		return istr
+		return iStr
 	}
 	if fraction.Sign() < 0 {
 		fraction = fraction.Neg()
 	}
-	fstr := fraction.Add(multiplierF128d16).String()
-	for i := len(fstr) - 1; i > 0; i-- {
-		if fstr[i] != '0' {
-			fstr = fstr[1 : i+1]
+	fStr := fraction.Add(multiplierF128d16).String()
+	for i := len(fStr) - 1; i > 0; i-- {
+		if fStr[i] != '0' {
+			fStr = fStr[1 : i+1]
 			break
 		}
 	}
@@ -178,23 +178,23 @@ func (f F128d16) Comma() string {
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%s.%s", neg, istr, fstr)
+	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
 func (f F128d16) String() string {
 	integer := f.data.Div(multiplierF128d16)
-	istr := integer.String()
+	iStr := integer.String()
 	fraction := f.data.Sub(integer.Mul(multiplierF128d16))
 	if fraction.IsZero() {
-		return istr
+		return iStr
 	}
 	if fraction.Sign() < 0 {
 		fraction = fraction.Neg()
 	}
-	fstr := fraction.Add(multiplierF128d16).String()
-	for i := len(fstr) - 1; i > 0; i-- {
-		if fstr[i] != '0' {
-			fstr = fstr[1 : i+1]
+	fStr := fraction.Add(multiplierF128d16).String()
+	for i := len(fStr) - 1; i > 0; i-- {
+		if fStr[i] != '0' {
+			fStr = fStr[1 : i+1]
 			break
 		}
 	}
@@ -204,7 +204,7 @@ func (f F128d16) String() string {
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%s.%s", neg, istr, fstr)
+	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.

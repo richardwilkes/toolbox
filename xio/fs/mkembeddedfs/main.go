@@ -31,7 +31,7 @@ import (
 	"github.com/richardwilkes/toolbox/txt"
 )
 
-type data struct {
+type fileData struct {
 	FSPath     string
 	Path       string
 	Name       string
@@ -45,7 +45,7 @@ type tmplInput struct {
 	Tag            string
 	Pkg            string
 	Var            string
-	Files          []*data
+	Files          []*fileData
 	NoEmbedModTime bool
 }
 
@@ -119,7 +119,7 @@ type collector struct {
 func (c *collector) walk(p string, info os.FileInfo, err error) error {
 	if info == nil {
 		if err == nil {
-			err = fmt.Errorf("Unable to walk to %q", p)
+			err = fmt.Errorf("unable to walk to %q", p)
 		}
 		return err
 	}
@@ -142,10 +142,10 @@ func (c *collector) walk(p string, info os.FileInfo, err error) error {
 	return nil
 }
 
-func (c *collector) prepare(strip string) ([]*data, error) {
+func (c *collector) prepare(strip string) ([]*fileData, error) {
 	paths := collection.NewStringSet()
 	values := c.paths.Values()
-	all := make([]*data, 0, len(values))
+	all := make([]*fileData, 0, len(values))
 	for _, one := range values {
 		fsPath := one
 		one = strings.TrimPrefix(one, strip)
@@ -153,7 +153,7 @@ func (c *collector) prepare(strip string) ([]*data, error) {
 			return nil, errors.New("When prefix is stripped, more than one file maps to the same path: " + one)
 		}
 		paths.Add(one)
-		all = append(all, &data{
+		all = append(all, &fileData{
 			FSPath: fsPath,
 			Path:   path.Clean("/" + one),
 		})

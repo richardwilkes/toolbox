@@ -12,6 +12,7 @@
 package texttmpl
 
 import (
+	"os"
 	"path/filepath"
 	"text/template"
 
@@ -29,16 +30,16 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, path string, filter f
 		return nil, errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(dir)
-	fi, err := dir.Stat()
-	if err != nil {
+	var fi os.FileInfo
+	if fi, err = dir.Stat(); err != nil {
 		return nil, errs.Wrap(err)
 	}
 	if fi.IsDir() {
-		fis, derr := dir.Readdir(-1)
-		if derr != nil {
-			return nil, errs.Wrap(derr)
+		fis, dirErr := dir.Readdir(-1)
+		if dirErr != nil {
+			return nil, errs.Wrap(dirErr)
 		}
-		for _, fi := range fis {
+		for _, fi = range fis {
 			onePath := filepath.Join(path, fi.Name())
 			isDir := fi.IsDir()
 			if filter == nil || !filter(onePath, isDir) {

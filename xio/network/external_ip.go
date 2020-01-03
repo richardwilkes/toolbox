@@ -52,7 +52,8 @@ func ExternalIP(timeout time.Duration) string {
 func externalIP(client *http.Client, site string) string {
 	if resp, err := client.Get(site); err == nil {
 		defer xio.CloseIgnoringErrors(resp.Body)
-		if body, err := ioutil.ReadAll(resp.Body); err == nil {
+		var body []byte
+		if body, err = ioutil.ReadAll(resp.Body); err == nil {
 			if ip := net.ParseIP(strings.TrimSpace(string(body))); ip != nil {
 				return ip.String()
 			}

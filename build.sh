@@ -50,14 +50,14 @@ if command -v git 2>&1 > /dev/null; then
   fi
   GIT_VERSION=$(git rev-parse HEAD)-$STATE
   GIT_TAG=$(git tag --points-at HEAD)
-  if [ -z $GIT_TAG ]; then
+  if [ -z "$GIT_TAG" ]; then
     GIT_TAG=$(git tag --list --sort -version:refname | head -1)
     if [ -n "$GIT_TAG" ]; then
       GIT_TAG=$GIT_TAG~
     fi
   fi
   if [ -n "$GIT_TAG" ]; then
-    VERSION=$(echo $GIT_TAG | sed -E "s/^v//")
+    VERSION=$(echo "$GIT_TAG" | sed -E "s/^v//")
   else
     VERSION=""
   fi
@@ -73,7 +73,7 @@ LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.BuildNumber=
 LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION"
 LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.CopyrightYears=2016-$(date "+%Y")"
 find . -iname "*_gen.go" -exec /bin/rm {} \;
-go generate ./...
+go generate ./gen
 go build -v -ldflags=all="$LINK_FLAGS" ./...
 
 # Run the linters

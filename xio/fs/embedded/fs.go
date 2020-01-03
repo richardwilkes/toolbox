@@ -44,17 +44,17 @@ func NewEFS(files map[string]*File) *EFS {
 	for k, v := range files {
 		all[k] = v
 	}
-	type dinfo struct {
+	type dInfo struct {
 		f *File
 		m collection.StringSet
 	}
-	dirs := make(map[string]*dinfo)
+	dirs := make(map[string]*dInfo)
 	for k, v := range files {
 		dir, _ := filepath.Split(k)
 		dir = filepath.Clean(dir)
 		di, ok := dirs[filepath.ToSlash(dir)]
 		if !ok {
-			di = &dinfo{
+			di = &dInfo{
 				f: &File{
 					name:    filepath.ToSlash(filepath.Base(dir)),
 					modTime: now,
@@ -72,9 +72,9 @@ func NewEFS(files map[string]*File) *EFS {
 				break
 			}
 			dir = filepath.Clean(dir)
-			p, ok := dirs[filepath.ToSlash(dir)]
-			if !ok {
-				p = &dinfo{
+			var p *dInfo
+			if p, ok = dirs[filepath.ToSlash(dir)]; !ok {
+				p = &dInfo{
 					f: &File{
 						name:    filepath.ToSlash(filepath.Base(dir)),
 						modTime: now,

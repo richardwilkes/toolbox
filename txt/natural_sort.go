@@ -15,7 +15,7 @@ import "sort"
 // "a2" < "a12".
 //
 // Non-digit sequences and numbers are compared separately. The former are
-// compared bytewise, while the latter are compared numerically (except that
+// compared byte-wise, while the latter are compared numerically (except that
 // the number of leading zeros is used as a tie-breaker, so "2" < "02").
 //
 // Limitations:
@@ -35,8 +35,8 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 		case d1 != d2: // Digits before other characters.
 			return d1 // True if LHS is a digit, false if the RHS is one.
 		case !d1: // && !dig2, because dig1 == dig2
-			// UTF-8 compares bytewise-lexicographically, no need to decode
-			// codepoints.
+			// UTF-8 compares byte-wise-lexicographically, no need to decode
+			// code-points.
 			if caseInsensitive {
 				if c1 >= 'a' && c1 <= 'z' {
 					c1 -= 'a' - 'A'

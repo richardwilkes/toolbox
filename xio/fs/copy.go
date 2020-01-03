@@ -25,10 +25,10 @@ func Copy(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	return copy(src, dst, info)
+	return generalCopy(src, dst, info)
 }
 
-func copy(src, dst string, info os.FileInfo) error {
+func generalCopy(src, dst string, info os.FileInfo) error {
 	if info.Mode()&os.ModeSymlink != 0 {
 		return linkCopy(src, dst, info)
 	}
@@ -47,8 +47,8 @@ func fileCopy(src, dst string, info os.FileInfo) (err error) {
 		return err
 	}
 	defer func() {
-		if lerr := f.Close(); lerr != nil && err == nil {
-			err = lerr
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = closeErr
 		}
 	}()
 	if err = os.Chmod(f.Name(), info.Mode()); err != nil {
@@ -63,17 +63,17 @@ func fileCopy(src, dst string, info os.FileInfo) (err error) {
 	return err
 }
 
-func dirCopy(srcdir, dstdir string, info os.FileInfo) error {
-	if err := os.MkdirAll(dstdir, info.Mode()); err != nil {
+func dirCopy(srcDir, dstDir string, info os.FileInfo) error {
+	if err := os.MkdirAll(dstDir, info.Mode()); err != nil {
 		return err
 	}
-	list, err := ioutil.ReadDir(srcdir)
+	list, err := ioutil.ReadDir(srcDir)
 	if err != nil {
 		return err
 	}
 	for _, one := range list {
 		name := one.Name()
-		if err := copy(filepath.Join(srcdir, name), filepath.Join(dstdir, name), one); err != nil {
+		if err = generalCopy(filepath.Join(srcDir, name), filepath.Join(dstDir, name), one); err != nil {
 			return err
 		}
 	}
@@ -81,9 +81,9 @@ func dirCopy(srcdir, dstdir string, info os.FileInfo) error {
 }
 
 func linkCopy(src, dst string, info os.FileInfo) error {
-	src, err := os.Readlink(src)
+	s, err := os.Readlink(src)
 	if err != nil {
 		return err
 	}
-	return os.Symlink(src, dst)
+	return os.Symlink(s, dst)
 }

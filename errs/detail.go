@@ -48,8 +48,10 @@ func (d detail) Cause() error {
 func (d *detail) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
+		// noinspection GoUnhandledErrorResult
 		state.Write([]byte(d.detail(true, !state.Flag('+'))))
 	case 's':
+		// noinspection GoUnhandledErrorResult
 		state.Write([]byte(d.message))
 	case 'q':
 		fmt.Fprintf(state, "%q", d.message)

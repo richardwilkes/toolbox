@@ -17,7 +17,7 @@ type localMinimaNode struct {
 	next       *localMinimaNode
 }
 
-func buildLocalMinimaTable(lmt *localMinimaNode, sbtree *scanBeamTree, p Polygon, nc []bool, which int, op clipOp) *localMinimaNode {
+func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon, nc []bool, which int, op clipOp) *localMinimaNode {
 	if len(p) == 0 {
 		return lmt
 	}
@@ -40,7 +40,7 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbtree *scanBeamTree, p Polygon
 			for v := range p[ci] {
 				if optimal(p[ci], v, len(p[ci])) {
 					edges[count].vertex = p[ci][v]
-					sbtree.add(edges[count].vertex.Y)
+					sbTree.add(edges[count].vertex.Y)
 					count++
 				}
 			}

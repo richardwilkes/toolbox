@@ -885,6 +885,7 @@ func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint1
 	n = n.LeftShift(uint(shift))
 	for {
 		if u.GreaterOrEqualTo(n) {
+			// noinspection GoAssignmentToReceiver
 			u = u.Sub(n)
 			q.lo |= 1
 		}
