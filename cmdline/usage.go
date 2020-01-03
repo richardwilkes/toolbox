@@ -80,12 +80,11 @@ func Copyright() string {
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
 	term.WrapText(cl, "", AppName)
-	var buildInfo string
-	if AppVersion != "" {
-		buildInfo = fmt.Sprintf(i18n.Text("Version %s"), AppVersion)
-	} else {
-		buildInfo = i18n.Text("Development Version")
+	version := AppVersion
+	if version == "" {
+		version = "0.0"
 	}
+	buildInfo := fmt.Sprintf(i18n.Text("Version %s"), version)
 	if BuildNumber != "" {
 		buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
 	}
