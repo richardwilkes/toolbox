@@ -32,11 +32,12 @@ fi
 
 # Setup the tools we'll need
 TOOLS_DIR=$PWD/tools
+GOLANGCI_LINT_VERSION=1.22.2
 mkdir -p "$TOOLS_DIR"
 if [ -z $SKIP_LINTERS ]; then
-  if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "1.22.2x" ]; then
-    echo -e "\033[33mInstalling version 1.22.2 of golangci-lint into $TOOLS_DIR...\033[0m"
-    curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$TOOLS_DIR" v1.22.2
+  if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "${GOLANGCI_LINT_VERSION}x" ]; then
+    echo -e "\033[33mInstalling version $GOLANGCI_LINT_VERSION of golangci-lint into $TOOLS_DIR...\033[0m"
+    curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$TOOLS_DIR" v$GOLANGCI_LINT_VERSION
   fi
 fi
 export PATH=$TOOLS_DIR:$PATH
@@ -69,7 +70,7 @@ fi
 # Build the code
 echo -e "\033[33mBuilding Go code...\033[0m"
 LINK_FLAGS="-X github.com/richardwilkes/toolbox/cmdline.AppVersion=$VERSION"
-LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.BuildNumber=$(date "+%Y%m%d%H%M%S")"
+LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.BuildNumber=$(date -u "+%Y%m%d%H%M%S")"
 LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION"
 LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.CopyrightYears=2016-$(date "+%Y")"
 find . -iname "*_gen.go" -exec /bin/rm {} \;
