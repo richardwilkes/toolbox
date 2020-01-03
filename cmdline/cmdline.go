@@ -188,7 +188,7 @@ func (cl *CmdLine) Parse(args []string) []string {
 				version += BuildNumber
 			}
 		}
-		fmt.Fprintln(cl, version)
+		fmt.Println(version)
 		atexit.Exit(0)
 	}
 	return remainingArgs
