@@ -35,17 +35,6 @@ func NewRectPtr(x, y, width, height float64) *Rect {
 	return &r
 }
 
-// Align modifies this rectangle to align with integer coordinates that would
-// encompass the original rectangle.
-func (r *Rect) Align() {
-	x := math.Floor(r.X)
-	r.Width = math.Ceil(r.Right()) - x
-	r.X = x
-	y := math.Floor(r.Y)
-	r.Height = math.Ceil(r.Bottom()) - y
-	r.Y = y
-}
-
 // CopyAndZeroLocation creates a new copy of the Rect and sets the location of
 // the copy to 0,0.
 func (r *Rect) CopyAndZeroLocation() Rect {
@@ -102,81 +91,6 @@ func (r Rect) Intersects(other Rect) bool {
 	return false
 }
 
-// Intersect this Rect with another Rect, storing the result into this Rect.
-func (r *Rect) Intersect(other Rect) {
-	if r.IsEmpty() || other.IsEmpty() {
-		r.Width = 0
-		r.Height = 0
-	} else {
-		x := math.Max(r.X, other.X)
-		y := math.Max(r.Y, other.Y)
-		w := math.Min(r.Right(), other.Right()) - x
-		h := math.Min(r.Bottom(), other.Bottom()) - y
-		if w > 0 && h > 0 {
-			r.X = x
-			r.Y = y
-			r.Width = w
-			r.Height = h
-		} else {
-			r.Width = 0
-			r.Height = 0
-		}
-	}
-}
-
-// Union this Rect with another Rect, storing the result into this Rect.
-func (r *Rect) Union(other Rect) {
-	e1 := r.IsEmpty()
-	e2 := other.IsEmpty()
-	switch {
-	case e1 && e2:
-		r.Width = 0
-		r.Height = 0
-	case e1:
-		*r = other
-	case !e2:
-		x := math.Min(r.X, other.X)
-		y := math.Min(r.Y, other.Y)
-		r.Width = math.Max(r.Right(), other.Right()) - x
-		r.Height = math.Max(r.Bottom(), other.Bottom()) - y
-		r.X = x
-		r.Y = y
-	}
-}
-
-// InsetUniform insets this Rect by the specified amount on all sides.
-// Positive values make the Rect smaller, while negative values make it
-// larger.
-func (r *Rect) InsetUniform(amount float64) {
-	r.X += amount
-	r.Y += amount
-	r.Width -= amount * 2
-	if r.Width < 0 {
-		r.Width = 0
-		r.Height = 0
-	} else {
-		r.Height -= amount * 2
-		if r.Height < 0 {
-			r.Width = 0
-			r.Height = 0
-		}
-	}
-}
-
-// Inset this Rect by the specified Insets.
-func (r *Rect) Inset(insets Insets) {
-	r.X += insets.Left
-	r.Y += insets.Top
-	r.Width -= insets.Left + insets.Right
-	if r.Width <= 0 {
-		r.Width = 0
-	}
-	r.Height -= insets.Top + insets.Bottom
-	if r.Height < 0 {
-		r.Height = 0
-	}
-}
-
 // ContainsPoint returns true if the coordinates are within the Rect.
 func (r Rect) ContainsPoint(pt Point) bool {
 	if r.IsEmpty() {
@@ -200,4 +114,97 @@ func (r Rect) ContainsRect(in Rect) bool {
 // String implements the fmt.Stringer interface.
 func (r Rect) String() string {
 	return fmt.Sprintf("%v, %v", r.Point, r.Size)
+}
+
+// Intersect this Rect with another Rect, storing the result into this Rect.
+// Returns itself for easy chaining.
+func (r *Rect) Intersect(other Rect) *Rect {
+	if r.IsEmpty() || other.IsEmpty() {
+		r.Width = 0
+		r.Height = 0
+	} else {
+		x := math.Max(r.X, other.X)
+		y := math.Max(r.Y, other.Y)
+		w := math.Min(r.Right(), other.Right()) - x
+		h := math.Min(r.Bottom(), other.Bottom()) - y
+		if w > 0 && h > 0 {
+			r.X = x
+			r.Y = y
+			r.Width = w
+			r.Height = h
+		} else {
+			r.Width = 0
+			r.Height = 0
+		}
+	}
+	return r
+}
+
+// Union this Rect with another Rect, storing the result into this Rect.
+// Returns itself for easy chaining.
+func (r *Rect) Union(other Rect) *Rect {
+	e1 := r.IsEmpty()
+	e2 := other.IsEmpty()
+	switch {
+	case e1 && e2:
+		r.Width = 0
+		r.Height = 0
+	case e1:
+		*r = other
+	case !e2:
+		x := math.Min(r.X, other.X)
+		y := math.Min(r.Y, other.Y)
+		r.Width = math.Max(r.Right(), other.Right()) - x
+		r.Height = math.Max(r.Bottom(), other.Bottom()) - y
+		r.X = x
+		r.Y = y
+	}
+	return r
+}
+
+// Align modifies this rectangle to align with integer coordinates that would
+// encompass the original rectangle. Returns itself for easy chaining.
+func (r *Rect) Align() *Rect {
+	x := math.Floor(r.X)
+	r.Width = math.Ceil(r.Right()) - x
+	r.X = x
+	y := math.Floor(r.Y)
+	r.Height = math.Ceil(r.Bottom()) - y
+	r.Y = y
+	return r
+}
+
+// InsetUniform insets this Rect by the specified amount on all sides.
+// Positive values make the Rect smaller, while negative values make it
+// larger. Returns itself for easy chaining.
+func (r *Rect) InsetUniform(amount float64) *Rect {
+	r.X += amount
+	r.Y += amount
+	r.Width -= amount * 2
+	if r.Width < 0 {
+		r.Width = 0
+		r.Height = 0
+	} else {
+		r.Height -= amount * 2
+		if r.Height < 0 {
+			r.Width = 0
+			r.Height = 0
+		}
+	}
+	return r
+}
+
+// Inset this Rect by the specified Insets. Returns itself for easy chaining.
+func (r *Rect) Inset(insets Insets) *Rect {
+	r.X += insets.Left
+	r.Y += insets.Top
+	r.Width -= insets.Left + insets.Right
+	if r.Width <= 0 {
+		r.Width = 0
+	}
+	r.Height -= insets.Top + insets.Bottom
+	if r.Height < 0 {
+		r.Height = 0
+	}
+	return r
 }

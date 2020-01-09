@@ -33,73 +33,84 @@ func NewSizePtr(x, y float64) *Size {
 	return &s
 }
 
-// Add modifies this Size by adding the supplied Size.
-func (s *Size) Add(size Size) {
+// String implements the fmt.Stringer interface.
+func (s Size) String() string {
+	return fmt.Sprintf("%v, %v", s.Width, s.Height)
+}
+
+// Add modifies this Size by adding the supplied Size. Returns itself for easy
+// chaining.
+func (s *Size) Add(size Size) *Size {
 	s.Width += size.Width
 	s.Height += size.Height
+	return s
 }
 
 // AddInsets modifies this Size by expanding it to accommodate the specified
-// insets.
-func (s *Size) AddInsets(insets Insets) {
+// insets. Returns itself for easy chaining.
+func (s *Size) AddInsets(insets Insets) *Size {
 	s.Width += insets.Left + insets.Right
 	s.Height += insets.Top + insets.Bottom
+	return s
 }
 
-// Subtract modifies this Size by subtracting the supplied Size.
-func (s *Size) Subtract(size Size) {
+// Subtract modifies this Size by subtracting the supplied Size. Returns
+// itself for easy chaining.
+func (s *Size) Subtract(size Size) *Size {
 	s.Width -= size.Width
 	s.Height -= size.Height
+	return s
 }
 
 // SubtractInsets modifies this Size by reducing it to accommodate the
-// specified insets.
-func (s *Size) SubtractInsets(insets Insets) {
+// specified insets. Returns itself for easy chaining.
+func (s *Size) SubtractInsets(insets Insets) *Size {
 	s.Width -= insets.Left + insets.Right
 	s.Height -= insets.Top + insets.Bottom
+	return s
 }
 
 // GrowToInteger modifies this Size such that its width and height are both
 // the smallest integers greater than or equal to their original values.
-func (s *Size) GrowToInteger() {
+// Returns itself for easy chaining.
+func (s *Size) GrowToInteger() *Size {
 	s.Width = math.Ceil(s.Width)
 	s.Height = math.Ceil(s.Height)
+	return s
 }
 
 // ConstrainForHint ensures this size is no larger than the hint. Hint values
-// less than one are ignored.
-func (s *Size) ConstrainForHint(hint Size) {
+// less than one are ignored. Returns itself for easy chaining.
+func (s *Size) ConstrainForHint(hint Size) *Size {
 	if hint.Width >= 1 && s.Width > hint.Width {
 		s.Width = hint.Width
 	}
 	if hint.Height >= 1 && s.Height > hint.Height {
 		s.Height = hint.Height
 	}
+	return s
 }
 
 // Min modifies this Size to contain the smallest values between itself and
-// 'other'.
-func (s *Size) Min(other Size) {
+// 'other'. Returns itself for easy chaining.
+func (s *Size) Min(other Size) *Size {
 	if s.Width > other.Width {
 		s.Width = other.Width
 	}
 	if s.Height > other.Height {
 		s.Height = other.Height
 	}
+	return s
 }
 
 // Max modifies this Size to contain the largest values between itself and
-// 'other'.
-func (s *Size) Max(other Size) {
+// 'other'. Returns itself for easy chaining.
+func (s *Size) Max(other Size) *Size {
 	if s.Width < other.Width {
 		s.Width = other.Width
 	}
 	if s.Height < other.Height {
 		s.Height = other.Height
 	}
-}
-
-// String implements the fmt.Stringer interface.
-func (s Size) String() string {
-	return fmt.Sprintf("%v, %v", s.Width, s.Height)
+	return s
 }

@@ -9,9 +9,7 @@
 
 package geom
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // Insets defines margins on each side of a rectangle.
 type Insets struct {
@@ -38,15 +36,27 @@ func NewVerticalInsets(amount float64) Insets {
 	return Insets{Top: amount, Bottom: amount}
 }
 
-// Add modifies this Insets by adding the supplied Insets.
-func (i *Insets) Add(insets Insets) {
+// String implements the fmt.Stringer interface.
+func (i Insets) String() string {
+	return fmt.Sprintf("%v, %v, %v, %v", i.Top, i.Left, i.Bottom, i.Right)
+}
+
+// Add modifies this Insets by adding the supplied Insets. Returns itself for
+// easy chaining.
+func (i *Insets) Add(insets Insets) *Insets {
 	i.Top += insets.Top
 	i.Left += insets.Left
 	i.Bottom += insets.Bottom
 	i.Right += insets.Right
+	return i
 }
 
-// String implements the fmt.Stringer interface.
-func (i Insets) String() string {
-	return fmt.Sprintf("%v, %v, %v, %v", i.Top, i.Left, i.Bottom, i.Right)
+// Subtract modifies this Insets by subtracting the supplied Insets. Returns
+// itself for easy chaining.
+func (i *Insets) Subtract(insets Insets) *Insets {
+	i.Top -= insets.Top
+	i.Left -= insets.Left
+	i.Bottom -= insets.Bottom
+	i.Right -= insets.Right
+	return i
 }
