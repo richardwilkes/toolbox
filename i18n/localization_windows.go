@@ -21,11 +21,9 @@ func Locale() string {
 	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	proc := kernel32.NewProc("GetUserDefaultLocaleName")
 	buffer := make([]uint16, 128)
-	ret, _, _ := proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer)))
-	if ret == 0 {
+	if ret, _, _ := proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 { //nolint:gosec,errcheck // unsafe is required to pass the pointer
 		proc = kernel32.NewProc("GetSystemDefaultLocaleName")
-		ret, _, _ = proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer)))
-		if ret == 0 {
+		if ret, _, _ = proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 { //nolint:gosec,errcheck // unsafe is required to pass the pointer
 			return "en_US.UTF-8"
 		}
 	}
