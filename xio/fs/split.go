@@ -13,12 +13,16 @@ import (
 	"path/filepath"
 )
 
-// Split a path into its component parts.
+// Split a path into its component parts. In the case of a full path, the
+// first element will be filepath.Separator, possibly prefixed by a volume
+// name. In the case of a relative path, the first element will be ".".
 func Split(path string) []string {
 	var parts []string
 	path = filepath.Clean(path)
 	parts = append(parts, filepath.Base(path))
 	sep := string(filepath.Separator)
+	volName := filepath.VolumeName(path)
+	path = path[len(volName):]
 	for {
 		path = filepath.Dir(path)
 		parts = append(parts, filepath.Base(path))
@@ -29,6 +33,9 @@ func Split(path string) []string {
 	result := make([]string, len(parts))
 	for i := 0; i < len(parts); i++ {
 		result[len(parts)-(i+1)] = parts[i]
+	}
+	if volName != "" && result[0] == sep {
+		result[0] = volName + sep
 	}
 	return result
 }
