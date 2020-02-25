@@ -72,7 +72,7 @@ func (d *detail) detail(includeMessage, trimRuntime bool) string {
 	for {
 		frame, more := frames.Next()
 		if frame.Function != "" {
-			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") || strings.HasPrefix(frame.Function, "testing.")) {
+			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") || strings.HasPrefix(frame.Function, "testing.") || strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.")) {
 				continue
 			}
 			buffer.WriteString("\n    [")
