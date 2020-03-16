@@ -32,7 +32,7 @@ fi
 
 # Setup the tools we'll need
 TOOLS_DIR=$PWD/tools
-GOLANGCI_LINT_VERSION=1.22.2
+GOLANGCI_LINT_VERSION=1.23.8
 mkdir -p "$TOOLS_DIR"
 if [ -z $SKIP_LINTERS ]; then
   if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "${GOLANGCI_LINT_VERSION}x" ]; then
