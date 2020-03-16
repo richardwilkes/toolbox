@@ -21,7 +21,7 @@ import (
 
 // StdAllCaps provides the standard list of words that golint expects to be
 // capitalized, found in the variable 'commonInitialisms' in
-// https://github.com/golang/lint/blob/master/lint.go
+// https://github.com/golang/lint/blob/master/lint.go#L771-L808
 var StdAllCaps = MustNewAllCaps("acl", "api", "ascii", "cpu", "css", "dns",
 	"eof", "guid", "html", "http", "https", "id", "ip", "json", "lhs", "qps",
 	"ram", "rhs", "rpc", "sla", "smtp", "sql", "ssh", "tcp", "tls", "ttl",
