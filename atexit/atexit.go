@@ -28,14 +28,21 @@ var (
 	// silently ignore them.
 	RecoveryHandler errs.RecoveryHandler = func(err error) { log.Println(err) }
 	lock            sync.Mutex
-	funcs           []func()
+	nextID          = 1
+	pairs           []pair
 )
 
-// Register a function to be run at exit.
-func Register(f func()) {
+type pair struct {
+	id int
+	f  func()
+}
+
+// Register a function to be run at exit. Returns an ID that can be used to
+// remove the function later, if desired.
+func Register(f func()) int {
 	lock.Lock()
 	defer lock.Unlock()
-	if len(funcs) == 0 {
+	if nextID == 1 {
 		sigChan := make(chan os.Signal, 2)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
@@ -46,17 +53,32 @@ func Register(f func()) {
 			Exit(1)
 		}()
 	}
-	funcs = append(funcs, f)
+	pairs = append(pairs, pair{id: nextID, f: f})
+	nextID++
+	return nextID - 1
+}
+
+// Unregister a function that was previously registered to be run at exit. If
+// the ID is no longer present, nothing happens.
+func Unregister(id int) {
+	lock.Lock()
+	defer lock.Unlock()
+	for i := range pairs {
+		if pairs[i].id == id {
+			if i < len(pairs)-1 {
+				copy(pairs[i:], pairs[i+1:])
+			}
+			pairs = pairs[:len(pairs)-1]
+		}
+	}
 }
 
 // Exit runs any registered exit functions in the inverse order they were
 // registered and then exits with the specified status.
 func Exit(status int) {
 	lock.Lock() // Intentionally don't unlock. Prevents secondary calls to Exit from causing early exits.
-	all := make([]func(), len(funcs))
-	copy(all, funcs)
-	for i := len(all) - 1; i >= 0; i-- {
-		run(all[i])
+	for i := len(pairs) - 1; i >= 0; i-- {
+		run(pairs[i].f)
 	}
 	os.Exit(status)
 }
