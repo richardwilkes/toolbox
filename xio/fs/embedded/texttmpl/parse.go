@@ -60,13 +60,13 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func
 	return tmpl, nil
 }
 
-func load(tmpl *template.Template, fs embedded.FileSystem, path string) error {
-	str, ok := fs.ContentAsString(path)
+func load(tmpl *template.Template, fs embedded.FileSystem, p string) error {
+	str, ok := fs.ContentAsString(p)
 	if !ok {
-		return errs.New("Unable to read " + path)
+		return errs.New("Unable to read " + p)
 	}
-	if _, err := tmpl.New(path).Parse(str); err != nil {
-		return errs.NewWithCause("Unable to parse "+path, err)
+	if _, err := tmpl.New(p).Parse(str); err != nil {
+		return errs.NewWithCause("Unable to parse "+p, err)
 	}
 	return nil
 }

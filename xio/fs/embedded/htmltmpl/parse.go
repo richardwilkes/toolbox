@@ -62,20 +62,20 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func
 	return tmpl, nil
 }
 
-func load(tmpl *template.Template, fs embedded.FileSystem, path string) (*template.Template, error) {
-	str, ok := fs.ContentAsString(path)
+func load(tmpl *template.Template, fs embedded.FileSystem, p string) (*template.Template, error) {
+	str, ok := fs.ContentAsString(p)
 	if !ok {
-		return nil, errs.New("Unable to read " + path)
+		return nil, errs.New("Unable to read " + p)
 	}
 	var t *template.Template
 	if tmpl == nil {
-		tmpl = template.New(path)
+		tmpl = template.New(p)
 		t = tmpl
 	} else {
-		t = tmpl.New(path)
+		t = tmpl.New(p)
 	}
 	if _, err := t.Parse(str); err != nil {
-		return nil, errs.NewWithCause("Unable to parse "+path, err)
+		return nil, errs.NewWithCause("Unable to parse "+p, err)
 	}
 	return tmpl, nil
 }

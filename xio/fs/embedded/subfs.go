@@ -36,22 +36,22 @@ func (f *subFS) adjustPath(p string) string {
 	return path.Join(f.base, ToEFSPath(p))
 }
 
-func (f *subFS) Open(path string) (http.File, error) {
-	return f.parent.Open(f.adjustPath(path))
+func (f *subFS) Open(p string) (http.File, error) {
+	return f.parent.Open(f.adjustPath(p))
 }
 
-func (f *subFS) ContentAsBytes(path string) ([]byte, bool) {
-	return f.parent.ContentAsBytes(f.adjustPath(path))
+func (f *subFS) ContentAsBytes(p string) ([]byte, bool) {
+	return f.parent.ContentAsBytes(f.adjustPath(p))
 }
 
-func (f *subFS) MustContentAsBytes(path string) []byte {
-	return f.parent.MustContentAsBytes(f.adjustPath(path))
+func (f *subFS) MustContentAsBytes(p string) []byte {
+	return f.parent.MustContentAsBytes(f.adjustPath(p))
 }
 
-func (f *subFS) ContentAsString(path string) (string, bool) {
-	return f.parent.ContentAsString(f.adjustPath(path))
+func (f *subFS) ContentAsString(p string) (string, bool) {
+	return f.parent.ContentAsString(f.adjustPath(p))
 }
 
-func (f *subFS) MustContentAsString(path string) string {
-	return f.parent.MustContentAsString(f.adjustPath(path))
+func (f *subFS) MustContentAsString(p string) string {
+	return f.parent.MustContentAsString(f.adjustPath(p))
 }
