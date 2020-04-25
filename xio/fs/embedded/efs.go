@@ -29,16 +29,8 @@ func (f *efs) IsLive() bool {
 	return false
 }
 
-func (f *efs) actualPath(path string) string {
-	path = filepath.ToSlash(filepath.Clean(path))
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	return path
-}
-
 func (f *efs) Open(path string) (http.File, error) {
-	one, ok := f.files[f.actualPath(path)]
+	one, ok := f.files[ToEFSPath(path)]
 	if !ok {
 		return nil, os.ErrNotExist
 	}
@@ -58,7 +50,7 @@ func (f *efs) Open(path string) (http.File, error) {
 }
 
 func (f *efs) ContentAsBytes(path string) ([]byte, bool) {
-	if one, ok := f.files[f.actualPath(path)]; ok {
+	if one, ok := f.files[ToEFSPath(path)]; ok {
 		if err := one.uncompressData(); err != nil {
 			return nil, false
 		}
@@ -88,4 +80,13 @@ func (f *efs) MustContentAsString(path string) string {
 	}
 	jot.Fatal(1, path+" does not exist")
 	return ""
+}
+
+// ToEFSPath converts a native file system path into one used by the EFS.
+func ToEFSPath(path string) string {
+	path = filepath.ToSlash(filepath.Clean(path))
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return path
 }

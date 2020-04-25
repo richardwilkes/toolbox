@@ -13,6 +13,7 @@ package embedded
 import (
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"time"
@@ -51,46 +52,46 @@ func NewEFS(files map[string]*File) *EFS {
 	dirs := make(map[string]*dInfo)
 	for k, v := range files {
 		dir, _ := filepath.Split(k)
-		dir = filepath.Clean(dir)
-		di, ok := dirs[filepath.ToSlash(dir)]
+		dir = ToEFSPath(dir)
+		di, ok := dirs[dir]
 		if !ok {
 			di = &dInfo{
 				f: &File{
-					name:    filepath.ToSlash(filepath.Base(dir)),
+					name:    path.Base(dir),
 					modTime: now,
 					isDir:   true,
 				},
 				m: collection.NewStringSet(),
 			}
-			dirs[filepath.ToSlash(dir)] = di
+			dirs[dir] = di
 		}
 		di.f.files = append(di.f.files, v)
 		// Ensure parents are present
-		path := dir
+		parent := dir
 		for {
-			if dir, _ = filepath.Split(dir); dir == "" || path == dir {
+			if dir, _ = path.Split(dir); dir == "" || parent == dir {
 				break
 			}
-			dir = filepath.Clean(dir)
+			dir = path.Clean(dir)
 			var p *dInfo
-			if p, ok = dirs[filepath.ToSlash(dir)]; !ok {
+			if p, ok = dirs[dir]; !ok {
 				p = &dInfo{
 					f: &File{
-						name:    filepath.ToSlash(filepath.Base(dir)),
+						name:    path.Base(dir),
 						modTime: now,
 						isDir:   true,
 					},
 					m: collection.NewStringSet(),
 				}
-				dirs[filepath.ToSlash(dir)] = p
+				dirs[dir] = p
 			}
-			if p.m.Contains(path) {
+			if p.m.Contains(parent) {
 				break
 			}
-			p.m.Add(path)
+			p.m.Add(parent)
 			p.f.files = append(p.f.files, di.f)
 			di = p
-			path = dir
+			parent = dir
 		}
 	}
 	// For each dir, sort its file list and add it to our "all" list

@@ -14,7 +14,7 @@ package htmltmpl
 import (
 	"html/template"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
@@ -26,8 +26,8 @@ import (
 // are loaded. The filter function is not called for the initial path. The
 // template passed in will be used to load new templates and will be returned.
 // If the passed in template is nil, a new one will be created.
-func Load(tmpl *template.Template, fs embedded.FileSystem, path string, filter func(path string, isDir bool) bool) (*template.Template, error) {
-	dir, err := fs.Open(path)
+func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func(p string, isDir bool) bool) (*template.Template, error) {
+	dir, err := fs.Open(p)
 	if err != nil {
 		return nil, errs.Wrap(err)
 	}
@@ -42,7 +42,7 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, path string, filter f
 			return nil, errs.Wrap(dirErr)
 		}
 		for _, fi = range fis {
-			onePath := filepath.Join(path, fi.Name())
+			onePath := path.Join(p, fi.Name())
 			isDir := fi.IsDir()
 			if filter == nil || !filter(onePath, isDir) {
 				if isDir {
@@ -56,7 +56,7 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, path string, filter f
 				}
 			}
 		}
-	} else if tmpl, err = load(tmpl, fs, path); err != nil {
+	} else if tmpl, err = load(tmpl, fs, p); err != nil {
 		return nil, err
 	}
 	return tmpl, nil

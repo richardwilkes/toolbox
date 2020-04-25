@@ -11,7 +11,7 @@ package embedded
 
 import (
 	"net/http"
-	"path/filepath"
+	"path"
 )
 
 type subFS struct {
@@ -22,13 +22,9 @@ type subFS struct {
 // NewSubFileSystem creates a new FileSystem rooted at 'base' within an
 // existing FileSystem.
 func NewSubFileSystem(parent FileSystem, base string) FileSystem {
-	base = filepath.Clean(base)
-	if !filepath.IsAbs(base) {
-		base = "/" + base
-	}
 	return &subFS{
 		parent: parent,
-		base:   base,
+		base:   ToEFSPath(base),
 	}
 }
 
@@ -36,12 +32,8 @@ func (f *subFS) IsLive() bool {
 	return f.parent.IsLive()
 }
 
-func (f *subFS) adjustPath(path string) string {
-	path = filepath.Clean(path)
-	if !filepath.IsAbs(path) {
-		path = "/" + path
-	}
-	return filepath.Join(f.base, path)
+func (f *subFS) adjustPath(p string) string {
+	return path.Join(f.base, ToEFSPath(p))
 }
 
 func (f *subFS) Open(path string) (http.File, error) {

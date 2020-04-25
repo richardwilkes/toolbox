@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/richardwilkes/toolbox/log/jot"
 )
@@ -38,10 +37,7 @@ func (f *liveFS) Open(path string) (http.File, error) {
 }
 
 func (f *liveFS) actualPath(path string) string {
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	return filepath.Join(f.base, filepath.FromSlash(filepath.Clean(path)))
+	return filepath.Join(f.base, ToEFSPath(path))
 }
 
 func (f *liveFS) ContentAsBytes(path string) ([]byte, bool) {

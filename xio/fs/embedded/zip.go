@@ -13,8 +13,7 @@ import (
 	"archive/zip"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
+	"path"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
@@ -76,11 +75,8 @@ func NewEFSFromZip(zr *zip.Reader) (*EFS, error) {
 		if err != nil {
 			return nil, errs.Wrap(err)
 		}
-		name := filepath.ToSlash(filepath.Clean(f.Name))
-		if !strings.HasPrefix(name, "/") {
-			name = "/" + name
-		}
-		files[name] = NewFile(filepath.Base(name), f.Modified, int64(f.UncompressedSize64), false, data)
+		name := ToEFSPath(f.Name)
+		files[name] = NewFile(path.Base(name), f.Modified, int64(f.UncompressedSize64), false, data)
 	}
 	return NewEFS(files), nil
 }

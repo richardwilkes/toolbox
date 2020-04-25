@@ -14,7 +14,7 @@ import (
 	"compress/gzip"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
 	"sync"
 	"time"
 )
@@ -35,7 +35,7 @@ type File struct { //nolint:maligned
 // NewFile creates a new embedded file.
 func NewFile(name string, modTime time.Time, size int64, compressed bool, data []byte) *File {
 	return &File{
-		name:       filepath.Base(name),
+		name:       path.Base(ToEFSPath(name)),
 		size:       size,
 		modTime:    modTime,
 		compressed: compressed,
