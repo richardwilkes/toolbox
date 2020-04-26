@@ -11,10 +11,14 @@ package cmdline
 
 import (
 	{{- if eq .Type "time.Duration"}}
+	"strings"
 	"time"
 	{{- else if ne .Type "string"}}
 	"fmt"
 	"strconv"
+	"strings"
+	{{- else}}
+	"strings"
 	{{- end}}
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -61,18 +65,18 @@ func (val *{{name .Type}}ArrayValue) Set(str string) error {
 
 // String implements the Value interface.
 func (val *{{name .Type}}ArrayValue) String() string {
-	var str string
+	var buffer strings.Builder
 	for _, v := range *val {
-		if str == "" {
-			str += ", "
+		if buffer.Len() != 0 {
+			buffer.WriteString(", ")
 		}
 		{{- if eq .Type "string"}}
-		str += v
+		buffer.WriteString(v)
 		{{- else if eq .Type "time.Duration"}}
-		str += v.String()
+		buffer.WriteString(v.String())
 		{{- else}}
-		str += fmt.Sprintf("%v", v)
+		fmt.Fprintf(&buffer, "%v", v)
 		{{- end}}
 	}
-	return str
+	return buffer.String()
 }

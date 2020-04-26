@@ -12,6 +12,7 @@
 package cmdline
 
 import (
+	"strings"
 	"time"
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -52,12 +53,12 @@ func (val *durationArrayValue) Set(str string) error {
 
 // String implements the Value interface.
 func (val *durationArrayValue) String() string {
-	var str string
+	var buffer strings.Builder
 	for _, v := range *val {
-		if str == "" {
-			str += ", "
+		if buffer.Len() != 0 {
+			buffer.WriteString(", ")
 		}
-		str += v.String()
+		buffer.WriteString(v.String())
 	}
-	return str
+	return buffer.String()
 }

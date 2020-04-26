@@ -12,6 +12,8 @@
 package cmdline
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/toolbox/errs"
 )
 
@@ -50,12 +52,12 @@ func (val *stringArrayValue) Set(str string) error {
 
 // String implements the Value interface.
 func (val *stringArrayValue) String() string {
-	var str string
+	var buffer strings.Builder
 	for _, v := range *val {
-		if str == "" {
-			str += ", "
+		if buffer.Len() != 0 {
+			buffer.WriteString(", ")
 		}
-		str += v
+		buffer.WriteString(v)
 	}
-	return str
+	return buffer.String()
 }

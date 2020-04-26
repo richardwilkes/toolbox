@@ -14,6 +14,7 @@ package cmdline
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
 )
@@ -53,12 +54,12 @@ func (val *uint32ArrayValue) Set(str string) error {
 
 // String implements the Value interface.
 func (val *uint32ArrayValue) String() string {
-	var str string
+	var buffer strings.Builder
 	for _, v := range *val {
-		if str == "" {
-			str += ", "
+		if buffer.Len() != 0 {
+			buffer.WriteString(", ")
 		}
-		str += fmt.Sprintf("%v", v)
+		fmt.Fprintf(&buffer, "%v", v)
 	}
-	return str
+	return buffer.String()
 }
