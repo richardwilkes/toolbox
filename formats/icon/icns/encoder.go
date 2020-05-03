@@ -34,6 +34,11 @@ type entryHeader struct {
 	Length   uint32
 }
 
+type iconInfo struct {
+	iconType [4]byte
+	buffer   []byte
+}
+
 // Encode one or more images into an .icns. At least one image must be
 // provided. macOS recommends providing 1024x1024, 512x512, 256x256, 128x128,
 // 64x64, 32x32, and 16x16. Note that sizes other than these will not be
@@ -45,68 +50,160 @@ func Encode(w io.Writer, images ...image.Image) error {
 	sort.Slice(images, func(i, j int) bool {
 		return images[i].Bounds().Dx() > images[j].Bounds().Dx()
 	})
-	list := make([][]byte, 0, len(images))
-	var totalBytes uint32
+	var info []*iconInfo
 	for _, img := range images {
-		bounds := img.Bounds()
-		width := bounds.Dx()
-		height := bounds.Dy()
-		if width != height || !validSize(width) || !validSize(height) {
+		width := img.Bounds().Dx()
+		if width != img.Bounds().Dy() {
+			return errs.New("image must be square")
+		}
+		var ii *iconInfo
+		var err error
+		switch width {
+		case 1024:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '1', '0'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 512:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '0', '9'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '1', '4'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 256:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '0', '8'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '1', '3'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 128:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '0', '7'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 64:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '1', '2'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 32:
+			if ii, err = createPNGData(img, [4]byte{'i', 'c', '1', '1'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+			if ii, err = createARGBData(img, [4]byte{'i', 'c', '0', '5'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		case 16:
+			if ii, err = createARGBData(img, [4]byte{'i', 'c', '0', '4'}); err != nil {
+				return err
+			}
+			info = append(info, ii)
+		default:
 			return errs.New("invalid image size")
 		}
-		if _, ok := img.(*image.RGBA); !ok {
-			m := image.NewRGBA(bounds)
-			draw.Draw(m, bounds, img, bounds.Min, draw.Src)
-			img = m
-		}
-		var buffer bytes.Buffer
-		if err := png.Encode(&buffer, img); err != nil {
-			return errs.Wrap(err)
-		}
-		totalBytes += uint32(buffer.Len())
-		list = append(list, buffer.Bytes())
+	}
+	totalBytes := 8 + 8*len(info)
+	for _, one := range info {
+		totalBytes += len(one.buffer)
 	}
 	if err := binary.Write(w, binary.BigEndian, header{
 		Magic:  [4]uint8{'i', 'c', 'n', 's'},
-		Length: 8 + 8*uint32(len(images)) + totalBytes,
+		Length: uint32(totalBytes),
 	}); err != nil {
 		return errs.Wrap(err)
 	}
-	for i, img := range images {
+	for _, one := range info {
 		if err := binary.Write(w, binary.BigEndian, entryHeader{
-			IconType: iconTypeForSize(img.Bounds().Dx()),
-			Length:   8 + uint32(len(list[i])),
+			IconType: one.iconType,
+			Length:   8 + uint32(len(one.buffer)),
 		}); err != nil {
 			return errs.Wrap(err)
 		}
-		if _, err := w.Write(list[i]); err != nil {
+		if _, err := w.Write(one.buffer); err != nil {
 			return errs.Wrap(err)
 		}
 	}
 	return nil
 }
 
-func validSize(size int) bool {
-	return size == 1024 || size == 512 || size == 256 || size == 128 || size == 64 || size == 32 || size == 16
+func createPNGData(img image.Image, iconType [4]byte) (*iconInfo, error) {
+	var buffer bytes.Buffer
+	if _, ok := img.(*image.RGBA); !ok {
+		bounds := img.Bounds()
+		m := image.NewRGBA(bounds)
+		draw.Draw(m, bounds, img, bounds.Min, draw.Src)
+		img = m
+	}
+	if err := png.Encode(&buffer, img); err != nil {
+		return nil, errs.Wrap(err)
+	}
+	return &iconInfo{
+		iconType: iconType,
+		buffer:   buffer.Bytes(),
+	}, nil
 }
 
-func iconTypeForSize(size int) [4]uint8 {
-	switch size {
-	case 1024:
-		return [4]uint8{'i', 'c', '1', '0'}
-	case 512:
-		return [4]uint8{'i', 'c', '0', '9'}
-	case 256:
-		return [4]uint8{'i', 'c', '0', '8'}
-	case 128:
-		return [4]uint8{'i', 'c', '0', '7'}
-	case 64:
-		return [4]uint8{'i', 'c', 'p', '6'}
-	case 32:
-		return [4]uint8{'i', 'c', 'p', '5'}
-	case 16:
-		return [4]uint8{'i', 'c', 'p', '4'}
-	default:
-		return [4]uint8{} // Can't actually happen
+func createARGBData(img image.Image, iconType [4]byte) (*iconInfo, error) {
+	var buffer bytes.Buffer
+	buffer.Write([]byte{'A', 'R', 'G', 'B'})
+	var nrgba *image.NRGBA
+	nrgba, ok := img.(*image.NRGBA)
+	if !ok {
+		bounds := img.Bounds()
+		nrgba = image.NewNRGBA(bounds)
+		draw.Draw(nrgba, bounds, img, bounds.Min, draw.Src)
 	}
+	size := len(nrgba.Pix)
+	a := make([]byte, size/4)
+	r := make([]byte, size/4)
+	g := make([]byte, size/4)
+	b := make([]byte, size/4)
+	for i := 0; i < size; i += 4 {
+		j := i / 4
+		r[j] = nrgba.Pix[i]
+		g[j] = nrgba.Pix[i+1]
+		b[j] = nrgba.Pix[i+2]
+		a[j] = nrgba.Pix[i+3]
+	}
+	if err := writeChannel(&buffer, a); err != nil {
+		return nil, err
+	}
+	if err := writeChannel(&buffer, r); err != nil {
+		return nil, err
+	}
+	if err := writeChannel(&buffer, g); err != nil {
+		return nil, err
+	}
+	if err := writeChannel(&buffer, b); err != nil {
+		return nil, err
+	}
+	return &iconInfo{
+		iconType: iconType,
+		buffer:   buffer.Bytes(),
+	}, nil
+}
+
+func writeChannel(buffer *bytes.Buffer, data []byte) error {
+	size := len(data)
+	for i := 0; i < size; i += 128 {
+		count := size - i
+		if count > 128 {
+			count = 128
+		}
+		if err := buffer.WriteByte(byte(count - 1)); err != nil {
+			return errs.Wrap(err)
+		}
+		if _, err := buffer.Write(data[i : i+count]); err != nil {
+			return errs.Wrap(err)
+		}
+	}
+	return nil
 }
