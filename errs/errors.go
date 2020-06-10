@@ -59,6 +59,7 @@ func Wrap(cause error) error {
 			{
 				message: cause.Error(),
 				stack:   callStack(),
+				cause: cause,
 			},
 		},
 	}
@@ -82,6 +83,7 @@ func WrapTyped(cause error) *Error {
 			{
 				message: cause.Error(),
 				stack:   callStack(),
+				cause: cause,
 			},
 		},
 	}
