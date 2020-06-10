@@ -23,6 +23,7 @@ type Causer interface {
 }
 
 type detail struct {
+	printCause bool
 	message string
 	stack   []uintptr
 	cause   error
@@ -107,7 +108,7 @@ func (d *detail) detail(includeMessage, trimRuntime bool) string {
 			break
 		}
 	}
-	if d.cause != nil {
+	if d.cause != nil && d.printCause {
 		buffer.WriteString("\n  Caused by: ")
 		if detailed, ok := d.cause.(*Error); ok {
 			buffer.WriteString(detailed.Detail(trimRuntime))
