@@ -69,12 +69,29 @@ func (r Rect) Bottom() float64 {
 	return r.Y + r.Height
 }
 
+// TopLeft returns the top-left point of the rectangle.
+func (r Rect) TopLeft() Point {
+	return r.Point
+}
+
+// TopRight returns the top-right point of the rectangle.
+func (r Rect) TopRight() Point {
+	return Point{X: r.Right() - 1, Y: r.Y}
+}
+
+// BottomRight returns the bottom-right point of the rectangle.
+func (r Rect) BottomRight() Point {
+	return Point{X: r.Right() - 1, Y: r.Bottom() - 1}
+}
+
+// BottomLeft returns the bottom-left point of the rectangle.
+func (r Rect) BottomLeft() Point {
+	return Point{X: r.X, Y: r.Bottom() - 1}
+}
+
 // Max returns the bottom right corner of the rectangle.
 func (r Rect) Max() Point {
-	return Point{
-		X: r.Right(),
-		Y: r.Bottom(),
-	}
+	return Point{X: r.Right(), Y: r.Bottom()}
 }
 
 // IsEmpty returns true if either the width or height is zero or less.
@@ -84,9 +101,29 @@ func (r Rect) IsEmpty() bool {
 
 // Intersects returns true if this rect and the other rect intersect.
 func (r Rect) Intersects(other Rect) bool {
-	if !r.IsEmpty() && !other.IsEmpty() {
-		return r.X < other.Right() && r.Y < other.Bottom() &&
-			r.Right() > other.X && r.Bottom() > other.Y
+	if r.IsEmpty() || other.IsEmpty() {
+		return false
+	}
+	return r.X < other.Right() && r.Y < other.Bottom() && r.Right() > other.X && r.Bottom() > other.Y
+}
+
+// IntersectsLine returns true if this rect and the line described by start
+// and end intersect.
+func (r Rect) IntersectsLine(start, end Point) bool {
+	if r.IsEmpty() {
+		return false
+	}
+	if len(LineIntersection(start, end, r.Point, r.TopRight())) != 0 {
+		return true
+	}
+	if len(LineIntersection(start, end, r.Point, r.BottomLeft())) != 0 {
+		return true
+	}
+	if len(LineIntersection(start, end, r.TopRight(), r.BottomRight())) != 0 {
+		return true
+	}
+	if len(LineIntersection(start, end, r.BottomLeft(), r.BottomRight())) != 0 {
+		return true
 	}
 	return false
 }
