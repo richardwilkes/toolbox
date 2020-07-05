@@ -113,6 +113,9 @@ func (r Rect) IntersectsLine(start, end Point) bool {
 	if r.IsEmpty() {
 		return false
 	}
+	if r.ContainsPoint(start) || r.ContainsPoint(end) {
+		return true
+	}
 	if len(LineIntersection(start, end, r.Point, r.TopRight())) != 0 {
 		return true
 	}
