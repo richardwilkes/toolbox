@@ -114,7 +114,7 @@ func initBenchSet() {
 			if j == numpos {
 				str += num
 			} else {
-				str += string('a' + rnd.Intn(16))
+				str += string(rune('a' + rnd.Intn(16)))
 			}
 		}
 		benchSet[i] = str
