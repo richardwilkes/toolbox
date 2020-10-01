@@ -248,3 +248,32 @@ func (r *Rect) Inset(insets Insets) *Rect {
 	}
 	return r
 }
+
+// AddPoint adds a Point to this Rect. If the Rect has a negative width or
+// height, then the Rect's upper-left corner will be set to the Point and its
+// width and height will be set to 0. Returns itself for easy chaining.
+func (r *Rect) AddPoint(pt Point) *Rect {
+	if r.Width < 0 || r.Height < 0 {
+		r.Point = pt
+		r.Width = 0
+		r.Height = 0
+		return r
+	}
+	x2 := r.Right()
+	y2 := r.Bottom()
+	if r.X > pt.X {
+		r.X = pt.X
+	}
+	if r.Y > pt.Y {
+		r.Y = pt.Y
+	}
+	if x2 < pt.X {
+		x2 = pt.X
+	}
+	if y2 < pt.Y {
+		y2 = pt.Y
+	}
+	r.Width = x2 - r.X
+	r.Height = y2 - r.Y
+	return r
+}
