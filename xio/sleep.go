@@ -20,11 +20,13 @@ import (
 // You can check the return error to see if the context deadline was
 // exceeded by using errors.Is(err, context.DeadlineExceeded).
 func ContextSleep(ctx context.Context, waitTime time.Duration) error {
+	timer := time.NewTimer(waitTime)
+	defer timer.Stop()
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		return errs.NewWithCause(err.Error(), err)
-	case <-time.After(waitTime):
+	case <-timer.C:
 		return nil
 	}
 }
