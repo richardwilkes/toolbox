@@ -9,5 +9,5 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 )

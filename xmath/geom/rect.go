@@ -277,3 +277,8 @@ func (r *Rect) AddPoint(pt Point) *Rect {
 	r.Height = y2 - r.Y
 	return r
 }
+
+// Bounds merely returns this rectangle.
+func (r Rect) Bounds() Rect {
+	return r
+}
