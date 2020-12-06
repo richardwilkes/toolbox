@@ -11,6 +11,7 @@
 package paths
 
 import (
+	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -57,4 +58,29 @@ func AppDataDir() string {
 		}
 	}
 	return path
+}
+
+// FontDirs returns the standard font directories, in order of priority.
+func FontDirs() []string {
+	var paths []string
+	switch runtime.GOOS {
+	case toolbox.MacOS:
+		if u, err := user.Current(); err == nil {
+			paths = append(paths, filepath.Join(u.HomeDir, "Library", "Fonts"))
+		}
+		paths = append(paths, "/Library/Fonts", "/System/Library/Fonts")
+	case toolbox.WindowsOS:
+		windir := os.Getenv("WINDIR")
+		if windir == "" {
+			windir = "C:\\Windows"
+		}
+		paths = append(paths, filepath.Join(windir, "Fonts"))
+	case toolbox.LinuxOS:
+		if u, err := user.Current(); err == nil {
+			paths = append(paths, filepath.Join(u.HomeDir, ".fonts"))
+		}
+		paths = append(paths, "/usr/local/share/fonts", "/usr/share/fonts")
+	default:
+	}
+	return paths
 }
