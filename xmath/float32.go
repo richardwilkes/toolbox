@@ -58,3 +58,23 @@ func FloorFloat32(x float32) float32 {
 func CeilFloat32(x float32) float32 {
 	return float32(math.Ceil(float64(x)))
 }
+
+// SqrtFloat32 returns the square root of x.
+func SqrtFloat32(x float32) float32 {
+	return float32(math.Sqrt(float64(x)))
+}
+
+// AcosFloat32 returns the arccosine of x.
+func AcosFloat32(x float32) float32 {
+	return float32(math.Acos(float64(x)))
+}
+
+// CosFloat32 returns the cosine of x.
+func CosFloat32(x float32) float32 {
+	return float32(math.Cos(float64(x)))
+}
+
+// SinFloat32 returns the sin of x.
+func SinFloat32(x float32) float32 {
+	return float32(math.Sin(float64(x)))
+}
