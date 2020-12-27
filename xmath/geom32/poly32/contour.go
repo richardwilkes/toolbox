@@ -12,8 +12,8 @@ package poly32
 import (
 	"math"
 
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Contour is a sequence of vertices connected by line segments, forming a
@@ -75,7 +75,7 @@ func (c Contour) Contains(pt geom32.Point) bool {
 		if bottom.Y > top.Y {
 			bottom, top = top, bottom
 		}
-		if pt.Y >= bottom.Y && pt.Y < top.Y && pt.X < xmath.MaxFloat32(cur.X, next.X) && next.Y != cur.Y &&
+		if pt.Y >= bottom.Y && pt.Y < top.Y && pt.X < mathf32.Max(cur.X, next.X) && next.Y != cur.Y &&
 			(cur.X == next.X || pt.X <= (pt.Y-cur.Y)*(next.X-cur.X)/(next.Y-cur.Y)+cur.X) {
 			count++
 		}

@@ -10,7 +10,7 @@
 package geom32
 
 import (
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // LineIntersection determines the intersection of two lines, if any. A return
@@ -54,15 +54,15 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 		} else if uat == 0 || ubt == 0 {
 			// Parallel, so check for overlap
 			var ub1, ub2 float32
-			if xmath.AbsFloat32(adx) > xmath.AbsFloat32(ady) {
+			if mathf32.Abs(adx) > mathf32.Abs(ady) {
 				ub1 = (b1.X - a1.X) / adx
 				ub2 = (b2.X - a1.X) / adx
 			} else {
 				ub1 = (b1.Y - a1.Y) / ady
 				ub2 = (b2.Y - a1.Y) / ady
 			}
-			left := xmath.MaxFloat32(0, xmath.MinFloat32(ub1, ub2))
-			right := xmath.MinFloat32(1, xmath.MaxFloat32(ub1, ub2))
+			left := mathf32.Max(0, mathf32.Min(ub1, ub2))
+			right := mathf32.Min(1, mathf32.Max(ub1, ub2))
 			if left < right {
 				return []Point{
 					{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
@@ -84,7 +84,7 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 // intersects the line segment in between the end points, this function
 // returns 0.
 func PointSegmentDistance(s1, s2, p Point) float32 {
-	return xmath.SqrtFloat32(PointSegmentDistanceSquared(s1, s2, p))
+	return mathf32.Sqrt(PointSegmentDistanceSquared(s1, s2, p))
 }
 
 // PointSegmentDistanceSquared returns the square of the distance from a point

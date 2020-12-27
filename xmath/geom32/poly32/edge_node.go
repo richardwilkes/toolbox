@@ -12,8 +12,8 @@ package poly32
 import (
 	"math"
 
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 const float32Epsilon = float32(2.2204460492503131e-16)
@@ -141,7 +141,7 @@ func (e *edgeNode) addToSortedEdgeTable(se **sortedEdge, it **intersection, dy f
 		}
 	} else {
 		den := ((*se).xt - (*se).xb) - (e.xt - e.xb)
-		if e.xt >= (*se).xt || e.dx == (*se).dx || xmath.AbsFloat32(den) <= float32Epsilon {
+		if e.xt >= (*se).xt || e.dx == (*se).dx || mathf32.Abs(den) <= float32Epsilon {
 			*se = &sortedEdge{
 				edge: e,
 				xb:   e.xb,
@@ -510,7 +510,7 @@ func (e *edgeNode) swapIntersectingEdgeBundles(inter *intersection) *edgeNode {
 }
 
 func mostlyEqual(a, b float32) bool {
-	return xmath.AbsFloat32(a-b) <= Epsilon
+	return mathf32.Abs(a-b) <= Epsilon
 }
 
 func calcNextHState(existsState int, current horizontalEdgeStates, parityRight bool) horizontalEdgeStates {

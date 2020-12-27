@@ -13,7 +13,7 @@ package geom32
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Rect defines a rectangle.
@@ -164,10 +164,10 @@ func (r *Rect) Intersect(other Rect) *Rect {
 		r.Width = 0
 		r.Height = 0
 	} else {
-		x := xmath.MaxFloat32(r.X, other.X)
-		y := xmath.MaxFloat32(r.Y, other.Y)
-		w := xmath.MinFloat32(r.Right(), other.Right()) - x
-		h := xmath.MinFloat32(r.Bottom(), other.Bottom()) - y
+		x := mathf32.Max(r.X, other.X)
+		y := mathf32.Max(r.Y, other.Y)
+		w := mathf32.Min(r.Right(), other.Right()) - x
+		h := mathf32.Min(r.Bottom(), other.Bottom()) - y
 		if w > 0 && h > 0 {
 			r.X = x
 			r.Y = y
@@ -193,10 +193,10 @@ func (r *Rect) Union(other Rect) *Rect {
 	case e1:
 		*r = other
 	case !e2:
-		x := xmath.MinFloat32(r.X, other.X)
-		y := xmath.MinFloat32(r.Y, other.Y)
-		r.Width = xmath.MaxFloat32(r.Right(), other.Right()) - x
-		r.Height = xmath.MaxFloat32(r.Bottom(), other.Bottom()) - y
+		x := mathf32.Min(r.X, other.X)
+		y := mathf32.Min(r.Y, other.Y)
+		r.Width = mathf32.Max(r.Right(), other.Right()) - x
+		r.Height = mathf32.Max(r.Bottom(), other.Bottom()) - y
 		r.X = x
 		r.Y = y
 	}
@@ -206,11 +206,11 @@ func (r *Rect) Union(other Rect) *Rect {
 // Align modifies this rectangle to align with integer coordinates that would
 // encompass the original rectangle. Returns itself for easy chaining.
 func (r *Rect) Align() *Rect {
-	x := xmath.FloorFloat32(r.X)
-	r.Width = xmath.CeilFloat32(r.Right()) - x
+	x := mathf32.Floor(r.X)
+	r.Width = mathf32.Ceil(r.Right()) - x
 	r.X = x
-	y := xmath.FloorFloat32(r.Y)
-	r.Height = xmath.CeilFloat32(r.Bottom()) - y
+	y := mathf32.Floor(r.Y)
+	r.Height = mathf32.Ceil(r.Bottom()) - y
 	r.Y = y
 	return r
 }

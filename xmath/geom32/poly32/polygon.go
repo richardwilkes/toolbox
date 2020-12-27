@@ -12,8 +12,8 @@ package poly32
 import (
 	"math"
 
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 const (
@@ -60,7 +60,7 @@ type Polygon []Contour
 // acceptable error, typically 1 or less.
 func CalcEllipseSegmentCount(r, e float32) int {
 	d := 1 - e/r
-	n := int(xmath.CeilFloat32(2 * math.Pi / xmath.AcosFloat32(2*d*d-1)))
+	n := int(mathf32.Ceil(2 * math.Pi / mathf32.Acos(2*d*d-1)))
 	if n < 4 {
 		n = 4
 	}
@@ -71,7 +71,7 @@ func CalcEllipseSegmentCount(r, e float32) int {
 // automatically choose the number of segments to break the ellipse contour
 // into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
 func ApproximateEllipseAuto(bounds geom32.Rect) Polygon {
-	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(xmath.MaxFloat32(bounds.Width, bounds.Height)/2, 0.2))
+	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(mathf32.Max(bounds.Width, bounds.Height)/2, 0.2))
 }
 
 // ApproximateEllipse creates a polygon that approximates an ellipse.
@@ -85,8 +85,8 @@ func ApproximateEllipse(bounds geom32.Rect, sections int) Polygon {
 	var angle float32
 	for i := 0; i < sections; i++ {
 		contour[i] = geom32.Point{
-			X: center.X + xmath.CosFloat32(angle)*halfWidth,
-			Y: center.Y + xmath.SinFloat32(angle)*halfHeight,
+			X: center.X + mathf32.Cos(angle)*halfWidth,
+			Y: center.Y + mathf32.Sin(angle)*halfHeight,
 		}
 		angle += inc
 	}

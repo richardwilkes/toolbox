@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom32"
 	"github.com/richardwilkes/toolbox/xmath/geom32/poly32"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -692,8 +692,8 @@ func rotate(p poly32.Polygon, radians float32) poly32.Polygon {
 		result[i] = make(poly32.Contour, len(contour))
 		for j, point := range contour {
 			result[i][j] = geom32.Point{
-				X: point.X*xmath.CosFloat32(radians) - point.Y*xmath.SinFloat32(radians),
-				Y: point.Y*xmath.CosFloat32(radians) + point.X*xmath.SinFloat32(radians),
+				X: point.X*mathf32.Cos(radians) - point.Y*mathf32.Sin(radians),
+				Y: point.Y*mathf32.Cos(radians) + point.X*mathf32.Sin(radians),
 			}
 		}
 	}

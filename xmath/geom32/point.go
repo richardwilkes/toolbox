@@ -12,7 +12,7 @@ package geom32
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Point defines a location.
@@ -42,8 +42,8 @@ func (p Point) String() string {
 // Align modifies this Point to align with integer coordinates. Returns itself
 // for easy chaining.
 func (p *Point) Align() *Point {
-	p.X = xmath.FloorFloat32(p.X)
-	p.Y = xmath.FloorFloat32(p.Y)
+	p.X = mathf32.Floor(p.X)
+	p.Y = mathf32.Floor(p.Y)
 	return p
 }
 

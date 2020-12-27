@@ -12,7 +12,7 @@ package geom32
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Size defines a width and height.
@@ -75,8 +75,8 @@ func (s *Size) SubtractInsets(insets Insets) *Size {
 // the smallest integers greater than or equal to their original values.
 // Returns itself for easy chaining.
 func (s *Size) GrowToInteger() *Size {
-	s.Width = xmath.CeilFloat32(s.Width)
-	s.Height = xmath.CeilFloat32(s.Height)
+	s.Width = mathf32.Ceil(s.Width)
+	s.Height = mathf32.Ceil(s.Height)
 	return s
 }
 
