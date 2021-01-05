@@ -61,3 +61,10 @@ func (p *Point) Subtract(pt Point) *Point {
 	p.Y -= pt.Y
 	return p
 }
+
+// Negate modifies this Point by negating both the X and Y coordinates.
+func (p *Point) Negate() *Point {
+	p.X = -p.X
+	p.Y = -p.Y
+	return p
+}
