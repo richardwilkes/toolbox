@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/dustin/go-humanize v1.0.0
-	github.com/jackpal/gateway v1.0.6
+	github.com/jackpal/gateway v1.0.7
 	github.com/pkg/term v1.1.0
 	github.com/stretchr/testify v1.6.1
 	github.com/yookoala/realpath v1.0.0
