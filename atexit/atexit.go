@@ -15,6 +15,7 @@ import (
 	"log" //nolint:depguard
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 
@@ -72,10 +73,25 @@ func Unregister(id int) {
 }
 
 // Exit runs any registered exit functions in the inverse order they were registered and then exits with the specified
-// status. If a previous call to Exit() is already being handled, this method does nothing. Note that once Exit() is
-// called, no subsequent changes to the registered list of functions will have an effect (i.e. you cannot Unregister() a
-// function inside an exit handler to prevent its execution).
+// status. If a previous call to Exit() is already being handled, this method does nothing but does not return.
+// Recursive calls to Exit() will trigger a panic, which the exit handling will catch and report, but will then proceed
+// with exit as normal. Note that once Exit() is called, no subsequent changes to the registered list of functions will
+// have an effect (i.e. you cannot Unregister() a function inside an exit handler to prevent its execution).
 func Exit(status int) {
+	var pcs [512]uintptr
+	recursive := false
+	n := runtime.Callers(2, pcs[:])
+	frames := runtime.CallersFrames(pcs[:n])
+	for {
+		frame, more := frames.Next()
+		if frame.Function == "github.com/richardwilkes/toolbox/atexit.Exit" {
+			recursive = true
+			break
+		}
+		if !more {
+			break
+		}
+	}
 	var f []func()
 	lock.Lock()
 	wasExiting := exiting
@@ -87,7 +103,13 @@ func Exit(status int) {
 		}
 	}
 	lock.Unlock()
-	if !wasExiting {
+	if wasExiting {
+		if recursive {
+			panic("recursive call of atexit.Exit()") // force the recovery mechanism to deal with it
+		} else {
+			select {} // halt progress so that we don't return
+		}
+	} else {
 		for i := len(f) - 1; i >= 0; i-- {
 			run(f[i])
 		}
