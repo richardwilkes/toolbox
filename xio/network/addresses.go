@@ -50,7 +50,7 @@ func PrimaryIPAddress() string {
 				return fallback
 			}
 		}
-		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
+		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond) //nolint:gosec // does not need to be secure
 	}
 	return "127.0.0.1"
 }
@@ -83,7 +83,7 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 				}
 			}
 		}
-		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
+		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond) //nolint:gosec // does not need to be secure
 	}
 	return "localhost", "127.0.0.1", "00:00:00:00:00:00"
 }

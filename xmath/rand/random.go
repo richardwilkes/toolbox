@@ -40,7 +40,7 @@ func (r *cryptoRand) Intn(n int) int {
 		}
 	}
 	if _, err := rand.Read(buffer[:size]); err != nil {
-		// Fallback to pseudo-random number generator if crypto/rand fails
+		//nolint:gosec // Fallback to pseudo-random number generator if crypto/rand fails
 		return mrnd.Intn(n)
 	}
 	var v int

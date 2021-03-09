@@ -172,7 +172,7 @@ func writeGoTemplate(tmpls *template.Template, tmpl, outputPath string, tmplArg 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 		return errs.Wrap(err)
 	}
-	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil { //nolint:gosec // these are the permissions I want
 		return errs.Wrap(err)
 	}
 	return nil

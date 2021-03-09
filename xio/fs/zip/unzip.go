@@ -103,7 +103,8 @@ func extractFile(f *zip.File, dst string) (err error) {
 			err = errs.Wrap(closeErr)
 		}
 	}()
-	if _, err = io.Copy(file, r); err != nil {
+	// TODO: Investigate if there is a way to eliminate the potential security issue below
+	if _, err = io.Copy(file, r); err != nil { //nolint:gosec // Don't see a way around the reported G110 issue, so allowing for now
 		err = errs.Wrap(err)
 	}
 	return

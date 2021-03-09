@@ -234,7 +234,7 @@ func (n *Notifier) NotifyWithData(name string, data, producer interface{}) {
 					list = append(list, k)
 				}
 				sort.Slice(list, func(i, j int) bool {
-					return targets[list[j]] < targets[list[i]]
+					return targets[list[i]] > targets[list[j]]
 				})
 				for _, target := range list {
 					n.notifyTarget(target, name, data, producer)

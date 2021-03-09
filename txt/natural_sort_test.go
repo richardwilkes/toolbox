@@ -99,7 +99,7 @@ func BenchmarkNaturalLessCaseInsensitive(b *testing.B) {
 }
 
 func initBenchSet() {
-	rnd := rand.New(rand.NewSource(22))
+	rnd := rand.New(rand.NewSource(22)) //nolint:gosec // does not need to be secure
 	benchSet = make([]string, 20000)
 	for i := range benchSet {
 		strlen := rnd.Intn(6) + 3
