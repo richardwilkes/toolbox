@@ -1,4 +1,4 @@
-// Copyright ©2016-2020 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2021 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,15 +10,19 @@
 // Package xio provides i/o utilities.
 package xio
 
-import "io"
+import (
+	"io"
+	"io/ioutil"
+)
 
-// CloseIgnoringErrors closes the closer and ignores any error it might
-// produce. Should only be used for read-only streams of data where closing
-// should never cause an error.
+// CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
+// streams of data where closing should never cause an error.
 func CloseIgnoringErrors(closer io.Closer) {
-	// The extra code here is just to quiet the linter about not checking
-	// for an error.
-	if err := closer.Close(); err != nil {
-		return
-	}
+	closer.Close() //nolint:errcheck // intentionally ignoring any error
+}
+
+// DiscardAndCloseIgnoringErrors reads any content remaining in the body and discards it, then closes the body.
+func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
+	io.Copy(ioutil.Discard, rc) //nolint:errcheck // intentionally ignoring any error
+	rc.Close()                  //nolint:errcheck // intentionally ignoring any error
 }
