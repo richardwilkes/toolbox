@@ -25,8 +25,8 @@ import (
 )
 
 var (
-	tagsRefListRegex   = regexp.MustCompile(`(?m-s)(?:tags)/(\S+)$`)
-	originRefListRegex = regexp.MustCompile(`(?m-s)(?:origin)/(\S+)$`)
+	tagsRefListRegex   = regexp.MustCompile(`(?m)(?:tags)/(\S+)$`)
+	originRefListRegex = regexp.MustCompile(`(?m)(?:origin)/(\S+)$`)
 )
 
 // Repo provides access to a git repository.
