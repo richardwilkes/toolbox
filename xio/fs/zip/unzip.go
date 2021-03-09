@@ -76,7 +76,7 @@ func extractSymLink(f *zip.File, dst string) error {
 	if buffer, err = ioutil.ReadAll(r); err != nil {
 		return errs.Wrap(err)
 	}
-	if err = os.MkdirAll(filepath.Dir(dst), 0775); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return errs.Wrap(err)
 	}
 	if err = os.Symlink(string(buffer), dst); err != nil {
@@ -91,7 +91,7 @@ func extractFile(f *zip.File, dst string) (err error) {
 		return errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(r)
-	if err = os.MkdirAll(filepath.Dir(dst), 0775); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return errs.Wrap(err)
 	}
 	var file *os.File
