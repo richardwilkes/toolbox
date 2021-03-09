@@ -10,6 +10,7 @@
 package rotation
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/richardwilkes/toolbox/cmdline"
@@ -55,6 +56,15 @@ func MaxSize(maxSize int64) func(*Rotator) error {
 func MaxBackups(maxBackups int) func(*Rotator) error {
 	return func(r *Rotator) error {
 		r.maxBackups = maxBackups
+		return nil
+	}
+}
+
+// WithMask sets the mask when creating files, which have the unmasked mode of 0666, and directories, which have the
+// unmasked mode of 0755. Defaults to 0777.
+func WithMask(mask os.FileMode) func(*Rotator) error {
+	return func(r *Rotator) error {
+		r.mask = mask
 		return nil
 	}
 }

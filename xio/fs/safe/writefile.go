@@ -12,12 +12,18 @@ package safe
 import (
 	"bufio"
 	"io"
+	"os"
 )
 
 // WriteFile uses writer to write data safely and atomically to a file.
 func WriteFile(filename string, writer func(io.Writer) error) (err error) {
+	return WriteFileWithMode(filename, writer, 0644) //nolint:gocritic // File modes are octal
+}
+
+// WriteFileWithMode uses writer to write data safely and atomically to a file.
+func WriteFileWithMode(filename string, writer func(io.Writer) error, mode os.FileMode) (err error) {
 	var f *File
-	f, err = Create(filename)
+	f, err = CreateWithMode(filename, mode)
 	if err != nil {
 		return
 	}

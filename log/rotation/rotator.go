@@ -24,6 +24,7 @@ type Rotator struct {
 	path       string
 	maxSize    int64
 	maxBackups int
+	mask       os.FileMode
 	lock       sync.Mutex
 	file       *os.File
 	size       int64
@@ -35,6 +36,7 @@ func New(options ...func(*Rotator) error) (*Rotator, error) {
 		path:       DefaultPath(),
 		maxSize:    DefaultMaxSize,
 		maxBackups: DefaultMaxBackups,
+		mask:       0777,
 	}
 	for _, option := range options {
 		if err := option(r); err != nil {
@@ -52,7 +54,7 @@ func (r *Rotator) Write(b []byte) (int, error) {
 		fi, err := os.Stat(r.path)
 		switch {
 		case os.IsNotExist(err):
-			if err = os.MkdirAll(filepath.Dir(r.path), 0755); err != nil {
+			if err = os.MkdirAll(filepath.Dir(r.path), 0755&r.mask); err != nil {
 				return 0, errs.Wrap(err)
 			}
 			file, fErr := os.Create(r.path)
@@ -65,7 +67,7 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			return 0, errs.Wrap(err)
 		default:
 			var file *os.File
-			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666); err != nil {
+			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666&r.mask); err != nil {
 				return 0, errs.Wrap(err)
 			}
 			r.file = file

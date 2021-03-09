@@ -12,6 +12,7 @@ package fs
 import (
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs/safe"
@@ -33,14 +34,19 @@ func LoadYAML(path string, data interface{}) error {
 
 // SaveYAML data to the specified path.
 func SaveYAML(path string, data interface{}) error {
+	return SaveYAMLWithMode(path, data, 0644) //nolint:gocritic // File modes are octal
+}
+
+// SaveYAMLWithMode data to the specified path.
+func SaveYAMLWithMode(path string, data interface{}, mode os.FileMode) error {
 	out, err := yaml.Marshal(data)
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	return safe.WriteFile(path, func(w io.Writer) error {
+	return safe.WriteFileWithMode(path, func(w io.Writer) error {
 		if _, err = w.Write(out); err != nil {
 			return errs.Wrap(err)
 		}
 		return nil
-	})
+	}, mode)
 }
