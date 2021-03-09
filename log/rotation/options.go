@@ -60,7 +60,7 @@ func MaxBackups(maxBackups int) func(*Rotator) error {
 	}
 }
 
-// WithMask sets the mask when creating files, which have the unmasked mode of 0666, and directories, which have the
+// WithMask sets the mask when creating files, which have the unmasked mode of 0644, and directories, which have the
 // unmasked mode of 0755. Defaults to 0777.
 func WithMask(mask os.FileMode) func(*Rotator) error {
 	return func(r *Rotator) error {

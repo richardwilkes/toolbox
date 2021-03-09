@@ -57,7 +57,7 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			if err = os.MkdirAll(filepath.Dir(r.path), 0755&r.mask); err != nil {
 				return 0, errs.Wrap(err)
 			}
-			file, fErr := os.Create(r.path)
+			file, fErr := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644&r.mask)
 			if fErr != nil {
 				return 0, errs.Wrap(fErr)
 			}
@@ -67,7 +67,7 @@ func (r *Rotator) Write(b []byte) (int, error) {
 			return 0, errs.Wrap(err)
 		default:
 			var file *os.File
-			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0666&r.mask); err != nil {
+			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0644&r.mask); err != nil {
 				return 0, errs.Wrap(err)
 			}
 			r.file = file
@@ -130,7 +130,7 @@ func (r *Rotator) rotate() error {
 			}
 		}
 	}
-	file, err := os.Create(r.path)
+	file, err := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644&r.mask)
 	if err != nil {
 		return errs.Wrap(err)
 	}

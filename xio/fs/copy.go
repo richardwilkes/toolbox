@@ -48,7 +48,7 @@ func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
 		return err
 	}
 	var f *os.File
-	if f, err = os.Create(dst); err != nil {
+	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644&mask); err != nil {
 		return err
 	}
 	defer func() {

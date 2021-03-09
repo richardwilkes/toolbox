@@ -46,7 +46,7 @@ func MoveFile(src, dst string) (err error) {
 		return nil
 	}
 	var in, out *os.File
-	out, err = os.Create(dst)
+	out, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
 	if err != nil {
 		return errs.Wrap(err)
 	}
