@@ -25,7 +25,7 @@ import (
 
 // ExtractArchive extracts the contents of a zip archive at 'src' into the
 // 'dst' directory.
-func ExtractArchive(src, dst string, mask os.FileMode) error {
+func ExtractArchive(src, dst string) error {
 	return ExtractArchiveWithMask(src, dst, 0777) //nolint:gocritic // File modes are octal
 }
 
