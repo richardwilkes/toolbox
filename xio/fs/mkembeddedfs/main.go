@@ -96,7 +96,7 @@ func main() {
 	failIfErr(tmpl.Execute(&buffer, &cfg))
 	d, err := format.Source(buffer.Bytes())
 	failIfErr(err)
-	failIfErr(ioutil.WriteFile(output, d, 0600))
+	failIfErr(ioutil.WriteFile(output, d, 0644)) //nolint:gosec // these are the permissions I want
 	atexit.Exit(0)
 }
 
