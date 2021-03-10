@@ -21,29 +21,34 @@ import (
 
 // Copy src to dst. src may be a directory, file, or symlink.
 func Copy(src, dst string) error {
+	return CopyWithMask(src, dst, 0777) //nolint:gocritic // File modes are octal
+}
+
+// CopyWithMask src to dst. src may be a directory, file, or symlink.
+func CopyWithMask(src, dst string, mask os.FileMode) error {
 	info, err := os.Lstat(src)
 	if err != nil {
 		return err
 	}
-	return generalCopy(src, dst, info)
+	return generalCopy(src, dst, info, mask)
 }
 
-func generalCopy(src, dst string, info os.FileInfo) error {
+func generalCopy(src, dst string, info os.FileInfo, mask os.FileMode) error {
 	if info.Mode()&os.ModeSymlink != 0 {
 		return linkCopy(src, dst, info)
 	}
 	if info.IsDir() {
-		return dirCopy(src, dst, info)
+		return dirCopy(src, dst, info, mask)
 	}
-	return fileCopy(src, dst, info)
+	return fileCopy(src, dst, info, mask)
 }
 
-func fileCopy(src, dst string, info os.FileInfo) (err error) {
-	if err = os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
+	if err = os.MkdirAll(filepath.Dir(dst), 0755&mask); err != nil {
 		return err
 	}
 	var f *os.File
-	if f, err = os.Create(dst); err != nil {
+	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644&mask); err != nil {
 		return err
 	}
 	defer func() {
@@ -63,8 +68,8 @@ func fileCopy(src, dst string, info os.FileInfo) (err error) {
 	return err
 }
 
-func dirCopy(srcDir, dstDir string, info os.FileInfo) error {
-	if err := os.MkdirAll(dstDir, info.Mode()); err != nil {
+func dirCopy(srcDir, dstDir string, info os.FileInfo, mask os.FileMode) error {
+	if err := os.MkdirAll(dstDir, info.Mode()&mask); err != nil {
 		return err
 	}
 	list, err := ioutil.ReadDir(srcDir)
@@ -73,7 +78,7 @@ func dirCopy(srcDir, dstDir string, info os.FileInfo) error {
 	}
 	for _, one := range list {
 		name := one.Name()
-		if err = generalCopy(filepath.Join(srcDir, name), filepath.Join(dstDir, name), one); err != nil {
+		if err = generalCopy(filepath.Join(srcDir, name), filepath.Join(dstDir, name), one, mask); err != nil {
 			return err
 		}
 	}

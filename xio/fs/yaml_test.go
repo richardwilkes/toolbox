@@ -31,7 +31,7 @@ func TestLoadSaveYAML(t *testing.T) {
 	f, err := ioutil.TempFile("", "yaml_test")
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
-	require.NoError(t, fs.SaveYAML(f.Name(), value))
+	require.NoError(t, fs.SaveYAMLWithMode(f.Name(), value, 0600)) //nolint:gocritic // File modes are octal
 	var value2 data
 	require.NoError(t, fs.LoadYAML(f.Name(), &value2))
 	require.NoError(t, os.Remove(f.Name()))

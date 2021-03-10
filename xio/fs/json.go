@@ -35,11 +35,16 @@ func LoadJSON(path string, data interface{}) error {
 
 // SaveJSON data to the specified path.
 func SaveJSON(path string, data interface{}, format bool) error {
-	return safe.WriteFile(path, func(w io.Writer) error {
+	return SaveJSONWithMode(path, data, format, 0644) //nolint:gocritic // File modes are octal
+}
+
+// SaveJSONWithMode data to the specified path.
+func SaveJSONWithMode(path string, data interface{}, format bool, mode os.FileMode) error {
+	return safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)
 		if format {
 			encoder.SetIndent("", "  ")
 		}
 		return errs.Wrap(encoder.Encode(data))
-	})
+	}, mode)
 }

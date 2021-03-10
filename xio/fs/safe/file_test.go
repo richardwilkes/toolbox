@@ -25,7 +25,7 @@ func TestAbortNonExisting(t *testing.T) {
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "abort.txt")
-	f, err := safe.Create(filename)
+	f, err := safe.CreateWithMode(filename, 0600) //nolint:gocritic // File modes are octal
 	require.NoError(t, err)
 	n, err := f.WriteString("abort")
 	assert.NoError(t, err)
@@ -46,7 +46,7 @@ func TestCommitNonExisting(t *testing.T) {
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "commit.txt")
-	f, err := safe.Create(filename)
+	f, err := safe.CreateWithMode(filename, 0600) //nolint:gocritic // File modes are octal
 	require.NoError(t, err)
 	n, err := f.WriteString("commit")
 	assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestAbortExisting(t *testing.T) {
 	filename := filepath.Join(tmpdir, "safe.txt")
 	originalData := []byte("safe")
 	require.NoError(t, ioutil.WriteFile(filename, originalData, 0600))
-	f, err := safe.Create(filename)
+	f, err := safe.CreateWithMode(filename, 0600) //nolint:gocritic // File modes are octal
 	require.NoError(t, err)
 	n, err := f.WriteString("bad")
 	assert.NoError(t, err)
@@ -90,7 +90,7 @@ func TestCommitExisting(t *testing.T) {
 	originalData := []byte("safe")
 	replacement := []byte("replaced")
 	require.NoError(t, ioutil.WriteFile(filename, originalData, 0600))
-	f, err := safe.Create(filename)
+	f, err := safe.CreateWithMode(filename, 0600) //nolint:gocritic // File modes are octal
 	require.NoError(t, err)
 	n, err := f.Write(replacement)
 	assert.NoError(t, err)
