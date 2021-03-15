@@ -20,6 +20,8 @@ import (
 )
 
 // File holds the data for an embedded file.
+//
+// Deprecated: use Go 1.16's embedded support instead
 type File struct { //nolint:maligned
 	*bytes.Reader
 	name       string
@@ -33,6 +35,8 @@ type File struct { //nolint:maligned
 }
 
 // NewFile creates a new embedded file.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewFile(name string, modTime time.Time, size int64, compressed bool, data []byte) *File {
 	return &File{
 		name:       path.Base(ToEFSPath(name)),

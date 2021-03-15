@@ -17,6 +17,8 @@ import (
 var _ FileSystem = &LayeredFS{}
 
 // LayeredFS holds the contents of a layered file system.
+//
+// Deprecated: use Go 1.16's embedded support instead
 type LayeredFS struct {
 	primaries map[string]FileSystem
 	fallback  FileSystem
@@ -29,6 +31,8 @@ type LayeredFS struct {
 // the time of a request by the current value of primary. Should the primary
 // file system be unable to fulfill the request, then the request is passed to
 // the fallback file system.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewLayeredFS(primary string, primaries map[string]FileSystem, fallback FileSystem) *LayeredFS {
 	return &LayeredFS{
 		primaries: primaries,

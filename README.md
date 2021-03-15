@@ -7,12 +7,11 @@ To install this package and the tools it provides:
 ```
 
 ## atexit
-Provides functionality similar to the C standard library's atexit() call. To
-function properly, use `atexit.Exit(result)` rather than `os.Exit(result)`.
+Provides functionality similar to the C standard library's atexit() call. To function properly, use
+`atexit.Exit(result)` rather than `os.Exit(result)`.
 
 ## cmdline
-Command line handling. Provides the tool `genversion` for generating version
-numbers with an embedded date.
+Command line handling. Provides the tool `genversion` for generating version numbers with an embedded date.
 
 ## collection
 Provides type-safe sets for the various primitive types.
@@ -21,8 +20,7 @@ Provides type-safe sets for the various primitive types.
 Desktop integration utilities.
 
 ## errs
-Errors that contain stack traces with source locations, along with nested
-causes, if any.
+Errors that contain stack traces with source locations, along with nested causes, if any.
 
 ## formats/json
 Manipulation of JSON data.
@@ -31,8 +29,8 @@ Manipulation of JSON data.
 Extract text from Excel spreadsheets.
 
 ## i18n
-Internationalization support for applications. Provides the tool `go-i18n` for
-generating a template for a localization file from source code.
+Internationalization support for applications. Provides the tool `go-i18n` for generating a template for a localization
+file from source code.
 
 ## log/jot
 Simple asynchronous logging.
@@ -59,22 +57,20 @@ func main() {
 ```
 
 ## log/jotrotate
-Provides a pre-canned way to add jot logging with file rotation, along with
-command-line options for controlling it.
+Provides a pre-canned way to add jot logging with file rotation, along with command-line options for controlling it.
 
 ## log/logadapter
-This package defines an API to use for logging, which actual logging
-implementations can implement directly or provide an adapter to use.
+This package defines an API to use for logging, which actual logging implementations can implement directly or provide
+an adapter to use.
 
-It also provides an implementation that just discards data given to it as
-well as an implementation that wraps another logger and prefixes all output.
+It also provides an implementation that just discards data given to it as well as an implementation that wraps another
+logger and prefixes all output.
 
 ## log/rotation
 Provides file rotation when files hit a given size.
 
 ## rate
-Rate limiting which supports a hierarchy of limiters, each capped by their
-parent.
+Rate limiting which supports a hierarchy of limiters, each capped by their parent.
 
 ## softref
 Soft references.
@@ -95,17 +91,19 @@ io utilities.
 Filesystem utilities.
 
 ## xio/fs/embedded
-Provides an implementation of an embedded filesystem.
+Provides an implementation of an embedded filesystem. Deprecated in favor of using Go 1.16+'s built-in embedded file
+support.
 
 ## xio/fs/embedded/htmltmpl
-Provides convenience utilities for using html templates in an embedded filesystem.
+Provides convenience utilities for using html templates in an embedded filesystem. Deprecated in favor of using
+Go 1.16+'s built-in embedded file support.
 
 ## xio/fs/embedded/texttmpl
-Provides convenience utilities for using text templates in an embedded filesystem.
+Provides convenience utilities for using text templates in an embedded filesystem. Deprecated in favor of using
+Go 1.16+'s built-in embedded file support.
 
 ## xio/fs/mkembeddedfs
-Tool for generating the embedded filesystem. Note: this utility has been
-deprecated in favor of using `embedded.NewFileSystemFromEmbeddedZip()` instead
+Tool for generating the embedded filesystem. Deprecated in favor of using Go 1.16+'s built-in embedded file support.
 
 ## xio/fs/paths
 Platform-specific standard paths.
@@ -135,13 +133,11 @@ Terminal utilities.
 Math utilities.
 
 ## xmath/fixed
-Fixed-point types of varying sizes. More can be added by adjusting the types
-created in the generator. These types implement the marshal/unmarshal
-interfaces for JSON and YAML.
+Fixed-point types of varying sizes. More can be added by adjusting the types created in the generator. These types
+implement the marshal/unmarshal interfaces for JSON and YAML.
 
 ## xmath/num
-128-bit int and uint types. These types implement the marshal/unmarshal
-interfaces for JSON and YAML.
+128-bit int and uint types. These types implement the marshal/unmarshal interfaces for JSON and YAML.
 
 ## xmath/geom
 Geometry primitives.

@@ -24,6 +24,8 @@ import (
 // Load the templates found at the path, omitting any that the filter function
 // returns true for. The filter function may be nil, in which case all files
 // are loaded. The filter function is not called for the initial path.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func(p string, isDir bool) bool) (*template.Template, error) {
 	dir, err := fs.Open(p)
 	if err != nil {
@@ -60,7 +62,7 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func
 	return tmpl, nil
 }
 
-func load(tmpl *template.Template, fs embedded.FileSystem, p string) error {
+func load(tmpl *template.Template, fs embedded.FileSystem, p string) error { //nolint:staticcheck // only used from the deprecated code
 	str, ok := fs.ContentAsString(p)
 	if !ok {
 		return errs.New("Unable to read " + p)

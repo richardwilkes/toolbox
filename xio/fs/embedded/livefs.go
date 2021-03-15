@@ -24,6 +24,8 @@ type liveFS struct {
 
 // NewLiveFS creates a new live filesystem with a root at the specified
 // location on the regular filesystem.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewLiveFS(localRoot string) FileSystem {
 	return &liveFS{base: localRoot}
 }
