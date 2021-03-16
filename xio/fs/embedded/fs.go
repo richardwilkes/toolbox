@@ -23,6 +23,8 @@ import (
 )
 
 // FileSystem defines the methods available for a live or embedded filesystem.
+//
+// Deprecated: use Go 1.16's embedded support instead
 type FileSystem interface {
 	http.FileSystem
 	IsLive() bool
@@ -33,11 +35,15 @@ type FileSystem interface {
 }
 
 // EFS holds an embedded filesystem.
+//
+// Deprecated: use Go 1.16's embedded support instead
 type EFS struct {
 	efs FileSystem
 }
 
 // NewEFS creates a new embedded filesystem.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewEFS(files map[string]*File) *EFS {
 	// Generate immediate directories for files
 	now := time.Now()

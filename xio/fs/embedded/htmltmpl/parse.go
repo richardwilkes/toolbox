@@ -26,6 +26,8 @@ import (
 // are loaded. The filter function is not called for the initial path. The
 // template passed in will be used to load new templates and will be returned.
 // If the passed in template is nil, a new one will be created.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func(p string, isDir bool) bool) (*template.Template, error) {
 	dir, err := fs.Open(p)
 	if err != nil {
@@ -62,7 +64,7 @@ func Load(tmpl *template.Template, fs embedded.FileSystem, p string, filter func
 	return tmpl, nil
 }
 
-func load(tmpl *template.Template, fs embedded.FileSystem, p string) (*template.Template, error) {
+func load(tmpl *template.Template, fs embedded.FileSystem, p string) (*template.Template, error) { //nolint:staticcheck // only used from the deprecated code
 	str, ok := fs.ContentAsString(p)
 	if !ok {
 		return nil, errs.New("Unable to read " + p)

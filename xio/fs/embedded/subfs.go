@@ -21,6 +21,8 @@ type subFS struct {
 
 // NewSubFileSystem creates a new FileSystem rooted at 'base' within an
 // existing FileSystem.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewSubFileSystem(parent FileSystem, base string) FileSystem {
 	return &subFS{
 		parent: parent,

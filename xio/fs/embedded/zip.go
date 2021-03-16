@@ -29,6 +29,8 @@ import (
 // e.g. `go build -o path/to/exe main.go`, then concatenate the zip file to
 // the end of your executable, e.g. `cat path/to/zip_file >> path/to/exe`.
 // Finally, run `zip -A path/to/exe` on your executable to fix up the offsets.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewFileSystemFromEmbeddedZip(fallbackLiveFSRoot string) FileSystem {
 	if fs, err := NewEFSFromEmbeddedZip(); err == nil {
 		return fs.PrimaryFileSystem()
@@ -38,6 +40,8 @@ func NewFileSystemFromEmbeddedZip(fallbackLiveFSRoot string) FileSystem {
 
 // NewEFSFromEmbeddedZip creates a new EFS from the contents of a zip file
 // appended to the end of the executable.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewEFSFromEmbeddedZip() (*EFS, error) {
 	exePath, err := os.Executable()
 	if err != nil {
@@ -60,6 +64,8 @@ func NewEFSFromEmbeddedZip() (*EFS, error) {
 }
 
 // NewEFSFromZip creates a new EFS from the contents of a zip file.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func NewEFSFromZip(zr *zip.Reader) (*EFS, error) {
 	files := make(map[string]*File)
 	for _, f := range zr.File {

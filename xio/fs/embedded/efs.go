@@ -83,6 +83,8 @@ func (f *efs) MustContentAsString(path string) string {
 }
 
 // ToEFSPath converts a native file system path into one used by the EFS.
+//
+// Deprecated: use Go 1.16's embedded support instead
 func ToEFSPath(path string) string {
 	path = filepath.ToSlash(filepath.Clean(path))
 	if !strings.HasPrefix(path, "/") {
