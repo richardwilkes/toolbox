@@ -1,4 +1,4 @@
-// Copyright ©2016-2020 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2021 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -28,8 +28,7 @@ type Pool struct {
 type Resource interface {
 	// Key returns a unique key for this resource. Must never change.
 	Key() string
-	// Release is called when the resource is no longer being referenced by
-	// any remaining soft references.
+	// Release is called when the resource is no longer being referenced by any remaining soft references.
 	Release()
 }
 
@@ -58,8 +57,7 @@ func NewPool(logger logadapter.WarnLogger) *Pool {
 	}
 }
 
-// NewSoftRef returns a soft reference to the given resource, along with a
-// flag indicating if a reference existed previously.
+// NewSoftRef returns a SoftRef to the given resource, along with a flag indicating if a reference existed previously.
 func (p *Pool) NewSoftRef(resource Resource) (ref *SoftRef, existedPreviously bool) {
 	key := resource.Key()
 	p.lock.Lock()
@@ -90,10 +88,10 @@ func (p *Pool) finalizeSoftRef(ref *SoftRef) {
 			delete(p.refs, ref.Key)
 			r.resource.Release()
 		} else if r.count < 0 {
-			p.logger.Warnf("internalImageRef for %v finalized but count is now %d", ref.Key, r.count)
+			p.logger.Warnf("SoftRef for %v finalized but count is now %d", ref.Key, r.count)
 		}
 	} else {
-		p.logger.Warnf("internalImageRef for %v finalized but hash is not present", ref.Key)
+		p.logger.Warnf("SoftRef for %v finalized but hash is not present", ref.Key)
 	}
 	p.lock.Unlock()
 }
