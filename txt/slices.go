@@ -26,3 +26,13 @@ func MapToStringSlice(m map[string]bool) []string {
 	}
 	return s
 }
+
+// CloneStringSlice returns a copy of the slice of strings.
+func CloneStringSlice(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]string, len(in))
+	copy(out, in)
+	return out
+}
