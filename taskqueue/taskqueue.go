@@ -34,13 +34,6 @@ type Queue struct {
 	recoveryHandler errs.RecoveryHandler
 }
 
-// Log sets the logger for tasks that panic.
-//
-// Deprecated: Use RecoveryHandler instead.
-func Log(logger Logger) Option {
-	return func(q *Queue) { q.recoveryHandler = func(err error) { logger(err) } }
-}
-
 // RecoveryHandler sets the recovery handler to use for tasks that panic.
 // Defaults to none, which silently ignores the panic.
 func RecoveryHandler(recoveryHandler errs.RecoveryHandler) Option {

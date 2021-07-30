@@ -1,6 +1,6 @@
 module github.com/richardwilkes/toolbox
 
-go 1.14
+go 1.16
 
 require (
 	github.com/dustin/go-humanize v1.0.0

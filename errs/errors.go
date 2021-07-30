@@ -42,12 +42,11 @@ type Error struct {
 	errors []detail
 }
 
-// Wrap an error and turn it into a detailed error. If error is already a
-// detailed error or nil, it will be returned as-is.
+// Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
+// as-is.
 func Wrap(cause error) error {
-	// Note: even though this function body is identical to WrapTyped(), do
-	// not make a call to it here, otherwise the code that trims the stack
-	// will be incorrect.
+	// Note: even though this function body is identical to WrapTyped(), do not make a call to it here, otherwise the
+	// code that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
@@ -64,13 +63,11 @@ func Wrap(cause error) error {
 	}
 }
 
-// WrapTyped wraps an error and turns it into a detailed error. If error is
-// already a detailed error or nil, it will be returned as-is. This method
-// returns the error as an *Error. Use Wrap() to receive a generic error.
+// WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
+// returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
 func WrapTyped(cause error) *Error {
-	// Note: even though this function body is identical to Wrap(), do not
-	// make a call to it here, otherwise the code that trims the stack will
-	// be incorrect.
+	// Note: even though this function body is identical to Wrap(), do not make a call to it here, otherwise the code
+	// that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
@@ -99,14 +96,12 @@ func New(message string) *Error {
 	}
 }
 
-// Newf creates a new detailed error using fmt.Sprintf() to format the
-// message.
+// Newf creates a new detailed error using fmt.Sprintf() to format the message.
 func Newf(format string, v ...interface{}) *Error {
 	return New(fmt.Sprintf(format, v...))
 }
 
-// NewWithCause creates a new detailed error with the 'message' and underlying
-// 'cause'.
+// NewWithCause creates a new detailed error with the 'message' and underlying 'cause'.
 func NewWithCause(message string, cause error) *Error {
 	return &Error{
 		errors: []detail{
@@ -119,16 +114,7 @@ func NewWithCause(message string, cause error) *Error {
 	}
 }
 
-// NewfWithCause creates a new detailed error with an underlying 'cause' and
-// using fmt.Sprintf() to format the message.
-//
-// Deprecated: Use NewWithCausef instead.
-func NewfWithCause(cause error, format string, v ...interface{}) *Error {
-	return NewWithCause(fmt.Sprintf(format, v...), cause)
-}
-
-// NewWithCausef creates a new detailed error with an underlying 'cause' and
-// using fmt.Sprintf() to format the message.
+// NewWithCausef creates a new detailed error with an underlying 'cause' and using fmt.Sprintf() to format the message.
 func NewWithCausef(cause error, format string, v ...interface{}) *Error {
 	return NewWithCause(fmt.Sprintf(format, v...), cause)
 }
@@ -232,8 +218,7 @@ func (d *Error) RawStackTrace() []uintptr {
 	return d.errors[0].StackTrace()
 }
 
-// ErrorOrNil returns an error interface if this Error represents one or more
-// errors, or nil if it is empty.
+// ErrorOrNil returns an error interface if this Error represents one or more errors, or nil if it is empty.
 func (d *Error) ErrorOrNil() error {
 	if d == nil || len(d.errors) == 0 {
 		return nil

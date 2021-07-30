@@ -88,5 +88,4 @@ fi
 
 # Install executables
 echo -e "\033[33mInstalling executables...\033[0m"
-go install -ldflags=all="$LINK_FLAGS" ./xio/fs/mkembeddedfs
 go install -ldflags=all="$LINK_FLAGS" ./i18n/i18n
