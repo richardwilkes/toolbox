@@ -1,0 +1,175 @@
+package eval
+
+import "unicode"
+
+// OpFunc provides a signature for an Operator's Evaluate function.
+type OpFunc func(left, right interface{}) (interface{}, error)
+
+// UnaryOpFunc provides a signature for an Operator's EvaluateUnary function.
+type UnaryOpFunc func(arg interface{}) (interface{}, error)
+
+// Operator provides an operator implementation for the Evaluator.
+type Operator struct {
+	Symbol        string
+	Precedence    int
+	Evaluate      OpFunc
+	EvaluateUnary UnaryOpFunc
+}
+
+func (o *Operator) match(expression string, start, max int) bool {
+	if max-start < len(o.Symbol) {
+		return false
+	}
+	matches := o.Symbol == expression[start:start+len(o.Symbol)]
+	// Hack to allow negative exponents on floating point numbers (i.e. 1.2e-2)
+	if matches && len(o.Symbol) == 1 && o.Symbol == "-" && start > 1 && expression[start-1:start] == "e" && unicode.IsDigit([]rune(expression[start-2 : start-1])[0]) {
+		return false
+	}
+	return matches
+}
+
+// OpenParen (
+func OpenParen() *Operator {
+	return &Operator{Symbol: "("}
+}
+
+// CloseParen )
+func CloseParen() *Operator {
+	return &Operator{Symbol: ")"}
+}
+
+// Not !
+func Not(f UnaryOpFunc) *Operator {
+	return &Operator{
+		Symbol:        "!",
+		EvaluateUnary: f,
+	}
+}
+
+// Or ||
+func Or(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "||",
+		Precedence: 10,
+		Evaluate:   f,
+	}
+}
+
+// And &&
+func And(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "&&",
+		Precedence: 20,
+		Evaluate:   f,
+	}
+}
+
+// Equal ==
+func Equal(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "==",
+		Precedence: 30,
+		Evaluate:   f,
+	}
+}
+
+// NotEqual !=
+func NotEqual(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "!=",
+		Precedence: 30,
+		Evaluate:   f,
+	}
+}
+
+// GreaterThan >
+func GreaterThan(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     ">",
+		Precedence: 40,
+		Evaluate:   f,
+	}
+}
+
+// GreaterThanOrEqual >=
+func GreaterThanOrEqual(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     ">=",
+		Precedence: 40,
+		Evaluate:   f,
+	}
+}
+
+// LessThan <
+func LessThan(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "<",
+		Precedence: 40,
+		Evaluate:   f,
+	}
+}
+
+// LessThanOrEqual <=
+func LessThanOrEqual(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "<=",
+		Precedence: 40,
+		Evaluate:   f,
+	}
+}
+
+// Add +
+func Add(f OpFunc, unary UnaryOpFunc) *Operator {
+	return &Operator{
+		Symbol:        "+",
+		Precedence:    50,
+		Evaluate:      f,
+		EvaluateUnary: unary,
+	}
+}
+
+// Subtract -
+func Subtract(f OpFunc, unary UnaryOpFunc) *Operator {
+	return &Operator{
+		Symbol:        "-",
+		Precedence:    50,
+		Evaluate:      f,
+		EvaluateUnary: unary,
+	}
+}
+
+// Multiply *
+func Multiply(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "*",
+		Precedence: 60,
+		Evaluate:   f,
+	}
+}
+
+// Divide /
+func Divide(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "/",
+		Precedence: 60,
+		Evaluate:   f,
+	}
+}
+
+// Modulo %
+func Modulo(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "%",
+		Precedence: 60,
+		Evaluate:   f,
+	}
+}
+
+// Power ^
+func Power(f OpFunc) *Operator {
+	return &Operator{
+		Symbol:     "^",
+		Precedence: 70,
+		Evaluate:   f,
+	}
+}

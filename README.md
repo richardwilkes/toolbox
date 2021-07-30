@@ -22,6 +22,9 @@ Desktop integration utilities.
 ## errs
 Errors that contain stack traces with source locations, along with nested causes, if any.
 
+## evaluate
+Dynamically evaluate expressions.
+
 ## formats/json
 Manipulation of JSON data.
 
@@ -89,21 +92,6 @@ io utilities.
 
 ## xio/fs
 Filesystem utilities.
-
-## xio/fs/embedded
-Provides an implementation of an embedded filesystem. Deprecated in favor of using Go 1.16+'s built-in embedded file
-support.
-
-## xio/fs/embedded/htmltmpl
-Provides convenience utilities for using html templates in an embedded filesystem. Deprecated in favor of using
-Go 1.16+'s built-in embedded file support.
-
-## xio/fs/embedded/texttmpl
-Provides convenience utilities for using text templates in an embedded filesystem. Deprecated in favor of using
-Go 1.16+'s built-in embedded file support.
-
-## xio/fs/mkembeddedfs
-Tool for generating the embedded filesystem. Deprecated in favor of using Go 1.16+'s built-in embedded file support.
 
 ## xio/fs/paths
 Platform-specific standard paths.
