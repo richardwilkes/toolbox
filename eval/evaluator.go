@@ -300,12 +300,15 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 			return nil, err
 		}
 		if op.left != nil && op.right != nil {
+			if op.op.Evaluate == nil {
+				return nil, errs.New("operator does not have Evaluate function defined")
+			}
 			var v interface{}
 			v, err = op.op.Evaluate(left, right)
 			if err != nil {
 				return nil, err
 			}
-			if op.unaryOp != nil {
+			if op.unaryOp != nil && op.unaryOp.EvaluateUnary != nil {
 				return op.unaryOp.EvaluateUnary(v)
 			}
 			return v, nil
@@ -317,9 +320,9 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 			v = right
 		}
 		if v != nil {
-			if op.unaryOp != nil {
+			if op.unaryOp != nil && op.unaryOp.EvaluateUnary != nil {
 				v, err = op.unaryOp.EvaluateUnary(v)
-			} else if op.op != nil {
+			} else if op.op != nil && op.op.EvaluateUnary != nil {
 				v, err = op.op.EvaluateUnary(v)
 			}
 			if err != nil {
@@ -335,7 +338,7 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if op.unaryOp != nil {
+		if op.unaryOp != nil && op.unaryOp.EvaluateUnary != nil {
 			return op.unaryOp.EvaluateUnary(v)
 		}
 		return v, nil
@@ -349,7 +352,7 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if op.unaryOp != nil {
+		if op.unaryOp != nil && op.unaryOp.EvaluateUnary != nil {
 			return op.unaryOp.EvaluateUnary(v)
 		}
 		return v, nil
