@@ -14,7 +14,7 @@ package collection
 import (
 	"encoding/json"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Float64Set holds a set of float64 values.

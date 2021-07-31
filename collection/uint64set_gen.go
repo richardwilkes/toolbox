@@ -14,7 +14,7 @@ package collection
 import (
 	"encoding/json"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Uint64Set holds a set of uint64 values.
