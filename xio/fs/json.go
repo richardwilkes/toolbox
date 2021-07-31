@@ -13,6 +13,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -26,8 +27,21 @@ func LoadJSON(path string, data interface{}) error {
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	defer xio.CloseIgnoringErrors(f)
-	return errs.Wrap(json.NewDecoder(bufio.NewReader(f)).Decode(data))
+	return loadJSON(f, data)
+}
+
+// LoadJSONFromFS data from the specified filesystem path.
+func LoadJSONFromFS(fsys fs.FS, path string, data interface{}) error {
+	f, err := fsys.Open(path)
+	if err != nil {
+		return errs.Wrap(err)
+	}
+	return loadJSON(f, data)
+}
+
+func loadJSON(r io.ReadCloser, data interface{}) error {
+	defer xio.CloseIgnoringErrors(r)
+	return errs.Wrap(json.NewDecoder(bufio.NewReader(r)).Decode(data))
 }
 
 // SaveJSON data to the specified path.

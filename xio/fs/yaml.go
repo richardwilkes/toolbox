@@ -12,6 +12,7 @@ package fs
 import (
 	"bufio"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -27,8 +28,21 @@ func LoadYAML(path string, data interface{}) error {
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	defer xio.CloseIgnoringErrors(f)
-	return errs.Wrap(yaml.NewDecoder(bufio.NewReader(f)).Decode(data))
+	return loadYAML(f, data)
+}
+
+// LoadYAMLFromFS data from the specified filesystem path.
+func LoadYAMLFromFS(fsys fs.FS, path string, data interface{}) error {
+	f, err := fsys.Open(path)
+	if err != nil {
+		return errs.Wrap(err)
+	}
+	return loadYAML(f, data)
+}
+
+func loadYAML(r io.ReadCloser, data interface{}) error {
+	defer xio.CloseIgnoringErrors(r)
+	return errs.Wrap(yaml.NewDecoder(bufio.NewReader(r)).Decode(data))
 }
 
 // SaveYAML data to the specified path.
