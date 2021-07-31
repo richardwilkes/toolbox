@@ -27,10 +27,7 @@ func LoadJSON(path string, data interface{}) error {
 		return errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(f)
-	if err = json.NewDecoder(bufio.NewReader(f)).Decode(data); err != nil {
-		return errs.Wrap(err)
-	}
-	return nil
+	return errs.Wrap(json.NewDecoder(bufio.NewReader(f)).Decode(data))
 }
 
 // SaveJSON data to the specified path.

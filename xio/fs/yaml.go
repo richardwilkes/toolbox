@@ -10,11 +10,12 @@
 package fs
 
 import (
+	"bufio"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs/safe"
 
 	"gopkg.in/yaml.v2"
@@ -22,14 +23,12 @@ import (
 
 // LoadYAML data from the specified path.
 func LoadYAML(path string, data interface{}) error {
-	in, err := ioutil.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	if err = yaml.Unmarshal(in, data); err != nil {
-		return errs.Wrap(err)
-	}
-	return nil
+	defer xio.CloseIgnoringErrors(f)
+	return errs.Wrap(yaml.NewDecoder(bufio.NewReader(f)).Decode(data))
 }
 
 // SaveYAML data to the specified path.
@@ -39,14 +38,11 @@ func SaveYAML(path string, data interface{}) error {
 
 // SaveYAMLWithMode data to the specified path.
 func SaveYAMLWithMode(path string, data interface{}, mode os.FileMode) error {
-	out, err := yaml.Marshal(data)
-	if err != nil {
-		return errs.Wrap(err)
-	}
 	return safe.WriteFileWithMode(path, func(w io.Writer) error {
-		if _, err = w.Write(out); err != nil {
+		encoder := yaml.NewEncoder(w)
+		if err := encoder.Encode(data); err != nil {
 			return errs.Wrap(err)
 		}
-		return nil
+		return errs.Wrap(encoder.Close())
 	}, mode)
 }
