@@ -54,6 +54,7 @@ func SaveYAML(path string, data interface{}) error {
 func SaveYAMLWithMode(path string, data interface{}, mode os.FileMode) error {
 	return safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)
+		encoder.SetIndent(2)
 		if err := encoder.Encode(data); err != nil {
 			return errs.Wrap(err)
 		}
