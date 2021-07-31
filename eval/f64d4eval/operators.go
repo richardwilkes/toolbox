@@ -43,7 +43,7 @@ func Not(arg interface{}) (interface{}, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
-	v, err := getNumber(arg)
+	v, err := NumberFrom(arg)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func Not(arg interface{}) (interface{}, error) {
 
 // Or ||
 func Or(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func Or(left, right interface{}) (interface{}, error) {
 		return true, nil
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func Or(left, right interface{}) (interface{}, error) {
 
 // And &&
 func And(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func And(left, right interface{}) (interface{}, error) {
 		return false, nil
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +90,9 @@ func And(left, right interface{}) (interface{}, error) {
 // Equal ==
 func Equal(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) == fmt.Sprintf("%v", right), nil
@@ -103,9 +103,9 @@ func Equal(left, right interface{}) (interface{}, error) {
 // NotEqual !=
 func NotEqual(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) != fmt.Sprintf("%v", right), nil
@@ -116,9 +116,9 @@ func NotEqual(left, right interface{}) (interface{}, error) {
 // GreaterThan >
 func GreaterThan(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) > fmt.Sprintf("%v", right), nil
@@ -129,9 +129,9 @@ func GreaterThan(left, right interface{}) (interface{}, error) {
 // GreaterThanOrEqual >=
 func GreaterThanOrEqual(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) >= fmt.Sprintf("%v", right), nil
@@ -142,9 +142,9 @@ func GreaterThanOrEqual(left, right interface{}) (interface{}, error) {
 // LessThan <
 func LessThan(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) < fmt.Sprintf("%v", right), nil
@@ -155,9 +155,9 @@ func LessThan(left, right interface{}) (interface{}, error) {
 // LessThanOrEqual <=
 func LessThanOrEqual(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) <= fmt.Sprintf("%v", right), nil
@@ -168,9 +168,9 @@ func LessThanOrEqual(left, right interface{}) (interface{}, error) {
 // Add + (addition)
 func Add(left, right interface{}) (interface{}, error) {
 	var r fixed.F64d4
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err == nil {
-		r, err = getNumber(right)
+		r, err = NumberFrom(right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v%v", left, right), nil
@@ -180,17 +180,17 @@ func Add(left, right interface{}) (interface{}, error) {
 
 // AddUnary + (plus)
 func AddUnary(arg interface{}) (interface{}, error) {
-	return getNumber(arg)
+	return NumberFrom(arg)
 }
 
 // Subtract - (subtraction)
 func Subtract(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func Subtract(left, right interface{}) (interface{}, error) {
 
 // SubtractUnary - (minus)
 func SubtractUnary(arg interface{}) (interface{}, error) {
-	v, err := getNumber(arg)
+	v, err := NumberFrom(arg)
 	if err != nil {
 		return nil, err
 	}
@@ -208,12 +208,12 @@ func SubtractUnary(arg interface{}) (interface{}, error) {
 
 // Multiply *
 func Multiply(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -222,12 +222,12 @@ func Multiply(left, right interface{}) (interface{}, error) {
 
 // Divide /
 func Divide(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -239,12 +239,12 @@ func Divide(left, right interface{}) (interface{}, error) {
 
 // DivideAllowDivideByZero / (returns 0 for division by 0)
 func DivideAllowDivideByZero(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -256,12 +256,12 @@ func DivideAllowDivideByZero(left, right interface{}) (interface{}, error) {
 
 // Modulo % (converts decimal numbers to integers, then performs the modulo)
 func Modulo(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
@@ -270,19 +270,20 @@ func Modulo(left, right interface{}) (interface{}, error) {
 
 // Power ^
 func Power(left, right interface{}) (interface{}, error) {
-	l, err := getNumber(left)
+	l, err := NumberFrom(left)
 	if err != nil {
 		return nil, err
 	}
 	var r fixed.F64d4
-	r, err = getNumber(right)
+	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
 	return fixed.F64d4FromFloat64(math.Pow(l.AsFloat64(), r.AsFloat64())), nil
 }
 
-func getNumber(arg interface{}) (fixed.F64d4, error) {
+// NumberFrom attempts to extract a number from arg.
+func NumberFrom(arg interface{}) (fixed.F64d4, error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {

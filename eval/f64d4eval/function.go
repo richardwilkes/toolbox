@@ -75,7 +75,7 @@ func If(e *eval.Evaluator, arguments string) (interface{}, error) {
 		return nil, err
 	}
 	var value fixed.F64d4
-	if value, err = getNumber(evaluated); err != nil {
+	if value, err = NumberFrom(evaluated); err != nil {
 		return nil, err
 	}
 	if value == 0 {
@@ -96,7 +96,7 @@ func Maximum(e *eval.Evaluator, arguments string) (interface{}, error) {
 			return nil, err
 		}
 		var value fixed.F64d4
-		if value, err = getNumber(evaluated); err != nil {
+		if value, err = NumberFrom(evaluated); err != nil {
 			return nil, err
 		}
 		if max < value {
@@ -117,7 +117,7 @@ func Minimum(e *eval.Evaluator, arguments string) (interface{}, error) {
 			return nil, err
 		}
 		var value fixed.F64d4
-		if value, err = getNumber(evaluated); err != nil {
+		if value, err = NumberFrom(evaluated); err != nil {
 			return nil, err
 		}
 		if min > value {
@@ -148,7 +148,7 @@ func singleNumberFunc(e *eval.Evaluator, arguments string, f func(float64) float
 		return nil, err
 	}
 	var value fixed.F64d4
-	value, err = getNumber(arg)
+	value, err = NumberFrom(arg)
 	if err != nil {
 		return nil, err
 	}
