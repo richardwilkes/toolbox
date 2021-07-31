@@ -20,6 +20,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/num"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -261,7 +262,10 @@ func (f *F128d2) UnmarshalJSON(in []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (f F128d2) MarshalYAML() (interface{}, error) {
-	return f.String(), nil
+	return yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Value: f.String(),
+	}, nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
