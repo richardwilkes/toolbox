@@ -18,11 +18,11 @@ import (
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
 // streams of data where closing should never cause an error.
 func CloseIgnoringErrors(closer io.Closer) {
-	closer.Close() //nolint:errcheck // intentionally ignoring any error
+	_ = closer.Close() //nolint:errcheck // intentionally ignoring any error
 }
 
 // DiscardAndCloseIgnoringErrors reads any content remaining in the body and discards it, then closes the body.
 func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
-	io.Copy(ioutil.Discard, rc) //nolint:errcheck // intentionally ignoring any error
-	rc.Close()                  //nolint:errcheck // intentionally ignoring any error
+	_, _ = io.Copy(ioutil.Discard, rc) //nolint:errcheck // intentionally ignoring any error
+	_ = rc.Close()                     //nolint:errcheck // intentionally ignoring any error
 }
