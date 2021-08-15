@@ -13,12 +13,26 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// RetrieveDataFromURL loads the bytes from the given URL. Only file, http,
-// and https URLs are currently supported.
+// RetrieveData loads the bytes from the given file path or URL of type file, http, or https.
+func RetrieveData(filePathOrURL string) ([]byte, error) {
+	if strings.HasPrefix(filePathOrURL, "http://") ||
+		strings.HasPrefix(filePathOrURL, "https://") ||
+		strings.HasPrefix(filePathOrURL, "file://") {
+		return RetrieveDataFromURL(filePathOrURL)
+	}
+	data, err := ioutil.ReadFile(filePathOrURL)
+	if err != nil {
+		return nil, errs.NewWithCause(filePathOrURL, err)
+	}
+	return data, nil
+}
+
+// RetrieveDataFromURL loads the bytes from the given URL of type file, http, or https.
 func RetrieveDataFromURL(urlStr string) ([]byte, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
