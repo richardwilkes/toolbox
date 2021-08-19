@@ -43,7 +43,7 @@ type F128d4 struct {
 
 // F128d4FromFloat64 creates a new F128d4 value from a float64.
 func F128d4FromFloat64(value float64) F128d4 {
-	f, _ := F128d4FromString(new(big.Float).SetPrec(128).SetFloat64(value).Text('f', 5)) //nolint:errcheck
+	f, _ := F128d4FromString(new(big.Float).SetPrec(128).SetFloat64(value).Text('f', 5)) //nolint:errcheck // Failure means 0
 	return f
 }
 
@@ -108,7 +108,7 @@ func F128d4FromString(str string) (F128d4, error) {
 
 // F128d4FromStringForced creates a new F128d4 value from a string.
 func F128d4FromStringForced(str string) F128d4 {
-	f, _ := F128d4FromString(str) //nolint:errcheck
+	f, _ := F128d4FromString(str) //nolint:errcheck // failure results in 0, which is acceptable here
 	return f
 }
 

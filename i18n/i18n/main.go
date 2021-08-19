@@ -149,7 +149,6 @@ func main() {
 			}
 		}
 	}
-	// noinspection GoNilness
 	if err = out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		atexit.Exit(1)

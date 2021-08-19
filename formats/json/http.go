@@ -18,7 +18,7 @@ import (
 // new Data object.
 func GetRequest(url string) (statusCode int, body *Data, err error) {
 	var resp *http.Response
-	if resp, err = http.Get(url); err == nil { //nolint:gosec
+	if resp, err = http.Get(url); err == nil {
 		defer func() {
 			if closeErr := resp.Body.Close(); closeErr != nil && err == nil {
 				err = closeErr
@@ -36,7 +36,7 @@ func GetRequest(url string) (statusCode int, body *Data, err error) {
 // object and returns the response body as a new Data object.
 func (j *Data) PostRequest(url string) (statusCode int, body *Data, err error) {
 	var resp *http.Response
-	if resp, err = http.Post(url, "application/json", bytes.NewBuffer(j.Bytes())); err == nil { //nolint:gosec
+	if resp, err = http.Post(url, "application/json", bytes.NewBuffer(j.Bytes())); err == nil {
 		defer func() {
 			if closeErr := resp.Body.Close(); closeErr != nil && err == nil {
 				err = closeErr

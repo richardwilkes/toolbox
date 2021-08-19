@@ -47,106 +47,107 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 
 			// Do the contour forward pass
 			for min := 0; min < count; min++ {
-				if edges[previousIndex(min, count)].vertex.Y >= edges[min].vertex.Y && //nolint:gocritic
-					edges[nextIndex(min, count)].vertex.Y > edges[min].vertex.Y {
-
-					// Search for the next local maximum
-					edgeCount := 1
-					max := nextIndex(min, count)
-					for edges[nextIndex(max, count)].vertex.Y > edges[max].vertex.Y {
-						edgeCount++
-						max = nextIndex(max, count)
-					}
-
-					// Build the next edge list
-					e := &edges[edgeIndex]
-					e.belowState = unbundled
-					e.bundleBelow[clipping] = false
-					e.bundleBelow[subject] = false
-					vi := min
-					for i := 0; i < edgeCount; i++ {
-						e = &edges[edgeIndex+i]
-						v := &edges[vi]
-						e.xb = v.vertex.X
-						e.bot = v.vertex
-						vi = nextIndex(vi, count)
-						v = &edges[vi]
-						e.top = v.vertex
-						e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
-						e.which = which
-						e.outAbove = nil
-						e.outBelow = nil
-						e.next = nil
-						e.prev = nil
-						if edgeCount > 1 && i < edgeCount-1 {
-							e.successor = &edges[edgeIndex+i+1]
-						} else {
-							e.successor = nil
-						}
-						if edgeCount > 1 && i > 0 {
-							e.pred = &edges[edgeIndex+i-1]
-						} else {
-							e.pred = nil
-						}
-						e.nextBound = nil
-						e.clipSide = op == subtractOp
-						e.subjectSide = false
-					}
-					lmt = lmt.insertBound(edges[min].vertex.Y, &edges[edgeIndex])
-					edgeIndex += edgeCount
+				if edges[previousIndex(min, count)].vertex.Y < edges[min].vertex.Y ||
+					edges[nextIndex(min, count)].vertex.Y <= edges[min].vertex.Y {
+					continue
 				}
+
+				// Search for the next local maximum
+				edgeCount := 1
+				max := nextIndex(min, count)
+				for edges[nextIndex(max, count)].vertex.Y > edges[max].vertex.Y {
+					edgeCount++
+					max = nextIndex(max, count)
+				}
+
+				// Build the next edge list
+				e := &edges[edgeIndex]
+				e.belowState = unbundled
+				e.bundleBelow[clipping] = false
+				e.bundleBelow[subject] = false
+				vi := min
+				for i := 0; i < edgeCount; i++ {
+					e = &edges[edgeIndex+i]
+					v := &edges[vi]
+					e.xb = v.vertex.X
+					e.bot = v.vertex
+					vi = nextIndex(vi, count)
+					v = &edges[vi]
+					e.top = v.vertex
+					e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
+					e.which = which
+					e.outAbove = nil
+					e.outBelow = nil
+					e.next = nil
+					e.prev = nil
+					if edgeCount > 1 && i < edgeCount-1 {
+						e.successor = &edges[edgeIndex+i+1]
+					} else {
+						e.successor = nil
+					}
+					if edgeCount > 1 && i > 0 {
+						e.pred = &edges[edgeIndex+i-1]
+					} else {
+						e.pred = nil
+					}
+					e.nextBound = nil
+					e.clipSide = op == subtractOp
+					e.subjectSide = false
+				}
+				lmt = lmt.insertBound(edges[min].vertex.Y, &edges[edgeIndex])
+				edgeIndex += edgeCount
 			}
 
 			// Do the contour reverse pass
 			for min := 0; min < count; min++ {
-				if edges[previousIndex(min, count)].vertex.Y > edges[min].vertex.Y && //nolint:gocritic
-					edges[nextIndex(min, count)].vertex.Y >= edges[min].vertex.Y {
-
-					// Search for the previous local maximum
-					edgeCount := 1
-					max := previousIndex(min, count)
-					for edges[previousIndex(max, count)].vertex.Y > edges[max].vertex.Y {
-						edgeCount++
-						max = previousIndex(max, count)
-					}
-
-					// Build the previous edge list
-					e := &edges[edgeIndex]
-					e.belowState = unbundled
-					e.bundleBelow[clipping] = false
-					e.bundleBelow[subject] = false
-					vi := min
-					for i := 0; i < edgeCount; i++ {
-						e = &edges[edgeIndex+i]
-						v := &edges[vi]
-						e.xb = v.vertex.X
-						e.bot = v.vertex
-						vi = previousIndex(vi, count)
-						v = &edges[vi]
-						e.top = v.vertex
-						e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
-						e.which = which
-						e.outAbove = nil
-						e.outBelow = nil
-						e.next = nil
-						e.prev = nil
-						if edgeCount > 1 && i < edgeCount-1 {
-							e.successor = &edges[edgeIndex+i+1]
-						} else {
-							e.successor = nil
-						}
-						if edgeCount > 1 && i > 0 {
-							e.pred = &edges[edgeIndex+i-1]
-						} else {
-							e.pred = nil
-						}
-						e.nextBound = nil
-						e.clipSide = op == subtractOp
-						e.subjectSide = false
-					}
-					lmt = lmt.insertBound(edges[min].vertex.Y, &edges[edgeIndex])
-					edgeIndex += edgeCount
+				if edges[previousIndex(min, count)].vertex.Y <= edges[min].vertex.Y ||
+					edges[nextIndex(min, count)].vertex.Y < edges[min].vertex.Y {
+					continue
 				}
+				// Search for the previous local maximum
+				edgeCount := 1
+				max := previousIndex(min, count)
+				for edges[previousIndex(max, count)].vertex.Y > edges[max].vertex.Y {
+					edgeCount++
+					max = previousIndex(max, count)
+				}
+
+				// Build the previous edge list
+				e := &edges[edgeIndex]
+				e.belowState = unbundled
+				e.bundleBelow[clipping] = false
+				e.bundleBelow[subject] = false
+				vi := min
+				for i := 0; i < edgeCount; i++ {
+					e = &edges[edgeIndex+i]
+					v := &edges[vi]
+					e.xb = v.vertex.X
+					e.bot = v.vertex
+					vi = previousIndex(vi, count)
+					v = &edges[vi]
+					e.top = v.vertex
+					e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
+					e.which = which
+					e.outAbove = nil
+					e.outBelow = nil
+					e.next = nil
+					e.prev = nil
+					if edgeCount > 1 && i < edgeCount-1 {
+						e.successor = &edges[edgeIndex+i+1]
+					} else {
+						e.successor = nil
+					}
+					if edgeCount > 1 && i > 0 {
+						e.pred = &edges[edgeIndex+i-1]
+					} else {
+						e.pred = nil
+					}
+					e.nextBound = nil
+					e.clipSide = op == subtractOp
+					e.subjectSide = false
+				}
+				lmt = lmt.insertBound(edges[min].vertex.Y, &edges[edgeIndex])
+				edgeIndex += edgeCount
 			}
 		}
 	}

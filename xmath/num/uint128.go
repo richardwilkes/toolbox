@@ -42,8 +42,7 @@ var (
 	errDoesNotFitInInt64         = errors.New("does not fit in int64")
 )
 
-// RandomSource defines the method required of a source of random bits. This
-// is a subset of the rand.Source64 interface.
+// RandomSource defines the method required of a source of random bits. This is a subset of the rand.Source64 interface.
 type RandomSource interface {
 	Uint64() uint64
 }
@@ -129,8 +128,8 @@ func parseToBigInt(s string) (*big.Int, error) {
 	var b *big.Int
 	var ok bool
 	if strings.ContainsAny(s, "Ee") {
-		// Given a floating-point value with an exponent, which technically
-		// isn't valid input, but we'll try to convert it anyway.
+		// Given a floating-point value with an exponent, which technically isn't valid input, but we'll try to convert
+		// it anyway.
 		var f *big.Float
 		f, ok = new(big.Float).SetString(s)
 		if ok && !f.IsInt() {
@@ -148,15 +147,13 @@ func parseToBigInt(s string) (*big.Int, error) {
 	return b, nil
 }
 
-// Uint128FromStringNoCheck creates a Uint128 from a string. Unlike
-// Uint128FromString, this allows any string as input.
+// Uint128FromStringNoCheck creates a Uint128 from a string. Unlike Uint128FromString, this allows any string as input.
 func Uint128FromStringNoCheck(s string) Uint128 {
-	out, _ := Uint128FromString(s) //nolint:errcheck
+	out, _ := Uint128FromString(s) //nolint:errcheck // Failure results in 0
 	return out
 }
 
-// Uint128FromComponents creates a Uint128 from two uint64 values representing
-// the high and low bits.
+// Uint128FromComponents creates a Uint128 from two uint64 values representing the high and low bits.
 func Uint128FromComponents(high, low uint64) Uint128 {
 	return Uint128{hi: high, lo: low}
 }
@@ -166,8 +163,7 @@ func Uint128FromRand(source RandomSource) Uint128 {
 	return Uint128{hi: source.Uint64(), lo: source.Uint64()}
 }
 
-// Components returns the two uint64 values representing the high and low
-// bits.
+// Components returns the two uint64 values representing the high and low bits.
 func (u Uint128) Components() (high, low uint64) {
 	return u.hi, u.lo
 }
@@ -223,8 +219,7 @@ func (u Uint128) AsFloat64() float64 {
 	return (float64(u.hi) * wrapUint64Float) + float64(u.lo)
 }
 
-// IsInt128 returns true if this value can be represented as an Int128 without
-// any loss.
+// IsInt128 returns true if this value can be represented as an Int128 without any loss.
 func (u Uint128) IsInt128() bool {
 	return u.hi&signBit == 0
 }
@@ -234,8 +229,7 @@ func (u Uint128) AsInt128() Int128 {
 	return Int128(u)
 }
 
-// IsUint64 returns true if this value can be represented as a uint64 without
-// any loss.
+// IsUint64 returns true if this value can be represented as a uint64 without any loss.
 func (u Uint128) IsUint64() bool {
 	return u.hi == 0
 }
@@ -396,8 +390,8 @@ func (u Uint128) OnesCount() int {
 	return bits.OnesCount64(u.lo)
 }
 
-// Bit returns the value of the i'th bit of x. That is, it returns (x>>i)&1.
-// If the bit index is less than 0 or greater than 127, zero will be returned.
+// Bit returns the value of the i'th bit of x. That is, it returns (x>>i)&1. If the bit index is less than 0 or greater
+// than 127, zero will be returned.
 func (u Uint128) Bit(i int) uint {
 	switch {
 	case i < 0 || i > 127:
@@ -409,9 +403,8 @@ func (u Uint128) Bit(i int) uint {
 	}
 }
 
-// SetBit returns a Uint128 with u's i'th bit set to b (0 or 1). Values of b
-// that are not 0 will be treated as 1. If the bit index is less than 0 or
-// greater than 127, nothing will happen.
+// SetBit returns a Uint128 with u's i'th bit set to b (0 or 1). Values of b that are not 0 will be treated as 1. If the
+// bit index is less than 0 or greater than 127, nothing will happen.
 func (u Uint128) SetBit(i int, b uint) Uint128 {
 	if i < 0 || i > 127 {
 		return u
@@ -652,8 +645,7 @@ func (u Uint128) Div64(n uint64) Uint128 {
 	return q
 }
 
-// DivMod returns both the result of u / n as well u % n. If n == 0, a divide
-// by zero panic will occur.
+// DivMod returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
 func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
@@ -694,8 +686,7 @@ func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
 	return u.divmod128bin(n, uLeading0, nLeading0)
 }
 
-// DivMod64 returns both the result of u / n as well u % n. If n == 0, a
-// divide by zero panic will occur.
+// DivMod64 returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
 func (u Uint128) DivMod64(n uint64) (q, r Uint128) {
 	if n == 0 {
 		panic(divByZero)
@@ -885,7 +876,7 @@ func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint1
 	n = n.LeftShift(uint(shift))
 	for {
 		if u.GreaterOrEqualTo(n) {
-			// noinspection GoAssignmentToReceiver
+			//goland:noinspection GoAssignmentToReceiver
 			u = u.Sub(n)
 			q.lo |= 1
 		}
@@ -944,8 +935,8 @@ func (u *Uint128) UnmarshalText(text []byte) (err error) {
 	return nil
 }
 
-// Float64 implements json.Number. Intentionally always returns an error, as
-// we never want to emit floating point values into json for Uint128.
+// Float64 implements json.Number. Intentionally always returns an error, as we never want to emit floating point values
+// into json for Uint128.
 func (u Uint128) Float64() (float64, error) {
 	return 0, errNoFloat64
 }

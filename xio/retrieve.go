@@ -47,7 +47,7 @@ func RetrieveDataFromURL(urlStr string) ([]byte, error) {
 		return data, nil
 	case "http", "https":
 		var rsp *http.Response
-		if rsp, err = http.Get(urlStr); err != nil { //nolint:gosec
+		if rsp, err = http.Get(urlStr); err != nil {
 			return nil, errs.NewWithCause(urlStr, err)
 		}
 		defer CloseIgnoringErrors(rsp.Body)

@@ -103,7 +103,7 @@ func F64d6FromString(str string) (F64d6, error) {
 
 // F64d6FromStringForced creates a new F64d6 value from a string.
 func F64d6FromStringForced(str string) F64d6 {
-	f, _ := F64d6FromString(str) //nolint:errcheck
+	f, _ := F64d6FromString(str) //nolint:errcheck // failure results in 0, which is acceptable here
 	return f
 }
 

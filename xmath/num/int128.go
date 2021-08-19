@@ -149,15 +149,13 @@ func Int128FromString(s string) (Int128, error) {
 	return Int128FromBigInt(b), nil
 }
 
-// Int128FromStringNoCheck creates an Int128 from a string. Unlike
-// Int128FromString, this allows any string as input.
+// Int128FromStringNoCheck creates an Int128 from a string. Unlike Int128FromString, this allows any string as input.
 func Int128FromStringNoCheck(s string) Int128 {
-	i, _ := Int128FromString(s) //nolint:errcheck
+	i, _ := Int128FromString(s) //nolint:errcheck // Failure results in 0
 	return i
 }
 
-// Int128FromComponents creates an Int128 from two uint64 values representing
-// the high and low bits.
+// Int128FromComponents creates an Int128 from two uint64 values representing the high and low bits.
 func Int128FromComponents(high, low uint64) Int128 {
 	return Int128{hi: high, lo: low}
 }
@@ -167,8 +165,7 @@ func Int128FromRand(source RandomSource) Int128 {
 	return Int128{hi: source.Uint64(), lo: source.Uint64()}
 }
 
-// Components returns the two uint64 values representing the high and low
-// bits.
+// Components returns the two uint64 values representing the high and low bits.
 func (i Int128) Components() (high, low uint64) {
 	return i.hi, i.lo
 }
@@ -215,8 +212,7 @@ func (i Int128) AsFloat64() float64 {
 	}
 }
 
-// IsUint128 returns true if this value can be represented as an Uint128
-// without any loss.
+// IsUint128 returns true if this value can be represented as an Uint128 without any loss.
 func (i Int128) IsUint128() bool {
 	return i.hi&signBit == 0
 }
@@ -226,8 +222,7 @@ func (i Int128) AsUint128() Uint128 {
 	return Uint128(i)
 }
 
-// IsInt64 returns true if this value can be represented as an int64 without
-// any loss.
+// IsInt64 returns true if this value can be represented as an int64 without any loss.
 func (i Int128) IsInt64() bool {
 	if i.hi&signBit != 0 {
 		return i.hi == math.MaxUint64 && i.lo >= signBit
@@ -243,8 +238,7 @@ func (i Int128) AsInt64() int64 {
 	return int64(i.lo)
 }
 
-// IsUint64 returns true if this value can be represented as a uint64 without
-// any loss.
+// IsUint64 returns true if this value can be represented as a uint64 without any loss.
 func (i Int128) IsUint64() bool {
 	return i.hi == 0
 }
@@ -564,7 +558,7 @@ func (i Int128) Div(n Int128) Int128 {
 	qSign := 1
 	if i.LessThan(Int128{}) {
 		qSign = -1
-		// noinspection GoAssignmentToReceiver
+		//goland:noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n.LessThan(Int128{}) {
@@ -583,7 +577,7 @@ func (i Int128) Div64(n int64) Int128 {
 	qSign := 1
 	if i.LessThan(Int128{}) {
 		qSign = -1
-		// noinspection GoAssignmentToReceiver
+		//goland:noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n < 0 {
@@ -597,15 +591,14 @@ func (i Int128) Div64(n int64) Int128 {
 	return q
 }
 
-// DivMod returns both the result of i / n as well i % n. If n == 0, a divide
-// by zero panic will occur.
+// DivMod returns both the result of i / n as well i % n. If n == 0, a divide by zero panic will occur.
 func (i Int128) DivMod(n Int128) (q, r Int128) {
 	qSign := 1
 	rSign := 1
 	if i.LessThan(Int128{}) {
 		qSign = -1
 		rSign = -1
-		// noinspection GoAssignmentToReceiver
+		//goland:noinspection GoAssignmentToReceiver
 		i = i.Neg()
 	}
 	if n.LessThan(Int128{}) {
@@ -624,8 +617,7 @@ func (i Int128) DivMod(n Int128) (q, r Int128) {
 	return q, r
 }
 
-// DivMod64 returns both the result of i / n as well i % n. If n == 0, a
-// divide by zero panic will occur.
+// DivMod64 returns both the result of i / n as well i % n. If n == 0, a divide by zero panic will occur.
 func (i Int128) DivMod64(n int64) (q, r Int128) {
 	var hi uint64
 	if n < 0 {
@@ -691,8 +683,8 @@ func (i *Int128) UnmarshalText(text []byte) (err error) {
 	return nil
 }
 
-// Float64 implements json.Number. Intentionally always returns an error, as
-// we never want to emit floating point values into json for Int128.
+// Float64 implements json.Number. Intentionally always returns an error, as we never want to emit floating point values
+// into json for Int128.
 func (i Int128) Float64() (float64, error) {
 	return 0, errNoFloat64
 }

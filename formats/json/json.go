@@ -86,7 +86,7 @@ func (j *Data) path(path ...string) *Data {
 	}
 	obj := j.obj
 	for i := 0; i < len(path); i++ {
-		if m, ok := obj.(map[string]interface{}); ok { //nolint:gocritic
+		if m, ok := obj.(map[string]interface{}); ok {
 			obj = m[path[i]]
 		} else {
 			var a []interface{}

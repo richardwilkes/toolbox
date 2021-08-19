@@ -12,7 +12,7 @@ package atexit
 
 import (
 	"fmt"
-	"log" //nolint:depguard
+	"log" //nolint:depguard // For the default recovery handler
 	"os"
 	"os/signal"
 	"runtime"

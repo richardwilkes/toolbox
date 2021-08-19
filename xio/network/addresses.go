@@ -129,10 +129,7 @@ func Address(iFace net.Interface) string {
 				var names []string
 				if names, err = net.LookupAddr(ipAddr); err == nil {
 					if len(names) > 0 {
-						name := names[0]
-						if strings.HasSuffix(name, ".") {
-							name = name[:len(name)-1]
-						}
+						name := strings.TrimSuffix(names[0], ".")
 						if ip.To4() != nil {
 							return name
 						}
@@ -186,10 +183,7 @@ func AddressesForHost(host string) []string {
 								var names []string
 								if names, err = net.LookupAddr(ip.String()); err == nil {
 									for _, name := range names {
-										if strings.HasSuffix(name, ".") {
-											name = name[:len(name)-1]
-										}
-										ss.Add(name)
+										ss.Add(strings.TrimSuffix(name, "."))
 									}
 								}
 							}

@@ -95,19 +95,20 @@ func (p *polygonNode) generate() Polygon {
 	result := make([]Contour, contourCount)
 	ci := 0
 	for poly := p; poly != nil; poly = poly.next {
-		if poly.active { //nolint:gocritic
-			var prev *vertexNode
-			result[ci] = make([]geom.Point, ptCounts[ci])
-			v := len(result[ci]) - 1
-			for vtx := poly.proxy.left; vtx != nil; vtx = vtx.next {
-				if prev == nil || prev.pt != vtx.pt {
-					result[ci][v] = vtx.pt
-					v--
-				}
-				prev = vtx
-			}
-			ci++
+		if !poly.active {
+			continue
 		}
+		var prev *vertexNode
+		result[ci] = make([]geom.Point, ptCounts[ci])
+		v := len(result[ci]) - 1
+		for vtx := poly.proxy.left; vtx != nil; vtx = vtx.next {
+			if prev == nil || prev.pt != vtx.pt {
+				result[ci][v] = vtx.pt
+				v--
+			}
+			prev = vtx
+		}
+		ci++
 	}
 	return result
 }

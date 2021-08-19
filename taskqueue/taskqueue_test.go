@@ -92,6 +92,5 @@ func TestRecoveryWithBadLogger(t *testing.T) {
 
 func boom() {
 	var bad *int
-	// noinspection GoNilness
 	*bad = 1
 }

@@ -32,10 +32,10 @@ const (
 type vertexType int
 
 const (
-	emptyNonIntersection vertexType = iota //nolint:deadcode,varcheck
+	emptyNonIntersection vertexType = iota //nolint:deadcode,varcheck // needed to ensure correct index
 	externalMaximum
 	externalLeftIntermediate
-	topEdge //nolint:deadcode,varcheck
+	topEdge //nolint:deadcode,varcheck // needed to ensure correct index
 	externalRightIntermediate
 	rightEdge
 	internalMaximumAndMinimum
@@ -44,10 +44,10 @@ const (
 	externalMaximumAndMinimum
 	leftEdge
 	internalLeftIntermediate
-	bottomEdge //nolint:deadcode,varcheck
+	bottomEdge //nolint:deadcode,varcheck // needed to ensure correct index
 	internalRightIntermediate
 	internalMaximum
-	fullNonIntersection //nolint:deadcode,varcheck
+	fullNonIntersection //nolint:deadcode,varcheck // needed to ensure correct index
 )
 
 // Polygon holds one or more contour lines. The polygon may contain holes and

@@ -253,11 +253,9 @@ func (d *Error) Unwrap() error {
 func (d *Error) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		// noinspection GoUnhandledErrorResult
-		state.Write([]byte(d.Detail(!state.Flag('+'))))
+		_, _ = state.Write([]byte(d.Detail(!state.Flag('+'))))
 	case 's':
-		// noinspection GoUnhandledErrorResult
-		state.Write([]byte(d.Message()))
+		_, _ = state.Write([]byte(d.Message()))
 	case 'q':
 		fmt.Fprintf(state, "%q", d.Message())
 	}

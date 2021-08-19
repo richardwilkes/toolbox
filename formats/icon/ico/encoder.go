@@ -25,7 +25,7 @@ import (
 // .ico file format.
 
 type header struct {
-	Reserved  uint16 //nolint:unused,structcheck // necessary for the format on disk
+	Reserved  uint16
 	ImageType uint16
 	Count     uint16
 }
@@ -33,8 +33,8 @@ type header struct {
 type entry struct {
 	Width       uint8
 	Height      uint8
-	Colors      uint8 //nolint:unused,structcheck // necessary for the format on disk
-	Reserved    uint8 //nolint:unused,structcheck // necessary for the format on disk
+	Colors      uint8
+	Reserved    uint8
 	Planes      uint16
 	BitPerPixel uint16
 	Size        uint32

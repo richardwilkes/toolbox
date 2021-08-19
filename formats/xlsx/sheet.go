@@ -53,7 +53,6 @@ func Read(in io.ReaderAt, size int64) ([]Sheet, error) {
 }
 
 func load(r *zip.Reader) ([]Sheet, error) {
-	var sheets []Sheet //nolint:prealloc
 	var sheetNames []string
 	var strs []string
 	var files []*zip.File
@@ -75,13 +74,13 @@ func load(r *zip.Reader) ([]Sheet, error) {
 	sort.Slice(files, func(i, j int) bool {
 		return txt.NaturalLess(files[i].Name, files[j].Name, true)
 	})
+	sheets := make([]Sheet, 0, len(files))
 	for i, f := range files {
 		var sheet *Sheet
 		if sheet, err = loadSheet(f, strs); err != nil {
 			return nil, err
 		}
 		if i < len(sheetNames) {
-			// noinspection GoNilness
 			sheet.Name = sheetNames[i]
 		} else {
 			sheet.Name = fmt.Sprintf("Sheet%d", i+1)

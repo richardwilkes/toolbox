@@ -97,7 +97,6 @@ func TestErrorOrNil(t *testing.T) {
 
 func TestErrorOrNilPointer(t *testing.T) {
 	var err *errs.Error
-	// noinspection GoNilness
 	require.Nil(t, err.ErrorOrNil(), "Should have been nil")
 }
 

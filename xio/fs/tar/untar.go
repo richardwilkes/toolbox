@@ -58,7 +58,7 @@ func ExtractWithMask(tr *tar.Reader, dst string, mask os.FileMode) error {
 		if err != nil {
 			return errs.Wrap(err)
 		}
-		path := filepath.Join(root, hdr.Name) //nolint:gosec // path is contained to root, below
+		path := filepath.Join(root, hdr.Name) //nolint:gosec // disallow path outside of root directly below
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", hdr.Name)
 		}

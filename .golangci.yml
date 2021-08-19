@@ -28,11 +28,8 @@ linters-settings:
       - experimental
     disabled-checks:
       - sloppyReassign
-      - whyNoLint
   gofmt:
     simplify: true
-  golint:
-    min-confidence: 0.8
   govet:
     check-shadowing: true
     settings:
@@ -64,11 +61,11 @@ linters:
     - deadcode
     - depguard
     - errcheck
+    - exportloopref
     - goconst
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - gosimple
     - govet
@@ -77,7 +74,7 @@ linters:
     - maligned
     - misspell
     - prealloc
-    - scopelint
+    - revive
     - staticcheck
     - structcheck
     - unconvert
@@ -90,11 +87,14 @@ issues:
   exclude-use-default: false
   exclude:
     - should call os.Exit to set exit code
-    - "G301: Expect directory permissions to be 0750 or less"
+    - "G103: Use of unsafe calls should be audited"
+    - "G107: Potential HTTP request made with variable url"
+    - "G110: Potential DoS vulnerability via decompression bomb"
+    - "G204: Subprocess launched with variable"
+    - "G204: Subprocess launched with function call as argument or cmd arguments"
     - "G302: Expect file permissions to be 0600 or less"
     - "G304: Potential file inclusion via variable"
-    - "G104: Errors unhandled"
-    - "G204: Subprocess launched with variable"
+    - "G306: Expect WriteFile permissions to be 0600 or less"
   exclude-rules:
     - path: _gen\.go
       linters:

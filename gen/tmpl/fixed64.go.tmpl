@@ -98,7 +98,7 @@ func F64d{{.}}FromString(str string) (F64d{{.}}, error) {
 
 // F64d{{.}}FromStringForced creates a new F64d{{.}} value from a string.
 func F64d{{.}}FromStringForced(str string) F64d{{.}} {
-	f, _ := F64d{{.}}FromString(str) //nolint:errcheck
+	f, _ := F64d{{.}}FromString(str) //nolint:errcheck // failure results in 0, which is acceptable here
 	return f
 }
 

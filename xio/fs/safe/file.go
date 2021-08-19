@@ -35,7 +35,7 @@ type File struct {
 // Create creates a temporary file in the same directory as filename,
 // which will be renamed to the given filename when calling Commit.
 func Create(filename string) (*File, error) {
-	return CreateWithMode(filename, 0644) //nolint:gocritic
+	return CreateWithMode(filename, 0644) //nolint:gocritic // File modes are octal
 }
 
 // CreateWithMode creates a temporary file in the same directory as filename,
@@ -52,8 +52,7 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if runtime.GOOS != toolbox.WindowsOS { // Windows doesn't support changing the mode
 		if err = f.Chmod(mode); err != nil {
 			xio.CloseIgnoringErrors(f)
-			// noinspection GoUnhandledErrorResult
-			os.Remove(f.Name()) //nolint: errcheck
+			_ = os.Remove(f.Name()) //nolint:errcheck // no need to report this error, too
 			return nil, err
 		}
 	}
@@ -88,8 +87,7 @@ func (f *File) Commit() error {
 		err = os.Rename(name, f.originalName)
 	}
 	if err != nil {
-		// noinspection GoUnhandledErrorResult
-		os.Remove(name) //nolint: errcheck
+		_ = os.Remove(name) //nolint:errcheck // no need to report this error, too
 	}
 	return err
 }

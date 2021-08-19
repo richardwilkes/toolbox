@@ -53,7 +53,7 @@ func ExtractWithMask(zr *zip.Reader, dst string, mask os.FileMode) error {
 	}
 	rootWithTrailingSep := fmt.Sprintf("%s%c", root, filepath.Separator)
 	for _, f := range zr.File {
-		path := filepath.Join(root, f.Name) //nolint:gosec // path is contained to root, below
+		path := filepath.Join(root, f.Name) //nolint:gosec // disallow path outside of root directly below
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", f.Name)
 		}
@@ -114,8 +114,7 @@ func extractFile(f *zip.File, dst string, mask os.FileMode) (err error) {
 			err = errs.Wrap(closeErr)
 		}
 	}()
-	// TODO: Investigate if there is a way to eliminate the potential security issue below
-	if _, err = io.Copy(file, r); err != nil { //nolint:gosec // Don't see a way around the reported G110 issue, so allowing for now
+	if _, err = io.Copy(file, r); err != nil {
 		err = errs.Wrap(err)
 	}
 	return

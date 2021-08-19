@@ -68,7 +68,7 @@ func (repo *Repo) CheckLocal() bool {
 
 // Init initializes a git repository at the local location.
 func (repo *Repo) Init() error {
-	if _, err := exec.Command("git", "init", repo.local).CombinedOutput(); err != nil { //nolint:gosec
+	if _, err := exec.Command("git", "init", repo.local).CombinedOutput(); err != nil {
 		return errs.NewWithCause(i18n.Text("Unable to initialize repository"), err)
 	}
 	return nil
@@ -76,7 +76,7 @@ func (repo *Repo) Init() error {
 
 // Clone a repository.
 func (repo *Repo) Clone() error {
-	if _, err := exec.Command("git", "clone", repo.remote, repo.local).CombinedOutput(); err != nil { //nolint:gosec
+	if _, err := exec.Command("git", "clone", repo.remote, repo.local).CombinedOutput(); err != nil {
 		return errs.NewWithCause(i18n.Text("Unable to clone repository"), err)
 	}
 	return nil
@@ -198,7 +198,7 @@ func (repo *Repo) TagsFromCommit(rev string) ([]string, error) {
 }
 
 func (repo *Repo) referenceList(content string, re *regexp.Regexp) []string {
-	var out []string //nolint:prealloc
+	var out []string //nolint:prealloc // no way to know in advance
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
 		out = append(out, m[1])
 	}
