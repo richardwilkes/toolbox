@@ -1,11 +1,8 @@
 run:
-  deadline: 5m
-  tests: true
+  timeout: 5m
   modules-download-mode: readonly
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
+  sort-results: true
 linters-settings:
   depguard:
     list-type: blacklist
@@ -16,9 +13,6 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
-  goconst:
-    min-len: 3
-    min-occurrences: 3
   gocritic:
     enabled-tags:
       - diagnostic
@@ -27,11 +21,13 @@ linters-settings:
       - opinionated
       - experimental
     disabled-checks:
+      - octalLiteral
       - sloppyReassign
-  gofmt:
-    simplify: true
+  gofumpt:
+    extra-rules: true
   govet:
     check-shadowing: true
+    enable-all: true
     settings:
       printf:
         funcs:
@@ -45,14 +41,11 @@ linters-settings:
           - EndWithMsgf
           - Newf
           - NewWithCausef
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
-  prealloc:
-    simple: true
-    range-loops: true
-    for-loops: false
+  staticcheck:
+    go: "1.17"
+    checks: [ "all", "-SA3000" ]
   unused:
     check-exported: false
 linters:
@@ -61,43 +54,29 @@ linters:
     - deadcode
     - depguard
     - errcheck
+    - errorlint
     - exportloopref
     - goconst
     - gocritic
-    - gofmt
+    - gofumpt
     - goimports
-    - gosec
     - gosimple
     - govet
+    - ifshort
     - ineffassign
-    - interfacer
-    - maligned
     - misspell
+    - noctx
     - prealloc
+    - predeclared
     - revive
     - staticcheck
     - structcheck
     - unconvert
     - unused
     - varcheck
+    - wastedassign
 issues:
-  max-per-linter: 20
-  max-same-issues: 3
-  new: false
+  max-same-issues: 10
   exclude-use-default: false
   exclude:
-    - should call os.Exit to set exit code
-    - "G103: Use of unsafe calls should be audited"
-    - "G107: Potential HTTP request made with variable url"
-    - "G110: Potential DoS vulnerability via decompression bomb"
-    - "G204: Subprocess launched with variable"
-    - "G204: Subprocess launched with function call as argument or cmd arguments"
-    - "G302: Expect file permissions to be 0600 or less"
-    - "G304: Potential file inclusion via variable"
-    - "G306: Expect WriteFile permissions to be 0600 or less"
-  exclude-rules:
-    - path: _gen\.go
-      linters:
-        - unused
-        - deadcode
-        - goconst
+    - "fieldalignment: struct with \\d+ pointer bytes could be"

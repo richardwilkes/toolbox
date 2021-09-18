@@ -11,41 +11,53 @@ package json
 
 import (
 	"bytes"
+	"context"
 	"net/http"
+
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/xio"
 )
 
-// GetRequest calls http.Get with the URL and returns the response body as a
-// new Data object.
+// GetRequest calls http.Get with the URL and returns the response body as a new Data object.
 func GetRequest(url string) (statusCode int, body *Data, err error) {
-	var resp *http.Response
-	if resp, err = http.Get(url); err == nil {
-		defer func() {
-			if closeErr := resp.Body.Close(); closeErr != nil && err == nil {
-				err = closeErr
-			}
-		}()
-		statusCode = resp.StatusCode
-		body = MustParseStream(resp.Body)
-	} else {
-		body = &Data{}
-	}
-	return
+	return GetRequestWithContext(context.Background(), url)
 }
 
-// PostRequest calls http.Post with the URL and the contents of this Data
-// object and returns the response body as a new Data object.
-func (j *Data) PostRequest(url string) (statusCode int, body *Data, err error) {
-	var resp *http.Response
-	if resp, err = http.Post(url, "application/json", bytes.NewBuffer(j.Bytes())); err == nil {
-		defer func() {
-			if closeErr := resp.Body.Close(); closeErr != nil && err == nil {
-				err = closeErr
-			}
-		}()
-		statusCode = resp.StatusCode
-		body = MustParseStream(resp.Body)
-	} else {
-		body = &Data{}
+// GetRequestWithContext calls http.Get with the URL and returns the response body as a new Data object.
+func GetRequestWithContext(ctx context.Context, url string) (statusCode int, body *Data, err error) {
+	var req *http.Request
+	req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return 0, nil, errs.NewWithCause("unable to create request", err)
 	}
+	return makeRequest(req)
+}
+
+// PostRequest calls http.Post with the URL and the contents of this Data object and returns the response body as a new
+// Data object.
+func (j *Data) PostRequest(url string) (statusCode int, body *Data, err error) {
+	return j.PostRequestWithContext(context.Background(), url)
+}
+
+// PostRequestWithContext calls http.Post with the URL and the contents of this Data object and returns the response
+// body as a new Data object.
+func (j *Data) PostRequestWithContext(ctx context.Context, url string) (statusCode int, body *Data, err error) {
+	var req *http.Request
+	req, err = http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(j.Bytes()))
+	if err != nil {
+		return 0, nil, errs.NewWithCause("unable to create request", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return makeRequest(req)
+}
+
+func makeRequest(req *http.Request) (statusCode int, body *Data, err error) {
+	var rsp *http.Response
+	if rsp, err = http.DefaultClient.Do(req); err != nil {
+		return 0, &Data{}, errs.NewWithCause("request failed", err)
+	}
+	defer xio.DiscardAndCloseIgnoringErrors(rsp.Body)
+	statusCode = rsp.StatusCode
+	body = MustParseStream(rsp.Body)
 	return
 }

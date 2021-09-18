@@ -50,7 +50,7 @@ func Wrap(cause error) error {
 	if cause == nil {
 		return nil
 	}
-	if err, ok := cause.(*Error); ok {
+	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		return err
 	}
 	return &Error{
@@ -71,7 +71,7 @@ func WrapTyped(cause error) *Error {
 	if cause == nil {
 		return nil
 	}
-	if err, ok := cause.(*Error); ok {
+	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		return err
 	}
 	return &Error{
@@ -121,33 +121,33 @@ func NewWithCausef(cause error, format string, v ...interface{}) *Error {
 
 // Append one or more errors to an existing error. err may be nil.
 func Append(err error, errs ...error) *Error {
-	switch err := err.(type) {
+	switch e := err.(type) { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 	case *Error:
-		if err == nil {
-			err = &Error{}
+		if e == nil {
+			e = &Error{}
 		}
 		for _, one := range errs {
-			switch typedErr := one.(type) {
+			switch typedErr := one.(type) { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 			case *Error:
 				if typedErr != nil {
-					err.errors = append(err.errors, typedErr.errors...)
+					e.errors = append(e.errors, typedErr.errors...)
 				}
 			default:
 				if typedErr != nil {
-					err.errors = append(err.errors, detail{
+					e.errors = append(e.errors, detail{
 						message: typedErr.Error(),
 						stack:   callStack(),
 					})
 				}
 			}
 		}
-		return err
+		return e
 	default:
-		if err == nil {
+		if e == nil {
 			return Append(&Error{}, errs...)
 		}
 		all := make([]error, 0, len(errs)+1)
-		all = append(all, err)
+		all = append(all, e)
 		all = append(all, errs...)
 		return Append(&Error{}, all...)
 	}

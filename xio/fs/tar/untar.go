@@ -12,6 +12,7 @@ package tar
 
 import (
 	"archive/tar"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -24,7 +25,7 @@ import (
 
 // ExtractArchive extracts the contents of a tar archive at 'src' into the 'dst' directory.
 func ExtractArchive(src, dst string) error {
-	return ExtractArchiveWithMask(src, dst, 0777) //nolint:gocritic // File modes are octal
+	return ExtractArchiveWithMask(src, dst, 0o777)
 }
 
 // ExtractArchiveWithMask extracts the contents of a tar archive at 'src' into the 'dst' directory.
@@ -40,7 +41,7 @@ func ExtractArchiveWithMask(src, dst string, mask os.FileMode) error {
 
 // Extract the contents of a tar reader into the 'dst' directory.
 func Extract(tr *tar.Reader, dst string) error {
-	return ExtractWithMask(tr, dst, 0777) //nolint:gocritic // File modes are octal
+	return ExtractWithMask(tr, dst, 0o777)
 }
 
 // ExtractWithMask the contents of a tar reader into the 'dst' directory.
@@ -52,13 +53,13 @@ func ExtractWithMask(tr *tar.Reader, dst string, mask os.FileMode) error {
 	rootWithTrailingSep := fmt.Sprintf("%s%c", root, filepath.Separator)
 	for {
 		var hdr *tar.Header
-		if hdr, err = tr.Next(); err == io.EOF {
+		if hdr, err = tr.Next(); errors.Is(err, io.EOF) {
 			return nil
 		}
 		if err != nil {
 			return errs.Wrap(err)
 		}
-		path := filepath.Join(root, hdr.Name) //nolint:gosec // disallow path outside of root directly below
+		path := filepath.Join(root, hdr.Name)
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", hdr.Name)
 		}
@@ -68,14 +69,14 @@ func ExtractWithMask(tr *tar.Reader, dst string, mask os.FileMode) error {
 				return err
 			}
 		case tar.TypeLink:
-			if err = os.MkdirAll(filepath.Dir(path), 0755&mask); err != nil {
+			if err = os.MkdirAll(filepath.Dir(path), 0o755&mask); err != nil {
 				return errs.Wrap(err)
 			}
 			if err = os.Link(hdr.Linkname, path); err != nil {
 				return errs.Wrap(err)
 			}
 		case tar.TypeSymlink:
-			if err = os.MkdirAll(filepath.Dir(path), 0755&mask); err != nil {
+			if err = os.MkdirAll(filepath.Dir(path), 0o755&mask); err != nil {
 				return errs.Wrap(err)
 			}
 			if err = os.Symlink(hdr.Linkname, path); err != nil {
@@ -90,7 +91,7 @@ func ExtractWithMask(tr *tar.Reader, dst string, mask os.FileMode) error {
 }
 
 func extractFile(r io.Reader, dst string, mode, mask os.FileMode) (err error) {
-	if err = os.MkdirAll(filepath.Dir(dst), 0755&mask); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
 	var file *os.File

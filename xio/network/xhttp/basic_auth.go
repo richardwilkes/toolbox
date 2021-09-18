@@ -16,7 +16,7 @@ import (
 )
 
 // PasswordLookup provides a way to map a user in a realm to a password
-type PasswordLookup func(user string, realm string) string
+type PasswordLookup func(user, realm string) string
 
 // BasicAuth provides basic HTTP authentication.
 type BasicAuth struct {

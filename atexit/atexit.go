@@ -94,7 +94,7 @@ func Exit(status int) {
 	}
 	var f []func()
 	lock.Lock()
-	wasExiting := exiting
+	wasExiting := exiting //nolint:ifshort // Cannot be merged into the if statement
 	if !wasExiting {
 		exiting = true
 		f = make([]func(), len(pairs))

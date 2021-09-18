@@ -31,7 +31,7 @@ func TestLoadSaveJSON(t *testing.T) {
 	f, err := ioutil.TempFile("", "json_test")
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
-	require.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0600)) //nolint:gocritic // File modes are octal
+	require.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0o600))
 	var value2 data
 	require.NoError(t, fs.LoadJSON(f.Name(), &value2))
 	require.NoError(t, os.Remove(f.Name()))

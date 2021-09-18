@@ -27,10 +27,8 @@ const (
 	bit32                   = uint64(1) << 32
 )
 
-var (
-	// MaxUint128 is the maximum value representable by a Uint128.
-	MaxUint128 = Uint128{hi: math.MaxUint64, lo: math.MaxUint64}
-)
+// MaxUint128 is the maximum value representable by a Uint128.
+var MaxUint128 = Uint128{hi: math.MaxUint64, lo: math.MaxUint64}
 
 var (
 	intSize                      = 32 << (^uint(0) >> 63)

@@ -35,7 +35,7 @@ type File struct {
 // Create creates a temporary file in the same directory as filename,
 // which will be renamed to the given filename when calling Commit.
 func Create(filename string) (*File, error) {
-	return CreateWithMode(filename, 0644) //nolint:gocritic // File modes are octal
+	return CreateWithMode(filename, 0o644)
 }
 
 // CreateWithMode creates a temporary file in the same directory as filename,

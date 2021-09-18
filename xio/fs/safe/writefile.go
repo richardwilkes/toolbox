@@ -17,7 +17,7 @@ import (
 
 // WriteFile uses writer to write data safely and atomically to a file.
 func WriteFile(filename string, writer func(io.Writer) error) (err error) {
-	return WriteFileWithMode(filename, writer, 0644) //nolint:gocritic // File modes are octal
+	return WriteFileWithMode(filename, writer, 0o644)
 }
 
 // WriteFileWithMode uses writer to write data safely and atomically to a file.

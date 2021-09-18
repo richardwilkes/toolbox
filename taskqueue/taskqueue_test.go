@@ -92,5 +92,5 @@ func TestRecoveryWithBadLogger(t *testing.T) {
 
 func boom() {
 	var bad *int
-	*bad = 1
+	*bad = 1 //nolint:govet // Yes, this is an intentional store to a nil pointer
 }

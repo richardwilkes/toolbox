@@ -30,9 +30,7 @@ const (
 	FATAL
 )
 
-var (
-	logChannel = make(chan *record, 100)
-)
+var logChannel = make(chan *record, 100)
 
 // Level holds a log level.
 type Level int

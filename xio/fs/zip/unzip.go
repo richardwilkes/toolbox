@@ -26,7 +26,7 @@ import (
 // ExtractArchive extracts the contents of a zip archive at 'src' into the
 // 'dst' directory.
 func ExtractArchive(src, dst string) error {
-	return ExtractArchiveWithMask(src, dst, 0777) //nolint:gocritic // File modes are octal
+	return ExtractArchiveWithMask(src, dst, 0o777)
 }
 
 // ExtractArchiveWithMask extracts the contents of a zip archive at 'src' into the
@@ -42,7 +42,7 @@ func ExtractArchiveWithMask(src, dst string, mask os.FileMode) error {
 
 // Extract the contents of a zip reader into the 'dst' directory.
 func Extract(zr *zip.Reader, dst string) error {
-	return ExtractWithMask(zr, dst, 0777) //nolint:gocritic // File modes are octal
+	return ExtractWithMask(zr, dst, 0o777)
 }
 
 // ExtractWithMask the contents of a zip reader into the 'dst' directory.
@@ -53,7 +53,7 @@ func ExtractWithMask(zr *zip.Reader, dst string, mask os.FileMode) error {
 	}
 	rootWithTrailingSep := fmt.Sprintf("%s%c", root, filepath.Separator)
 	for _, f := range zr.File {
-		path := filepath.Join(root, f.Name) //nolint:gosec // disallow path outside of root directly below
+		path := filepath.Join(root, f.Name)
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", f.Name)
 		}
@@ -87,7 +87,7 @@ func extractSymLink(f *zip.File, dst string, mask os.FileMode) error {
 	if buffer, err = ioutil.ReadAll(r); err != nil {
 		return errs.Wrap(err)
 	}
-	if err = os.MkdirAll(filepath.Dir(dst), 0755&mask); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
 	if err = os.Symlink(string(buffer), dst); err != nil {
@@ -102,7 +102,7 @@ func extractFile(f *zip.File, dst string, mask os.FileMode) (err error) {
 		return errs.Wrap(err)
 	}
 	defer xio.CloseIgnoringErrors(r)
-	if err = os.MkdirAll(filepath.Dir(dst), 0755&mask); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
 	var file *os.File

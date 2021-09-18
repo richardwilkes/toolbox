@@ -46,7 +46,7 @@ func loadJSON(r io.ReadCloser, data interface{}) error {
 
 // SaveJSON data to the specified path.
 func SaveJSON(path string, data interface{}, format bool) error {
-	return SaveJSONWithMode(path, data, format, 0644) //nolint:gocritic // File modes are octal
+	return SaveJSONWithMode(path, data, format, 0o644)
 }
 
 // SaveJSONWithMode data to the specified path.

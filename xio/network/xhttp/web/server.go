@@ -13,6 +13,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -157,7 +158,7 @@ func (s *Server) Run() error {
 	} else {
 		err = s.WebServer.Serve(listener)
 	}
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return errs.Wrap(err)
 	}
 	return nil

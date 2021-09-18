@@ -33,74 +33,72 @@ const (
 	minInt128MinusOneAsStr = "-170141183460469231731687303715884105729"
 )
 
-var (
-	table = []*info{
-		{
-			IsInt64:  true,
-			IsInt128: true,
-		},
-		{
-			Int64:    -1,
-			IsInt64:  true,
-			IsInt128: true,
-		},
-		{
-			Int64:    1,
-			IsInt64:  true,
-			IsInt128: true,
-		},
-		{
-			ValueAsStr: "18446744073712590000",
-			IsInt128:   true,
-		},
-		{
-			ValueAsStr: "-18446744073712590000",
-			IsInt128:   true,
-		},
-		{
-			Int64:    math.MaxInt64,
-			IsInt64:  true,
-			IsInt128: true,
-		},
-		{
-			Int64:    math.MinInt64,
-			IsInt64:  true,
-			IsInt128: true,
-		},
-		{
-			ValueAsStr: maxInt64PlusOneAsStr,
-			IsInt64:    false,
-			IsInt128:   true,
-		},
-		{
-			ValueAsStr: minInt64MinusOneAsStr,
-			IsInt64:    false,
-			IsInt128:   true,
-		},
-		{
-			ValueAsStr: maxInt128AsStr,
-			IsInt64:    false,
-			IsInt128:   true,
-		},
-		{
-			ValueAsStr: minInt128AsStr,
-			IsInt64:    false,
-			IsInt128:   true,
-		},
-		{
-			ValueAsStr:              maxInt128PlusOneAsStr,
-			ExpectedConversionAsStr: maxInt128AsStr,
-			IsInt64:                 false,
-			IsInt128:                false,
-		},
-		{
-			ValueAsStr:              minInt128MinusOneAsStr,
-			ExpectedConversionAsStr: minInt128AsStr,
-			IsInt64:                 false,
-			IsInt128:                false,
-		},
-	}
-)
+var table = []*info{
+	{
+		IsInt64:  true,
+		IsInt128: true,
+	},
+	{
+		Int64:    -1,
+		IsInt64:  true,
+		IsInt128: true,
+	},
+	{
+		Int64:    1,
+		IsInt64:  true,
+		IsInt128: true,
+	},
+	{
+		ValueAsStr: "18446744073712590000",
+		IsInt128:   true,
+	},
+	{
+		ValueAsStr: "-18446744073712590000",
+		IsInt128:   true,
+	},
+	{
+		Int64:    math.MaxInt64,
+		IsInt64:  true,
+		IsInt128: true,
+	},
+	{
+		Int64:    math.MinInt64,
+		IsInt64:  true,
+		IsInt128: true,
+	},
+	{
+		ValueAsStr: maxInt64PlusOneAsStr,
+		IsInt64:    false,
+		IsInt128:   true,
+	},
+	{
+		ValueAsStr: minInt64MinusOneAsStr,
+		IsInt64:    false,
+		IsInt128:   true,
+	},
+	{
+		ValueAsStr: maxInt128AsStr,
+		IsInt64:    false,
+		IsInt128:   true,
+	},
+	{
+		ValueAsStr: minInt128AsStr,
+		IsInt64:    false,
+		IsInt128:   true,
+	},
+	{
+		ValueAsStr:              maxInt128PlusOneAsStr,
+		ExpectedConversionAsStr: maxInt128AsStr,
+		IsInt64:                 false,
+		IsInt128:                false,
+	},
+	{
+		ValueAsStr:              minInt128MinusOneAsStr,
+		ExpectedConversionAsStr: minInt128AsStr,
+		IsInt64:                 false,
+		IsInt128:                false,
+	},
+}
 
 type info struct {
 	Int64                   int64

@@ -33,14 +33,11 @@ var sites = []string{
 	"https://tnx.nl/ip",
 }
 
-// ExternalIP returns your IP address as seen by external sites. It does this
-// by iterating through a list of websites that will return your IP address as
-// they see it. The first response with a valid IP address will be returned.
-// timeout sets the maximum amount of time for each attempt.
+// ExternalIP returns your IP address as seen by external sites. It does this by iterating through a list of websites
+// that will return your IP address as they see it. The first response with a valid IP address will be returned. timeout
+// sets the maximum amount of time for each attempt.
 func ExternalIP(timeout time.Duration) string {
-	client := &http.Client{
-		Timeout: timeout,
-	}
+	client := &http.Client{Timeout: timeout}
 	for _, site := range sites {
 		if ip := externalIP(client, site); ip != "" {
 			return ip
@@ -50,8 +47,8 @@ func ExternalIP(timeout time.Duration) string {
 }
 
 func externalIP(client *http.Client, site string) string {
-	if resp, err := client.Get(site); err == nil {
-		defer xio.CloseIgnoringErrors(resp.Body)
+	if resp, err := client.Get(site); err == nil { //nolint:noctx // The timeout on the client provides the same effect
+		defer xio.DiscardAndCloseIgnoringErrors(resp.Body)
 		var body []byte
 		if body, err = ioutil.ReadAll(resp.Body); err == nil {
 			if ip := net.ParseIP(strings.TrimSpace(string(body))); ip != nil {

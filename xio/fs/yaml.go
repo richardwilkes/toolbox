@@ -47,7 +47,7 @@ func loadYAML(r io.ReadCloser, data interface{}) error {
 
 // SaveYAML data to the specified path.
 func SaveYAML(path string, data interface{}) error {
-	return SaveYAMLWithMode(path, data, 0644) //nolint:gocritic // File modes are octal
+	return SaveYAMLWithMode(path, data, 0o644)
 }
 
 // SaveYAMLWithMode data to the specified path.

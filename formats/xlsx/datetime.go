@@ -18,13 +18,13 @@ import (
 // Code for date/time conversion adapted from github.com/tealeg/xlsx.
 func timeFromExcelTime(excelTime float64) time.Time {
 	var date time.Time
-	var intPart = int64(excelTime)
+	intPart := int64(excelTime)
 	// Excel uses Julian dates prior to March 1st 1900, and
 	// Gregorian thereafter.
 	if intPart <= 61 {
 		return julianDateToGregorianTime(2400000.5, excelTime+15018.0)
 	}
-	var floatPart = excelTime - float64(intPart)
+	floatPart := excelTime - float64(intPart)
 	var dayNanoSeconds float64 = 24 * 60 * 60 * 1000 * 1000 * 1000
 	date = time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC)
 	durationDays := time.Duration(intPart) * time.Hour * 24

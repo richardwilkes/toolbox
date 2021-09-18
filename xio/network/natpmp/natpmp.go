@@ -13,6 +13,7 @@ package natpmp
 
 import (
 	"encoding/binary"
+	"errors"
 	"net"
 	"sync"
 	"time"
@@ -248,7 +249,8 @@ func call(msg []byte, resultSize int) ([]byte, error) {
 		var n int
 		var remote *net.UDPAddr
 		if n, remote, err = conn.ReadFromUDP(result); err != nil {
-			if err.(net.Error).Timeout() {
+			var nerr net.Error
+			if errors.As(err, &nerr) && nerr.Timeout() {
 				continue
 			}
 			return nil, errs.Wrap(err)

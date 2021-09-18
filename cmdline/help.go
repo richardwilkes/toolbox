@@ -16,8 +16,7 @@ import (
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
-type helpCmd struct {
-}
+type helpCmd struct{}
 
 // Name implements the Cmd interface.
 func (c *helpCmd) Name() string {

@@ -68,7 +68,7 @@ func TestContainsRect(t *testing.T) {
 
 func TestGeneral(t *testing.T) {
 	q := &quadtree.QuadTree{}
-	r := rand.New(rand.NewSource(22)) //nolint:gosec // does not need to be secure
+	r := rand.New(rand.NewSource(22))
 	mine := newNode(22, 22, 22, 22)
 	q.Insert(mine)
 	for i := 0; i < 100*quadtree.DefaultQuadTreeThreshold; i++ {

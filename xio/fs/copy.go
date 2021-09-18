@@ -21,7 +21,7 @@ import (
 
 // Copy src to dst. src may be a directory, file, or symlink.
 func Copy(src, dst string) error {
-	return CopyWithMask(src, dst, 0777) //nolint:gocritic // File modes are octal
+	return CopyWithMask(src, dst, 0o777)
 }
 
 // CopyWithMask src to dst. src may be a directory, file, or symlink.
@@ -44,11 +44,11 @@ func generalCopy(src, dst string, info os.FileInfo, mask os.FileMode) error {
 }
 
 func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
-	if err = os.MkdirAll(filepath.Dir(dst), 0755&mask); err != nil {
+	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return err
 	}
 	var f *os.File
-	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644&mask); err != nil {
+	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644&mask); err != nil {
 		return err
 	}
 	defer func() {

@@ -29,40 +29,38 @@ const (
 	maxUint128PlusOneAsStr = "340282366920938463463374607431768211456"
 )
 
-var (
-	uTable = []*uInfo{
-		{
-			IsUint64:  true,
-			IsUint128: true,
-		},
-		{
-			Uint64:    1,
-			IsUint64:  true,
-			IsUint128: true,
-		},
-		{
-			ValueAsStr: "18446744073712590000",
-			IsUint128:  true,
-		},
-		{
-			Uint64:    math.MaxUint64,
-			IsUint64:  true,
-			IsUint128: true,
-		},
-		{
-			ValueAsStr: maxUint64PlusOneAsStr,
-			IsUint128:  true,
-		},
-		{
-			ValueAsStr: maxUint128AsStr,
-			IsUint128:  true,
-		},
-		{
-			ValueAsStr:              maxUint128PlusOneAsStr,
-			ExpectedConversionAsStr: maxUint128AsStr,
-		},
-	}
-)
+var uTable = []*uInfo{
+	{
+		IsUint64:  true,
+		IsUint128: true,
+	},
+	{
+		Uint64:    1,
+		IsUint64:  true,
+		IsUint128: true,
+	},
+	{
+		ValueAsStr: "18446744073712590000",
+		IsUint128:  true,
+	},
+	{
+		Uint64:    math.MaxUint64,
+		IsUint64:  true,
+		IsUint128: true,
+	},
+	{
+		ValueAsStr: maxUint64PlusOneAsStr,
+		IsUint128:  true,
+	},
+	{
+		ValueAsStr: maxUint128AsStr,
+		IsUint128:  true,
+	},
+	{
+		ValueAsStr:              maxUint128PlusOneAsStr,
+		ExpectedConversionAsStr: maxUint128AsStr,
+	},
+}
 
 type uInfo struct {
 	Uint64                  uint64

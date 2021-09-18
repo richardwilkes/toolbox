@@ -13,13 +13,13 @@ package rate
 type Limiter interface {
 	// New returns a new limiter that is subordinate to this limiter, meaning
 	// that its cap rate is also capped by its parent.
-	New(cap int) Limiter
+	New(capacity int) Limiter
 
 	// Cap returns the capacity per time period.
 	Cap(applyParentCaps bool) int
 
 	// SetCap sets the capacity.
-	SetCap(cap int)
+	SetCap(capacity int)
 
 	// LastUsed returns the capacity used in the last time period.
 	LastUsed() int

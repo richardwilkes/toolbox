@@ -107,7 +107,7 @@ func (d *detail) detail(includeMessage, trimRuntime bool) string {
 	}
 	if d.cause != nil {
 		buffer.WriteString("\n  Caused by: ")
-		if detailed, ok := d.cause.(*Error); ok {
+		if detailed, ok := d.cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 			buffer.WriteString(detailed.Detail(trimRuntime))
 		} else {
 			buffer.WriteString(d.cause.Error())

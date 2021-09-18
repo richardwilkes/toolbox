@@ -16,8 +16,7 @@ import (
 )
 
 // Discarder discards all data given to it.
-type Discarder struct {
-}
+type Discarder struct{}
 
 // Debug logs a debug message. Arguments are handled in the manner of
 // fmt.Print.

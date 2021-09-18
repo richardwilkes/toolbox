@@ -18,8 +18,7 @@ import (
 // Logger wraps the various jot function calls into a struct that can be
 // passed around, typically for the sake of satisfying one or more logging
 // interfaces.
-type Logger struct {
-}
+type Logger struct{}
 
 // SetWriter sets the io.Writer to use when writing log messages. Default is
 // os.Stderr.

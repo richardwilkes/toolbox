@@ -82,8 +82,7 @@ func TestEvaluator(t *testing.T) {
 	assert.Error(t, err)
 }
 
-type resolver struct {
-}
+type resolver struct{}
 
 func (r resolver) ResolveVariable(variableName string) string {
 	switch variableName {

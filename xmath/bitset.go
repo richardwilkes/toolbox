@@ -254,9 +254,8 @@ func (b *BitSet) LastSet() int {
 func (b *BitSet) PreviousSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
-	max := len(b.data) - 1
 	var firstBit int
-	if i > max {
+	if max := len(b.data) - 1; i > max {
 		i = max
 		firstBit = 63
 	} else {
@@ -306,8 +305,7 @@ func (b *BitSet) NextSet(start int) int {
 func (b *BitSet) PreviousClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
-	max := len(b.data) - 1
-	if i > max {
+	if i > len(b.data)-1 {
 		return start
 	}
 	firstBit := bitIndexForMask(wordMask(start))

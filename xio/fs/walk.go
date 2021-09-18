@@ -10,6 +10,7 @@
 package fs
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +28,7 @@ func Walk(fs http.FileSystem, root string, walkFn filepath.WalkFunc) error {
 	} else {
 		err = walk(fs, root, info, walkFn)
 	}
-	if err == filepath.SkipDir {
+	if errors.Is(err, filepath.SkipDir) {
 		return nil
 	}
 	return err
@@ -38,7 +39,8 @@ func stat(fs http.FileSystem, path string) (os.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	info, err := f.Stat()
+	var info os.FileInfo
+	info, err = f.Stat()
 	xio.CloseIgnoringErrors(f)
 	return info, err
 }
@@ -56,13 +58,13 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 		filename := filepath.Join(path, name)
 		var fileInfo os.FileInfo
 		if fileInfo, err = stat(fs, filename); err != nil {
-			if err = walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
+			if err = walkFn(filename, fileInfo, err); err != nil && !errors.Is(err, filepath.SkipDir) {
 				return err
 			}
 		} else {
 			err = walk(fs, filename, fileInfo, walkFn)
 			if err != nil {
-				if !fileInfo.IsDir() || err != filepath.SkipDir {
+				if !fileInfo.IsDir() || !errors.Is(err, filepath.SkipDir) {
 					return err
 				}
 			}
@@ -76,7 +78,8 @@ func readDirNames(fs http.FileSystem, dirname string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	list, err := f.Readdir(-1)
+	var list []os.FileInfo
+	list, err = f.Readdir(-1)
 	xio.CloseIgnoringErrors(f)
 	if err != nil {
 		return nil, err

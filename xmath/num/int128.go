@@ -383,7 +383,7 @@ func (i Int128) Cmp(n Int128) int {
 // Cmp64 returns 1 if i > n, 0 if i == n, and -1 if i < n.
 func (i Int128) Cmp64(n int64) int {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
@@ -415,7 +415,7 @@ func (i Int128) GreaterThan(n Int128) bool {
 // GreaterThan64 returns true if i > n.
 func (i Int128) GreaterThan64(n int64) bool {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
@@ -446,7 +446,7 @@ func (i Int128) GreaterOrEqualTo(n Int128) bool {
 // GreaterOrEqualTo64 returns true if i >= n.
 func (i Int128) GreaterOrEqualTo64(n int64) bool {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
@@ -470,7 +470,7 @@ func (i Int128) Equal(n Int128) bool {
 // Equal64 returns true if i == n.
 func (i Int128) Equal64(n int64) bool {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
@@ -492,7 +492,7 @@ func (i Int128) LessThan(n Int128) bool {
 // LessThan64 returns true if i < n.
 func (i Int128) LessThan64(n int64) bool {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
@@ -523,7 +523,7 @@ func (i Int128) LessOrEqualTo(n Int128) bool {
 // LessOrEqualTo64 returns true if i <= n.
 func (i Int128) LessOrEqualTo64(n int64) bool {
 	var nhi uint64
-	var nlo = uint64(n)
+	nlo := uint64(n)
 	if n < 0 {
 		nhi = math.MaxUint64
 	}

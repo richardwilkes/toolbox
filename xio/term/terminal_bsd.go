@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// +build darwin freebsd openbsd netbsd dragonfly
+//go:build darwin || freebsd || openbsd || netbsd || dragonfly
 
 package term
 

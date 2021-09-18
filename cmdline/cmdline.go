@@ -240,8 +240,8 @@ func (cl *CmdLine) availableOptions() (available map[string]*Option) {
 }
 
 func (cl *CmdLine) loadArgsFromFile(path string) (args []string, err error) {
-	file, err := os.Open(path)
-	if err != nil {
+	var file *os.File
+	if file, err = os.Open(path); err != nil {
 		return nil, errs.NewWithCause(fmt.Sprintf(i18n.Text("Unable to open: %s"), path), err)
 	}
 	defer func() {

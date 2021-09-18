@@ -249,7 +249,6 @@ func TestIntersect(t *testing.T) {
 		{X: 10, Y: 5},
 		{X: 5, Y: 10},
 	}}))
-
 }
 
 func TestSubtract(t *testing.T) {

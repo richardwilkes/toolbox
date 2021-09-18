@@ -10,6 +10,7 @@
 package xio
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -20,10 +21,15 @@ import (
 
 // RetrieveData loads the bytes from the given file path or URL of type file, http, or https.
 func RetrieveData(filePathOrURL string) ([]byte, error) {
+	return RetrieveDataWithContext(context.Background(), filePathOrURL)
+}
+
+// RetrieveDataWithContext loads the bytes from the given file path or URL of type file, http, or https.
+func RetrieveDataWithContext(ctx context.Context, filePathOrURL string) ([]byte, error) {
 	if strings.HasPrefix(filePathOrURL, "http://") ||
 		strings.HasPrefix(filePathOrURL, "https://") ||
 		strings.HasPrefix(filePathOrURL, "file://") {
-		return RetrieveDataFromURL(filePathOrURL)
+		return RetrieveDataFromURLWithContext(ctx, filePathOrURL)
 	}
 	data, err := ioutil.ReadFile(filePathOrURL)
 	if err != nil {
@@ -34,6 +40,11 @@ func RetrieveData(filePathOrURL string) ([]byte, error) {
 
 // RetrieveDataFromURL loads the bytes from the given URL of type file, http, or https.
 func RetrieveDataFromURL(urlStr string) ([]byte, error) {
+	return RetrieveDataFromURLWithContext(context.Background(), urlStr)
+}
+
+// RetrieveDataFromURLWithContext loads the bytes from the given URL of type file, http, or https.
+func RetrieveDataFromURLWithContext(ctx context.Context, urlStr string) ([]byte, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, errs.NewWithCause(urlStr, err)
@@ -46,11 +57,16 @@ func RetrieveDataFromURL(urlStr string) ([]byte, error) {
 		}
 		return data, nil
 	case "http", "https":
+		var req *http.Request
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
+		if err != nil {
+			return nil, errs.NewWithCause("unable to create request", err)
+		}
 		var rsp *http.Response
-		if rsp, err = http.Get(urlStr); err != nil {
+		if rsp, err = http.DefaultClient.Do(req); err != nil {
 			return nil, errs.NewWithCause(urlStr, err)
 		}
-		defer CloseIgnoringErrors(rsp.Body)
+		defer DiscardAndCloseIgnoringErrors(rsp.Body)
 		if rsp.StatusCode < 200 || rsp.StatusCode > 299 {
 			return nil, errs.NewWithCause(urlStr, errs.Newf("received status %d (%s)", rsp.StatusCode, rsp.Status))
 		}
