@@ -13,6 +13,10 @@ package geom
 import (
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
+
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Rect defines a rectangle.
@@ -151,11 +155,6 @@ func (r Rect) ContainsRect(in Rect) bool {
 	return r.X <= in.X && r.Y <= in.Y && in.X < right && in.Y < bottom && r.X <= inRight && r.Y <= inBottom && inRight < right && inBottom < bottom
 }
 
-// String implements the fmt.Stringer interface.
-func (r Rect) String() string {
-	return fmt.Sprintf("%v, %v", r.Point, r.Size)
-}
-
 // Intersect this Rect with another Rect, storing the result into this Rect.
 // Returns itself for easy chaining.
 func (r *Rect) Intersect(other Rect) *Rect {
@@ -281,4 +280,45 @@ func (r *Rect) AddPoint(pt Point) *Rect {
 // Bounds merely returns this rectangle.
 func (r Rect) Bounds() Rect {
 	return r
+}
+
+// String implements the fmt.Stringer interface.
+func (r Rect) String() string {
+	return fmt.Sprintf("%f,%f,%f,%f", r.X, r.Y, r.Width, r.Height)
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (r Rect) MarshalText() (text []byte, err error) {
+	return []byte(r.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (r *Rect) UnmarshalText(text []byte) error {
+	txt := string(text)
+	parts := strings.SplitN(strings.TrimSpace(txt), ",", 4)
+	if len(parts) != 4 {
+		return errs.Newf("unable to parse '%s'", txt)
+	}
+	var err error
+	if r.X, err = parseFloat(parts[0]); err != nil {
+		return err
+	}
+	if r.Y, err = parseFloat(parts[1]); err != nil {
+		return err
+	}
+	if r.Width, err = parseFloat(parts[2]); err != nil {
+		return err
+	}
+	if r.Height, err = parseFloat(parts[3]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func parseFloat(txt string) (float64, error) {
+	v, err := strconv.ParseFloat(txt, 64)
+	if err != nil {
+		return 0, errs.Wrap(err)
+	}
+	return v, nil
 }

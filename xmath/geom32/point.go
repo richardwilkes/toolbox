@@ -11,7 +11,9 @@ package geom32
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
@@ -32,11 +34,6 @@ func NewPoint(x, y float32) Point {
 func NewPointPtr(x, y float32) *Point {
 	p := NewPoint(x, y)
 	return &p
-}
-
-// String implements the fmt.Stringer interface.
-func (p Point) String() string {
-	return fmt.Sprintf("%v, %v", p.X, p.Y)
 }
 
 // Align modifies this Point to align with integer coordinates. Returns itself
@@ -68,4 +65,31 @@ func (p *Point) Negate() *Point {
 	p.X = -p.X
 	p.Y = -p.Y
 	return p
+}
+
+// String implements the fmt.Stringer interface.
+func (p Point) String() string {
+	return fmt.Sprintf("%f,%f", p.X, p.Y)
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (p Point) MarshalText() (text []byte, err error) {
+	return []byte(p.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (p *Point) UnmarshalText(text []byte) error {
+	txt := string(text)
+	parts := strings.SplitN(strings.TrimSpace(txt), ",", 2)
+	if len(parts) != 2 {
+		return errs.Newf("unable to parse '%s'", txt)
+	}
+	var err error
+	if p.X, err = parseFloat(parts[0]); err != nil {
+		return err
+	}
+	if p.Y, err = parseFloat(parts[1]); err != nil {
+		return err
+	}
+	return nil
 }

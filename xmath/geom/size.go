@@ -12,6 +12,9 @@ package geom
 import (
 	"fmt"
 	"math"
+	"strings"
+
+	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Size defines a width and height.
@@ -31,11 +34,6 @@ func NewSize(width, height float64) Size {
 func NewSizePtr(x, y float64) *Size {
 	s := NewSize(x, y)
 	return &s
-}
-
-// String implements the fmt.Stringer interface.
-func (s Size) String() string {
-	return fmt.Sprintf("%v, %v", s.Width, s.Height)
 }
 
 // Add modifies this Size by adding the supplied Size. Returns itself for easy
@@ -113,4 +111,31 @@ func (s *Size) Max(other Size) *Size {
 		s.Height = other.Height
 	}
 	return s
+}
+
+// String implements the fmt.Stringer interface.
+func (s Size) String() string {
+	return fmt.Sprintf("%f,%f", s.Width, s.Height)
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (s Size) MarshalText() (text []byte, err error) {
+	return []byte(s.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (s *Size) UnmarshalText(text []byte) error {
+	txt := string(text)
+	parts := strings.SplitN(strings.TrimSpace(txt), ",", 2)
+	if len(parts) != 2 {
+		return errs.Newf("unable to parse '%s'", txt)
+	}
+	var err error
+	if s.Width, err = parseFloat(parts[0]); err != nil {
+		return err
+	}
+	if s.Height, err = parseFloat(parts[1]); err != nil {
+		return err
+	}
+	return nil
 }

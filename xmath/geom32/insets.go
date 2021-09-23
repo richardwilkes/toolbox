@@ -9,7 +9,12 @@
 
 package geom32
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/richardwilkes/toolbox/errs"
+)
 
 // Insets defines margins on each side of a rectangle.
 type Insets struct {
@@ -36,11 +41,6 @@ func NewVerticalInsets(amount float32) Insets {
 	return Insets{Top: amount, Bottom: amount}
 }
 
-// String implements the fmt.Stringer interface.
-func (i Insets) String() string {
-	return fmt.Sprintf("%v, %v, %v, %v", i.Top, i.Left, i.Bottom, i.Right)
-}
-
 // Add modifies this Insets by adding the supplied Insets. Returns itself for
 // easy chaining.
 func (i *Insets) Add(insets Insets) *Insets {
@@ -59,4 +59,37 @@ func (i *Insets) Subtract(insets Insets) *Insets {
 	i.Bottom -= insets.Bottom
 	i.Right -= insets.Right
 	return i
+}
+
+// String implements the fmt.Stringer interface.
+func (i Insets) String() string {
+	return fmt.Sprintf("%f,%f,%f,%f", i.Top, i.Left, i.Bottom, i.Right)
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (i Insets) MarshalText() (text []byte, err error) {
+	return []byte(i.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (i *Insets) UnmarshalText(text []byte) error {
+	txt := string(text)
+	parts := strings.SplitN(strings.TrimSpace(txt), ",", 4)
+	if len(parts) != 4 {
+		return errs.Newf("unable to parse '%s'", txt)
+	}
+	var err error
+	if i.Top, err = parseFloat(parts[0]); err != nil {
+		return err
+	}
+	if i.Left, err = parseFloat(parts[1]); err != nil {
+		return err
+	}
+	if i.Bottom, err = parseFloat(parts[2]); err != nil {
+		return err
+	}
+	if i.Right, err = parseFloat(parts[3]); err != nil {
+		return err
+	}
+	return nil
 }
