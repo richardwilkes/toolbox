@@ -14,7 +14,7 @@ do
     --test|-t) TEST=1 ;;
     --help|-h)
       echo "$0 [options]"
-      echo "  -a, --all  Equivalent to --lint --race"
+      echo "  -a, --all  Equivalent to --lint --test --race"
       echo "  -l, --lint Run the linters"
       echo "  -r, --race Run the tests with race-checking enabled"
       echo "  -t, --test Run the tests"
