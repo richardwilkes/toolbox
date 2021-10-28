@@ -20,31 +20,42 @@ import (
 	"github.com/richardwilkes/toolbox/cmdline"
 )
 
+// HomeDir returns the home directory. If this cannot be determined for some reason, "." will be returned instead.
+func HomeDir() string {
+	if u, err := user.Current(); err == nil {
+		return u.HomeDir
+	}
+	if dir, err := os.UserHomeDir(); err == nil {
+		return dir
+	}
+	return "."
+}
+
 // AppLogDir returns the application log directory.
 func AppLogDir() string {
-	var path string
-	if u, err := user.Current(); err == nil {
-		path = u.HomeDir
+	path := HomeDir()
+	if path != "." {
 		switch runtime.GOOS {
 		case toolbox.MacOS:
 			path = filepath.Join(path, "Library", "Logs")
 		case toolbox.WindowsOS:
-			path = filepath.Join(path, "AppData")
+			path = filepath.Join(path, "AppData", "Logs")
 		default:
 			path = filepath.Join(path, ".logs")
 		}
-		if cmdline.AppIdentifier != "" {
-			path = filepath.Join(path, cmdline.AppIdentifier)
-		}
+	} else {
+		path = filepath.Join(path, "logs")
+	}
+	if cmdline.AppIdentifier != "" {
+		path = filepath.Join(path, cmdline.AppIdentifier)
 	}
 	return path
 }
 
 // AppDataDir returns the application data directory.
 func AppDataDir() string {
-	var path string
-	if u, err := user.Current(); err == nil {
-		path = u.HomeDir
+	path := HomeDir()
+	if path != "." {
 		switch runtime.GOOS {
 		case toolbox.MacOS:
 			path = filepath.Join(path, "Library", "Application Support")
@@ -53,34 +64,29 @@ func AppDataDir() string {
 		default:
 			path = filepath.Join(path, ".appdata")
 		}
-		if cmdline.AppIdentifier != "" {
-			path = filepath.Join(path, cmdline.AppIdentifier)
-		}
+	} else {
+		path = filepath.Join(path, "app_data")
+	}
+	if cmdline.AppIdentifier != "" {
+		path = filepath.Join(path, cmdline.AppIdentifier)
 	}
 	return path
 }
 
 // FontDirs returns the standard font directories, in order of priority.
 func FontDirs() []string {
-	var paths []string
 	switch runtime.GOOS {
 	case toolbox.MacOS:
-		if u, err := user.Current(); err == nil {
-			paths = append(paths, filepath.Join(u.HomeDir, "Library", "Fonts"))
-		}
-		paths = append(paths, "/Library/Fonts", "/System/Library/Fonts")
+		return []string{filepath.Join(HomeDir(), "Library", "Fonts"), "/Library/Fonts", "/System/Library/Fonts"}
 	case toolbox.WindowsOS:
 		windir := os.Getenv("WINDIR")
 		if windir == "" {
 			windir = "C:\\Windows"
 		}
-		paths = append(paths, filepath.Join(windir, "Fonts"))
+		return []string{filepath.Join(windir, "Fonts")}
 	case toolbox.LinuxOS:
-		if u, err := user.Current(); err == nil {
-			paths = append(paths, filepath.Join(u.HomeDir, ".fonts"))
-		}
-		paths = append(paths, "/usr/local/share/fonts", "/usr/share/fonts")
+		return []string{filepath.Join(HomeDir(), ".fonts"), "/usr/local/share/fonts", "/usr/share/fonts"}
 	default:
+		return nil
 	}
-	return paths
 }
