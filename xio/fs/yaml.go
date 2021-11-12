@@ -26,23 +26,26 @@ import (
 func LoadYAML(path string, data interface{}) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return errs.Wrap(err)
+		return errs.NewWithCause(path, err)
 	}
-	return loadYAML(f, data)
+	return loadYAML(f, path, data)
 }
 
 // LoadYAMLFromFS data from the specified filesystem path.
 func LoadYAMLFromFS(fsys fs.FS, path string, data interface{}) error {
 	f, err := fsys.Open(path)
 	if err != nil {
-		return errs.Wrap(err)
+		return errs.NewWithCause(path, err)
 	}
-	return loadYAML(f, data)
+	return loadYAML(f, path, data)
 }
 
-func loadYAML(r io.ReadCloser, data interface{}) error {
+func loadYAML(r io.ReadCloser, path string, data interface{}) error {
 	defer xio.CloseIgnoringErrors(r)
-	return errs.Wrap(yaml.NewDecoder(bufio.NewReader(r)).Decode(data))
+	if err := yaml.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
+		return errs.NewWithCause(path, err)
+	}
+	return nil
 }
 
 // SaveYAML data to the specified path.
@@ -52,12 +55,15 @@ func SaveYAML(path string, data interface{}) error {
 
 // SaveYAMLWithMode data to the specified path.
 func SaveYAMLWithMode(path string, data interface{}, mode os.FileMode) error {
-	return safe.WriteFileWithMode(path, func(w io.Writer) error {
+	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)
 		encoder.SetIndent(2)
 		if err := encoder.Encode(data); err != nil {
 			return errs.Wrap(err)
 		}
 		return errs.Wrap(encoder.Close())
-	}, mode)
+	}, mode); err != nil {
+		return errs.NewWithCause(path, err)
+	}
+	return nil
 }

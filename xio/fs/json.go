@@ -25,23 +25,26 @@ import (
 func LoadJSON(path string, data interface{}) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return errs.Wrap(err)
+		return errs.NewWithCause(path, err)
 	}
-	return loadJSON(f, data)
+	return loadJSON(f, path, data)
 }
 
 // LoadJSONFromFS data from the specified filesystem path.
 func LoadJSONFromFS(fsys fs.FS, path string, data interface{}) error {
 	f, err := fsys.Open(path)
 	if err != nil {
-		return errs.Wrap(err)
+		return errs.NewWithCause(path, err)
 	}
-	return loadJSON(f, data)
+	return loadJSON(f, path, data)
 }
 
-func loadJSON(r io.ReadCloser, data interface{}) error {
+func loadJSON(r io.ReadCloser, path string, data interface{}) error {
 	defer xio.CloseIgnoringErrors(r)
-	return errs.Wrap(json.NewDecoder(bufio.NewReader(r)).Decode(data))
+	if err := json.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
+		return errs.NewWithCause(path, err)
+	}
+	return nil
 }
 
 // SaveJSON data to the specified path.
@@ -51,11 +54,14 @@ func SaveJSON(path string, data interface{}, format bool) error {
 
 // SaveJSONWithMode data to the specified path.
 func SaveJSONWithMode(path string, data interface{}, format bool, mode os.FileMode) error {
-	return safe.WriteFileWithMode(path, func(w io.Writer) error {
+	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)
 		if format {
 			encoder.SetIndent("", "  ")
 		}
 		return errs.Wrap(encoder.Encode(data))
-	}, mode)
+	}, mode); err != nil {
+		return errs.NewWithCause(path, err)
+	}
+	return nil
 }
