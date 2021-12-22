@@ -16,9 +16,8 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// ContextSleep sleeps for the specified time, or until the context is done.
-// You can check the return error to see if the context deadline was
-// exceeded by using errors.Is(err, context.DeadlineExceeded).
+// ContextSleep sleeps for the specified time, or until the context is done. You can check the return error to see if
+// the context deadline was exceeded by using errors.Is(err, context.DeadlineExceeded).
 func ContextSleep(ctx context.Context, waitTime time.Duration) error {
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()

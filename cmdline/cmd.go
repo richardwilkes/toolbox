@@ -16,16 +16,13 @@ import (
 
 // Cmd represents a sub-command available on the command-line.
 type Cmd interface {
-	// Name should return the name of the command as it needs to be entered on
-	// the command line.
+	// Name should return the name of the command as it needs to be entered on the command line.
 	Name() string
 	// Usage should return a description of what the command does.
 	Usage() string
-	// Run will be called to run the command. It will be passed a fresh
-	// command line created from the command line that was parsed to determine
-	// this command would be run, along with the arguments that have not yet
-	// been consumed. The first argument, much like an application called from
-	// main, will be the name of the command.
+	// Run will be called to run the command. It will be passed a fresh command line created from the command line that
+	// was parsed to determine this command would be run, along with the arguments that have not yet been consumed. The
+	// first argument, much like an application called from main, will be the name of the command.
 	Run(cmdLine *CmdLine, args []string) error
 }
 
@@ -46,8 +43,7 @@ func (cl *CmdLine) AddCommand(cmd Cmd) {
 	cl.cmds[cmd.Name()] = cmd
 }
 
-// RunCommand attempts to run a command. Pass in the command line arguments,
-// usually the result from calling Parse().
+// RunCommand attempts to run a command. Pass in the command line arguments, usually the result from calling Parse().
 func (cl *CmdLine) RunCommand(args []string) error {
 	if len(args) < 1 {
 		return errs.New(i18n.Text("Must specify a command name"))

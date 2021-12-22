@@ -67,8 +67,7 @@ func (p *polygonNode) generate() Polygon {
 	contourCount := 0
 	ptCounts := make([]int, 0, 32)
 
-	// Count the points of each contour and disable any that don't have
-	// enough points.
+	// Count the points of each contour and disable any that don't have enough points.
 	for poly := p; poly != nil; poly = poly.next {
 		if poly.active {
 			var prev *vertexNode

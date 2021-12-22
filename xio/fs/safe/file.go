@@ -20,11 +20,10 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// File provides safe, atomic saving of files. Instead of truncating and
-// overwriting the destination file, it creates a temporary file in the same
-// directory, writes to it, and then renames the temporary file to the
-// original name when Commit() is called. If Close() is called without calling
-// Commit(), or the Commit() fails, then the original file is left untouched.
+// File provides safe, atomic saving of files. Instead of truncating and overwriting the destination file, it creates a
+// temporary file in the same directory, writes to it, and then renames the temporary file to the original name when
+// Commit() is called. If Close() is called without calling Commit(), or the Commit() fails, then the original file is
+// left untouched.
 type File struct {
 	*os.File
 	originalName string
@@ -32,14 +31,14 @@ type File struct {
 	closed       bool
 }
 
-// Create creates a temporary file in the same directory as filename,
-// which will be renamed to the given filename when calling Commit.
+// Create creates a temporary file in the same directory as filename, which will be renamed to the given filename when
+// calling Commit.
 func Create(filename string) (*File, error) {
 	return CreateWithMode(filename, 0o644)
 }
 
-// CreateWithMode creates a temporary file in the same directory as filename,
-// which will be renamed to the given filename when calling Commit.
+// CreateWithMode creates a temporary file in the same directory as filename, which will be renamed to the given
+// filename when calling Commit.
 func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	filename = filepath.Clean(filename)
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
@@ -67,8 +66,8 @@ func (f *File) OriginalName() string {
 	return f.originalName
 }
 
-// Commit the data into the original file and remove the temporary file from
-// disk. Close() may still be called, but will do nothing.
+// Commit the data into the original file and remove the temporary file from disk. Close() may still be called, but will
+// do nothing.
 func (f *File) Commit() error {
 	if f.committed {
 		return nil
@@ -92,8 +91,8 @@ func (f *File) Commit() error {
 	return err
 }
 
-// Close the temporary file and remove it, if it hasn't already been
-// committed. If it has been committed, nothing happens.
+// Close the temporary file and remove it, if it hasn't already been committed. If it has been committed, nothing
+// happens.
 func (f *File) Close() error {
 	if f.committed {
 		return nil

@@ -55,8 +55,7 @@ func PrimaryIPAddress() string {
 	return "127.0.0.1"
 }
 
-// PrimaryAddress returns the primary hostname and its associated IP address
-// and MAC address.
+// PrimaryAddress returns the primary hostname and its associated IP address and MAC address.
 func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 	// Try up to 3 times in case of transient errors
 	for i := 0; i < 3; i++ {
@@ -88,9 +87,8 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 	return "localhost", "127.0.0.1", "00:00:00:00:00:00"
 }
 
-// ActiveAddresses determines the best address for each active network
-// interface. IPv4 addresses will be selected over IPv6 addresses on the same
-// interface. Numeric addresses are resolved into names where possible.
+// ActiveAddresses determines the best address for each active network interface. IPv4 addresses will be selected over
+// IPv6 addresses on the same interface. Numeric addresses are resolved into names where possible.
 func ActiveAddresses() map[string]net.Interface {
 	result := make(map[string]net.Interface)
 	if iFaces, err := net.Interfaces(); err == nil {
@@ -106,11 +104,9 @@ func ActiveAddresses() map[string]net.Interface {
 	return result
 }
 
-// Address returns the best address for the network interface. IPv4 addresses
-// will be selected over IPv6 addresses on the same interface. Numeric
-// addresses are resolved into names where possible. An empty string will be
-// returned if the network interface cannot be resolved into an IPv4 or IPv6
-// address.
+// Address returns the best address for the network interface. IPv4 addresses will be selected over IPv6 addresses on
+// the same interface. Numeric addresses are resolved into names where possible. An empty string will be returned if the
+// network interface cannot be resolved into an IPv4 or IPv6 address.
 func Address(iFace net.Interface) string {
 	if addrs, err := iFace.Addrs(); err == nil {
 		var fallback string
@@ -154,11 +150,9 @@ func Address(iFace net.Interface) string {
 	return ""
 }
 
-// AddressesForHost returns the addresses/names for the given host. If an IP
-// number is passed in, then it will be returned. If a host name is passed in,
-// the host name plus the IP address(es) it resolves to will be returned. If
-// the empty string is passed in, then the host names and IP addresses for all
-// active interfaces will be returned.
+// AddressesForHost returns the addresses/names for the given host. If an IP number is passed in, then it will be
+// returned. If a host name is passed in, the host name plus the IP address(es) it resolves to will be returned. If the
+// empty string is passed in, then the host names and IP addresses for all active interfaces will be returned.
 func AddressesForHost(host string) []string {
 	ss := collection.NewStringSet()
 	if host == "" { // All address on machine

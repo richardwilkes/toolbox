@@ -18,11 +18,9 @@ import (
 
 const float32Epsilon = float32(2.2204460492503131e-16)
 
-// Epsilon controls how close a point has to be to be considered the same as
-// another. If performance becomes an issue, you can increase this value,
-// which will cause more points to merge together, reducing the amount of work
-// that must be done. Don't raise it too high, though, as it can distort the
-// resulting polygon.
+// Epsilon controls how close a point has to be to be considered the same as another. If performance becomes an issue,
+// you can increase this value, which will cause more points to merge together, reducing the amount of work that must be
+// done. Don't raise it too high, though, as it can distort the resulting polygon.
 var Epsilon = float32Epsilon
 
 type horizontalEdgeStates int

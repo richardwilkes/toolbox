@@ -155,9 +155,8 @@ func collectGenFiles() []string {
 
 func writeGoTemplate(tmpls *template.Template, tmpl, outputPath string, tmplArg interface{}) error {
 	var buffer bytes.Buffer
-	// I intentionally do not include the standard "Code generated ... DO NOT EDIT"
-	// comment at the top of the file because I want linting to run on the
-	// file. Instead, this comment is inserted, which is similar, but doesn't
+	// I intentionally do not include the standard "Code generated ... DO NOT EDIT" comment at the top of the file
+	// because I want linting to run on the file. Instead, this comment is inserted, which is similar, but doesn't
 	// trigger the linter to ignore the file.
 	fmt.Fprintf(&buffer, "// Code created from %q - don't edit by hand\n//\n", tmpl)
 	if err := tmpls.ExecuteTemplate(&buffer, tmpl, tmplArg); err != nil {

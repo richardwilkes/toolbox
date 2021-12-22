@@ -37,8 +37,7 @@ const (
 // Color represents an ANSI terminal color
 type Color int
 
-// Style represents an ANSI terminal style. Multiple styles may be or'd
-// together.
+// Style represents an ANSI terminal style. Multiple styles may be or'd together.
 type Style int
 
 // ANSI provides support for ANSI terminal escape sequences.
@@ -64,34 +63,32 @@ func (a *ANSI) Reset() {
 	}
 }
 
-// Up moves the cursor up 'count' rows. If this would put it beyond the top
-// edge of the screen, it will instead go to the top edge of the screen.
+// Up moves the cursor up 'count' rows. If this would put it beyond the top edge of the screen, it will instead go to
+// the top edge of the screen.
 func (a *ANSI) Up(count int) {
 	if a.ok {
 		fmt.Fprintf(a, "\033[%dA", count)
 	}
 }
 
-// Down moves the cursor down 'count' rows. If this would put it beyond the
-// bottom edge of the screen, it will instead go to the bottom edge of the
-// screen.
+// Down moves the cursor down 'count' rows. If this would put it beyond the bottom edge of the screen, it will instead
+// go to the bottom edge of the screen.
 func (a *ANSI) Down(count int) {
 	if a.ok {
 		fmt.Fprintf(a, "\033[%dB", count)
 	}
 }
 
-// Left moves the cursor left 'count' columns. If this would put it beyond the
-// left edge of the screen, it will instead go to the left edge of the screen.
+// Left moves the cursor left 'count' columns. If this would put it beyond the left edge of the screen, it will instead
+// go to the left edge of the screen.
 func (a *ANSI) Left(count int) {
 	if a.ok {
 		fmt.Fprintf(a, "\033[%dD", count)
 	}
 }
 
-// Right moves the cursor right 'count' columns. If this would put it beyond
-// the right edge of the screen, it will instead go to the right edge of the
-// screen.
+// Right moves the cursor right 'count' columns. If this would put it beyond the right edge of the screen, it will
+// instead go to the right edge of the screen.
 func (a *ANSI) Right(count int) {
 	if a.ok {
 		fmt.Fprintf(a, "\033[%dC", count)
@@ -112,8 +109,7 @@ func (a *ANSI) Clear() {
 	}
 }
 
-// ClearToStart clears the screen from the cursor to the beginning of the
-// screen.
+// ClearToStart clears the screen from the cursor to the beginning of the screen.
 func (a *ANSI) ClearToStart() {
 	if a.ok {
 		fmt.Fprint(a, "\033[1J")
@@ -134,16 +130,14 @@ func (a *ANSI) EraseLine() {
 	}
 }
 
-// EraseLineToStart clears from the cursor position to the start of the
-// current row.
+// EraseLineToStart clears from the cursor position to the start of the current row.
 func (a *ANSI) EraseLineToStart() {
 	if a.ok {
 		fmt.Fprint(a, "\033[1K")
 	}
 }
 
-// EraseLineToEnd clears from the cursor position to the end of the current
-// row.
+// EraseLineToEnd clears from the cursor position to the end of the current row.
 func (a *ANSI) EraseLineToEnd() {
 	if a.ok {
 		fmt.Fprint(a, "\033[K")

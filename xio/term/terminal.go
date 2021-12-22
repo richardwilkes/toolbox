@@ -21,8 +21,7 @@ const (
 	defRows    = 24
 )
 
-// WrapText prints the 'prefix' to 'out' and then wraps 'text' in the
-// remaining space.
+// WrapText prints the 'prefix' to 'out' and then wraps 'text' in the remaining space.
 func WrapText(out io.Writer, prefix, text string) {
 	fmt.Fprint(out, prefix)
 	avail, _ := Size()

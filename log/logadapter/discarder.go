@@ -18,54 +18,44 @@ import (
 // Discarder discards all data given to it.
 type Discarder struct{}
 
-// Debug logs a debug message. Arguments are handled in the manner of
-// fmt.Print.
+// Debug logs a debug message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Debug(v ...interface{}) {
 }
 
-// Debugf logs a debug message. Arguments are handled in the manner of
-// fmt.Printf.
+// Debugf logs a debug message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Debugf(format string, v ...interface{}) {
 }
 
-// Info logs an informational message. Arguments are handled in the manner of
-// fmt.Print.
+// Info logs an informational message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Info(v ...interface{}) {
 }
 
-// Infof logs an informational message. Arguments are handled in the manner of
-// fmt.Printf.
+// Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Infof(format string, v ...interface{}) {
 }
 
-// Warn logs a warning message. Arguments are handled in the manner of
-// fmt.Print.
+// Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Warn(v ...interface{}) {
 }
 
-// Warnf logs a warning message. Arguments are handled in the manner of
-// fmt.Printf.
+// Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Warnf(format string, v ...interface{}) {
 }
 
-// Error logs an error message. Arguments are handled in the manner of
-// fmt.Print.
+// Error logs an error message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Error(v ...interface{}) {
 }
 
-// Errorf logs an error message. Arguments are handled in the manner of
-// fmt.Printf.
+// Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Errorf(format string, v ...interface{}) {
 }
 
-// Fatal logs a fatal error message. Arguments are handled in the manner of
-// fmt.Print.
+// Fatal logs a fatal error message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Fatal(status int, v ...interface{}) {
 	atexit.Exit(status)
 }
 
-// Fatalf logs a fatal error message. Arguments are handled in the manner of
-// fmt.Printf.
+// Fatalf logs a fatal error message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Fatalf(status int, format string, v ...interface{}) {
 	atexit.Exit(status)
 }
@@ -86,14 +76,12 @@ func (d *discarderTiming) EndWithMsgf(format string, v ...interface{}) time.Dura
 	return time.Since(d.started)
 }
 
-// Time starts timing an event and logs an informational message.
-// Arguments are handled in the manner of fmt.Print.
+// Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
 func (d *Discarder) Time(v ...interface{}) Timing {
 	return &discarderTiming{started: time.Now()}
 }
 
-// Timef starts timing an event and logs an informational message.
-// Arguments are handled in the manner of fmt.Printf.
+// Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func (d *Discarder) Timef(format string, v ...interface{}) Timing {
 	return &discarderTiming{started: time.Now()}
 }

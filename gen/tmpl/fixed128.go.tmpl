@@ -31,7 +31,7 @@ var (
 	multiplierF128d{{.}} = num.Int128FromBigInt(multiplierF128d{{.}}BigInt)
 )
 
-{{wrap_comment (printf "F128d%[1]d holds a fixed-point value that contains up to %[1]d decimal places. Values are truncated, not rounded. Values can be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be used." .) 78}}
+{{wrap_comment (printf "F128d%[1]d holds a fixed-point value that contains up to %[1]d decimal places. Values are truncated, not rounded. Values can be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be used." .) 120}}
 type F128d{{.}} struct {
 	data num.Int128
 }

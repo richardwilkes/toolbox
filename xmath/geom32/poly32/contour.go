@@ -16,8 +16,7 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
-// Contour is a sequence of vertices connected by line segments, forming a
-// closed shape.
+// Contour is a sequence of vertices connected by line segments, forming a closed shape.
 type Contour []geom32.Point
 
 // Clone returns a copy of this contour.

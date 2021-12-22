@@ -24,14 +24,14 @@ const (
 	DefaultMaxBackups = 1
 )
 
-// DefaultPath returns the default path that will be used. This will use
-// cmdline.AppIdentifier (if set) to better isolate the log location.
+// DefaultPath returns the default path that will be used. This will use cmdline.AppIdentifier (if set) to better
+// isolate the log location.
 func DefaultPath() string {
 	return filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+".log")
 }
 
-// Path specifies the file to write logs to. Backup log files will be retained
-// in the same directory. Defaults to the value of DefaultPath().
+// Path specifies the file to write logs to. Backup log files will be retained in the same directory. Defaults to the
+// value of DefaultPath().
 func Path(path string) func(*Rotator) error {
 	return func(r *Rotator) error {
 		if path == "" {
@@ -42,8 +42,7 @@ func Path(path string) func(*Rotator) error {
 	}
 }
 
-// MaxSize sets the maximum size of the log file before it gets rotated.
-// Defaults to DefaultMaxSize.
+// MaxSize sets the maximum size of the log file before it gets rotated. Defaults to DefaultMaxSize.
 func MaxSize(maxSize int64) func(*Rotator) error {
 	return func(r *Rotator) error {
 		r.maxSize = maxSize
@@ -51,8 +50,7 @@ func MaxSize(maxSize int64) func(*Rotator) error {
 	}
 }
 
-// MaxBackups sets the maximum number of old log files to retain.  Defaults
-// to DefaultMaxBackups.
+// MaxBackups sets the maximum number of old log files to retain. Defaults to DefaultMaxBackups.
 func MaxBackups(maxBackups int) func(*Rotator) error {
 	return func(r *Rotator) error {
 		r.maxBackups = maxBackups

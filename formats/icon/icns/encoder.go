@@ -21,8 +21,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// See https://en.wikipedia.org/wiki/Apple_Icon_Image_format for information
-// on the .icns file format.
+// See https://en.wikipedia.org/wiki/Apple_Icon_Image_format for information on the .icns file format.
 
 type header struct {
 	Magic  [4]uint8
@@ -39,10 +38,8 @@ type iconInfo struct {
 	buffer   []byte
 }
 
-// Encode one or more images into an .icns. At least one image must be
-// provided. macOS recommends providing 1024x1024, 512x512, 256x256, 128x128,
-// 64x64, 32x32, and 16x16. Note that sizes other than these will not be
-// considered valid.
+// Encode one or more images into an .icns. At least one image must be provided. macOS recommends providing 1024x1024,
+// 512x512, 256x256, 128x128, 64x64, 32x32, and 16x16. Note that sizes other than these will not be considered valid.
 func Encode(w io.Writer, images ...image.Image) error {
 	if len(images) == 0 {
 		return errs.New("must supply at least 1 image")

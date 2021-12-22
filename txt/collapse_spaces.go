@@ -11,8 +11,7 @@ package txt
 
 import "strings"
 
-// CollapseSpaces removes leading and trailing spaces and reduces any runs of
-// two or more spaces to a single space.
+// CollapseSpaces removes leading and trailing spaces and reduces any runs of two or more spaces to a single space.
 func CollapseSpaces(in string) string {
 	var buffer strings.Builder
 	lastWasSpace := false

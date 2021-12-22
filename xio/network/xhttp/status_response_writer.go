@@ -11,8 +11,8 @@ package xhttp
 
 import "net/http"
 
-// StatusResponseWriter wraps an http.ResponseWriter and provides methods to
-// retrieve the status code and number of bytes written.
+// StatusResponseWriter wraps an http.ResponseWriter and provides methods to retrieve the status code and number of
+// bytes written.
 type StatusResponseWriter struct {
 	Original http.ResponseWriter
 	Head     bool
@@ -20,8 +20,7 @@ type StatusResponseWriter struct {
 	written  int
 }
 
-// Status returns the status that was set, or http.StatusOK if no call to
-// WriteHeader() was made.
+// Status returns the status that was set, or http.StatusOK if no call to WriteHeader() was made.
 func (w *StatusResponseWriter) Status() int {
 	if w.status != 0 {
 		return w.status

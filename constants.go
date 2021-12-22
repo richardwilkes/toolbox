@@ -7,8 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package toolbox is the top level package for a collection of utility
-// packages.
+// Package toolbox is the top level package for a collection of utility packages.
 package toolbox
 
 // Constants for comparison to runtime.GOOS

@@ -21,35 +21,27 @@ import (
 )
 
 var (
-	// AppCmdName holds the application's name as specified on the command
-	// line.
+	// AppCmdName holds the application's name as specified on the command line.
 	AppCmdName string
-	// AppName holds the name of the application. By default, this is the same
-	// as AppCmdName.
+	// AppName holds the name of the application. By default, this is the same as AppCmdName.
 	AppName string
 	// CopyrightYears holds the years to place in the copyright banner.
 	CopyrightYears string
 	// CopyrightHolder holds the name of the copyright holder.
 	CopyrightHolder string
-	// License holds the license the software is being distributed under. This
-	// is intended to be a simple one line description, such as "Mozilla
-	// Public License 2.0" and not the full license itself.
+	// License holds the license the software is being distributed under. This is intended to be a simple one line
+	// description, such as "Mozilla Public License 2.0" and not the full license itself.
 	License string
-	// AppVersion holds the application's version information. Typically set
-	// by the build system.
+	// AppVersion holds the application's version information. Typically set by the build system.
 	AppVersion string
-	// GitVersion holds the git revision and clean/dirty status and should be
-	// set by the build system.
+	// GitVersion holds the git revision and clean/dirty status and should be set by the build system.
 	GitVersion string
-	// BuildNumber holds the build number and should be set by the build
-	// system.
+	// BuildNumber holds the build number and should be set by the build system.
 	BuildNumber string
-	// AppIdentifier holds the uniform type identifier (UTI) for the
-	// application. This should contain only alphanumeric (A-Z,a-z,0-9),
-	// hyphen (-), and period (.) characters. The string should also be in
-	// reverse-DNS format. For example, if your company’s domain is Ajax.com
-	// and you create an application named Hello, you could assign the string
-	// com.Ajax.Hello as your AppIdentifier.
+	// AppIdentifier holds the uniform type identifier (UTI) for the application. This should contain only alphanumeric
+	// (A-Z,a-z,0-9), hyphen (-), and period (.) characters. The string should also be in reverse-DNS format. For
+	// example, if your company’s domain is Ajax.com and you create an application named Hello, you could assign the
+	// string com.Ajax.Hello as your AppIdentifier.
 	AppIdentifier string
 )
 

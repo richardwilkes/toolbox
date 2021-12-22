@@ -20,9 +20,8 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// EncryptStreamWithPublicKey copies 'in' to 'out', encrypting the bytes along
-// the way. Note that the output stream will be larger than the input stream
-// by aes.BlockSize + publicKey.Size() bytes.
+// EncryptStreamWithPublicKey copies 'in' to 'out', encrypting the bytes along the way. Note that the output stream will
+// be larger than the input stream by aes.BlockSize + publicKey.Size() bytes.
 func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.PublicKey) error {
 	iv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
@@ -55,9 +54,8 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 	return nil
 }
 
-// DecryptStreamWithPrivateKey copies 'in' to 'out', decrypting the bytes
-// along the way. Note that the output stream will be smaller than the input
-// stream by aes.BlockSize + publicKey.Size() bytes.
+// DecryptStreamWithPrivateKey copies 'in' to 'out', decrypting the bytes along the way. Note that the output stream
+// will be smaller than the input stream by aes.BlockSize + publicKey.Size() bytes.
 func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.PrivateKey) error {
 	encryptedEncryptionKey := make([]byte, privateKey.PublicKey.Size())
 	if _, err := in.Read(encryptedEncryptionKey); err != nil {

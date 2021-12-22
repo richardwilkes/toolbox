@@ -23,14 +23,12 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// ExtractArchive extracts the contents of a zip archive at 'src' into the
-// 'dst' directory.
+// ExtractArchive extracts the contents of a zip archive at 'src' into the 'dst' directory.
 func ExtractArchive(src, dst string) error {
 	return ExtractArchiveWithMask(src, dst, 0o777)
 }
 
-// ExtractArchiveWithMask extracts the contents of a zip archive at 'src' into the
-// 'dst' directory.
+// ExtractArchiveWithMask extracts the contents of a zip archive at 'src' into the 'dst' directory.
 func ExtractArchiveWithMask(src, dst string, mask os.FileMode) error {
 	r, err := zip.OpenReader(src)
 	if err != nil {

@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// TimeFromExcelTime convertx an Excel time representation to a time.Time.
-// Code for date/time conversion adapted from github.com/tealeg/xlsx.
+// TimeFromExcelTime convertx an Excel time representation to a time.Time. Code for date/time conversion adapted from
+// github.com/tealeg/xlsx.
 func timeFromExcelTime(excelTime float64) time.Time {
 	var date time.Time
 	intPart := int64(excelTime)

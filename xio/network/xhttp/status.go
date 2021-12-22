@@ -14,8 +14,8 @@ import (
 	"net/http"
 )
 
-// WriteHTTPStatus sends an HTTP response header with 'statusCode' and follows
-// it with the standard text for that code as the body.
+// WriteHTTPStatus sends an HTTP response header with 'statusCode' and follows it with the standard text for that code
+// as the body.
 func WriteHTTPStatus(w http.ResponseWriter, statusCode int) {
 	w.WriteHeader(statusCode)
 	fmt.Fprint(w, http.StatusText(statusCode))

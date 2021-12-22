@@ -9,15 +9,13 @@
 
 package jot
 
-// LoggerWriter provides a bridge between the standard log.Logger and the jot
-// package. You can use it like this:
+// LoggerWriter provides a bridge between the standard log.Logger and the jot package. You can use it like this:
 //
 // log.New(&jot.LoggerWriter{}, "", 0)
 //
 // This will send all output for this logger to the jot.Error() call.
 //
-// You can also set the Filter function to direct the output to a particular
-// jot logging method:
+// You can also set the Filter function to direct the output to a particular jot logging method:
 //
 // log.New(&jot.LoggerWriter{Filter: jot.Info}), "", 0)
 type LoggerWriter struct {

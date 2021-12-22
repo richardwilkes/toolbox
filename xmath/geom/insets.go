@@ -29,20 +29,17 @@ func NewUniformInsets(amount float64) Insets {
 	return Insets{Top: amount, Left: amount, Bottom: amount, Right: amount}
 }
 
-// NewHorizontalInsets creates a new Insets whose left and right edges have
-// the specified value.
+// NewHorizontalInsets creates a new Insets whose left and right edges have the specified value.
 func NewHorizontalInsets(amount float64) Insets {
 	return Insets{Left: amount, Right: amount}
 }
 
-// NewVerticalInsets creates a new Insets whose top and bottom edges have the
-// specified value.
+// NewVerticalInsets creates a new Insets whose top and bottom edges have the specified value.
 func NewVerticalInsets(amount float64) Insets {
 	return Insets{Top: amount, Bottom: amount}
 }
 
-// Add modifies this Insets by adding the supplied Insets. Returns itself for
-// easy chaining.
+// Add modifies this Insets by adding the supplied Insets. Returns itself for easy chaining.
 func (i *Insets) Add(insets Insets) *Insets {
 	i.Top += insets.Top
 	i.Left += insets.Left
@@ -51,8 +48,7 @@ func (i *Insets) Add(insets Insets) *Insets {
 	return i
 }
 
-// Subtract modifies this Insets by subtracting the supplied Insets. Returns
-// itself for easy chaining.
+// Subtract modifies this Insets by subtracting the supplied Insets. Returns itself for easy chaining.
 func (i *Insets) Subtract(insets Insets) *Insets {
 	i.Top -= insets.Top
 	i.Left -= insets.Left

@@ -21,8 +21,7 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// See https://en.wikipedia.org/wiki/ICO_(file_format) for information on the
-// .ico file format.
+// See https://en.wikipedia.org/wiki/ICO_(file_format) for information on the .ico file format.
 
 type header struct {
 	Reserved  uint16
@@ -41,9 +40,8 @@ type entry struct {
 	Offset      uint32
 }
 
-// Encode one or more images into an .ico. At least one image must be provided
-// and no image may have a width or height greater than 256 pixels. Windows
-// recommends providing 256x256, 48x48, 32x32, and 16x16 icons.
+// Encode one or more images into an .ico. At least one image must be provided and no image may have a width or height
+// greater than 256 pixels. Windows recommends providing 256x256, 48x48, 32x32, and 16x16 icons.
 func Encode(w io.Writer, images ...image.Image) error {
 	if len(images) == 0 {
 		return errs.New("must supply at least 1 image")

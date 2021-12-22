@@ -21,9 +21,8 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// ParseAndSetup adds command-line options for controlling logging, parses the
-// command line, then instantiates a rotator and attaches it to jot. Returns
-// the remaining arguments that weren't used for option content.
+// ParseAndSetup adds command-line options for controlling logging, parses the command line, then instantiates a rotator
+// and attaches it to jot. Returns the remaining arguments that weren't used for option content.
 func ParseAndSetup(cl *cmdline.CmdLine) []string {
 	logFile := rotation.DefaultPath()
 	var maxSize int64 = rotation.DefaultMaxSize

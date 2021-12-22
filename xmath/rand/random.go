@@ -17,8 +17,8 @@ import (
 
 var cryptoRandInstance = &cryptoRand{}
 
-// NewCryptoRand returns a Randomizer based on the crypto/rand package. This
-// method returns a shared singleton instance and does not allocate.
+// NewCryptoRand returns a Randomizer based on the crypto/rand package. This method returns a shared singleton instance
+// and does not allocate.
 func NewCryptoRand() Randomizer {
 	return cryptoRandInstance
 }

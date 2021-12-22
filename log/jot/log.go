@@ -87,21 +87,18 @@ func init() {
 }
 
 func write(out io.Writer, text string) {
-	// The extra code here is just to quiet the linter about not checking
-	// for an error.
+	// The extra code here is just to quiet the linter about not checking for an error.
 	if _, err := out.Write([]byte(text)); err != nil {
 		return
 	}
 }
 
-// SetWriter sets the io.Writer to use when writing log messages. Default is
-// os.Stderr.
+// SetWriter sets the io.Writer to use when writing log messages. Default is os.Stderr.
 func SetWriter(w io.Writer) {
 	logChannel <- &record{writer: w}
 }
 
-// SetMinimumLevel sets the minimum log level that will be output. Default is
-// DEBUG.
+// SetMinimumLevel sets the minimum log level that will be output. Default is DEBUG.
 func SetMinimumLevel(level Level) {
 	logChannel <- &record{
 		level:       level,
@@ -109,8 +106,7 @@ func SetMinimumLevel(level Level) {
 	}
 }
 
-// Debug logs a debugging message. Arguments are handled in the manner of
-// fmt.Print.
+// Debug logs a debugging message. Arguments are handled in the manner of fmt.Print.
 func Debug(v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -119,8 +115,7 @@ func Debug(v ...interface{}) {
 	}
 }
 
-// Debugf logs a debugging message. Arguments are handled in the manner of
-// fmt.Printf.
+// Debugf logs a debugging message. Arguments are handled in the manner of fmt.Printf.
 func Debugf(format string, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -129,8 +124,7 @@ func Debugf(format string, v ...interface{}) {
 	}
 }
 
-// Info logs an informational message. Arguments are handled in the manner of
-// fmt.Print.
+// Info logs an informational message. Arguments are handled in the manner of fmt.Print.
 func Info(v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -139,8 +133,7 @@ func Info(v ...interface{}) {
 	}
 }
 
-// Infof logs an informational message. Arguments are handled in the manner of
-// fmt.Printf.
+// Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func Infof(format string, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -149,8 +142,7 @@ func Infof(format string, v ...interface{}) {
 	}
 }
 
-// Warn logs a warning message. Arguments are handled in the manner of
-// fmt.Print.
+// Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
 func Warn(v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -159,8 +151,7 @@ func Warn(v ...interface{}) {
 	}
 }
 
-// Warnf logs a warning message. Arguments are handled in the manner of
-// fmt.Printf.
+// Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
 func Warnf(format string, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -169,8 +160,7 @@ func Warnf(format string, v ...interface{}) {
 	}
 }
 
-// Error logs an error message. Arguments are handled in the manner of
-// fmt.Print.
+// Error logs an error message. Arguments are handled in the manner of fmt.Print.
 func Error(v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -179,8 +169,7 @@ func Error(v ...interface{}) {
 	}
 }
 
-// Errorf logs an error message. Arguments are handled in the manner of
-// fmt.Printf.
+// Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
 func Errorf(format string, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -189,8 +178,7 @@ func Errorf(format string, v ...interface{}) {
 	}
 }
 
-// Fatal logs a fatal error message. Arguments other than the status are
-// handled in the manner of fmt.Print.
+// Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
 func Fatal(status int, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -200,8 +188,7 @@ func Fatal(status int, v ...interface{}) {
 	atexit.Exit(status)
 }
 
-// Fatalf logs a fatal error message. Arguments other than the status are
-// handled in the manner of fmt.Printf.
+// Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
 func Fatalf(status int, format string, v ...interface{}) {
 	logChannel <- &record{
 		when:  time.Now(),

@@ -11,9 +11,8 @@ package geom
 
 import "math"
 
-// LineIntersection determines the intersection of two lines, if any. A return
-// of no points indicates no intersection. One point indicates intersection at
-// a single point. Two points indicates an overlapping line segment.
+// LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.
+// One point indicates intersection at a single point. Two points indicates an overlapping line segment.
 func LineIntersection(a1, a2, b1, b2 Point) []Point {
 	aIsPt := a1.X == a2.X && a1.Y == a2.Y
 	bIsPt := b1.X == b2.X && b1.Y == b2.Y
@@ -76,20 +75,16 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 	return nil
 }
 
-// PointSegmentDistance returns the distance from a point to a line segment.
-// The distance measured is the distance between the specified point and the
-// closest point between the specified end points. If the specified point
-// intersects the line segment in between the end points, this function
-// returns 0.
+// PointSegmentDistance returns the distance from a point to a line segment. The distance measured is the distance
+// between the specified point and the closest point between the specified end points. If the specified point intersects
+// the line segment in between the end points, this function returns 0.
 func PointSegmentDistance(s1, s2, p Point) float64 {
 	return math.Sqrt(PointSegmentDistanceSquared(s1, s2, p))
 }
 
-// PointSegmentDistanceSquared returns the square of the distance from a point
-// to a line segment. The distance measured is the distance between the
-// specified point and the closest point between the specified end points. If
-// the specified point intersects the line segment in between the end points,
-// this function returns 0.
+// PointSegmentDistanceSquared returns the square of the distance from a point to a line segment. The distance measured
+// is the distance between the specified point and the closest point between the specified end points. If the specified
+// point intersects the line segment in between the end points, this function returns 0.
 func PointSegmentDistanceSquared(s1, s2, p Point) float64 {
 	vx := s2.X - s1.X
 	vy := s2.Y - s1.Y

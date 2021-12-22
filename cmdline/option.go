@@ -66,29 +66,25 @@ func (op *Option) SetName(name string) *Option {
 	return op
 }
 
-// SetSingle sets the single character name for this option. Returns self for
-// easy chaining.
+// SetSingle sets the single character name for this option. Returns self for easy chaining.
 func (op *Option) SetSingle(ch rune) *Option {
 	op.single = ch
 	return op
 }
 
-// SetArg sets the argument name for this option. Returns self for easy
-// chaining.
+// SetArg sets the argument name for this option. Returns self for easy chaining.
 func (op *Option) SetArg(name string) *Option {
 	op.arg = name
 	return op
 }
 
-// SetDefault sets the default value for this option. Returns self for easy
-// chaining.
+// SetDefault sets the default value for this option. Returns self for easy chaining.
 func (op *Option) SetDefault(def string) *Option {
 	op.def = def
 	return op
 }
 
-// SetUsage sets the usage message for this option. Returns self for easy
-// chaining.
+// SetUsage sets the usage message for this option. Returns self for easy chaining.
 func (op *Option) SetUsage(usage string) *Option {
 	op.usage = usage
 	return op

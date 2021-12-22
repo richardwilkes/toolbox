@@ -15,8 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/xmath/geom"
 )
 
-// Contour is a sequence of vertices connected by line segments, forming a
-// closed shape.
+// Contour is a sequence of vertices connected by line segments, forming a closed shape.
 type Contour []geom.Point
 
 // Clone returns a copy of this contour.

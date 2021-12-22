@@ -17,9 +17,8 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// MoveFile moves a file in the file system or across volumes, using rename if
-// possible, but falling back to copying the file if not. This will error if
-// either src or dst are not regular files.
+// MoveFile moves a file in the file system or across volumes, using rename if possible, but falling back to copying the
+// file if not. This will error if either src or dst are not regular files.
 func MoveFile(src, dst string) (err error) {
 	var srcInfo, dstInfo os.FileInfo
 	srcInfo, err = os.Stat(src)

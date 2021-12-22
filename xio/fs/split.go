@@ -13,9 +13,8 @@ import (
 	"path/filepath"
 )
 
-// Split a path into its component parts. In the case of a full path, the
-// first element will be filepath.Separator, possibly prefixed by a volume
-// name. In the case of a relative path, the first element will be ".".
+// Split a path into its component parts. In the case of a full path, the first element will be filepath.Separator,
+// possibly prefixed by a volume name. In the case of a relative path, the first element will be ".".
 func Split(path string) []string {
 	var parts []string
 	path = filepath.Clean(path)

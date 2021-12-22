@@ -30,20 +30,16 @@ const (
 )
 
 var (
-	// Dir is the directory to scan for localization files. This will occur
-	// only once, the first time a call to Text() is made. If you do not set
-	// this prior to the first call, a directory in the same location as the
-	// executable with "_i18n" appended to the executable name (sans any
-	// extension) will be used.
+	// Dir is the directory to scan for localization files. This will occur only once, the first time a call to Text()
+	// is made. If you do not set this prior to the first call, a directory in the same location as the executable with
+	// "_i18n" appended to the executable name (sans any extension) will be used.
 	Dir string
-	// Language is the language that should be used for text returned from
-	// calls to Text(). It is initialized to the result of calling Locale().
-	// You may set this at runtime, forcing a particular language for all
-	// subsequent calls to Text().
+	// Language is the language that should be used for text returned from calls to Text(). It is initialized to the
+	// result of calling Locale(). You may set this at runtime, forcing a particular language for all subsequent calls
+	// to Text().
 	Language = Locale()
-	// Languages is a slice of languages to fall back to should the one
-	// specified in the Language variable not be available. It is initialized
-	// to the value of the LANGUAGE environment variable.
+	// Languages is a slice of languages to fall back to should the one specified in the Language variable not be
+	// available. It is initialized to the value of the LANGUAGE environment variable.
 	Languages = strings.Split(os.Getenv("LANGUAGE"), ":")
 	// Log is set to discard by default.
 	Log      logadapter.ErrorLogger = &logadapter.Discarder{}
@@ -53,8 +49,7 @@ var (
 	hierMap  = make(map[string][]string)
 )
 
-// Text returns a localized version of the text if one exists, or the original
-// text if not.
+// Text returns a localized version of the text if one exists, or the original text if not.
 func Text(text string) string {
 	once.Do(func() {
 		if Dir == "" {

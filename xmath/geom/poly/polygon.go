@@ -50,13 +50,11 @@ const (
 	fullNonIntersection //nolint:deadcode,varcheck // needed to ensure correct index
 )
 
-// Polygon holds one or more contour lines. The polygon may contain holes and
-// may be self-intersecting.
+// Polygon holds one or more contour lines. The polygon may contain holes and may be self-intersecting.
 type Polygon []Contour
 
-// CalcEllipseSegmentCount returns a suggested number of segments to use when
-// generating an ellipse. 'r' is the largest radius of the ellipse. 'e' is the
-// acceptable error, typically 1 or less.
+// CalcEllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
+// radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
 func CalcEllipseSegmentCount(r, e float64) int {
 	d := 1 - e/r
 	n := int(math.Ceil(2 * math.Pi / math.Acos(2*d*d-1)))
@@ -66,15 +64,14 @@ func CalcEllipseSegmentCount(r, e float64) int {
 	return n
 }
 
-// ApproximateEllipseAuto creates a polygon that approximates an ellipse,
-// automatically choose the number of segments to break the ellipse contour
-// into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
+// ApproximateEllipseAuto creates a polygon that approximates an ellipse, automatically choose the number of segments to
+// break the ellipse contour into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
 func ApproximateEllipseAuto(bounds geom.Rect) Polygon {
 	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(math.Max(bounds.Width, bounds.Height)/2, 0.2))
 }
 
-// ApproximateEllipse creates a polygon that approximates an ellipse.
-// 'sections' indicates how many segments to break the ellipse contour into.
+// ApproximateEllipse creates a polygon that approximates an ellipse. 'sections' indicates how many segments to break
+// the ellipse contour into.
 func ApproximateEllipse(bounds geom.Rect, sections int) Polygon {
 	halfWidth := bounds.Width / 2
 	halfHeight := bounds.Height / 2
@@ -133,8 +130,8 @@ func (p Polygon) Contains(pt geom.Point) bool {
 	return false
 }
 
-// ContainsEvenOdd returns true if the point is contained by the polygon using
-// the even-odd rule. https://en.wikipedia.org/wiki/Even-odd_rule
+// ContainsEvenOdd returns true if the point is contained by the polygon using the even-odd rule.
+// https://en.wikipedia.org/wiki/Even-odd_rule
 func (p Polygon) ContainsEvenOdd(pt geom.Point) bool {
 	var count int
 	for i := range p {
@@ -155,8 +152,7 @@ func (p Polygon) Intersect(other Polygon) Polygon {
 	return p.construct(intersectOp, other)
 }
 
-// Subtract returns the result of removing the other polygon from this
-// polygon.
+// Subtract returns the result of removing the other polygon from this polygon.
 func (p Polygon) Subtract(other Polygon) Polygon {
 	return p.construct(subtractOp, other)
 }
@@ -169,8 +165,7 @@ func (p Polygon) Xor(other Polygon) Polygon {
 func (p Polygon) construct(op clipOp, other Polygon) Polygon {
 	var result Polygon
 
-	// Short-circuit the work if we can trivially determine the result is an
-	// empty polygon.
+	// Short-circuit the work if we can trivially determine the result is an empty polygon.
 	if (len(p) == 0 && len(other) == 0) ||
 		(len(p) == 0 && (op == intersectOp || op == subtractOp)) ||
 		(len(other) == 0 && op == intersectOp) {

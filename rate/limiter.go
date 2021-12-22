@@ -42,8 +42,8 @@ type request struct {
 	done    chan error
 }
 
-// New creates a new top-level rate limiter. 'capacity' is the number of units
-// (bytes, for example) allowed to be used in a particular time 'period'.
+// New creates a new top-level rate limiter. 'capacity' is the number of units (bytes, for example) allowed to be used
+// in a particular time 'period'.
 func New(capacity int, period time.Duration) Limiter {
 	c := &controller{
 		ticker: time.NewTicker(period),

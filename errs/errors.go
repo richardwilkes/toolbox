@@ -189,8 +189,8 @@ func (d Error) Error() string {
 	return d.Detail(true)
 }
 
-// Detail returns the fully detailed error message, which includes the primary
-// message, the call stack, and potentially one or more chained causes.
+// Detail returns the fully detailed error message, which includes the primary message, the call stack, and potentially
+// one or more chained causes.
 func (d *Error) Detail(trimRuntime bool) string {
 	switch len(d.errors) {
 	case 0:

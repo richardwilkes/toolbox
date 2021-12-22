@@ -109,8 +109,7 @@ func init() {
 	}
 }
 
-// ExternalAddress returns the external address the internet sees you as
-// having.
+// ExternalAddress returns the external address the internet sees you as having.
 func ExternalAddress() (net.IP, error) {
 	buffer := make([]byte, 2)
 	buffer[0] = protocolVersion
@@ -122,12 +121,10 @@ func ExternalAddress() (net.IP, error) {
 	return response[8:12], nil
 }
 
-// MapTCP maps the specified TCP port for external access. It returns the port
-// on the external address that can be used to connect to the internal port.
-// If you wish to be notified of changes to the external port mapping, provide
-// a notify channel. It will be sent an int containing the updated external
-// port mapping when it changes or an error if a renewal fails. The channel
-// will only be sent to if it is ready.
+// MapTCP maps the specified TCP port for external access. It returns the port on the external address that can be used
+// to connect to the internal port. If you wish to be notified of changes to the external port mapping, provide a notify
+// channel. It will be sent an int containing the updated external port mapping when it changes or an error if a renewal
+// fails. The channel will only be sent to if it is ready.
 func MapTCP(port int, notifyChan chan interface{}) (int, error) {
 	if err := checkPort(port); err != nil {
 		return 0, err
@@ -141,12 +138,10 @@ func MapTCP(port int, notifyChan chan interface{}) (int, error) {
 	return external, nil
 }
 
-// MapUDP maps the specified UDP port for external access. It returns the port
-// on the external address that can be used to connect to the internal port.
-// If you wish to be notified of changes to the external port mapping, provide
-// a notify channel. It will be sent an int containing the updated external
-// port mapping when it changes or an error if a renewal fails. The channel
-// will only be sent to if it is ready.
+// MapUDP maps the specified UDP port for external access. It returns the port on the external address that can be used
+// to connect to the internal port. If you wish to be notified of changes to the external port mapping, provide a notify
+// channel. It will be sent an int containing the updated external port mapping when it changes or an error if a renewal
+// fails. The channel will only be sent to if it is ready.
 func MapUDP(port int, notifyChan chan interface{}) (int, error) {
 	if err := checkPort(port); err != nil {
 		return 0, err

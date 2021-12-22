@@ -13,8 +13,8 @@ import (
 	"bytes"
 )
 
-// LineWriter buffers its input into lines before sending each line to an
-// output function without the trailing line feed.
+// LineWriter buffers its input into lines before sending each line to an output function without the trailing line
+// feed.
 type LineWriter struct {
 	buffer *bytes.Buffer
 	out    func([]byte)

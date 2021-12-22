@@ -11,8 +11,7 @@ package cmdline
 
 import "strings"
 
-// ShortVersion returns the app version. If AppVersion has not been set, then
-// "0.0" will be returned instead.
+// ShortVersion returns the app version. If AppVersion has not been set, then "0.0" will be returned instead.
 func ShortVersion() string {
 	if AppVersion == "" {
 		return "0.0"
@@ -20,8 +19,8 @@ func ShortVersion() string {
 	return AppVersion
 }
 
-// LongVersion returns a combination of the app version and the build number.
-// If AppVersion has not been set, then "0.0" will be used instead.
+// LongVersion returns a combination of the app version and the build number. If AppVersion has not been set, then "0.0"
+// will be used instead.
 func LongVersion() string {
 	version := ShortVersion()
 	if BuildNumber != "" {

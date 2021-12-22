@@ -16,11 +16,9 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// Stack a set of images on top of each other, producing a new image. The
-// first image in the series will be on the bottom and the last will be on the
-// top. If the images are of different sizes, the resulting image will be the
-// size of the largest image and all other images will be centered within that
-// area.
+// Stack a set of images on top of each other, producing a new image. The first image in the series will be on the
+// bottom and the last will be on the top. If the images are of different sizes, the resulting image will be the size of
+// the largest image and all other images will be centered within that area.
 func Stack(images ...image.Image) image.Image {
 	var width, height int
 	for _, img := range images {
@@ -48,12 +46,10 @@ type ImageAt struct {
 	Origin image.Point
 }
 
-// StackAt stacks a set of images on top of each other, producing a new image.
-// The first image in the series will be on the bottom and the last will be on
-// the top. The resulting image will be the size of the largest area covered
-// based on each image's size plus origin. Note that if an origin has a
-// negative value, it will be normalized such that the largest negative will
-// become the new origin for the resulting image.
+// StackAt stacks a set of images on top of each other, producing a new image. The first image in the series will be on
+// the bottom and the last will be on the top. The resulting image will be the size of the largest area covered based on
+// each image's size plus origin. Note that if an origin has a negative value, it will be normalized such that the
+// largest negative will become the new origin for the resulting image.
 func StackAt(images ...*ImageAt) image.Image {
 	var x, y, width, height int
 	for _, img := range images {
@@ -94,9 +90,8 @@ func Scale(img image.Image, width, height int) image.Image {
 	return scaled
 }
 
-// ScaleTo scales the image to the desired sizes. If an image cannot be scaled
-// exactly to the desired size, it will be scaled proportionally and then
-// centered within the available space.
+// ScaleTo scales the image to the desired sizes. If an image cannot be scaled exactly to the desired size, it will be
+// scaled proportionally and then centered within the available space.
 func ScaleTo(img image.Image, sizes []image.Point) []image.Image {
 	list := make([]image.Image, 0, len(sizes))
 	bounds := img.Bounds()
@@ -122,8 +117,7 @@ func ScaleTo(img image.Image, sizes []image.Point) []image.Image {
 	return list
 }
 
-// ScaleProportionally returns the width and height that are closest to the
-// desired values without distorting the size.
+// ScaleProportionally returns the width and height that are closest to the desired values without distorting the size.
 func ScaleProportionally(currentWidth, currentHeight, desiredWidth, desiredHeight int) (width, height int) {
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)
@@ -134,9 +128,8 @@ func ScaleProportionally(currentWidth, currentHeight, desiredWidth, desiredHeigh
 	return currentWidth, currentHeight
 }
 
-// ScaleUpProportionally returns the width and height that are closest to
-// the desired values without distorting the size, but won't decrease the
-// current values.
+// ScaleUpProportionally returns the width and height that are closest to the desired values without distorting the
+// size, but won't decrease the current values.
 func ScaleUpProportionally(currentWidth, currentHeight, desiredWidth, desiredHeight int) (width, height int) {
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)
@@ -149,9 +142,8 @@ func ScaleUpProportionally(currentWidth, currentHeight, desiredWidth, desiredHei
 	return currentWidth, currentHeight
 }
 
-// ScaleDownProportionally returns the width and height that are closest to
-// the desired values without distorting the size, but won't increase the
-// current values.
+// ScaleDownProportionally returns the width and height that are closest to the desired values without distorting the
+// size, but won't increase the current values.
 func ScaleDownProportionally(currentWidth, currentHeight, desiredWidth, desiredHeight int) (width, height int) {
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)

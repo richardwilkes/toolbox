@@ -39,8 +39,7 @@ func (t *timing) EndWithMsgf(format string, v ...interface{}) time.Duration {
 	return elapsed
 }
 
-// Time starts timing an event and logs an informational message. Arguments
-// are handled in the manner of fmt.Print.
+// Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
 func Time(v ...interface{}) logadapter.Timing {
 	msg := fmt.Sprint(v...)
 	Infof("Starting %s", msg)
@@ -50,8 +49,7 @@ func Time(v ...interface{}) logadapter.Timing {
 	}
 }
 
-// Timef starts timing an event and logs an informational message. Arguments
-// are handled in the manner of fmt.Printf.
+// Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func Timef(format string, v ...interface{}) logadapter.Timing {
 	msg := fmt.Sprintf(format, v...)
 	Infof("Starting %s", msg)

@@ -33,10 +33,9 @@ var (
 	multiplierF128d4         = num.Int128FromBigInt(multiplierF128d4BigInt)
 )
 
-// F128d4 holds a fixed-point value that contains up to 4 decimal places.
-// Values are truncated, not rounded. Values can be added and subtracted
-// directly. For multiplication and division, the provided Mul() and Div()
-// methods should be used.
+// F128d4 holds a fixed-point value that contains up to 4 decimal places. Values are truncated, not rounded. Values can
+// be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be
+// used.
 type F128d4 struct {
 	data num.Int128
 }

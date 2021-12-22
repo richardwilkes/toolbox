@@ -39,8 +39,7 @@ func NewRectPtr(x, y, width, height float64) *Rect {
 	return &r
 }
 
-// CopyAndZeroLocation creates a new copy of the Rect and sets the location of
-// the copy to 0,0.
+// CopyAndZeroLocation creates a new copy of the Rect and sets the location of the copy to 0,0.
 func (r *Rect) CopyAndZeroLocation() Rect {
 	return Rect{Size: r.Size}
 }
@@ -111,8 +110,7 @@ func (r Rect) Intersects(other Rect) bool {
 	return r.X < other.Right() && r.Y < other.Bottom() && r.Right() > other.X && r.Bottom() > other.Y
 }
 
-// IntersectsLine returns true if this rect and the line described by start
-// and end intersect.
+// IntersectsLine returns true if this rect and the line described by start and end intersect.
 func (r Rect) IntersectsLine(start, end Point) bool {
 	if r.IsEmpty() {
 		return false
@@ -155,8 +153,7 @@ func (r Rect) ContainsRect(in Rect) bool {
 	return r.X <= in.X && r.Y <= in.Y && in.X < right && in.Y < bottom && r.X <= inRight && r.Y <= inBottom && inRight < right && inBottom < bottom
 }
 
-// Intersect this Rect with another Rect, storing the result into this Rect.
-// Returns itself for easy chaining.
+// Intersect this Rect with another Rect, storing the result into this Rect. Returns itself for easy chaining.
 func (r *Rect) Intersect(other Rect) *Rect {
 	if r.IsEmpty() || other.IsEmpty() {
 		r.Width = 0
@@ -179,8 +176,7 @@ func (r *Rect) Intersect(other Rect) *Rect {
 	return r
 }
 
-// Union this Rect with another Rect, storing the result into this Rect.
-// Returns itself for easy chaining.
+// Union this Rect with another Rect, storing the result into this Rect. Returns itself for easy chaining.
 func (r *Rect) Union(other Rect) *Rect {
 	e1 := r.IsEmpty()
 	e2 := other.IsEmpty()
@@ -201,8 +197,8 @@ func (r *Rect) Union(other Rect) *Rect {
 	return r
 }
 
-// Align modifies this rectangle to align with integer coordinates that would
-// encompass the original rectangle. Returns itself for easy chaining.
+// Align modifies this rectangle to align with integer coordinates that would encompass the original rectangle. Returns
+// itself for easy chaining.
 func (r *Rect) Align() *Rect {
 	x := math.Floor(r.X)
 	r.Width = math.Ceil(r.Right()) - x
@@ -213,9 +209,8 @@ func (r *Rect) Align() *Rect {
 	return r
 }
 
-// InsetUniform insets this Rect by the specified amount on all sides.
-// Positive values make the Rect smaller, while negative values make it
-// larger. Returns itself for easy chaining.
+// InsetUniform insets this Rect by the specified amount on all sides. Positive values make the Rect smaller, while
+// negative values make it larger. Returns itself for easy chaining.
 func (r *Rect) InsetUniform(amount float64) *Rect {
 	r.X += amount
 	r.Y += amount
@@ -248,9 +243,8 @@ func (r *Rect) Inset(insets Insets) *Rect {
 	return r
 }
 
-// AddPoint adds a Point to this Rect. If the Rect has a negative width or
-// height, then the Rect's upper-left corner will be set to the Point and its
-// width and height will be set to 0. Returns itself for easy chaining.
+// AddPoint adds a Point to this Rect. If the Rect has a negative width or height, then the Rect's upper-left corner
+// will be set to the Point and its width and height will be set to 0. Returns itself for easy chaining.
 func (r *Rect) AddPoint(pt Point) *Rect {
 	if r.Width < 0 || r.Height < 0 {
 		r.Point = pt

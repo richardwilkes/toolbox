@@ -15,91 +15,76 @@ import (
 	"github.com/richardwilkes/toolbox/log/logadapter"
 )
 
-// Logger wraps the various jot function calls into a struct that can be
-// passed around, typically for the sake of satisfying one or more logging
-// interfaces.
+// Logger wraps the various jot function calls into a struct that can be passed around, typically for the sake of
+// satisfying one or more logging interfaces.
 type Logger struct{}
 
-// SetWriter sets the io.Writer to use when writing log messages. Default is
-// os.Stderr.
+// SetWriter sets the io.Writer to use when writing log messages. Default is os.Stderr.
 func (lgr *Logger) SetWriter(w io.Writer) {
 	SetWriter(w)
 }
 
-// SetMinimumLevel sets the minimum log level that will be output. Default is
-// DEBUG.
+// SetMinimumLevel sets the minimum log level that will be output. Default is DEBUG.
 func (lgr *Logger) SetMinimumLevel(level Level) {
 	SetMinimumLevel(level)
 }
 
-// Debug logs a debug message. Arguments are handled in the manner of
-// fmt.Print.
+// Debug logs a debug message. Arguments are handled in the manner of fmt.Print.
 func (lgr *Logger) Debug(v ...interface{}) {
 	Debug(v...)
 }
 
-// Debugf logs a debug message. Arguments are handled in the manner of
-// fmt.Printf.
+// Debugf logs a debug message. Arguments are handled in the manner of fmt.Printf.
 func (lgr *Logger) Debugf(format string, v ...interface{}) {
 	Debugf(format, v...)
 }
 
-// Info logs an informational message. Arguments are handled in the manner of
-// fmt.Print.
+// Info logs an informational message. Arguments are handled in the manner of fmt.Print.
 func (lgr *Logger) Info(v ...interface{}) {
 	Info(v...)
 }
 
-// Infof logs an informational message. Arguments are handled in the manner of
-// fmt.Printf.
+// Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func (lgr *Logger) Infof(format string, v ...interface{}) {
 	Infof(format, v...)
 }
 
-// Warn logs a warning message. Arguments are handled in the manner of
-// fmt.Print.
+// Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
 func (lgr *Logger) Warn(v ...interface{}) {
 	Warn(v...)
 }
 
-// Warnf logs a warning message. Arguments are handled in the manner of
-// fmt.Printf.
+// Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
 func (lgr *Logger) Warnf(format string, v ...interface{}) {
 	Warnf(format, v...)
 }
 
-// Error logs an error message. Arguments are handled in the manner of
-// fmt.Print.
+// Error logs an error message. Arguments are handled in the manner of fmt.Print.
 func (lgr *Logger) Error(v ...interface{}) {
 	Error(v...)
 }
 
-// Errorf logs an error message. Arguments are handled in the manner of
-// fmt.Printf.
+// Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
 func (lgr *Logger) Errorf(format string, v ...interface{}) {
 	Errorf(format, v...)
 }
 
-// Fatal logs a fatal error message. Arguments other than the status are
-// handled in the manner of fmt.Print.
+// Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
 func (lgr *Logger) Fatal(status int, v ...interface{}) {
 	Fatal(status, v...)
 }
 
-// Fatalf logs a fatal error message. Arguments other than the status are
-// handled in the manner of fmt.Printf.
+// Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
 func (lgr *Logger) Fatalf(status int, format string, v ...interface{}) {
 	Fatalf(status, format, v...)
 }
 
-// Time starts timing an event and logs an informational message.
-// Arguments are handled in the manner of fmt.Print.
+// Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
 func (lgr *Logger) Time(v ...interface{}) logadapter.Timing {
 	return Time(v...)
 }
 
-// Timef starts timing an event and logs an informational message.
-// Arguments are handled in the manner of fmt.Printf.
+// Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
 func (lgr *Logger) Timef(format string, v ...interface{}) logadapter.Timing {
 	return Timef(format, v...)
 }

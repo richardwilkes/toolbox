@@ -23,18 +23,16 @@ type Target interface {
 	HandleNotification(name string, data, producer interface{})
 }
 
-// BatchTarget defines the methods a target of notifications that wants to be
-// notified when a batch change occurs must implement.
+// BatchTarget defines the methods a target of notifications that wants to be notified when a batch change occurs must
+// implement.
 type BatchTarget interface {
 	Target
-	// BatchMode is called both before and after a series of notifications are
-	// about to be broadcast. The target is not guaranteed to have intervening
-	// calls to HandleNotification() made to it.
+	// BatchMode is called both before and after a series of notifications are about to be broadcast. The target is not
+	// guaranteed to have intervening calls to HandleNotification() made to it.
 	BatchMode(start bool)
 }
 
-// Notifier tracks targets of notifications and provides methods for notifying
-// them.
+// Notifier tracks targets of notifications and provides methods for notifying them.
 type Notifier struct {
 	recoveryHandler errs.RecoveryHandler
 	lock            sync.RWMutex
@@ -57,12 +55,10 @@ func New(recoveryHandler errs.RecoveryHandler) *Notifier {
 	}
 }
 
-// Register a target with this notifier. 'priority' is the relative
-// notification priority, with higher values being delivered first. 'names'
-// are the names the target wishes to consume. Names are hierarchical
-// (separated by a .), so specifying a name of "foo.bar" will consume not only
-// a produced name of "foo.bar", but all sub-names, such as "foo.bar.a", but
-// not "foo.barn" or "foo.barn.a".
+// Register a target with this notifier. 'priority' is the relative notification priority, with higher values being
+// delivered first. 'names' are the names the target wishes to consume. Names are hierarchical (separated by a .), so
+// specifying a name of "foo.bar" will consume not only a produced name of "foo.bar", but all sub-names, such as
+// "foo.bar.a", but not "foo.barn" or "foo.barn.a".
 func (n *Notifier) Register(target Target, priority int, names ...string) {
 	var normalizedNames []string
 	for _, name := range names {
@@ -202,9 +198,8 @@ func (n *Notifier) Notify(name string, producer interface{}) {
 	n.NotifyWithData(name, nil, producer)
 }
 
-// NotifyWithData sends a notification to all interested targets. This is a
-// synchronous notification and will not return until all interested targets
-// handle the notification.
+// NotifyWithData sends a notification to all interested targets. This is a synchronous notification and will not return
+// until all interested targets handle the notification.
 func (n *Notifier) NotifyWithData(name string, data, producer interface{}) {
 	if n.Enabled() {
 		name = normalizeName(name)
@@ -254,10 +249,8 @@ func (n *Notifier) BatchLevel() int {
 	return n.batchLevel
 }
 
-// StartBatch informs all BatchTargets that a batch of notifications will be
-// starting. If a previous call to this method was made without a call to
-// EndBatch(), then the batch level will be incremented, but no notifications
-// will be made.
+// StartBatch informs all BatchTargets that a batch of notifications will be starting. If a previous call to this method
+// was made without a call to EndBatch(), then the batch level will be incremented, but no notifications will be made.
 func (n *Notifier) StartBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()
@@ -282,10 +275,8 @@ func (n *Notifier) notifyBatchTarget(target BatchTarget, start bool) {
 	target.BatchMode(start)
 }
 
-// EndBatch informs all BatchTargets that were present when StartBatch() was
-// called that a batch of notifications just finished. If batch level is still
-// greater than zero after being decremented, then no notifications will be
-// made.
+// EndBatch informs all BatchTargets that were present when StartBatch() was called that a batch of notifications just
+// finished. If batch level is still greater than zero after being decremented, then no notifications will be made.
 func (n *Notifier) EndBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()

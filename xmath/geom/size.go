@@ -36,49 +36,45 @@ func NewSizePtr(x, y float64) *Size {
 	return &s
 }
 
-// Add modifies this Size by adding the supplied Size. Returns itself for easy
-// chaining.
+// Add modifies this Size by adding the supplied Size. Returns itself for easy chaining.
 func (s *Size) Add(size Size) *Size {
 	s.Width += size.Width
 	s.Height += size.Height
 	return s
 }
 
-// AddInsets modifies this Size by expanding it to accommodate the specified
-// insets. Returns itself for easy chaining.
+// AddInsets modifies this Size by expanding it to accommodate the specified insets. Returns itself for easy chaining.
 func (s *Size) AddInsets(insets Insets) *Size {
 	s.Width += insets.Left + insets.Right
 	s.Height += insets.Top + insets.Bottom
 	return s
 }
 
-// Subtract modifies this Size by subtracting the supplied Size. Returns
-// itself for easy chaining.
+// Subtract modifies this Size by subtracting the supplied Size. Returns itself for easy chaining.
 func (s *Size) Subtract(size Size) *Size {
 	s.Width -= size.Width
 	s.Height -= size.Height
 	return s
 }
 
-// SubtractInsets modifies this Size by reducing it to accommodate the
-// specified insets. Returns itself for easy chaining.
+// SubtractInsets modifies this Size by reducing it to accommodate the specified insets. Returns itself for easy
+// chaining.
 func (s *Size) SubtractInsets(insets Insets) *Size {
 	s.Width -= insets.Left + insets.Right
 	s.Height -= insets.Top + insets.Bottom
 	return s
 }
 
-// GrowToInteger modifies this Size such that its width and height are both
-// the smallest integers greater than or equal to their original values.
-// Returns itself for easy chaining.
+// GrowToInteger modifies this Size such that its width and height are both the smallest integers greater than or equal
+// to their original values. Returns itself for easy chaining.
 func (s *Size) GrowToInteger() *Size {
 	s.Width = math.Ceil(s.Width)
 	s.Height = math.Ceil(s.Height)
 	return s
 }
 
-// ConstrainForHint ensures this size is no larger than the hint. Hint values
-// less than one are ignored. Returns itself for easy chaining.
+// ConstrainForHint ensures this size is no larger than the hint. Hint values less than one are ignored. Returns itself
+// for easy chaining.
 func (s *Size) ConstrainForHint(hint Size) *Size {
 	if hint.Width >= 1 && s.Width > hint.Width {
 		s.Width = hint.Width
@@ -89,8 +85,7 @@ func (s *Size) ConstrainForHint(hint Size) *Size {
 	return s
 }
 
-// Min modifies this Size to contain the smallest values between itself and
-// 'other'. Returns itself for easy chaining.
+// Min modifies this Size to contain the smallest values between itself and 'other'. Returns itself for easy chaining.
 func (s *Size) Min(other Size) *Size {
 	if s.Width > other.Width {
 		s.Width = other.Width
@@ -101,8 +96,7 @@ func (s *Size) Min(other Size) *Size {
 	return s
 }
 
-// Max modifies this Size to contain the largest values between itself and
-// 'other'. Returns itself for easy chaining.
+// Max modifies this Size to contain the largest values between itself and 'other'. Returns itself for easy chaining.
 func (s *Size) Max(other Size) *Size {
 	if s.Width < other.Width {
 		s.Width = other.Width

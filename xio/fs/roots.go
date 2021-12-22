@@ -17,8 +17,7 @@ import (
 	"github.com/yookoala/realpath"
 )
 
-// UniquePaths returns a list of unique paths from the given paths, pruning
-// out paths that are a subset of another.
+// UniquePaths returns a list of unique paths from the given paths, pruning out paths that are a subset of another.
 func UniquePaths(paths ...string) ([]string, error) {
 	set := make(map[string]bool, len(paths))
 	for _, path := range paths {

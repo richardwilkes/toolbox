@@ -36,24 +36,21 @@ func NewPointPtr(x, y float64) *Point {
 	return &p
 }
 
-// Align modifies this Point to align with integer coordinates. Returns itself
-// for easy chaining.
+// Align modifies this Point to align with integer coordinates. Returns itself for easy chaining.
 func (p *Point) Align() *Point {
 	p.X = math.Floor(p.X)
 	p.Y = math.Floor(p.Y)
 	return p
 }
 
-// Add modifies this Point by adding the supplied coordinates. Returns itself
-// for easy chaining.
+// Add modifies this Point by adding the supplied coordinates. Returns itself for easy chaining.
 func (p *Point) Add(pt Point) *Point {
 	p.X += pt.X
 	p.Y += pt.Y
 	return p
 }
 
-// Subtract modifies this Point by subtracting the supplied coordinates.
-// Returns itself for easy chaining.
+// Subtract modifies this Point by subtracting the supplied coordinates. Returns itself for easy chaining.
 func (p *Point) Subtract(pt Point) *Point {
 	p.X -= pt.X
 	p.Y -= pt.Y

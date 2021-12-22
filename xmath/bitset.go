@@ -238,8 +238,7 @@ func (b *BitSet) FlipRange(start, end int) {
 	}
 }
 
-// FirstSet returns the first set bit. If no bits are set, then -1 is
-// returned.
+// FirstSet returns the first set bit. If no bits are set, then -1 is returned.
 func (b *BitSet) FirstSet() int {
 	return b.NextSet(0)
 }
@@ -249,8 +248,8 @@ func (b *BitSet) LastSet() int {
 	return b.PreviousSet(len(b.data) << addressBitsPerWord)
 }
 
-// PreviousSet returns the previous set bit starting from 'start'. If no bits
-// are set at or before 'start', then -1 is returned.
+// PreviousSet returns the previous set bit starting from 'start'. If no bits are set at or before 'start', then -1 is
+// returned.
 func (b *BitSet) PreviousSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -277,8 +276,7 @@ func (b *BitSet) PreviousSet(start int) int {
 	return -1
 }
 
-// NextSet returns the next set bit starting from 'start'. If no bits are set
-// at or beyond 'start', then -1 is returned.
+// NextSet returns the next set bit starting from 'start'. If no bits are set at or beyond 'start', then -1 is returned.
 func (b *BitSet) NextSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -300,8 +298,8 @@ func (b *BitSet) NextSet(start int) int {
 	return -1
 }
 
-// PreviousClear returns the previous clear bit starting from 'start'. If no
-// bits are clear at or before 'start', then -1 is returned.
+// PreviousClear returns the previous clear bit starting from 'start'. If no bits are clear at or before 'start', then
+// -1 is returned.
 func (b *BitSet) PreviousClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -365,9 +363,8 @@ func (b *BitSet) Trim() {
 	b.data = nil
 }
 
-// EnsureCapacity ensures that the BitSet has enough underlying storage to
-// accommodate setting a bit as high as index position 'words' x 64 - 1
-// without needing to allocate more storage.
+// EnsureCapacity ensures that the BitSet has enough underlying storage to accommodate setting a bit as high as index
+// position 'words' x 64 - 1 without needing to allocate more storage.
 func (b *BitSet) EnsureCapacity(words int) {
 	size := len(b.data)
 	if words > size {

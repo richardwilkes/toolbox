@@ -106,8 +106,7 @@ func (repo *Repo) Pull() error {
 	return nil
 }
 
-// HasDetachedHead returns true if the repo is currently in a "detached head"
-// state.
+// HasDetachedHead returns true if the repo is currently in a "detached head" state.
 func (repo *Repo) HasDetachedHead() bool {
 	contents, err := ioutil.ReadFile(filepath.Join(repo.local, ".git", "HEAD"))
 	return err != nil && !bytes.HasPrefix(bytes.TrimSpace(contents), []byte("ref: "))

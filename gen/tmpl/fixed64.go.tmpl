@@ -29,7 +29,7 @@ const (
 
 var multiplierF64d{{.}} = int64(math.Pow(10, {{.}}))
 
-{{wrap_comment (printf "F64d%[1]d holds a fixed-point value that contains up to %[1]d decimal places. Values are truncated, not rounded. Values can be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be used." .) 78}}
+{{wrap_comment (printf "F64d%[1]d holds a fixed-point value that contains up to %[1]d decimal places. Values are truncated, not rounded. Values can be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be used." .) 120}}
 type F64d{{.}} int64
 
 // F64d{{.}}FromFloat64 creates a new F64d{{.}} value from a float64.
@@ -112,8 +112,7 @@ func (f F64d{{.}}) Div(value F64d{{.}}) F64d{{.}} {
 	return f * F64d{{.}}(multiplierF64d{{.}}) / value
 }
 
-// Trunc returns a new value which has everything to the right of the decimal
-// place truncated.
+{{wrap_comment "Trunc returns a new value which has everything to the right of the decimal place truncated." 120}}
 func (f F64d{{.}}) Trunc() F64d{{.}} {
 	return f / F64d{{.}}(multiplierF64d{{.}}) * F64d{{.}}(multiplierF64d{{.}})
 }
@@ -128,8 +127,7 @@ func (f F64d{{.}}) AsFloat64() float64 {
 	return float64(f) / float64(multiplierF64d{{.}})
 }
 
-// Comma returns the same as String(), but with commas for values of 1000 and
-// greater.
+{{wrap_comment "Comma returns the same as String(), but with commas for values of 1000 and greater." 120}}
 func (f F64d{{.}}) Comma() string {
 	integer := f / F64d{{.}}(multiplierF64d{{.}})
 	fraction := f % F64d{{.}}(multiplierF64d{{.}})
@@ -197,9 +195,7 @@ func (f *F64d{{.}}) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Float64 implements json.Number. Intentionally returns an error if the value
-// cannot be represented exactly with a float64, as we never want to emit
-// inexact floating point values into json for fixed-point values.
+{{wrap_comment "Float64 implements json.Number. Intentionally returns an error if the value cannot be represented exactly with a float64, as we never want to emit inexact floating point values into json for fixed-point values." 120}}
 func (f F64d{{.}}) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
@@ -208,9 +204,7 @@ func (f F64d{{.}}) Float64() (float64, error) {
 	return n, nil
 }
 
-// Int64 implements json.Number. Intentionally returns an error if the value
-// cannot be represented exactly with an int64, as we never want to emit
-// inexact values into json for fixed-point values.
+{{wrap_comment "Int64 implements json.Number. Intentionally returns an error if the value cannot be represented exactly with an int64, as we never want to emit inexact values into json for fixed-point values." 120}}
 func (f F64d{{.}}) Int64() (int64, error) {
 	n := f.AsInt64()
 	if F64d{{.}}FromInt64(n) != f {

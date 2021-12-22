@@ -19,8 +19,7 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
-// Walk performs the same function as filepath.Walk() does, but works on
-// http.FileSystem objects.
+// Walk performs the same function as filepath.Walk() does, but works on http.FileSystem objects.
 func Walk(fs http.FileSystem, root string, walkFn filepath.WalkFunc) error {
 	info, err := stat(fs, root)
 	if err != nil {

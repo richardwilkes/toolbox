@@ -34,8 +34,7 @@ func ToCamelCase(in string) string {
 	return string(out)
 }
 
-// ToCamelCaseWithExceptions converts a string to CamelCase, but forces
-// certain words to all caps.
+// ToCamelCaseWithExceptions converts a string to CamelCase, but forces certain words to all caps.
 func ToCamelCaseWithExceptions(in string, exceptions *AllCaps) string {
 	out := ToCamelCase(in)
 	pos := 0

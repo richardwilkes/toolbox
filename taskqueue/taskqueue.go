@@ -34,22 +34,20 @@ type Queue struct {
 	recoveryHandler errs.RecoveryHandler
 }
 
-// RecoveryHandler sets the recovery handler to use for tasks that panic.
-// Defaults to none, which silently ignores the panic.
+// RecoveryHandler sets the recovery handler to use for tasks that panic. Defaults to none, which silently ignores the
+// panic.
 func RecoveryHandler(recoveryHandler errs.RecoveryHandler) Option {
 	return func(q *Queue) { q.recoveryHandler = recoveryHandler }
 }
 
-// Depth sets the depth of the queue. Calls to Submit() will block when this
-// number of tasks are already pending execution. Pass in a negative number to
-// use an unbounded queue. Defaults to unbounded.
+// Depth sets the depth of the queue. Calls to Submit() will block when this number of tasks are already pending
+// execution. Pass in a negative number to use an unbounded queue. Defaults to unbounded.
 func Depth(depth int) Option {
 	return func(q *Queue) { q.depth = depth }
 }
 
-// Workers sets the number of workers that will simultaneously process tasks.
-// If this is set to 1, tasks submitted to the queue will be executed
-// serially. Defaults to one plus the number of CPUs.
+// Workers sets the number of workers that will simultaneously process tasks. If this is set to 1, tasks submitted to
+// the queue will be executed serially. Defaults to one plus the number of CPUs.
 func Workers(workers int) Option {
 	return func(q *Queue) { q.workers = workers }
 }

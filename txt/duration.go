@@ -68,8 +68,8 @@ func FormatDuration(duration time.Duration, includeMillis bool) string {
 	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
 
-// DurationToCode turns a time.Duration into more human-readable text required
-// for code than a simple number of nanoseconds.
+// DurationToCode turns a time.Duration into more human-readable text required for code than a simple number of
+// nanoseconds.
 func DurationToCode(duration time.Duration) string {
 	var buffer strings.Builder
 	if duration >= time.Hour {
