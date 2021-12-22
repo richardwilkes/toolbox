@@ -142,7 +142,7 @@ func loadSheet(f *zip.File, strs []string) (*Sheet, error) {
 	sheet := &Sheet{
 		Min:   Ref{Row: math.MaxInt32, Col: math.MaxInt32},
 		Max:   Ref{},
-		Cells: make(map[Ref]Cell),
+		Cells: make(map[Ref]Cell, len(data.Cells)),
 	}
 	for _, one := range data.Cells {
 		if one.Value == nil {

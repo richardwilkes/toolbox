@@ -26,11 +26,9 @@ import (
 
 // CmdLine holds information about the command line.
 type CmdLine struct {
-	// UsageSuffix, if set, will be appended to the 'Usage: ' line of the
-	// output.
+	// UsageSuffix, if set, will be appended to the 'Usage: ' line of the output.
 	UsageSuffix string
-	// Description, if set, will be inserted after the program identity
-	// section, before the usage.
+	// Description, if set, will be inserted after the program identity section, before the usage.
 	Description     string
 	options         Options
 	cmds            map[string]Cmd
@@ -42,12 +40,14 @@ type CmdLine struct {
 	showLongVersion bool
 }
 
-// New creates a new CmdLine. If 'includeDefaultOptions' is true, help (-h,
-// --help) and version (-v, --version, along with hidden -V, --Version for
-// long variants) options will be added, otherwise, only the help options will
-// be added, although they will be hidden.
+// New creates a new CmdLine. If 'includeDefaultOptions' is true, help (-h, --help) and version (-v, --version, along
+// with hidden -V, --Version for long variants) options will be added, otherwise, only the help options will be added,
+// although they will be hidden.
 func New(includeDefaultOptions bool) *CmdLine {
-	cl := &CmdLine{cmds: make(map[string]Cmd), out: term.NewANSI(os.Stderr)}
+	cl := &CmdLine{
+		cmds: make(map[string]Cmd),
+		out:  term.NewANSI(os.Stderr),
+	}
 	help := cl.NewBoolOption(&cl.showHelp).SetSingle('h').SetName("help")
 	if includeDefaultOptions {
 		help.SetUsage(i18n.Text("Display this help information and exit."))
@@ -71,8 +71,7 @@ func (cl *CmdLine) NewOption(value Value) *Option {
 	return option
 }
 
-// Parse the 'args', filling in any options. Returns the remaining arguments
-// that weren't used for option content.
+// Parse the 'args', filling in any options. Returns the remaining arguments that weren't used for option content.
 func (cl *CmdLine) Parse(args []string) []string {
 	const (
 		lookForOptionState = iota
@@ -205,8 +204,7 @@ func (cl *CmdLine) FatalError(err error) {
 	cl.FatalMsg(err.Error())
 }
 
-// FatalIfError emits an error message and causes the program to exit if
-// err != nil.
+// FatalIfError emits an error message and causes the program to exit if err != nil.
 func (cl *CmdLine) FatalIfError(err error) {
 	if err != nil {
 		cl.FatalError(err)
@@ -214,7 +212,7 @@ func (cl *CmdLine) FatalIfError(err error) {
 }
 
 func (cl *CmdLine) availableOptions() (available map[string]*Option) {
-	available = make(map[string]*Option)
+	available = make(map[string]*Option, len(cl.options))
 	for _, option := range cl.options {
 		if ok, err := option.isValid(); !ok {
 			cl.FatalMsg(fmt.Sprintf(i18n.Text("Invalid option specification: %v"), err))
@@ -260,8 +258,7 @@ func (cl *CmdLine) loadArgsFromFile(path string) (args []string, err error) {
 	return args, nil
 }
 
-// SetWriter sets the io.Writer to use for output. By default, a new CmdLine
-// uses os.Stderr.
+// SetWriter sets the io.Writer to use for output. By default, a new CmdLine uses os.Stderr.
 func (cl *CmdLine) SetWriter(w io.Writer) {
 	cl.out = term.NewANSI(w)
 }

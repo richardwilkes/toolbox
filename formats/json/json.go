@@ -23,8 +23,7 @@ type Data struct {
 	obj interface{}
 }
 
-// MustParse is the same as calling Parse, but without the error code on
-// return.
+// MustParse is the same as calling Parse, but without the error code on return.
 func MustParse(data []byte) *Data {
 	result, err := Parse(data)
 	if err != nil {
@@ -33,8 +32,8 @@ func MustParse(data []byte) *Data {
 	return result
 }
 
-// Parse JSON data from bytes. If the data can't be loaded, a valid, empty
-// Data will still be returned, along with an error.
+// Parse JSON data from bytes. If the data can't be loaded, a valid, empty Data will still be returned, along with an
+// error.
 func Parse(data []byte) (*Data, error) {
 	var obj interface{}
 	decoder := json.NewDecoder(bytes.NewReader(data))
@@ -45,8 +44,7 @@ func Parse(data []byte) (*Data, error) {
 	return &Data{obj: obj}, nil
 }
 
-// MustParseStream is the same as calling ParseStream, but without the error
-// code on return.
+// MustParseStream is the same as calling ParseStream, but without the error code on return.
 func MustParseStream(in io.Reader) *Data {
 	result, err := ParseStream(in)
 	if err != nil {
@@ -55,8 +53,8 @@ func MustParseStream(in io.Reader) *Data {
 	return result
 }
 
-// ParseStream parses JSON data from the stream. If the data can't be loaded,
-// a valid, empty Data will still be returned, along with an error.
+// ParseStream parses JSON data from the stream. If the data can't be loaded, a valid, empty Data will still be
+// returned, along with an error.
 func ParseStream(in io.Reader) (*Data, error) {
 	var obj interface{}
 	decoder := json.NewDecoder(in)
@@ -72,10 +70,9 @@ func (j *Data) Raw() interface{} {
 	return j.obj
 }
 
-// Path searches the dot-separated path and returns the object at that point.
-// If the search encounters an array and has not reached the end target, then
-// it will iterate through the array for the target and return all results in
-// a Data array.
+// Path searches the dot-separated path and returns the object at that point. If the search encounters an array and has
+// not reached the end target, then it will iterate through the array for the target and return all results in a Data
+// array.
 func (j *Data) Path(path string) *Data {
 	return j.path(strings.Split(path, ".")...)
 }
@@ -137,8 +134,7 @@ func (j *Data) Keys() []string {
 	return make([]string, 0)
 }
 
-// Size returns the number of elements in an array or map, or 0 if this is
-// neither type.
+// Size returns the number of elements in an array or map, or 0 if this is neither type.
 func (j *Data) Size() int {
 	if m, ok := j.obj.(map[string]interface{}); ok {
 		return len(m)
@@ -149,8 +145,8 @@ func (j *Data) Size() int {
 	return 0
 }
 
-// Index returns the object at the specified index within an array, or nil if
-// this isn't an array or the index isn't valid.
+// Index returns the object at the specified index within an array, or nil if this isn't an array or the index isn't
+// valid.
 func (j *Data) Index(index int) *Data {
 	if a, ok := j.obj.([]interface{}); ok {
 		if index >= 0 && index < len(a) {
@@ -175,8 +171,7 @@ func (j *Data) String() string {
 	return string(j.Bytes())
 }
 
-// Str extracts a string from the path. Returns the empty string if the path
-// isn't present or isn't a string type.
+// Str extracts a string from the path. Returns the empty string if the path isn't present or isn't a string type.
 func (j *Data) Str(path string) string {
 	if str, ok := j.Path(path).obj.(string); ok {
 		return str
@@ -184,8 +179,7 @@ func (j *Data) Str(path string) string {
 	return ""
 }
 
-// Bool extracts a bool from the path. Returns false if the path isn't present
-// or isn't a boolean type.
+// Bool extracts a bool from the path. Returns false if the path isn't present or isn't a boolean type.
 func (j *Data) Bool(path string) bool {
 	if b, ok := j.Path(path).obj.(bool); ok {
 		return b
@@ -193,8 +187,8 @@ func (j *Data) Bool(path string) bool {
 	return false
 }
 
-// BoolRelaxed extracts a bool from the path. Returns false if the path isn't
-// present or can't be converted to a boolean type.
+// BoolRelaxed extracts a bool from the path. Returns false if the path isn't present or can't be converted to a boolean
+// type.
 func (j *Data) BoolRelaxed(path string) bool {
 	if b, ok := j.Path(path).obj.(bool); ok {
 		return b
@@ -202,8 +196,7 @@ func (j *Data) BoolRelaxed(path string) bool {
 	return strings.EqualFold(j.Str(path), "true")
 }
 
-// Float64 extracts an float64 from the path. Returns 0 if the path isn't
-// present or isn't a numeric type.
+// Float64 extracts an float64 from the path. Returns 0 if the path isn't present or isn't a numeric type.
 func (j *Data) Float64(path string) float64 {
 	if n, ok := j.Path(path).obj.(json.Number); ok {
 		if f, err := n.Float64(); err == nil {
@@ -213,8 +206,8 @@ func (j *Data) Float64(path string) float64 {
 	return 0
 }
 
-// Float64Relaxed extracts an float64 from the path. Returns 0 if the path
-// isn't present or can't be converted to a numeric type.
+// Float64Relaxed extracts an float64 from the path. Returns 0 if the path isn't present or can't be converted to a
+// numeric type.
 func (j *Data) Float64Relaxed(path string) float64 {
 	if n, ok := j.Path(path).obj.(json.Number); ok {
 		if f, err := n.Float64(); err == nil {
@@ -228,8 +221,7 @@ func (j *Data) Float64Relaxed(path string) float64 {
 	return 0
 }
 
-// Int64 extracts an int64 from the path. Returns 0 if the path isn't present
-// or isn't a numeric type.
+// Int64 extracts an int64 from the path. Returns 0 if the path isn't present or isn't a numeric type.
 func (j *Data) Int64(path string) int64 {
 	if n, ok := j.Path(path).obj.(json.Number); ok {
 		if i, err := n.Int64(); err == nil {
@@ -239,8 +231,8 @@ func (j *Data) Int64(path string) int64 {
 	return 0
 }
 
-// Int64Relaxed extracts an int64 from the path. Returns 0 if the path isn't
-// present or can't be converted to a numeric type.
+// Int64Relaxed extracts an int64 from the path. Returns 0 if the path isn't present or can't be converted to a numeric
+// type.
 func (j *Data) Int64Relaxed(path string) int64 {
 	if n, ok := j.Path(path).obj.(json.Number); ok {
 		if i, err := n.Int64(); err == nil {
@@ -259,51 +251,44 @@ func (j *Data) Unmarshal(path string, value interface{}) error {
 	return json.Unmarshal(j.Path(path).Bytes(), value)
 }
 
-// NewMap creates a map at the specified path. Any parts of the path that do
-// not exist will be created. Returns true if successful, or false if a
-// collision occurs with a non-object type while traversing the path.
+// NewMap creates a map at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) NewMap(path string) bool {
 	return j.set(path, make(map[string]interface{}))
 }
 
-// NewArray creates an array at the specified path. Any parts of the path that
-// do not exist will be created. Returns true if successful, or false if a
-// collision occurs with a non-object type while traversing the path.
+// NewArray creates an array at the specified path. Any parts of the path that do not exist will be created. Returns
+// true if successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) NewArray(path string) bool {
 	return j.set(path, make([]interface{}, 0))
 }
 
-// SetStr a string at the specified path. Any parts of the path that do not
-// exist will be created. Returns true if successful, or false if a collision
-// occurs with a non-object type while traversing the path.
+// SetStr a string at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) SetStr(path, value string) bool {
 	return j.set(path, value)
 }
 
-// SetBool a bool at the specified path. Any parts of the path that do not
-// exist will be created. Returns true if successful, or false if a collision
-// occurs with a non-object type while traversing the path.
+// SetBool a bool at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) SetBool(path string, value bool) bool {
 	return j.set(path, value)
 }
 
-// SetFloat64 a float64 at the specified path. Any parts of the path that do
-// not exist will be created. Returns true if successful, or false if a
-// collision occurs with a non-object type while traversing the path.
+// SetFloat64 a float64 at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) SetFloat64(path string, value float64) bool {
 	return j.set(path, value)
 }
 
-// SetInt64 an int64 at the specified path. Any parts of the path that do not
-// exist will be created. Returns true if successful, or false if a collision
-// occurs with a non-object type while traversing the path.
+// SetInt64 an int64 at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) SetInt64(path string, value int64) bool {
 	return j.set(path, value)
 }
 
-// Set a Data value at the specified path. Any parts of the path that do not
-// exist will be created. Returns true if successful, or false if a collision
-// occurs with a non-object type while traversing the path.
+// Set a Data value at the specified path. Any parts of the path that do not exist will be created. Returns true if
+// successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) Set(path string, value *Data) bool {
 	var v interface{}
 	if value != nil {
@@ -337,44 +322,43 @@ func (j *Data) set(path string, value interface{}) bool {
 	return true
 }
 
-// AppendMap appends a new map to an array at the specified path. The array
-// must already exist. Returns true if successful.
+// AppendMap appends a new map to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendMap(path string) bool {
 	return j.append(path, make(map[string]interface{}))
 }
 
-// AppendArray appends a new array to an array at the specified path. The
-// array must already exist. Returns true if successful.
+// AppendArray appends a new array to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendArray(path string) bool {
 	return j.append(path, make([]interface{}, 0))
 }
 
-// AppendStr appends a string to an array at the specified path. The array
-// must already exist. Returns true if successful.
+// AppendStr appends a string to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendStr(path, value string) bool {
 	return j.append(path, value)
 }
 
-// AppendBool appends a bool to an array at the specified path. The array must
-// already exist. Returns true if successful.
+// AppendBool appends a bool to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendBool(path string, value bool) bool {
 	return j.append(path, value)
 }
 
-// AppendFloat64 appends a float64 to an array at the specified path. The
-// array must already exist. Returns true if successful.
+// AppendFloat64 appends a float64 to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendFloat64(path string, value float64) bool {
 	return j.append(path, value)
 }
 
-// AppendInt64 appends an int64 to an array at the specified path. The array
-// must already exist. Returns true if successful.
+// AppendInt64 appends an int64 to an array at the specified path. The array must already exist. Returns true if
+// successful.
 func (j *Data) AppendInt64(path string, value int64) bool {
 	return j.append(path, value)
 }
 
-// Append a Data value to an array at the specified path. The array must
-// already exist. Returns true if successful.
+// Append a Data value to an array at the specified path. The array must already exist. Returns true if successful.
 func (j *Data) Append(path string, value *Data) bool {
 	var v interface{}
 	if value != nil {

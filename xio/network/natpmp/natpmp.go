@@ -68,7 +68,7 @@ func init() {
 			})
 			for {
 				time.Sleep(time.Minute)
-				renew := make(map[int]mapping)
+				renew := make(map[int]mapping, len(mappings))
 				now := time.Now()
 				lock.RLock()
 				for k, v := range mappings {

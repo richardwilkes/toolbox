@@ -75,7 +75,7 @@ func (n *Notifier) Register(target Target, priority int, names ...string) {
 		n.lock.Lock()
 		targetNames, ok := n.nameMap[target]
 		if !ok {
-			targetNames = make(map[string]bool)
+			targetNames = make(map[string]bool, len(normalizedNames))
 			n.nameMap[target] = targetNames
 		}
 		if batchTarget, ok2 := target.(BatchTarget); ok2 {
@@ -107,30 +107,28 @@ func normalizeName(name string) string {
 	return buffer.String()
 }
 
-// RegisterFromNotifier adds all registrations from the other notifier into
-// this notifier.
+// RegisterFromNotifier adds all registrations from the other notifier into this notifier.
 func (n *Notifier) RegisterFromNotifier(other *Notifier) {
 	if n == other {
 		return
 	}
-	// To avoid a potential deadlock, we make a copy of the other notifier's
-	// data first.
+	// To avoid a potential deadlock, we make a copy of the other notifier's data first.
 	other.lock.Lock()
-	batchTargets := make(map[BatchTarget]bool)
+	batchTargets := make(map[BatchTarget]bool, len(other.batchTargets))
 	for k, v := range other.batchTargets {
 		batchTargets[k] = v
 	}
-	productionMap := make(map[string]map[Target]int)
+	productionMap := make(map[string]map[Target]int, len(other.productionMap))
 	for k, v := range other.productionMap {
-		m := make(map[Target]int)
+		m := make(map[Target]int, len(v))
 		for k1, v1 := range v {
 			m[k1] = v1
 		}
 		productionMap[k] = m
 	}
-	nameMap := make(map[Target]map[string]bool)
+	nameMap := make(map[Target]map[string]bool, len(other.nameMap))
 	for k, v := range other.nameMap {
-		m := make(map[string]bool)
+		m := make(map[string]bool, len(v))
 		for k1, v1 := range v {
 			m[k1] = v1
 		}

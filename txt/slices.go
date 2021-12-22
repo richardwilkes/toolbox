@@ -11,7 +11,7 @@ package txt
 
 // StringSliceToMap returns a map created from the strings of a slice.
 func StringSliceToMap(slice []string) map[string]bool {
-	m := make(map[string]bool)
+	m := make(map[string]bool, len(slice))
 	for _, str := range slice {
 		m[str] = true
 	}
