@@ -10,18 +10,15 @@
 package geom32
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Point defines a location.
 type Point struct {
-	X float32
-	Y float32
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
 }
 
 // NewPoint creates a new Point.
@@ -69,38 +66,4 @@ func (p *Point) Negate() *Point {
 // String implements the fmt.Stringer interface.
 func (p Point) String() string {
 	return fmt.Sprintf("%f,%f", p.X, p.Y)
-}
-
-// MarshalText implements the encoding.TextMarshaler interface.
-func (p Point) MarshalText() (text []byte, err error) {
-	return []byte(p.String()), nil
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-func (p *Point) UnmarshalText(text []byte) error {
-	txt := strings.TrimSpace(string(text))
-	if strings.HasPrefix(txt, "{") {
-		// Permit old style struct to be loaded
-		var old struct {
-			X, Y float32
-		}
-		if err := json.Unmarshal(text, &old); err != nil {
-			return err
-		}
-		p.X = old.X
-		p.Y = old.Y
-		return nil
-	}
-	parts := strings.SplitN(txt, ",", 2)
-	if len(parts) != 2 {
-		return errs.Newf("unable to parse '%s'", txt)
-	}
-	var err error
-	if p.X, err = parseFloat(parts[0]); err != nil {
-		return err
-	}
-	if p.Y, err = parseFloat(parts[1]); err != nil {
-		return err
-	}
-	return nil
 }

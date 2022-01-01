@@ -11,19 +11,15 @@
 package geom32
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/mathf32"
 )
 
 // Rect defines a rectangle.
 type Rect struct {
-	Point
-	Size
+	Point `json:"point,inline"`
+	Size  `json:"size,inline"`
 }
 
 // NewRect creates a new Rect.
@@ -280,55 +276,4 @@ func (r Rect) Bounds() Rect {
 // String implements the fmt.Stringer interface.
 func (r Rect) String() string {
 	return fmt.Sprintf("%f,%f,%f,%f", r.X, r.Y, r.Width, r.Height)
-}
-
-// MarshalText implements the encoding.TextMarshaler interface.
-func (r Rect) MarshalText() (text []byte, err error) {
-	return []byte(r.String()), nil
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-func (r *Rect) UnmarshalText(text []byte) error {
-	txt := strings.TrimSpace(string(text))
-	if strings.HasPrefix(txt, "{") {
-		// Permit old style struct to be loaded
-		var old struct {
-			Point
-			Size
-		}
-		if err := json.Unmarshal(text, &old); err != nil {
-			return err
-		}
-		r.X = old.X
-		r.Y = old.Y
-		r.Width = old.Width
-		r.Height = old.Height
-		return nil
-	}
-	parts := strings.SplitN(txt, ",", 4)
-	if len(parts) != 4 {
-		return errs.Newf("unable to parse '%s'", txt)
-	}
-	var err error
-	if r.X, err = parseFloat(parts[0]); err != nil {
-		return err
-	}
-	if r.Y, err = parseFloat(parts[1]); err != nil {
-		return err
-	}
-	if r.Width, err = parseFloat(parts[2]); err != nil {
-		return err
-	}
-	if r.Height, err = parseFloat(parts[3]); err != nil {
-		return err
-	}
-	return nil
-}
-
-func parseFloat(txt string) (float32, error) {
-	v, err := strconv.ParseFloat(txt, 32)
-	if err != nil {
-		return 0, errs.Wrap(err)
-	}
-	return float32(v), nil
 }

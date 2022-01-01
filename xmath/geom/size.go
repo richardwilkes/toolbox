@@ -10,17 +10,14 @@
 package geom
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
-	"strings"
-
-	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Size defines a width and height.
 type Size struct {
-	Width, Height float64
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
 }
 
 // NewSize creates a new Size.
@@ -111,39 +108,4 @@ func (s *Size) Max(other Size) *Size {
 // String implements the fmt.Stringer interface.
 func (s Size) String() string {
 	return fmt.Sprintf("%f,%f", s.Width, s.Height)
-}
-
-// MarshalText implements the encoding.TextMarshaler interface.
-func (s Size) MarshalText() (text []byte, err error) {
-	return []byte(s.String()), nil
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-func (s *Size) UnmarshalText(text []byte) error {
-	txt := strings.TrimSpace(string(text))
-	if strings.HasPrefix(txt, "{") {
-		// Permit old style struct to be loaded
-		var old struct {
-			Width  float64
-			Height float64
-		}
-		if err := json.Unmarshal(text, &old); err != nil {
-			return err
-		}
-		s.Width = old.Width
-		s.Height = old.Height
-		return nil
-	}
-	parts := strings.SplitN(txt, ",", 2)
-	if len(parts) != 2 {
-		return errs.Newf("unable to parse '%s'", txt)
-	}
-	var err error
-	if s.Width, err = parseFloat(parts[0]); err != nil {
-		return err
-	}
-	if s.Height, err = parseFloat(parts[1]); err != nil {
-		return err
-	}
-	return nil
 }

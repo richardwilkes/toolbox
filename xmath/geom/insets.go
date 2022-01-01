@@ -10,19 +10,15 @@
 package geom
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
-
-	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Insets defines margins on each side of a rectangle.
 type Insets struct {
-	Top    float64
-	Left   float64
-	Bottom float64
-	Right  float64
+	Top    float64 `json:"top"`
+	Left   float64 `json:"left"`
+	Bottom float64 `json:"bottom"`
+	Right  float64 `json:"right"`
 }
 
 // NewUniformInsets creates a new Insets whose edges all have the same value.
@@ -61,49 +57,4 @@ func (i *Insets) Subtract(insets Insets) *Insets {
 // String implements the fmt.Stringer interface.
 func (i Insets) String() string {
 	return fmt.Sprintf("%f,%f,%f,%f", i.Top, i.Left, i.Bottom, i.Right)
-}
-
-// MarshalText implements the encoding.TextMarshaler interface.
-func (i Insets) MarshalText() (text []byte, err error) {
-	return []byte(i.String()), nil
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-func (i *Insets) UnmarshalText(text []byte) error {
-	txt := strings.TrimSpace(string(text))
-	if strings.HasPrefix(txt, "{") {
-		// Permit old style struct to be loaded
-		var old struct {
-			Top    float64
-			Left   float64
-			Bottom float64
-			Right  float64
-		}
-		if err := json.Unmarshal(text, &old); err != nil {
-			return err
-		}
-		i.Top = old.Top
-		i.Left = old.Left
-		i.Bottom = old.Bottom
-		i.Right = old.Right
-		return nil
-	}
-	parts := strings.SplitN(txt, ",", 4)
-	if len(parts) != 4 {
-		return errs.Newf("unable to parse '%s'", txt)
-	}
-	var err error
-	if i.Top, err = parseFloat(parts[0]); err != nil {
-		return err
-	}
-	if i.Left, err = parseFloat(parts[1]); err != nil {
-		return err
-	}
-	if i.Bottom, err = parseFloat(parts[2]); err != nil {
-		return err
-	}
-	if i.Right, err = parseFloat(parts[3]); err != nil {
-		return err
-	}
-	return nil
 }
