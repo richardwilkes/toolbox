@@ -10,6 +10,7 @@
 package geom
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -119,8 +120,21 @@ func (s Size) MarshalText() (text []byte, err error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (s *Size) UnmarshalText(text []byte) error {
-	txt := string(text)
-	parts := strings.SplitN(strings.TrimSpace(txt), ",", 2)
+	txt := strings.TrimSpace(string(text))
+	if strings.HasPrefix(txt, "{") {
+		// Permit old style struct to be loaded
+		var old struct {
+			Width  float64
+			Height float64
+		}
+		if err := json.Unmarshal(text, &old); err != nil {
+			return err
+		}
+		s.Width = old.Width
+		s.Height = old.Height
+		return nil
+	}
+	parts := strings.SplitN(txt, ",", 2)
 	if len(parts) != 2 {
 		return errs.Newf("unable to parse '%s'", txt)
 	}

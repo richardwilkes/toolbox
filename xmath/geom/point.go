@@ -10,6 +10,7 @@
 package geom
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -19,7 +20,8 @@ import (
 
 // Point defines a location.
 type Point struct {
-	X, Y float64
+	X float64
+	Y float64
 }
 
 // NewPoint creates a new Point.
@@ -76,8 +78,20 @@ func (p Point) MarshalText() (text []byte, err error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (p *Point) UnmarshalText(text []byte) error {
-	txt := string(text)
-	parts := strings.SplitN(strings.TrimSpace(txt), ",", 2)
+	txt := strings.TrimSpace(string(text))
+	if strings.HasPrefix(txt, "{") {
+		// Permit old style struct to be loaded
+		var old struct {
+			X, Y float64
+		}
+		if err := json.Unmarshal(text, &old); err != nil {
+			return err
+		}
+		p.X = old.X
+		p.Y = old.Y
+		return nil
+	}
+	parts := strings.SplitN(txt, ",", 2)
 	if len(parts) != 2 {
 		return errs.Newf("unable to parse '%s'", txt)
 	}
