@@ -127,6 +127,14 @@ func (f F64d{{.}}) AsFloat64() float64 {
 	return float64(f) / float64(multiplierF64d{{.}})
 }
 
+{{wrap_comment "CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive" 120}}
+func (f F64d{{.}}) CommaWithSign() string {
+	if f >= 0 {
+		return "+" + f.Comma()
+	}
+	return f.Comma()
+}
+
 {{wrap_comment "Comma returns the same as String(), but with commas for values of 1000 and greater." 120}}
 func (f F64d{{.}}) Comma() string {
 	integer := f / F64d{{.}}(multiplierF64d{{.}})
@@ -152,6 +160,14 @@ func (f F64d{{.}}) Comma() string {
 		neg = ""
 	}
 	return fmt.Sprintf("%s%s.%s", neg, humanize.Comma(int64(integer)), fStr)
+}
+
+{{wrap_comment "StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive" 120}}
+func (f F64d{{.}}) StringWithSign() string {
+	if f >= 0 {
+		return "+" + f.String()
+	}
+	return f.String()
 }
 
 func (f F64d{{.}}) String() string {

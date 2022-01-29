@@ -33,9 +33,7 @@ var (
 	multiplierF128d16         = num.Int128FromBigInt(multiplierF128d16BigInt)
 )
 
-// F128d16 holds a fixed-point value that contains up to 16 decimal places. Values are truncated, not rounded. Values
-// can be added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be
-// used.
+// F128d16 holds a fixed-point value that contains up to 16 decimal places. Values are truncated, not rounded.
 type F128d16 struct {
 	data num.Int128
 }
@@ -148,6 +146,14 @@ func (f F128d16) AsFloat64() float64 {
 	return f64
 }
 
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
+func (f F128d16) CommaWithSign() string {
+	if f.data.Sign() >= 0 {
+		return "+" + f.Comma()
+	}
+	return f.Comma()
+}
+
 // Comma returns the same as String(), but with commas for values of 1000 and
 // greater.
 func (f F128d16) Comma() string {
@@ -179,6 +185,14 @@ func (f F128d16) Comma() string {
 		neg = ""
 	}
 	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
+}
+
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
+func (f F128d16) StringWithSign() string {
+	if f.data.Sign() >= 0 {
+		return "+" + f.String()
+	}
+	return f.String()
 }
 
 func (f F128d16) String() string {
