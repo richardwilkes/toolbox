@@ -121,6 +121,22 @@ func (f F64d3) Trunc() F64d3 {
 	return f / F64d3(multiplierF64d3) * F64d3(multiplierF64d3)
 }
 
+// Min returns the minimum of this value or its argument.
+func (f F64d3) Min(value F64d3) F64d3 {
+	if f < value {
+		return f
+	}
+	return value
+}
+
+// Max returns the maximum of this value or its argument.
+func (f F64d3) Max(value F64d3) F64d3 {
+	if f > value {
+		return f
+	}
+	return value
+}
+
 // AsInt64 returns the truncated equivalent integer to this value.
 func (f F64d3) AsInt64() int64 {
 	return int64(f / F64d3(multiplierF64d3))

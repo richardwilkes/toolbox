@@ -129,10 +129,25 @@ func (f F128d4) Div(value F128d4) F128d4 {
 	return F128d4{data: f.data.Mul(multiplierF128d4).Div(value.data)}
 }
 
-// Trunc returns a new value which has everything to the right of the decimal
-// place truncated.
+// Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f F128d4) Trunc() F128d4 {
 	return F128d4{data: f.data.Div(multiplierF128d4).Mul(multiplierF128d4)}
+}
+
+// Min returns the minimum of this value or its argument.
+func (f F128d4) Min(value F128d4) F128d4 {
+	if f.data.LessThan(value.data) {
+		return f
+	}
+	return value
+}
+
+// Max returns the maximum of this value or its argument.
+func (f F128d4) Max(value F128d4) F128d4 {
+	if f.data.GreaterThan(value.data) {
+		return f
+	}
+	return value
 }
 
 // AsInt64 returns the truncated equivalent integer to this value.
@@ -154,8 +169,7 @@ func (f F128d4) CommaWithSign() string {
 	return f.Comma()
 }
 
-// Comma returns the same as String(), but with commas for values of 1000 and
-// greater.
+// Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f F128d4) Comma() string {
 	var iStr string
 	integer := f.data.Div(multiplierF128d4)
