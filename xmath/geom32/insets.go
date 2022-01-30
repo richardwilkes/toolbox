@@ -56,5 +56,5 @@ func (i *Insets) Subtract(insets Insets) *Insets {
 
 // String implements the fmt.Stringer interface.
 func (i Insets) String() string {
-	return fmt.Sprintf("%f,%f,%f,%f", i.Top, i.Left, i.Bottom, i.Right)
+	return fmt.Sprintf("%v,%v,%v,%v", i.Top, i.Left, i.Bottom, i.Right)
 }

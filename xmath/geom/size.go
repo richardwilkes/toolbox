@@ -16,8 +16,8 @@ import (
 
 // Size defines a width and height.
 type Size struct {
-	Width  float64 `json:"width"`
-	Height float64 `json:"height"`
+	Width  float64 `json:"w"`
+	Height float64 `json:"h"`
 }
 
 // NewSize creates a new Size.
@@ -107,5 +107,5 @@ func (s *Size) Max(other Size) *Size {
 
 // String implements the fmt.Stringer interface.
 func (s Size) String() string {
-	return fmt.Sprintf("%f,%f", s.Width, s.Height)
+	return fmt.Sprintf("%v,%v", s.Width, s.Height)
 }

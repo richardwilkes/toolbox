@@ -17,8 +17,8 @@ import (
 
 // Rect defines a rectangle.
 type Rect struct {
-	Point `json:"point,inline"`
-	Size  `json:"size,inline"`
+	Point `json:",inline"`
+	Size  `json:",inline"`
 }
 
 // NewRect creates a new Rect.
@@ -274,5 +274,5 @@ func (r Rect) Bounds() Rect {
 
 // String implements the fmt.Stringer interface.
 func (r Rect) String() string {
-	return fmt.Sprintf("%f,%f,%f,%f", r.X, r.Y, r.Width, r.Height)
+	return fmt.Sprintf("%v,%v,%v,%v", r.X, r.Y, r.Width, r.Height)
 }

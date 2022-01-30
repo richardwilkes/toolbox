@@ -64,5 +64,5 @@ func (p *Point) Negate() *Point {
 
 // String implements the fmt.Stringer interface.
 func (p Point) String() string {
-	return fmt.Sprintf("%f,%f", p.X, p.Y)
+	return fmt.Sprintf("%v,%v", p.X, p.Y)
 }
