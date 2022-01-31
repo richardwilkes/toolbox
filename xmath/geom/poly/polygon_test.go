@@ -97,7 +97,7 @@ func TestUnion(t *testing.T) {
 		{X: 45.01393469004752, Y: -1.778840704083887},
 		{X: 22.504998288170377, Y: -11.102347436334847},
 	}}
-	assert.Equal(t, poly.Polygon{{
+	assert.InDeltaSlice(t, flatten(poly.Polygon{{
 		{X: 70.78432620601497, Y: -7.668842337087888},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 22.504998288170377, Y: -11.102347436334847},
@@ -107,7 +107,7 @@ func TestUnion(t *testing.T) {
 		{X: -23.270336557414375, Y: 26.505430543378026},
 		{X: -18.453791204657392, Y: 38.13359965778903},
 		{X: -28.102259079650896, Y: 61.42706165771948},
-	}}, p1.Union(p2))
+	}}), flatten(p1.Union(p2)), 0.0000001)
 
 	assert.Equal(t, poly.Polygon{{
 		{X: 82.50005495855308, Y: 20.61542891037402},
@@ -827,3 +827,13 @@ var (
 		{X: 11.897740920349097, Y: 21.42706165771947},
 	}}
 )
+
+func flatten(p poly.Polygon) []float64 {
+	var s []float64
+	for _, c := range p {
+		for _, pt := range c {
+			s = append(s, pt.X, pt.Y)
+		}
+	}
+	return s
+}

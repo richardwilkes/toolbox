@@ -363,7 +363,7 @@ func TestSubtract(t *testing.T) {
 		{X: 114, Y: 108},
 		{X: 121, Y: 164},
 	}}
-	assert.Equal(t, poly32.Polygon{
+	assert.InDeltaSlice(t, flatten(poly32.Polygon{
 		{
 			{X: 115.11904761904762, Y: 164},
 			{X: 114, Y: 164},
@@ -375,7 +375,7 @@ func TestSubtract(t *testing.T) {
 			{X: 114, Y: 108},
 			{X: 119.18382352941177, Y: 149.47058823529412},
 		},
-	}, p1.Subtract(p2))
+	}), flatten(p1.Subtract(p2)), 0.0001)
 
 	p1 = poly32.Polygon{{
 		{X: 426694.6365274183, Y: -668547.1611580737},
@@ -813,3 +813,13 @@ var (
 		{X: 11.897740920349097, Y: 21.42706165771947},
 	}}
 )
+
+func flatten(p poly32.Polygon) []float32 {
+	var s []float32
+	for _, c := range p {
+		for _, pt := range c {
+			s = append(s, pt.X, pt.Y)
+		}
+	}
+	return s
+}
