@@ -223,7 +223,7 @@ func (f F64d4) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (f *F64d4) UnmarshalText(text []byte) error {
-	f1, err := F64d4FromString(string(text))
+	f1, err := F64d4FromString(unquote(text))
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func (f F64d4) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (f *F64d4) UnmarshalJSON(in []byte) error {
-	v, err := F64d4FromString(string(in))
+	v, err := F64d4FromString(unquote(in))
 	if err != nil {
 		return err
 	}

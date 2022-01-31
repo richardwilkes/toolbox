@@ -9,9 +9,23 @@
 
 package fixed
 
-import "errors"
+import (
+	"errors"
+	"unicode/utf8"
+)
 
 var (
 	errDoesNotFitInFloat64 = errors.New("does not fit in float64")
 	errDoesNotFitInInt64   = errors.New("does not fit in int64")
 )
+
+func unquote(text []byte) string {
+	if len(text) > 1 {
+		if ch, _ := utf8.DecodeRune(text); ch == '"' {
+			if ch, _ = utf8.DecodeLastRune(text); ch == '"' {
+				text = text[1 : len(text)-1]
+			}
+		}
+	}
+	return string(text)
+}
