@@ -142,9 +142,29 @@ func (f F64d3) AsInt64() int64 {
 	return int64(f / F64d3(multiplierF64d3))
 }
 
+// Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an
+// int64.
+func (f F64d3) Int64() (int64, error) {
+	n := f.AsInt64()
+	if F64d3FromInt64(n) != f {
+		return 0, errDoesNotFitInInt64
+	}
+	return f.AsInt64(), nil
+}
+
 // AsFloat64 returns the floating-point equivalent to this value.
 func (f F64d3) AsFloat64() float64 {
 	return float64(f) / float64(multiplierF64d3)
+}
+
+// Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a
+// float64.
+func (f F64d3) Float64() (float64, error) {
+	n := f.AsFloat64()
+	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
+		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
 }
 
 // CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
@@ -229,26 +249,6 @@ func (f *F64d3) UnmarshalText(text []byte) error {
 	}
 	*f = f1
 	return nil
-}
-
-// Float64 implements json.Number. Intentionally returns an error if the value cannot be represented exactly with a
-// float64, as we never want to emit inexact floating point values into json for fixed-point values.
-func (f F64d3) Float64() (float64, error) {
-	n := f.AsFloat64()
-	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
-		return 0, errDoesNotFitInFloat64
-	}
-	return n, nil
-}
-
-// Int64 implements json.Number. Intentionally returns an error if the value cannot be represented exactly with an
-// int64, as we never want to emit inexact values into json for fixed-point values.
-func (f F64d3) Int64() (int64, error) {
-	n := f.AsInt64()
-	if F64d3FromInt64(n) != f {
-		return 0, errDoesNotFitInInt64
-	}
-	return f.AsInt64(), nil
 }
 
 // MarshalJSON implements json.Marshaler.
