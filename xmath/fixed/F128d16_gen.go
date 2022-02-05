@@ -44,9 +44,19 @@ func F128d16FromFloat64(value float64) F128d16 {
 	return f
 }
 
+// F128d16FromFloat32 creates a new F128d16 value from a float32.
+func F128d16FromFloat32(value float32) F128d16 {
+	return F128d16FromFloat64(float64(value))
+}
+
 // F128d16FromInt64 creates a new F128d16 value from an int64.
 func F128d16FromInt64(value int64) F128d16 {
 	return F128d16{data: num.Int128From64(value).Mul(multiplierF128d16)}
+}
+
+// F128d16FromInt creates a new F128d16 value from an int.
+func F128d16FromInt(value int) F128d16 {
+	return F128d16FromInt64(int64(value))
 }
 
 // F128d16FromString creates a new F128d16 value from a string.
@@ -165,6 +175,20 @@ func (f F128d16) Int64() (int64, error) {
 	return n, nil
 }
 
+// AsInt returns the truncated equivalent integer to this value.
+func (f F128d16) AsInt() int {
+	return int(f.data.Div(multiplierF128d16).AsInt64())
+}
+
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
+func (f F128d16) Int() (int, error) {
+	n := f.AsInt()
+	if F128d16FromInt(n) != f {
+		return 0, errDoesNotFitInInt
+	}
+	return n, nil
+}
+
 // AsFloat64 returns the floating-point equivalent to this value.
 func (f F128d16) AsFloat64() float64 {
 	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierF128d16BigFloat).Float64()
@@ -177,6 +201,22 @@ func (f F128d16) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
 		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
+}
+
+// AsFloat32 returns the floating-point equivalent to this value.
+func (f F128d16) AsFloat32() float32 {
+	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierF128d16BigFloat).Float32()
+	return f64
+}
+
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
+func (f F128d16) Float32() (float32, error) {
+	n := f.AsFloat32()
+	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
+		return 0, errDoesNotFitInFloat32
 	}
 	return n, nil
 }

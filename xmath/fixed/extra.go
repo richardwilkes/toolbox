@@ -16,7 +16,9 @@ import (
 
 var (
 	errDoesNotFitInFloat64 = errors.New("does not fit in float64")
+	errDoesNotFitInFloat32 = errors.New("does not fit in float32")
 	errDoesNotFitInInt64   = errors.New("does not fit in int64")
+	errDoesNotFitInInt     = errors.New("does not fit in int")
 )
 
 func unquote(text []byte) string {

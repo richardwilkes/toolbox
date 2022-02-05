@@ -44,9 +44,19 @@ func F128d6FromFloat64(value float64) F128d6 {
 	return f
 }
 
+// F128d6FromFloat32 creates a new F128d6 value from a float32.
+func F128d6FromFloat32(value float32) F128d6 {
+	return F128d6FromFloat64(float64(value))
+}
+
 // F128d6FromInt64 creates a new F128d6 value from an int64.
 func F128d6FromInt64(value int64) F128d6 {
 	return F128d6{data: num.Int128From64(value).Mul(multiplierF128d6)}
+}
+
+// F128d6FromInt creates a new F128d6 value from an int.
+func F128d6FromInt(value int) F128d6 {
+	return F128d6FromInt64(int64(value))
 }
 
 // F128d6FromString creates a new F128d6 value from a string.
@@ -165,6 +175,20 @@ func (f F128d6) Int64() (int64, error) {
 	return n, nil
 }
 
+// AsInt returns the truncated equivalent integer to this value.
+func (f F128d6) AsInt() int {
+	return int(f.data.Div(multiplierF128d6).AsInt64())
+}
+
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
+func (f F128d6) Int() (int, error) {
+	n := f.AsInt()
+	if F128d6FromInt(n) != f {
+		return 0, errDoesNotFitInInt
+	}
+	return n, nil
+}
+
 // AsFloat64 returns the floating-point equivalent to this value.
 func (f F128d6) AsFloat64() float64 {
 	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierF128d6BigFloat).Float64()
@@ -177,6 +201,22 @@ func (f F128d6) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
 		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
+}
+
+// AsFloat32 returns the floating-point equivalent to this value.
+func (f F128d6) AsFloat32() float32 {
+	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierF128d6BigFloat).Float32()
+	return f64
+}
+
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
+func (f F128d6) Float32() (float32, error) {
+	n := f.AsFloat32()
+	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
+		return 0, errDoesNotFitInFloat32
 	}
 	return n, nil
 }

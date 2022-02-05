@@ -41,9 +41,19 @@ func F64d3FromFloat64(value float64) F64d3 {
 	return F64d3(value * float64(multiplierF64d3))
 }
 
+// F64d3FromFloat32 creates a new F64d3 value from a float32.
+func F64d3FromFloat32(value float32) F64d3 {
+	return F64d3(float64(value) * float64(multiplierF64d3))
+}
+
 // F64d3FromInt64 creates a new F64d3 value from an int64.
 func F64d3FromInt64(value int64) F64d3 {
 	return F64d3(value * multiplierF64d3)
+}
+
+// F64d3FromInt creates a new F64d3 value from an int.
+func F64d3FromInt(value int) F64d3 {
+	return F64d3(int64(value) * multiplierF64d3)
 }
 
 // F64d3FromString creates a new F64d3 value from a string.
@@ -149,7 +159,21 @@ func (f F64d3) Int64() (int64, error) {
 	if F64d3FromInt64(n) != f {
 		return 0, errDoesNotFitInInt64
 	}
-	return f.AsInt64(), nil
+	return n, nil
+}
+
+// AsInt returns the truncated equivalent integer to this value.
+func (f F64d3) AsInt() int {
+	return int(f / F64d3(multiplierF64d3))
+}
+
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
+func (f F64d3) Int() (int, error) {
+	n := f.AsInt()
+	if F64d3FromInt(n) != f {
+		return 0, errDoesNotFitInInt
+	}
+	return n, nil
 }
 
 // AsFloat64 returns the floating-point equivalent to this value.
@@ -163,6 +187,21 @@ func (f F64d3) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
 		return 0, errDoesNotFitInFloat64
+	}
+	return n, nil
+}
+
+// AsFloat32 returns the floating-point equivalent to this value.
+func (f F64d3) AsFloat32() float32 {
+	return float32(f.AsFloat64())
+}
+
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
+func (f F64d3) Float32() (float32, error) {
+	n := f.AsFloat32()
+	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
+		return 0, errDoesNotFitInFloat32
 	}
 	return n, nil
 }
