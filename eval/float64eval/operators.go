@@ -20,11 +20,13 @@ import (
 
 // Operators returns standard operators that work with float64.
 func Operators(divideByZeroReturnsZero bool) []*eval.Operator {
-	var divide eval.OpFunc
+	var divide, modulo eval.OpFunc
 	if divideByZeroReturnsZero {
 		divide = DivideAllowDivideByZero
+		modulo = ModuloAllowDivideByZero
 	} else {
 		divide = Divide
+		modulo = Modulo
 	}
 	return []*eval.Operator{
 		eval.OpenParen(),
@@ -42,7 +44,7 @@ func Operators(divideByZeroReturnsZero bool) []*eval.Operator {
 		eval.Subtract(Subtract, SubtractUnary),
 		eval.Multiply(Multiply),
 		eval.Divide(divide),
-		eval.Modulo(Modulo),
+		eval.Modulo(modulo),
 		eval.Power(Power),
 	}
 }
@@ -263,7 +265,7 @@ func DivideAllowDivideByZero(left, right interface{}) (interface{}, error) {
 	return l / r, nil
 }
 
-// Modulo % (converts decimal numbers to integers, then performs the modulo)
+// Modulo %
 func Modulo(left, right interface{}) (interface{}, error) {
 	l, err := NumberFrom(left)
 	if err != nil {
@@ -274,7 +276,27 @@ func Modulo(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return float64(int64(l) % int64(r)), nil
+	if r == 0 {
+		return nil, errs.New("divide by zero")
+	}
+	return math.Mod(l, r), nil
+}
+
+// ModuloAllowDivideByZero % (returns 0 for modulo 0)
+func ModuloAllowDivideByZero(left, right interface{}) (interface{}, error) {
+	l, err := NumberFrom(left)
+	if err != nil {
+		return nil, err
+	}
+	var r float64
+	r, err = NumberFrom(right)
+	if err != nil {
+		return nil, err
+	}
+	if r == 0 {
+		return r, nil
+	}
+	return math.Mod(l, r), nil
 }
 
 // Power ^
