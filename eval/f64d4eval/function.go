@@ -11,6 +11,7 @@ package f64d4eval
 
 import (
 	"math"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/eval"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
@@ -20,16 +21,17 @@ import (
 func Functions() map[string]eval.Function {
 	return map[string]eval.Function{
 		"abs":   Absolute,
-		"exp2":  Base2Exponential,
-		"exp":   BaseEExponential,
-		"ceil":  Ceiling,
 		"cbrt":  CubeRoot,
-		"log10": DecimalLog,
+		"ceil":  Ceiling,
+		"exp":   BaseEExponential,
+		"exp2":  Base2Exponential,
 		"floor": Floor,
 		"if":    If,
+		"log":   NaturalLog,
+		"log1p": NaturalLogSum1,
+		"log10": DecimalLog,
 		"max":   Maximum,
 		"min":   Minimum,
-		"log":   NaturalLog,
 		"round": Round,
 		"sqrt":  SquareRoot,
 	}
@@ -37,12 +39,11 @@ func Functions() map[string]eval.Function {
 
 // Absolute returns the absolute value of its argument.
 func Absolute(e *eval.Evaluator, arguments string) (interface{}, error) {
-	return singleNumberFunc(e, arguments, func(v float64) float64 {
-		if v < 0 {
-			return -v
-		}
-		return v
-	})
+	value, err := evalToNumber(e, arguments)
+	if err != nil {
+		return nil, err
+	}
+	return value.Abs(), nil
 }
 
 // Base2Exponential returns 2**x, the base-2 exponential of its argument.
@@ -57,7 +58,11 @@ func BaseEExponential(e *eval.Evaluator, arguments string) (interface{}, error) 
 
 // Ceiling returns the least integer value greater than or equal to its argument.
 func Ceiling(e *eval.Evaluator, arguments string) (interface{}, error) {
-	return singleNumberFunc(e, arguments, math.Ceil)
+	value, err := evalToNumber(e, arguments)
+	if err != nil {
+		return nil, err
+	}
+	return value.Ceil(), nil
 }
 
 // CubeRoot returns the cube root of it argument.
@@ -72,7 +77,11 @@ func DecimalLog(e *eval.Evaluator, arguments string) (interface{}, error) {
 
 // Floor returns the greatest integer value less than or equal to its argument.
 func Floor(e *eval.Evaluator, arguments string) (interface{}, error) {
-	return singleNumberFunc(e, arguments, math.Floor)
+	value, err := evalToNumber(e, arguments)
+	if err != nil {
+		return nil, err
+	}
+	return value.Trunc(), nil
 }
 
 // If returns the second argument if the first argument resolves to true, or the third argument if it doesn't.
@@ -85,7 +94,13 @@ func If(e *eval.Evaluator, arguments string) (interface{}, error) {
 	}
 	var value fixed.F64d4
 	if value, err = NumberFrom(evaluated); err != nil {
-		return nil, err
+		if s, ok := evaluated.(string); ok {
+			if s != "" && !strings.EqualFold(s, "false") {
+				value = 1
+			}
+		} else {
+			return nil, err
+		}
 	}
 	if value == 0 {
 		_, arguments = eval.NextArg(arguments)
@@ -100,17 +115,11 @@ func Maximum(e *eval.Evaluator, arguments string) (interface{}, error) {
 	for arguments != "" {
 		var arg string
 		arg, arguments = eval.NextArg(arguments)
-		evaluated, err := e.EvaluateNew(arg)
+		value, err := evalToNumber(e, arg)
 		if err != nil {
 			return nil, err
 		}
-		var value fixed.F64d4
-		if value, err = NumberFrom(evaluated); err != nil {
-			return nil, err
-		}
-		if max < value {
-			max = value
-		}
+		max = max.Max(value)
 	}
 	return max, nil
 }
@@ -121,17 +130,11 @@ func Minimum(e *eval.Evaluator, arguments string) (interface{}, error) {
 	for arguments != "" {
 		var arg string
 		arg, arguments = eval.NextArg(arguments)
-		evaluated, err := e.EvaluateNew(arg)
+		value, err := evalToNumber(e, arg)
 		if err != nil {
 			return nil, err
 		}
-		var value fixed.F64d4
-		if value, err = NumberFrom(evaluated); err != nil {
-			return nil, err
-		}
-		if min > value {
-			min = value
-		}
+		min = min.Min(value)
 	}
 	return min, nil
 }
@@ -141,9 +144,22 @@ func NaturalLog(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return singleNumberFunc(e, arguments, math.Log)
 }
 
+// NaturalLogSum1 returns the natural logarithm of the sum of its argument and 1.
+func NaturalLogSum1(e *eval.Evaluator, arguments string) (interface{}, error) {
+	value, err := evalToNumber(e, arguments)
+	if err != nil {
+		return nil, err
+	}
+	return fixed.F64d4FromFloat64(math.Log((value + fixed.F64d4FromInt(1)).AsFloat64())), nil
+}
+
 // Round returns the nearest integer, rounding half away from zero.
 func Round(e *eval.Evaluator, arguments string) (interface{}, error) {
-	return singleNumberFunc(e, arguments, math.Round)
+	value, err := evalToNumber(e, arguments)
+	if err != nil {
+		return nil, err
+	}
+	return value.Round(), nil
 }
 
 // SquareRoot returns the square root of it argument.
@@ -151,13 +167,16 @@ func SquareRoot(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return singleNumberFunc(e, arguments, math.Sqrt)
 }
 
-func singleNumberFunc(e *eval.Evaluator, arguments string, f func(float64) float64) (interface{}, error) {
-	arg, err := e.EvaluateNew(arguments)
+func evalToNumber(e *eval.Evaluator, arg string) (fixed.F64d4, error) {
+	evaluated, err := e.EvaluateNew(arg)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	var value fixed.F64d4
-	value, err = NumberFrom(arg)
+	return NumberFrom(evaluated)
+}
+
+func singleNumberFunc(e *eval.Evaluator, arguments string, f func(float64) float64) (interface{}, error) {
+	value, err := evalToNumber(e, arguments)
 	if err != nil {
 		return nil, err
 	}
