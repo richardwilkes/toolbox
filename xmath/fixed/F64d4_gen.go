@@ -29,6 +29,13 @@ const (
 	F64d4Min = F64d4(^(1<<63 - 1))
 )
 
+// Some commonly used values.
+var (
+	F64d4One     = F64d4FromInt(1)
+	F64d4Half    = F64d4FromStringForced("0.5")
+	F64d4NegHalf = -F64d4Half
+)
+
 var multiplierF64d4 = int64(math.Pow(10, 4))
 
 // F64d4 holds a fixed-point value that contains up to 4 decimal places. Values are truncated, not rounded. Values can
@@ -126,9 +133,43 @@ func (f F64d4) Div(value F64d4) F64d4 {
 	return f * F64d4(multiplierF64d4) / value
 }
 
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
+func (f F64d4) Mod(value F64d4) F64d4 {
+	return f - (value.Mul(f.Div(value).Trunc()))
+}
+
+// Abs returns the absolute value of this value.
+func (f F64d4) Abs() F64d4 {
+	if f < 0 {
+		return -f
+	}
+	return f
+}
+
 // Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f F64d4) Trunc() F64d4 {
 	return f / F64d4(multiplierF64d4) * F64d4(multiplierF64d4)
+}
+
+// Ceil returns the value rounded up to the nearest whole number.
+func (f F64d4) Ceil() F64d4 {
+	v := f.Trunc()
+	if f != v {
+		v += F64d4One
+	}
+	return v
+}
+
+// Round returns the nearest integer, rounding half away from zero.
+func (f F64d4) Round() F64d4 {
+	value := f.Trunc()
+	rem := f - value //nolint:ifshort // don't want to embed this in the if
+	if rem >= F64d4Half {
+		value += F64d4One
+	} else if rem < F64d4NegHalf {
+		value -= F64d4One
+	}
+	return value
 }
 
 // Min returns the minimum of this value or its argument.

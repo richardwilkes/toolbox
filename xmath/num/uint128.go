@@ -332,13 +332,13 @@ func (u Uint128) GreaterThan64(n uint64) bool {
 	return u.hi > 0 || u.lo > n
 }
 
-// GreaterOrEqualTo returns true if u >= n.
-func (u Uint128) GreaterOrEqualTo(n Uint128) bool {
+// GreaterThanOrEqual returns true if u >= n.
+func (u Uint128) GreaterThanOrEqual(n Uint128) bool {
 	return u.hi > n.hi || (u.hi == n.hi && u.lo >= n.lo)
 }
 
-// GreaterOrEqualTo64 returns true if u >= n.
-func (u Uint128) GreaterOrEqualTo64(n uint64) bool {
+// GreaterThanOrEqual64 returns true if u >= n.
+func (u Uint128) GreaterThanOrEqual64(n uint64) bool {
 	return u.hi > 0 || u.lo >= n
 }
 
@@ -362,13 +362,13 @@ func (u Uint128) LessThan64(n uint64) bool {
 	return u.hi == 0 && u.lo < n
 }
 
-// LessOrEqualTo returns true if u <= n.
-func (u Uint128) LessOrEqualTo(n Uint128) bool {
+// LessThanOrEqual returns true if u <= n.
+func (u Uint128) LessThanOrEqual(n Uint128) bool {
 	return u.hi < n.hi || (u.hi == n.hi && u.lo <= n.lo)
 }
 
-// LessOrEqualTo64 returns true if u <= n.
-func (u Uint128) LessOrEqualTo64(n uint64) bool {
+// LessThanOrEqual64 returns true if u <= n.
+func (u Uint128) LessThanOrEqual64(n uint64) bool {
 	return u.hi == 0 && u.lo <= n
 }
 
@@ -873,7 +873,7 @@ func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint1
 	shift := int(byLeading0 - uLeading0)
 	n = n.LeftShift(uint(shift))
 	for {
-		if u.GreaterOrEqualTo(n) {
+		if u.GreaterThanOrEqual(n) {
 			//goland:noinspection GoAssignmentToReceiver
 			u = u.Sub(n)
 			q.lo |= 1

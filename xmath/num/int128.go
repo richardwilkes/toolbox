@@ -429,8 +429,8 @@ func (i Int128) GreaterThan64(n int64) bool {
 	}
 }
 
-// GreaterOrEqualTo returns true if i >= n.
-func (i Int128) GreaterOrEqualTo(n Int128) bool {
+// GreaterThanOrEqual returns true if i >= n.
+func (i Int128) GreaterThanOrEqual(n Int128) bool {
 	switch {
 	case i.hi == n.hi && i.lo == n.lo:
 		return true
@@ -443,8 +443,8 @@ func (i Int128) GreaterOrEqualTo(n Int128) bool {
 	}
 }
 
-// GreaterOrEqualTo64 returns true if i >= n.
-func (i Int128) GreaterOrEqualTo64(n int64) bool {
+// GreaterThanOrEqual64 returns true if i >= n.
+func (i Int128) GreaterThanOrEqual64(n int64) bool {
 	var nhi uint64
 	nlo := uint64(n)
 	if n < 0 {
@@ -506,8 +506,8 @@ func (i Int128) LessThan64(n int64) bool {
 	}
 }
 
-// LessOrEqualTo returns true if i <= n.
-func (i Int128) LessOrEqualTo(n Int128) bool {
+// LessThanOrEqual returns true if i <= n.
+func (i Int128) LessThanOrEqual(n Int128) bool {
 	switch {
 	case i.hi == n.hi && i.lo == n.lo:
 		return true
@@ -520,8 +520,8 @@ func (i Int128) LessOrEqualTo(n Int128) bool {
 	}
 }
 
-// LessOrEqualTo64 returns true if i <= n.
-func (i Int128) LessOrEqualTo64(n int64) bool {
+// LessThanOrEqual64 returns true if i <= n.
+func (i Int128) LessThanOrEqual64(n int64) bool {
 	var nhi uint64
 	nlo := uint64(n)
 	if n < 0 {

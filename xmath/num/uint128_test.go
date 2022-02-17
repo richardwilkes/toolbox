@@ -193,14 +193,14 @@ func TestUint128GreaterThan(t *testing.T) {
 }
 
 func TestUint128GreaterOrEqualTo(t *testing.T) {
-	assert.Equal(t, true, num.Uint128From64(0).GreaterOrEqualTo(num.Uint128From64(0)))
-	assert.Equal(t, false, num.Uint128From64(1).GreaterOrEqualTo(num.Uint128From64(2)))
-	assert.Equal(t, false, num.Uint128From64(22).GreaterOrEqualTo(num.Uint128From64(98)))
-	assert.Equal(t, false, num.Uint128From64(0).GreaterOrEqualTo(num.Uint128From64(1)))
-	assert.Equal(t, false, num.Uint128From64(0).GreaterOrEqualTo(num.MaxUint128))
-	assert.Equal(t, true, num.MaxUint128.GreaterOrEqualTo(num.MaxUint128))
-	assert.Equal(t, true, num.Uint128FromComponents(1, 0).GreaterOrEqualTo(num.Uint128From64(1)))
-	assert.Equal(t, true, num.MaxUint128.GreaterOrEqualTo(num.Uint128From64(0)))
+	assert.Equal(t, true, num.Uint128From64(0).GreaterThanOrEqual(num.Uint128From64(0)))
+	assert.Equal(t, false, num.Uint128From64(1).GreaterThanOrEqual(num.Uint128From64(2)))
+	assert.Equal(t, false, num.Uint128From64(22).GreaterThanOrEqual(num.Uint128From64(98)))
+	assert.Equal(t, false, num.Uint128From64(0).GreaterThanOrEqual(num.Uint128From64(1)))
+	assert.Equal(t, false, num.Uint128From64(0).GreaterThanOrEqual(num.MaxUint128))
+	assert.Equal(t, true, num.MaxUint128.GreaterThanOrEqual(num.MaxUint128))
+	assert.Equal(t, true, num.Uint128FromComponents(1, 0).GreaterThanOrEqual(num.Uint128From64(1)))
+	assert.Equal(t, true, num.MaxUint128.GreaterThanOrEqual(num.Uint128From64(0)))
 }
 
 func TestUint128LessThan(t *testing.T) {
@@ -215,14 +215,14 @@ func TestUint128LessThan(t *testing.T) {
 }
 
 func TestUint128LessOrEqualTo(t *testing.T) {
-	assert.Equal(t, true, num.Uint128From64(0).LessOrEqualTo(num.Uint128From64(0)))
-	assert.Equal(t, true, num.Uint128From64(1).LessOrEqualTo(num.Uint128From64(2)))
-	assert.Equal(t, true, num.Uint128From64(22).LessOrEqualTo(num.Uint128From64(98)))
-	assert.Equal(t, true, num.Uint128From64(0).LessOrEqualTo(num.Uint128From64(1)))
-	assert.Equal(t, true, num.Uint128From64(0).LessOrEqualTo(num.MaxUint128))
-	assert.Equal(t, true, num.MaxUint128.LessOrEqualTo(num.MaxUint128))
-	assert.Equal(t, false, num.Uint128FromComponents(1, 0).LessOrEqualTo(num.Uint128From64(1)))
-	assert.Equal(t, false, num.MaxUint128.LessOrEqualTo(num.Uint128From64(0)))
+	assert.Equal(t, true, num.Uint128From64(0).LessThanOrEqual(num.Uint128From64(0)))
+	assert.Equal(t, true, num.Uint128From64(1).LessThanOrEqual(num.Uint128From64(2)))
+	assert.Equal(t, true, num.Uint128From64(22).LessThanOrEqual(num.Uint128From64(98)))
+	assert.Equal(t, true, num.Uint128From64(0).LessThanOrEqual(num.Uint128From64(1)))
+	assert.Equal(t, true, num.Uint128From64(0).LessThanOrEqual(num.MaxUint128))
+	assert.Equal(t, true, num.MaxUint128.LessThanOrEqual(num.MaxUint128))
+	assert.Equal(t, false, num.Uint128FromComponents(1, 0).LessThanOrEqual(num.Uint128From64(1)))
+	assert.Equal(t, false, num.MaxUint128.LessThanOrEqual(num.Uint128From64(0)))
 }
 
 func TestUint128Mul(t *testing.T) {

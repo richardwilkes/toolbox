@@ -33,6 +33,13 @@ var (
 	multiplierF128d4         = num.Int128FromBigInt(multiplierF128d4BigInt)
 )
 
+// Some commonly used values.
+var (
+	F128d4One     = F128d4FromInt(1)
+	F128d4Half    = F128d4FromStringForced("0.5")
+	F128d4NegHalf = F128d4Half.Neg()
+)
+
 // F128d4 holds a fixed-point value that contains up to 4 decimal places. Values are truncated, not rounded.
 type F128d4 struct {
 	data num.Int128
@@ -139,9 +146,75 @@ func (f F128d4) Div(value F128d4) F128d4 {
 	return F128d4{data: f.data.Mul(multiplierF128d4).Div(value.data)}
 }
 
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
+func (f F128d4) Mod(value F128d4) F128d4 {
+	return f.Sub(value.Mul(f.Div(value).Trunc()))
+}
+
+// Neg negates this value, returning a new value.
+func (f F128d4) Neg() F128d4 {
+	return F128d4{data: f.data.Neg()}
+}
+
+// Abs returns the absolute value of this value.
+func (f F128d4) Abs() F128d4 {
+	return F128d4{data: f.data.Abs()}
+}
+
+// Cmp returns 1 if i > n, 0 if i == n, and -1 if i < n.
+func (f F128d4) Cmp(n F128d4) int {
+	return f.data.Cmp(n.data)
+}
+
+// GreaterThan returns true if i > n.
+func (f F128d4) GreaterThan(n F128d4) bool {
+	return f.data.GreaterThan(n.data)
+}
+
+// GreaterThanOrEqual returns true if i >= n.
+func (f F128d4) GreaterThanOrEqual(n F128d4) bool {
+	return f.data.GreaterThanOrEqual(n.data)
+}
+
+// Equal returns true if i == n.
+func (f F128d4) Equal(n F128d4) bool {
+	return f.data.Equal(n.data)
+}
+
+// LessThan returns true if i < n.
+func (f F128d4) LessThan(n F128d4) bool {
+	return f.data.LessThan(n.data)
+}
+
+// LessThanOrEqual returns true if i <= n.
+func (f F128d4) LessThanOrEqual(n F128d4) bool {
+	return f.data.LessThanOrEqual(n.data)
+}
+
 // Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f F128d4) Trunc() F128d4 {
 	return F128d4{data: f.data.Div(multiplierF128d4).Mul(multiplierF128d4)}
+}
+
+// Ceil returns the value rounded up to the nearest whole number.
+func (f F128d4) Ceil() F128d4 {
+	v := f.Trunc()
+	if f != v {
+		v = v.Add(F128d4One)
+	}
+	return v
+}
+
+// Round returns the nearest integer, rounding half away from zero.
+func (f F128d4) Round() F128d4 {
+	value := f.Trunc()
+	rem := f.Sub(value)
+	if rem.GreaterThanOrEqual(F128d4Half) {
+		value = value.Add(F128d4One)
+	} else if rem.LessThan(F128d4NegHalf) {
+		value = value.Sub(F128d4One)
+	}
+	return value
 }
 
 // Min returns the minimum of this value or its argument.

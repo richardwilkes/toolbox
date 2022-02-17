@@ -33,6 +33,13 @@ var (
 	multiplierF128d16         = num.Int128FromBigInt(multiplierF128d16BigInt)
 )
 
+// Some commonly used values.
+var (
+	F128d16One     = F128d16FromInt(1)
+	F128d16Half    = F128d16FromStringForced("0.5")
+	F128d16NegHalf = F128d16Half.Neg()
+)
+
 // F128d16 holds a fixed-point value that contains up to 16 decimal places. Values are truncated, not rounded.
 type F128d16 struct {
 	data num.Int128
@@ -139,9 +146,75 @@ func (f F128d16) Div(value F128d16) F128d16 {
 	return F128d16{data: f.data.Mul(multiplierF128d16).Div(value.data)}
 }
 
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
+func (f F128d16) Mod(value F128d16) F128d16 {
+	return f.Sub(value.Mul(f.Div(value).Trunc()))
+}
+
+// Neg negates this value, returning a new value.
+func (f F128d16) Neg() F128d16 {
+	return F128d16{data: f.data.Neg()}
+}
+
+// Abs returns the absolute value of this value.
+func (f F128d16) Abs() F128d16 {
+	return F128d16{data: f.data.Abs()}
+}
+
+// Cmp returns 1 if i > n, 0 if i == n, and -1 if i < n.
+func (f F128d16) Cmp(n F128d16) int {
+	return f.data.Cmp(n.data)
+}
+
+// GreaterThan returns true if i > n.
+func (f F128d16) GreaterThan(n F128d16) bool {
+	return f.data.GreaterThan(n.data)
+}
+
+// GreaterThanOrEqual returns true if i >= n.
+func (f F128d16) GreaterThanOrEqual(n F128d16) bool {
+	return f.data.GreaterThanOrEqual(n.data)
+}
+
+// Equal returns true if i == n.
+func (f F128d16) Equal(n F128d16) bool {
+	return f.data.Equal(n.data)
+}
+
+// LessThan returns true if i < n.
+func (f F128d16) LessThan(n F128d16) bool {
+	return f.data.LessThan(n.data)
+}
+
+// LessThanOrEqual returns true if i <= n.
+func (f F128d16) LessThanOrEqual(n F128d16) bool {
+	return f.data.LessThanOrEqual(n.data)
+}
+
 // Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f F128d16) Trunc() F128d16 {
 	return F128d16{data: f.data.Div(multiplierF128d16).Mul(multiplierF128d16)}
+}
+
+// Ceil returns the value rounded up to the nearest whole number.
+func (f F128d16) Ceil() F128d16 {
+	v := f.Trunc()
+	if f != v {
+		v = v.Add(F128d16One)
+	}
+	return v
+}
+
+// Round returns the nearest integer, rounding half away from zero.
+func (f F128d16) Round() F128d16 {
+	value := f.Trunc()
+	rem := f.Sub(value)
+	if rem.GreaterThanOrEqual(F128d16Half) {
+		value = value.Add(F128d16One)
+	} else if rem.LessThan(F128d16NegHalf) {
+		value = value.Sub(F128d16One)
+	}
+	return value
 }
 
 // Min returns the minimum of this value or its argument.
