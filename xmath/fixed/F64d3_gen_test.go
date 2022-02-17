@@ -50,28 +50,28 @@ func TestConversion64d3(t *testing.T) {
 
 	v, err := fixed.F64d3FromString("33.0")
 	assert.NoError(t, err)
-	assert.Equal(t, v, fixed.F64d3FromInt64(33))
+	assert.Equal(t, v, fixed.F64d3FromInt(33))
 
 	v, err = fixed.F64d3FromString("33.00000000000000000000")
 	assert.NoError(t, err)
-	assert.Equal(t, v, fixed.F64d3FromInt64(33))
+	assert.Equal(t, v, fixed.F64d3FromInt(33))
 }
 
 func TestAddSub64d3(t *testing.T) {
 	oneThird := fixed.F64d3FromStringForced("0.333")
 	negTwoThirds := fixed.F64d3FromStringForced("-0.666")
-	one := fixed.F64d3FromInt64(1)
+	one := fixed.F64d3FromInt(1)
 	oneAndTwoThirds := fixed.F64d3FromStringForced("1.666")
-	nineThousandSix := fixed.F64d3FromInt64(9006)
+	nineThousandSix := fixed.F64d3FromInt(9006)
 	ninetyPointZeroSix := fixed.F64d3FromStringForced("90.06")
 	twelvePointThirtyFour := fixed.F64d3FromStringForced("12.34")
-	two := fixed.F64d3FromInt64(2)
+	two := fixed.F64d3FromInt(2)
 	assert.Equal(t, "0.999", (oneThird + oneThird + oneThird).String())
 	assert.Equal(t, "0.667", (one - oneThird).String())
 	assert.Equal(t, "-1.666", (negTwoThirds - one).String())
 	assert.Equal(t, "0", (negTwoThirds - one + oneAndTwoThirds).String())
-	assert.Equal(t, fixed.F64d3FromInt64(10240), fixed.F64d3FromInt64(1234)+nineThousandSix)
-	assert.Equal(t, "10240", (fixed.F64d3FromInt64(1234) + nineThousandSix).String())
+	assert.Equal(t, fixed.F64d3FromInt(10240), fixed.F64d3FromInt(1234)+nineThousandSix)
+	assert.Equal(t, "10240", (fixed.F64d3FromInt(1234) + nineThousandSix).String())
 	assert.Equal(t, fixed.F64d3FromStringForced("102.4"), twelvePointThirtyFour+ninetyPointZeroSix)
 	assert.Equal(t, "102.4", (twelvePointThirtyFour + ninetyPointZeroSix).String())
 	assert.Equal(t, "-1.5", (fixed.F64d3FromFloat64(0.5) - two).String())
@@ -80,25 +80,58 @@ func TestAddSub64d3(t *testing.T) {
 func TestMulDiv64d3(t *testing.T) {
 	pointThree := fixed.F64d3FromStringForced("0.3")
 	negativePointThree := fixed.F64d3FromStringForced("-0.3")
-	assert.Equal(t, "0.333", fixed.F64d3FromInt64(1).Div(fixed.F64d3FromInt64(3)).String())
-	assert.Equal(t, "-0.333", fixed.F64d3FromInt64(1).Div(fixed.F64d3FromInt64(-3)).String())
-	assert.Equal(t, "0.1", pointThree.Div(fixed.F64d3FromInt64(3)).String())
-	assert.Equal(t, "0.9", pointThree.Mul(fixed.F64d3FromInt64(3)).String())
-	assert.Equal(t, "-0.9", negativePointThree.Mul(fixed.F64d3FromInt64(3)).String())
+	assert.Equal(t, "0.333", fixed.F64d3FromInt(1).Div(fixed.F64d3FromInt(3)).String())
+	assert.Equal(t, "-0.333", fixed.F64d3FromInt(1).Div(fixed.F64d3FromInt(-3)).String())
+	assert.Equal(t, "0.1", pointThree.Div(fixed.F64d3FromInt(3)).String())
+	assert.Equal(t, "0.9", pointThree.Mul(fixed.F64d3FromInt(3)).String())
+	assert.Equal(t, "-0.9", negativePointThree.Mul(fixed.F64d3FromInt(3)).String())
+}
+
+func TestMod64d3(t *testing.T) {
+	assert.Equal(t, fixed.F64d3FromInt(1), fixed.F64d3FromInt(3).Mod(fixed.F64d3FromInt(2)))
+	assert.Equal(t, fixed.F64d3FromStringForced("0.3"), fixed.F64d3FromStringForced("9.3").Mod(fixed.F64d3FromInt(3)))
+	assert.Equal(t, fixed.F64d3FromStringForced("0.1"), fixed.F64d3FromStringForced("3.1").Mod(fixed.F64d3FromStringForced("0.2")))
 }
 
 func TestTrunc64d3(t *testing.T) {
-	assert.Equal(t, fixed.F64d3FromInt64(0), fixed.F64d3FromStringForced("0.3333").Trunc())
-	assert.Equal(t, fixed.F64d3FromInt64(2), fixed.F64d3FromStringForced("2.6789").Trunc())
-	assert.Equal(t, fixed.F64d3FromInt64(3), fixed.F64d3FromInt64(3).Trunc())
-	assert.Equal(t, fixed.F64d3FromInt64(0), fixed.F64d3FromStringForced("-0.3333").Trunc())
-	assert.Equal(t, fixed.F64d3FromInt64(-2), fixed.F64d3FromStringForced("-2.6789").Trunc())
-	assert.Equal(t, fixed.F64d3FromInt64(-3), fixed.F64d3FromInt64(-3).Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(0), fixed.F64d3FromStringForced("0.3333").Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(2), fixed.F64d3FromStringForced("2.6789").Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromInt(3).Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(0), fixed.F64d3FromStringForced("-0.3333").Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(-2), fixed.F64d3FromStringForced("-2.6789").Trunc())
+	assert.Equal(t, fixed.F64d3FromInt(-3), fixed.F64d3FromInt(-3).Trunc())
+}
+
+func TestCeil64d3(t *testing.T) {
+	assert.Equal(t, fixed.F64d3FromInt(1), fixed.F64d3FromStringForced("0.3333").Ceil())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromStringForced("2.6789").Ceil())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromInt(3).Ceil())
+	assert.Equal(t, fixed.F64d3FromInt(0), fixed.F64d3FromStringForced("-0.3333").Ceil())
+	assert.Equal(t, fixed.F64d3FromInt(-2), fixed.F64d3FromStringForced("-2.6789").Ceil())
+	assert.Equal(t, fixed.F64d3FromInt(-3), fixed.F64d3FromInt(-3).Ceil())
+}
+
+func TestRound64d3(t *testing.T) {
+	assert.Equal(t, fixed.F64d3FromInt(0), fixed.F64d3FromStringForced("0.3333").Round())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromStringForced("2.6789").Round())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromInt(3).Round())
+	assert.Equal(t, fixed.F64d3FromInt(0), fixed.F64d3FromStringForced("-0.3333").Round())
+	assert.Equal(t, fixed.F64d3FromInt(-3), fixed.F64d3FromStringForced("-2.6789").Round())
+	assert.Equal(t, fixed.F64d3FromInt(-3), fixed.F64d3FromInt(-3).Round())
+}
+
+func TestAbs64d3(t *testing.T) {
+	assert.Equal(t, fixed.F64d3FromStringForced("0.3333"), fixed.F64d3FromStringForced("0.3333").Abs())
+	assert.Equal(t, fixed.F64d3FromStringForced("2.6789"), fixed.F64d3FromStringForced("2.6789").Abs())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromInt(3).Abs())
+	assert.Equal(t, fixed.F64d3FromStringForced("0.3333"), fixed.F64d3FromStringForced("-0.3333").Abs())
+	assert.Equal(t, fixed.F64d3FromStringForced("2.6789"), fixed.F64d3FromStringForced("-2.6789").Abs())
+	assert.Equal(t, fixed.F64d3FromInt(3), fixed.F64d3FromInt(-3).Abs())
 }
 
 func TestJSON64d3(t *testing.T) {
-	for i := int64(-25000); i < 25001; i += 13 {
-		testJSON64d3(t, fixed.F64d3FromInt64(i))
+	for i := -25000; i < 25001; i += 13 {
+		testJSON64d3(t, fixed.F64d3FromInt(i))
 	}
 	testJSON64d3(t, fixed.F64d3FromInt64(1844674407371259000))
 }
@@ -115,8 +148,8 @@ func testJSON64d3(t *testing.T, v fixed.F64d3) {
 }
 
 func TestYAML64d3(t *testing.T) {
-	for i := int64(-25000); i < 25001; i += 13 {
-		testYAML64d3(t, fixed.F64d3FromInt64(i))
+	for i := -25000; i < 25001; i += 13 {
+		testYAML64d3(t, fixed.F64d3FromInt(i))
 	}
 	testYAML64d3(t, fixed.F64d3FromInt64(1844674407371259000))
 }

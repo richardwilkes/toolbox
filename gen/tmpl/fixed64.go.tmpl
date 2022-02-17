@@ -150,7 +150,7 @@ func (f F64d{{.}}) Trunc() F64d{{.}} {
 // Ceil returns the value rounded up to the nearest whole number.
 func (f F64d{{.}}) Ceil() F64d{{.}} {
 	v := f.Trunc()
-	if f != v {
+	if f > 0 && f != v {
 		v += F64d{{.}}One
 	}
 	return v

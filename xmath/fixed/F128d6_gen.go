@@ -199,7 +199,7 @@ func (f F128d6) Trunc() F128d6 {
 // Ceil returns the value rounded up to the nearest whole number.
 func (f F128d6) Ceil() F128d6 {
 	v := f.Trunc()
-	if f != v {
+	if f.GreaterThan(F128d6{}) && f != v {
 		v = v.Add(F128d6One)
 	}
 	return v

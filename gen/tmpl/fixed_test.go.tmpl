@@ -48,28 +48,28 @@ func TestConversion{{.Bits}}d{{.Digits}}(t *testing.T) {
 
 	v, err := fixed.F{{.Bits}}d{{.Digits}}FromString("33.0")
 	assert.NoError(t, err)
-	assert.Equal(t, v, fixed.F{{.Bits}}d{{.Digits}}FromInt64(33))
+	assert.Equal(t, v, fixed.F{{.Bits}}d{{.Digits}}FromInt(33))
 
 	v, err = fixed.F{{.Bits}}d{{.Digits}}FromString("33.00000000000000000000")
 	assert.NoError(t, err)
-	assert.Equal(t, v, fixed.F{{.Bits}}d{{.Digits}}FromInt64(33))
+	assert.Equal(t, v, fixed.F{{.Bits}}d{{.Digits}}FromInt(33))
 }
 
 func TestAddSub{{.Bits}}d{{.Digits}}(t *testing.T) {
 	oneThird := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.{{repeat "3" .Digits}}")
 	negTwoThirds := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.{{repeat "6" .Digits}}")
-	one := fixed.F{{.Bits}}d{{.Digits}}FromInt64(1)
+	one := fixed.F{{.Bits}}d{{.Digits}}FromInt(1)
 	oneAndTwoThirds := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("1.{{repeat "6" .Digits}}")
-	nineThousandSix := fixed.F{{.Bits}}d{{.Digits}}FromInt64(9006)
+	nineThousandSix := fixed.F{{.Bits}}d{{.Digits}}FromInt(9006)
 	ninetyPointZeroSix := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("90.06")
 	twelvePointThirtyFour := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("12.34")
-	two := fixed.F{{.Bits}}d{{.Digits}}FromInt64(2)
+	two := fixed.F{{.Bits}}d{{.Digits}}FromInt(2)
 	assert.Equal(t, "0.{{repeat "9" .Digits}}", (oneThird{{if eq .Bits 64}} + oneThird + oneThird{{else}}.Add(oneThird).Add(oneThird){{end}}).String())
 	assert.Equal(t, "0.{{repeat "6" (sub .Digits 1)}}7", (one{{if eq .Bits 64}} - oneThird{{else}}.Sub(oneThird){{end}}).String())
 	assert.Equal(t, "-1.{{repeat "6" .Digits}}", (negTwoThirds{{if eq .Bits 64}} - one{{else}}.Sub(one){{end}}).String())
 	assert.Equal(t, "0", (negTwoThirds{{if eq .Bits 64}} - one + oneAndTwoThirds{{else}}.Sub(one).Add(oneAndTwoThirds){{end}}).String())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(10240), fixed.F{{.Bits}}d{{.Digits}}FromInt64(1234){{if eq .Bits 64}}+nineThousandSix{{else}}.Add(nineThousandSix){{end}})
-	assert.Equal(t, "10240", (fixed.F{{.Bits}}d{{.Digits}}FromInt64(1234){{if eq .Bits 64}} + nineThousandSix{{else}}.Add(nineThousandSix){{end}}).String())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(10240), fixed.F{{.Bits}}d{{.Digits}}FromInt(1234){{if eq .Bits 64}}+nineThousandSix{{else}}.Add(nineThousandSix){{end}})
+	assert.Equal(t, "10240", (fixed.F{{.Bits}}d{{.Digits}}FromInt(1234){{if eq .Bits 64}} + nineThousandSix{{else}}.Add(nineThousandSix){{end}}).String())
 	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("102.4"), twelvePointThirtyFour{{if eq .Bits 64}}+ninetyPointZeroSix{{else}}.Add(ninetyPointZeroSix){{end}})
 	assert.Equal(t, "102.4", (twelvePointThirtyFour{{if eq .Bits 64}} + ninetyPointZeroSix{{else}}.Add(ninetyPointZeroSix){{end}}).String())
 	assert.Equal(t, "-1.5", (fixed.F{{.Bits}}d{{.Digits}}FromFloat64(0.5){{if eq .Bits 64}} - two{{else}}.Sub(two){{end}}).String())
@@ -78,25 +78,113 @@ func TestAddSub{{.Bits}}d{{.Digits}}(t *testing.T) {
 func TestMulDiv{{.Bits}}d{{.Digits}}(t *testing.T) {
 	pointThree := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3")
 	negativePointThree := fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3")
-	assert.Equal(t, "0.{{repeat "3" .Digits}}", fixed.F{{.Bits}}d{{.Digits}}FromInt64(1).Div(fixed.F{{.Bits}}d{{.Digits}}FromInt64(3)).String())
-	assert.Equal(t, "-0.{{repeat "3" .Digits}}", fixed.F{{.Bits}}d{{.Digits}}FromInt64(1).Div(fixed.F{{.Bits}}d{{.Digits}}FromInt64(-3)).String())
-	assert.Equal(t, "0.1", pointThree.Div(fixed.F{{.Bits}}d{{.Digits}}FromInt64(3)).String())
-	assert.Equal(t, "0.9", pointThree.Mul(fixed.F{{.Bits}}d{{.Digits}}FromInt64(3)).String())
-	assert.Equal(t, "-0.9", negativePointThree.Mul(fixed.F{{.Bits}}d{{.Digits}}FromInt64(3)).String())
+	assert.Equal(t, "0.{{repeat "3" .Digits}}", fixed.F{{.Bits}}d{{.Digits}}FromInt(1).Div(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)).String())
+	assert.Equal(t, "-0.{{repeat "3" .Digits}}", fixed.F{{.Bits}}d{{.Digits}}FromInt(1).Div(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)).String())
+	assert.Equal(t, "0.1", pointThree.Div(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)).String())
+	assert.Equal(t, "0.9", pointThree.Mul(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)).String())
+	assert.Equal(t, "-0.9", negativePointThree.Mul(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)).String())
+}
+
+func TestMod{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(1), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Mod(fixed.F{{.Bits}}d{{.Digits}}FromInt(2)))
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("9.3").Mod(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.1"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("3.1").Mod(fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.2")))
 }
 
 func TestTrunc{{.Bits}}d{{.Digits}}(t *testing.T) {
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Trunc())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(2), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Trunc())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(3), fixed.F{{.Bits}}d{{.Digits}}FromInt64(3).Trunc())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Trunc())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(-2), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Trunc())
-	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt64(-3).Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(2), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-2), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Trunc())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt(-3).Trunc())
 }
 
+func TestCeil{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(1), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Ceil())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Ceil())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Ceil())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Ceil())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-2), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Ceil())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt(-3).Ceil())
+}
+
+func TestRound{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Round())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Round())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Round())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(0), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Round())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-3), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Round())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt(-3).Round())
+}
+
+func TestAbs{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Abs())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Abs())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Abs())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Abs())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Abs())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(-3).Abs())
+}
+
+{{if eq .Bits 128}}
+func TestNeg{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Neg())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Neg())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(-3), fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Neg())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-0.3333").Neg())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789"), fixed.F{{.Bits}}d{{.Digits}}FromStringForced("-2.6789").Neg())
+	assert.Equal(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(3), fixed.F{{.Bits}}d{{.Digits}}FromInt(-3).Neg())
+}
+
+func TestCmp{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, 1, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Cmp(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, -1, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Cmp(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, 0, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Cmp(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+}
+
+func TestEqual{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").Equal(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").Equal(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).Equal(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+}
+
+func TestGreaterThan{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").GreaterThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").GreaterThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).GreaterThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromInt(4).GreaterThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").GreaterThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(-1)))
+}
+
+func TestGreaterThanOrEqual{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").GreaterThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").GreaterThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).GreaterThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromInt(4).GreaterThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").GreaterThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(-1)))
+}
+
+func TestLessThan{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").LessThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").LessThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).LessThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromInt(4).LessThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").LessThan(fixed.F{{.Bits}}d{{.Digits}}FromInt(-1)))
+}
+
+func TestLessThanOrEqual{{.Bits}}d{{.Digits}}(t *testing.T) {
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("0.3333").LessThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(-3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").LessThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, true, fixed.F{{.Bits}}d{{.Digits}}FromInt(3).LessThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromInt(4).LessThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(3)))
+	assert.Equal(t, false, fixed.F{{.Bits}}d{{.Digits}}FromStringForced("2.6789").LessThanOrEqual(fixed.F{{.Bits}}d{{.Digits}}FromInt(-1)))
+}
+{{end}}
+
 func TestJSON{{.Bits}}d{{.Digits}}(t *testing.T) {
-	for i := int64(-25000); i < 25001; i += 13 {
-		testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(i))
+	for i := -25000; i < 25001; i += 13 {
+		testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(i))
 	}
 	{{- if eq .Bits 64}}
 	testJSON{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(1844674407371259000))
@@ -117,8 +205,8 @@ func testJSON{{.Bits}}d{{.Digits}}(t *testing.T, v fixed.F{{.Bits}}d{{.Digits}})
 }
 
 func TestYAML{{.Bits}}d{{.Digits}}(t *testing.T) {
-	for i := int64(-25000); i < 25001; i += 13 {
-		testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(i))
+	for i := -25000; i < 25001; i += 13 {
+		testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt(i))
 	}
 	{{- if eq .Bits 64}}
 	testYAML{{.Bits}}d{{.Digits}}(t, fixed.F{{.Bits}}d{{.Digits}}FromInt64(1844674407371259000))
