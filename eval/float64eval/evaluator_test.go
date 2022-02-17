@@ -20,6 +20,7 @@ func TestEvaluator(t *testing.T) {
 	data := []string{
 		"1 + 1",
 		"1.3 + 1.5",
+		"1.3+1.5",
 		"1.30015 + 1.5",
 		"1 / 3",
 		"1 / 3 + 10",
@@ -37,6 +38,7 @@ func TestEvaluator(t *testing.T) {
 	}
 	expected := []float64{
 		2,
+		2.8,
 		2.8,
 		2.80015,
 		0.3333333333333333,
