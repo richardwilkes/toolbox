@@ -36,3 +36,16 @@ func CloneStringSlice(in []string) []string {
 	copy(out, in)
 	return out
 }
+
+// RunesEqual returns true if the two slices of runes are equal.
+func RunesEqual(left, right []rune) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if left[i] != right[i] {
+			return false
+		}
+	}
+	return true
+}
