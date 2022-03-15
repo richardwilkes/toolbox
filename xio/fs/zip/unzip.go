@@ -14,7 +14,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,7 +81,7 @@ func extractSymLink(f *zip.File, dst string, mask os.FileMode) error {
 	}
 	defer xio.CloseIgnoringErrors(r)
 	var buffer []byte
-	if buffer, err = ioutil.ReadAll(r); err != nil {
+	if buffer, err = io.ReadAll(r); err != nil {
 		return errs.Wrap(err)
 	}
 	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {

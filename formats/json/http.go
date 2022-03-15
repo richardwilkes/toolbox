@@ -26,7 +26,7 @@ func GetRequest(url string) (statusCode int, body *Data, err error) {
 // GetRequestWithContext calls http.Get with the URL and returns the response body as a new Data object.
 func GetRequestWithContext(ctx context.Context, url string) (statusCode int, body *Data, err error) {
 	var req *http.Request
-	req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return 0, nil, errs.NewWithCause("unable to create request", err)
 	}

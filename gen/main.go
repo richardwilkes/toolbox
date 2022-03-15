@@ -13,7 +13,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -171,7 +170,7 @@ func writeGoTemplate(tmpls *template.Template, tmpl, outputPath string, tmplArg 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o750); err != nil {
 		return errs.Wrap(err)
 	}
-	if err := ioutil.WriteFile(outputPath, data, 0o640); err != nil {
+	if err := os.WriteFile(outputPath, data, 0o640); err != nil {
 		return errs.Wrap(err)
 	}
 	return nil

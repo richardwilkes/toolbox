@@ -12,7 +12,6 @@ package git
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -108,7 +107,7 @@ func (repo *Repo) Pull() error {
 
 // HasDetachedHead returns true if the repo is currently in a "detached head" state.
 func (repo *Repo) HasDetachedHead() bool {
-	contents, err := ioutil.ReadFile(filepath.Join(repo.local, ".git", "HEAD"))
+	contents, err := os.ReadFile(filepath.Join(repo.local, ".git", "HEAD"))
 	return err != nil && !bytes.HasPrefix(bytes.TrimSpace(contents), []byte("ref: "))
 }
 

@@ -62,7 +62,7 @@ func (cl *CmdLine) NewOption(value Value) *Option {
 	option := new(Option)
 	option.value = value
 	if option.isString() {
-		option.def = fmt.Sprintf(`"%s"`, value.String())
+		option.def = fmt.Sprintf("%q", value.String())
 	} else {
 		option.def = value.String()
 	}

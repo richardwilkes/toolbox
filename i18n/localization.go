@@ -13,7 +13,6 @@ package i18n
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,11 +66,11 @@ func Text(text string) string {
 			}
 			Dir = path
 		}
-		fi, err := ioutil.ReadDir(Dir)
+		dirEntry, err := os.ReadDir(Dir)
 		if err != nil {
 			return
 		}
-		for _, one := range fi {
+		for _, one := range dirEntry {
 			if !one.IsDir() {
 				name := one.Name()
 				if filepath.Ext(name) == Extension {

@@ -12,7 +12,6 @@ package xio
 
 import (
 	"io"
-	"io/ioutil"
 )
 
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
@@ -23,6 +22,6 @@ func CloseIgnoringErrors(closer io.Closer) {
 
 // DiscardAndCloseIgnoringErrors reads any content remaining in the body and discards it, then closes the body.
 func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
-	_, _ = io.Copy(ioutil.Discard, rc) //nolint:errcheck // intentionally ignoring any error
-	_ = rc.Close()                     //nolint:errcheck // intentionally ignoring any error
+	_, _ = io.Copy(io.Discard, rc) //nolint:errcheck // intentionally ignoring any error
+	_ = rc.Close()                 //nolint:errcheck // intentionally ignoring any error
 }

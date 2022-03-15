@@ -12,7 +12,7 @@ package fs
 
 import (
 	"io"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -25,25 +25,25 @@ func Copy(src, dst string) error {
 }
 
 // CopyWithMask src to dst. src may be a directory, file, or symlink.
-func CopyWithMask(src, dst string, mask os.FileMode) error {
+func CopyWithMask(src, dst string, mask fs.FileMode) error {
 	info, err := os.Lstat(src)
 	if err != nil {
 		return err
 	}
-	return generalCopy(src, dst, info, mask)
+	return generalCopy(src, dst, info.Mode(), mask)
 }
 
-func generalCopy(src, dst string, info os.FileInfo, mask os.FileMode) error {
-	if info.Mode()&os.ModeSymlink != 0 {
-		return linkCopy(src, dst, info)
+func generalCopy(src, dst string, srcMode, mask fs.FileMode) error {
+	if srcMode&os.ModeSymlink != 0 {
+		return linkCopy(src, dst)
 	}
-	if info.IsDir() {
-		return dirCopy(src, dst, info, mask)
+	if srcMode.IsDir() {
+		return dirCopy(src, dst, srcMode, mask)
 	}
-	return fileCopy(src, dst, info, mask)
+	return fileCopy(src, dst, srcMode, mask)
 }
 
-func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
+func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
 			err = closeErr
 		}
 	}()
-	if err = os.Chmod(f.Name(), info.Mode()); err != nil {
+	if err = os.Chmod(f.Name(), srcMode); err != nil {
 		return err
 	}
 	var s *os.File
@@ -68,24 +68,24 @@ func fileCopy(src, dst string, info os.FileInfo, mask os.FileMode) (err error) {
 	return err
 }
 
-func dirCopy(srcDir, dstDir string, info os.FileInfo, mask os.FileMode) error {
-	if err := os.MkdirAll(dstDir, info.Mode()&mask); err != nil {
+func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) error {
+	if err := os.MkdirAll(dstDir, srcMode&mask); err != nil {
 		return err
 	}
-	list, err := ioutil.ReadDir(srcDir)
+	list, err := os.ReadDir(srcDir)
 	if err != nil {
 		return err
 	}
 	for _, one := range list {
 		name := one.Name()
-		if err = generalCopy(filepath.Join(srcDir, name), filepath.Join(dstDir, name), one, mask); err != nil {
+		if err = generalCopy(filepath.Join(srcDir, name), filepath.Join(dstDir, name), one.Type(), mask); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func linkCopy(src, dst string, info os.FileInfo) error {
+func linkCopy(src, dst string) error {
 	s, err := os.Readlink(src)
 	if err != nil {
 		return err

@@ -46,6 +46,6 @@ func (hw *wrapper) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, hw.auth.realm))
+	w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm=%q`, hw.auth.realm))
 	WriteHTTPStatus(w, http.StatusUnauthorized)
 }

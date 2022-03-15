@@ -10,7 +10,7 @@
 package network
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -50,7 +50,7 @@ func externalIP(client *http.Client, site string) string {
 	if resp, err := client.Get(site); err == nil { //nolint:noctx // The timeout on the client provides the same effect
 		defer xio.DiscardAndCloseIgnoringErrors(resp.Body)
 		var body []byte
-		if body, err = ioutil.ReadAll(resp.Body); err == nil {
+		if body, err = io.ReadAll(resp.Body); err == nil {
 			if ip := net.ParseIP(strings.TrimSpace(string(body))); ip != nil {
 				return ip.String()
 			}

@@ -11,9 +11,10 @@ package xio
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -31,7 +32,7 @@ func RetrieveDataWithContext(ctx context.Context, filePathOrURL string) ([]byte,
 		strings.HasPrefix(filePathOrURL, "file://") {
 		return RetrieveDataFromURLWithContext(ctx, filePathOrURL)
 	}
-	data, err := ioutil.ReadFile(filePathOrURL)
+	data, err := os.ReadFile(filePathOrURL)
 	if err != nil {
 		return nil, errs.NewWithCause(filePathOrURL, err)
 	}
@@ -52,13 +53,13 @@ func RetrieveDataFromURLWithContext(ctx context.Context, urlStr string) ([]byte,
 	var data []byte
 	switch u.Scheme {
 	case "file":
-		if data, err = ioutil.ReadFile(u.Path); err != nil {
+		if data, err = os.ReadFile(u.Path); err != nil {
 			return nil, errs.NewWithCause(urlStr, err)
 		}
 		return data, nil
 	case "http", "https":
 		var req *http.Request
-		req, err = http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, urlStr, http.NoBody)
 		if err != nil {
 			return nil, errs.NewWithCause("unable to create request", err)
 		}
@@ -70,7 +71,7 @@ func RetrieveDataFromURLWithContext(ctx context.Context, urlStr string) ([]byte,
 		if rsp.StatusCode < 200 || rsp.StatusCode > 299 {
 			return nil, errs.NewWithCause(urlStr, errs.Newf("received status %d (%s)", rsp.StatusCode, rsp.Status))
 		}
-		data, err = ioutil.ReadAll(rsp.Body)
+		data, err = io.ReadAll(rsp.Body)
 		if err != nil {
 			return nil, errs.NewWithCause(urlStr, err)
 		}

@@ -120,9 +120,9 @@ func TestNewWithCause(t *testing.T) {
 
 func TestFormat(t *testing.T) {
 	err := errs.New("test")
-	assert.Equal(t, "test", fmt.Sprintf("%s", err))
+	assert.Equal(t, "test", fmt.Sprintf("%s", err)) //nolint:gocritic // Testing %s, so necessary
 	assert.Equal(t, `"test"`, fmt.Sprintf("%q", err))
-	result := fmt.Sprintf("%v", err)
+	result := fmt.Sprintf("%v", err) //nolint:gocritic // Testing %v, so necessary
 	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
 	assert.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", err)

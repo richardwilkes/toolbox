@@ -179,7 +179,7 @@ func TestUint128Cmp(t *testing.T) {
 	assert.Equal(t, 1, num.Uint128FromComponents(1, 0).Cmp(num.Uint128From64(1)))
 	assert.Equal(t, -1, num.Uint128From64(0).Cmp(num.MaxUint128))
 	assert.Equal(t, 1, num.MaxUint128.Cmp(num.Uint128From64(0)))
-	assert.Equal(t, 0, num.MaxUint128.Cmp(num.MaxUint128))
+	assert.Equal(t, 0, num.MaxUint128.Cmp(num.MaxUint128)) //nolint:gocritic // Here for testing
 }
 
 func TestUint128GreaterThan(t *testing.T) {

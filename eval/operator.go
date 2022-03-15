@@ -9,7 +9,10 @@
 
 package eval
 
-import "unicode"
+import (
+	"unicode"
+	"unicode/utf8"
+)
 
 // OpFunc provides a signature for an Operator's Evaluate function.
 type OpFunc func(left, right interface{}) (interface{}, error)
@@ -31,8 +34,11 @@ func (o *Operator) match(expression string, start, max int) bool {
 	}
 	matches := o.Symbol == expression[start:start+len(o.Symbol)]
 	// Hack to allow negative exponents on floating point numbers (i.e. 1.2e-2)
-	if matches && len(o.Symbol) == 1 && o.Symbol == "-" && start > 1 && expression[start-1:start] == "e" && unicode.IsDigit([]rune(expression[start-2 : start-1])[0]) {
-		return false
+	if matches && len(o.Symbol) == 1 && o.Symbol == "-" && start > 1 && expression[start-1:start] == "e" {
+		ch, _ := utf8.DecodeRuneInString(expression[start-2 : start-1])
+		if unicode.IsDigit(ch) {
+			return false
+		}
 	}
 	return matches
 }
