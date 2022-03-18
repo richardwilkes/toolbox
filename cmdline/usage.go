@@ -50,6 +50,8 @@ var (
 	// GitVersion holds the vcs revision and clean/dirty status. If not set explicitly, will be generated from the value
 	// of the build tags "vcs.revision" and "vcs.modified".
 	GitVersion string
+	// VCSModified is true if the "vcs.modified" build tag is true.
+	VCSModified bool
 	// BuildNumber holds the build number. If not set explicitly, will be generated from the value of the build tag
 	// "vcs.time".
 	BuildNumber string
@@ -76,14 +78,9 @@ func init() {
 	}
 	var vcsRevision string
 	var vcsTime time.Time
-	var vcsModified bool
 	if info, ok := debug.ReadBuildInfo(); ok {
 		if AppVersion == "" {
-			if info.Main.Version == "(devel)" {
-				AppVersion = "0.0"
-			} else {
-				AppVersion = strings.TrimLeft(info.Main.Version, "v")
-			}
+			AppVersion = strings.TrimLeft(info.Main.Version, "v")
 		}
 		for _, setting := range info.Settings {
 			switch setting.Key {
@@ -97,18 +94,18 @@ func init() {
 				}
 			case "vcs.modified":
 				if setting.Value == "true" {
-					vcsModified = true
+					VCSModified = true
 				}
 			}
 		}
 	}
+	if AppVersion == "" {
+		AppVersion = "(devel)"
+	}
 	if GitVersion == "" && vcsRevision != "" {
 		GitVersion = vcsRevision
-		if vcsModified {
-			GitVersion += "-dirty"
-		}
 	}
-	if !vcsModified && !vcsTime.IsZero() {
+	if !VCSModified && !vcsTime.IsZero() {
 		if BuildNumber == "" {
 			BuildNumber = vcsTime.Format("20060102150405")
 		}
@@ -152,17 +149,17 @@ func Copyright() string {
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
 	term.WrapText(cl, "", AppName)
-	version := AppVersion
-	if version == "" {
-		version = "0.0"
-	}
-	buildInfo := fmt.Sprintf(i18n.Text("Version %s"), version)
+	buildInfo := fmt.Sprintf(i18n.Text("Version %s"), ShortVersion())
 	if BuildNumber != "" {
 		buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
 	}
 	term.WrapText(cl, "  ", buildInfo)
 	if GitVersion != "" {
-		term.WrapText(cl, "  ", vcs+": "+GitVersion)
+		str := vcs + ": " + GitVersion
+		if VCSModified {
+			str += "-modified"
+		}
+		term.WrapText(cl, "  ", str)
 	}
 	term.WrapText(cl, "  ", Copyright())
 	if License != "" {

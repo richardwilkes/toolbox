@@ -9,25 +9,22 @@
 
 package cmdline
 
-import "strings"
-
-// ShortVersion returns the app version. If AppVersion has not been set, then "0.0" will be returned instead.
+// ShortVersion returns the app version.
 func ShortVersion() string {
-	if AppVersion == "" {
-		return "0.0"
+	if VCSModified {
+		return AppVersion + "~"
 	}
 	return AppVersion
 }
 
-// LongVersion returns a combination of the app version and the build number. If AppVersion has not been set, then "0.0"
-// will be used instead.
+// LongVersion returns a combination of the app version and the build number.
 func LongVersion() string {
-	version := ShortVersion()
+	version := AppVersion
 	if BuildNumber != "" {
-		if !strings.HasSuffix(version, "~") {
-			version += "-"
-		}
-		version += BuildNumber
+		version += "-" + BuildNumber
+	}
+	if VCSModified {
+		return version + "~"
 	}
 	return version
 }
