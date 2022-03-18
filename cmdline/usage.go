@@ -44,7 +44,8 @@ var (
 	// description, such as "Mozilla Public License 2.0" and not the full license itself.
 	License string
 	// AppVersion holds the application's version information. If not set explicitly, will be the version of the main
-	// module.
+	// module. Unfortunately, this automatic setting only works for binaries created using
+	// "go install <package>@<version>".
 	AppVersion string
 	// GitVersion holds the vcs revision and clean/dirty status. If not set explicitly, will be generated from the value
 	// of the build tags "vcs.revision" and "vcs.modified".
@@ -81,7 +82,7 @@ func init() {
 			if info.Main.Version == "(devel)" {
 				AppVersion = "0.0"
 			} else {
-				AppVersion = info.Main.Version
+				AppVersion = strings.TrimLeft(info.Main.Version, "v")
 			}
 		}
 		for _, setting := range info.Settings {
