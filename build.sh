@@ -37,40 +37,11 @@ do
   esac
 done
 
-# Setup version info
-if command -v git 2>&1 > /dev/null; then
-  if [ -z "$(git status --porcelain)" ]; then
-    STATE=clean
-  else
-    STATE=dirty
-  fi
-  GIT_VERSION=$(git rev-parse HEAD)-$STATE
-  GIT_TAG=$(git tag --points-at HEAD)
-  if [ -z "$GIT_TAG" ]; then
-    GIT_TAG=$(git tag --list --sort -version:refname | head -1)
-    if [ -n "$GIT_TAG" ]; then
-      GIT_TAG=$GIT_TAG~
-    fi
-  fi
-  if [ -n "$GIT_TAG" ]; then
-    VERSION=$(echo "$GIT_TAG" | sed -E "s/^v//")
-  else
-    VERSION=""
-  fi
-else
-  GIT_VERSION=Unknown
-  VERSION=""
-fi
-
 # Build the code
 echo -e "\033[33mBuilding Go code...\033[0m"
-LINK_FLAGS="-X github.com/richardwilkes/toolbox/cmdline.AppVersion=$VERSION"
-LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.BuildNumber=$(date -u "+%Y%m%d%H%M%S")"
-LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.GitVersion=$GIT_VERSION"
-LINK_FLAGS="$LINK_FLAGS -X github.com/richardwilkes/toolbox/cmdline.CopyrightYears=2016-$(date "+%Y")"
 find . -iname "*_gen.go" -exec /bin/rm {} \;
 go generate ./gen
-go build -v -ldflags=all="$LINK_FLAGS" ./...
+go build -v ./...
 
 # Run the tests
 if [ "$TEST"x == "1x" ]; then

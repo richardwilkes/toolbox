@@ -13,8 +13,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/term"
@@ -25,24 +28,36 @@ var (
 	AppCmdName string
 	// AppName holds the name of the application. By default, this is the same as AppCmdName.
 	AppName string
-	// CopyrightYears holds the years to place in the copyright banner.
+	// CopyrightYears holds the years to place in the copyright banner. Instead of setting this explicitly, consider
+	// using CopyrightStartYear and CopyrightEndYear instead. For example, setting CopyrightStartYear early in your
+	// main() method, and allowing the build system to populate CopyrightEndYear for you.
 	CopyrightYears string
+	// CopyrightStartYear holds the starting year to place in the copyright banner. Will not be used if CopyrightYears
+	// is already set. If not set explicitly, will be set to the year of the "vcs.time" build tag, if available.
+	CopyrightStartYear string
+	// CopyrightEndYear holds the ending year to place in the copyright banner. Will not be used if CopyrightYears is
+	// already set. If not set explicitly, will be set to the year of the "vcs.time" build tag, if available.
+	CopyrightEndYear string
 	// CopyrightHolder holds the name of the copyright holder.
 	CopyrightHolder string
 	// License holds the license the software is being distributed under. This is intended to be a simple one line
 	// description, such as "Mozilla Public License 2.0" and not the full license itself.
 	License string
-	// AppVersion holds the application's version information. Typically set by the build system.
+	// AppVersion holds the application's version information. If not set explicitly, will be the version of the main
+	// module.
 	AppVersion string
-	// GitVersion holds the git revision and clean/dirty status and should be set by the build system.
+	// GitVersion holds the vcs revision and clean/dirty status. If not set explicitly, will be generated from the value
+	// of the build tags "vcs.revision" and "vcs.modified".
 	GitVersion string
-	// BuildNumber holds the build number and should be set by the build system.
+	// BuildNumber holds the build number. If not set explicitly, will be generated from the value of the build tag
+	// "vcs.time".
 	BuildNumber string
 	// AppIdentifier holds the uniform type identifier (UTI) for the application. This should contain only alphanumeric
 	// (A-Z,a-z,0-9), hyphen (-), and period (.) characters. The string should also be in reverse-DNS format. For
-	// example, if your company’s domain is Ajax.com and you create an application named Hello, you could assign the
-	// string com.Ajax.Hello as your AppIdentifier.
+	// example, if your company’s domain is ajax.com and you create an application named Hello, you could assign the
+	// string com.ajax.Hello as your AppIdentifier.
 	AppIdentifier string
+	vcs           = "git"
 )
 
 func init() {
@@ -58,6 +73,69 @@ func init() {
 	if AppName == "" {
 		AppName = AppCmdName
 	}
+	var vcsRevision string
+	var vcsTime time.Time
+	var vcsModified bool
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if AppVersion == "" {
+			if info.Main.Version == "(devel)" {
+				AppVersion = "0.0"
+			} else {
+				AppVersion = info.Main.Version
+			}
+		}
+		for _, setting := range info.Settings {
+			switch setting.Key {
+			case "vcs":
+				vcs = setting.Value
+			case "vcs.revision":
+				vcsRevision = setting.Value
+			case "vcs.time":
+				if t, err := time.Parse(time.RFC3339, setting.Value); err == nil {
+					vcsTime = t
+				}
+			case "vcs.modified":
+				if setting.Value == "true" {
+					vcsModified = true
+				}
+			}
+		}
+	}
+	if GitVersion == "" && vcsRevision != "" {
+		GitVersion = vcsRevision
+		if vcsModified {
+			GitVersion += "-dirty"
+		}
+	}
+	if !vcsModified && !vcsTime.IsZero() {
+		if BuildNumber == "" {
+			BuildNumber = vcsTime.Format("20060102150405")
+		}
+		year := strconv.Itoa(vcsTime.Year())
+		if CopyrightStartYear == "" {
+			CopyrightStartYear = year
+		}
+		if CopyrightEndYear == "" {
+			CopyrightEndYear = year
+		}
+	}
+}
+
+// ResolveCopyrightYears resolves the copyright years. If the CopyrightYears has been explicitly set, that will be
+// returned unmodified. Otherwise, it will be generated based on the values of CopyrightStartYear and CopyrightEndYear.
+func ResolveCopyrightYears() string {
+	if CopyrightYears != "" {
+		return CopyrightYears
+	}
+	years := CopyrightStartYear
+	if CopyrightEndYear != "" && CopyrightEndYear != CopyrightStartYear {
+		if years == "" {
+			years = CopyrightEndYear
+		} else {
+			years += "-" + CopyrightEndYear
+		}
+	}
+	return years
 }
 
 // Copyright returns the copyright notice.
@@ -66,7 +144,8 @@ func Copyright() string {
 	if !strings.HasSuffix(CopyrightHolder, ".") {
 		dot = "."
 	}
-	return fmt.Sprintf(i18n.Text("Copyright © %[1]s by %[2]s%[3]s All rights reserved."), CopyrightYears, CopyrightHolder, dot)
+	return fmt.Sprintf(i18n.Text("Copyright © %[1]s by %[2]s%[3]s All rights reserved."), ResolveCopyrightYears(),
+		CopyrightHolder, dot)
 }
 
 // DisplayUsage displays the program usage information.
@@ -82,7 +161,7 @@ func (cl *CmdLine) DisplayUsage() {
 	}
 	term.WrapText(cl, "  ", buildInfo)
 	if GitVersion != "" {
-		term.WrapText(cl, "  ", "git: "+GitVersion)
+		term.WrapText(cl, "  ", vcs+": "+GitVersion)
 	}
 	term.WrapText(cl, "  ", Copyright())
 	if License != "" {
