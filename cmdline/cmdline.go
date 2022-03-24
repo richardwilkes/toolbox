@@ -84,7 +84,7 @@ func (cl *CmdLine) Parse(args []string) []string {
 	var remainingArgs []string
 	options := cl.availableOptions()
 	max := len(args)
-	seen := collection.StringSet{}
+	seen := collection.NewSet[string]()
 	for i := 0; i < max; i++ {
 		arg := args[i]
 		switch state {

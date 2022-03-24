@@ -39,25 +39,6 @@ type fixedTestInfo struct {
 }
 
 var (
-	setTypes = []string{
-		"byte",
-		"complex64",
-		"complex128",
-		"float32",
-		"float64",
-		"int",
-		"int8",
-		"int16",
-		"int32",
-		"int64",
-		"rune",
-		"string",
-		"uint",
-		"uint8",
-		"uint16",
-		"uint32",
-		"uint64",
-	}
 	cmdlineTypes = []cmdlineInfo{
 		{"bool", "strconv.ParseBool(str)", false},
 		{"int", "strconv.ParseInt(str, 0, 64)", true},
@@ -93,9 +74,6 @@ func main() {
 	})
 	tmpls, err := tmpl.ParseGlob("tmpl/*.go.tmpl")
 	jot.FatalIfErr(errs.Wrap(err))
-	for _, one := range setTypes {
-		jot.FatalIfErr(writeGoTemplate(tmpls, "set.go.tmpl", "../collection/"+one+"set_gen.go", one))
-	}
 	for _, one := range cmdlineTypes {
 		jot.FatalIfErr(writeGoTemplate(tmpls, "values.go.tmpl", "../cmdline/"+toName(one.Type)+"_value_gen.go", one))
 	}

@@ -154,7 +154,7 @@ func Address(iFace net.Interface) string {
 // returned. If a host name is passed in, the host name plus the IP address(es) it resolves to will be returned. If the
 // empty string is passed in, then the host names and IP addresses for all active interfaces will be returned.
 func AddressesForHost(host string) []string {
-	ss := collection.NewStringSet()
+	ss := collection.NewSet[string]()
 	if host == "" { // All address on machine
 		if iFaces, err := net.Interfaces(); err == nil {
 			for _, iFace := range iFaces {
