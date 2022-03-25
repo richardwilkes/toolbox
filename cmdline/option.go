@@ -46,13 +46,12 @@ func (op *Option) isValid() (bool, error) {
 }
 
 func (op *Option) isBool() bool {
-	_, ok := op.value.(*boolValue)
-	return ok
-}
-
-func (op *Option) isString() bool {
-	_, ok := op.value.(*stringValue)
-	return ok
+	if generalValue, ok := op.value.(*GeneralValue); ok {
+		if _, ok = generalValue.Value.(*bool); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // SetName sets the name for this option. Returns self for easy chaining.

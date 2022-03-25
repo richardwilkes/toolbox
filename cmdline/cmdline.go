@@ -48,11 +48,11 @@ func New(includeDefaultOptions bool) *CmdLine {
 		cmds: make(map[string]Cmd),
 		out:  term.NewANSI(os.Stderr),
 	}
-	help := cl.NewBoolOption(&cl.showHelp).SetSingle('h').SetName("help")
+	help := cl.NewGeneralOption(&cl.showHelp).SetSingle('h').SetName("help")
 	if includeDefaultOptions {
 		help.SetUsage(i18n.Text("Display this help information and exit."))
-		cl.NewBoolOption(&cl.showVersion).SetSingle('v').SetName("version").SetUsage(i18n.Text("Display short version information and exit"))
-		cl.NewBoolOption(&cl.showLongVersion).SetSingle('V').SetName("Version").SetUsage(i18n.Text("Display the full version information and exit"))
+		cl.NewGeneralOption(&cl.showVersion).SetSingle('v').SetName("version").SetUsage(i18n.Text("Display short version information and exit"))
+		cl.NewGeneralOption(&cl.showLongVersion).SetSingle('V').SetName("Version").SetUsage(i18n.Text("Display the full version information and exit"))
 	}
 	return cl
 }
@@ -61,11 +61,19 @@ func New(includeDefaultOptions bool) *CmdLine {
 func (cl *CmdLine) NewOption(value Value) *Option {
 	option := new(Option)
 	option.value = value
-	if option.isString() {
-		option.def = fmt.Sprintf("%q", value.String())
-	} else {
-		option.def = value.String()
-	}
+	option.def = value.String()
+	option.arg = i18n.Text("value")
+	cl.options = append(cl.options, option)
+	return option
+}
+
+// NewGeneralOption creates a new Option and attaches it to this CmdLine. Valid value types are: *bool, *int, *int8,
+// *int16, *int32, *int64, *uint, *uint8, *uint16, *uint32, *uint64, *string, *time.Duration, *[]bool, *[]uint8,
+// *[]uint16, *[]uint32, *[]uint64, *[]int8, *[]int16, *[]int32, *[]int64, *[]string, *[]time.Duration
+func (cl *CmdLine) NewGeneralOption(value any) *Option {
+	option := new(Option)
+	option.value = &GeneralValue{Value: value}
+	option.def = option.value.String()
 	option.arg = i18n.Text("value")
 	cl.options = append(cl.options, option)
 	return option

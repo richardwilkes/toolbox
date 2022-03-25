@@ -27,35 +27,12 @@ import (
 
 //go:generate go run main.go
 
-type cmdlineInfo struct {
-	Type           string
-	Parser         string
-	NeedConversion bool
-}
-
 type fixedTestInfo struct {
 	Bits   int
 	Digits int
 }
 
 var (
-	cmdlineTypes = []cmdlineInfo{
-		{"bool", "strconv.ParseBool(str)", false},
-		{"int", "strconv.ParseInt(str, 0, 64)", true},
-		{"int8", "strconv.ParseInt(str, 0, 8)", true},
-		{"int16", "strconv.ParseInt(str, 0, 16)", true},
-		{"int32", "strconv.ParseInt(str, 0, 32)", true},
-		{"int64", "strconv.ParseInt(str, 0, 64)", false},
-		{"uint", "strconv.ParseUint(str, 0, 64)", true},
-		{"uint8", "strconv.ParseUint(str, 0, 8)", true},
-		{"uint16", "strconv.ParseUint(str, 0, 16)", true},
-		{"uint32", "strconv.ParseUint(str, 0, 32)", true},
-		{"uint64", "strconv.ParseUint(str, 0, 64)", false},
-		{"float32", "strconv.ParseFloat(str, 32)", true},
-		{"float64", "strconv.ParseFloat(str, 64)", false},
-		{"string", "str, error(nil)", false},
-		{"time.Duration", "time.ParseDuration(str)", false},
-	}
 	fixed64Digits  = []int{2, 3, 4, 6}
 	fixed128Digits = []int{2, 3, 4, 6, 16}
 )
@@ -74,9 +51,6 @@ func main() {
 	})
 	tmpls, err := tmpl.ParseGlob("tmpl/*.go.tmpl")
 	jot.FatalIfErr(errs.Wrap(err))
-	for _, one := range cmdlineTypes {
-		jot.FatalIfErr(writeGoTemplate(tmpls, "values.go.tmpl", "../cmdline/"+toName(one.Type)+"_value_gen.go", one))
-	}
 	for _, one := range fixed64Digits {
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed64.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen.go", one), one))
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen_test.go", one), &fixedTestInfo{Bits: 64, Digits: one}))

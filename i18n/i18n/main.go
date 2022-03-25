@@ -35,7 +35,7 @@ func main() {
 	cl.UsageSuffix = "<path> [path...]"
 	cl.Description = i18n.Text("Generates a template for a localization file from source code.")
 	outPath := "language.i18n"
-	cl.NewStringOption(&outPath).SetSingle('o').SetName("output").SetArg("path").SetUsage("The output file")
+	cl.NewGeneralOption(&outPath).SetSingle('o').SetName("output").SetArg("path").SetUsage("The output file")
 	args := cl.Parse(os.Args[1:])
 	if outPath == "" {
 		cl.FatalMsg(i18n.Text("The output file may not be an empty path."))
