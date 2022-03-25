@@ -9,20 +9,23 @@
 
 package quadtree
 
-import "github.com/richardwilkes/toolbox/xmath/geom"
+import (
+	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/xmath/geom"
+)
 
-type node struct {
-	rect      geom.Rect
-	contents  []Node
-	children  [4]*node
+type node[T xmath.Numeric] struct {
+	rect      geom.Rect[T]
+	contents  []Node[T]
+	children  [4]*node[T]
 	threshold int
 }
 
-func (n *node) Bounds() geom.Rect {
+func (n *node[T]) Bounds() geom.Rect[T] {
 	return n.rect
 }
 
-func (n *node) all(result []Node) []Node {
+func (n *node[T]) all(result []Node[T]) []Node[T] {
 	result = append(result, n.contents...)
 	if !n.isLeaf() {
 		for _, child := range n.children {
@@ -32,11 +35,11 @@ func (n *node) all(result []Node) []Node {
 	return result
 }
 
-func (n *node) isLeaf() bool {
+func (n *node[T]) isLeaf() bool {
 	return n.children[0] == nil
 }
 
-func (n *node) insert(obj Node) {
+func (n *node[T]) insert(obj Node[T]) {
 	n.splitIfNeeded()
 	if !n.isLeaf() {
 		rect := obj.Bounds()
@@ -50,7 +53,7 @@ func (n *node) insert(obj Node) {
 	n.contents = append(n.contents, obj)
 }
 
-func (n *node) remove(obj Node) bool {
+func (n *node[T]) remove(obj Node[T]) bool {
 	for i, one := range n.contents {
 		if one == obj {
 			n.contents[i] = n.contents[len(n.contents)-1]
@@ -69,54 +72,54 @@ func (n *node) remove(obj Node) bool {
 	return false
 }
 
-func (n *node) splitIfNeeded() {
+func (n *node[T]) splitIfNeeded() {
 	if n.isLeaf() {
 		if len(n.contents) >= n.threshold {
 			hw := n.rect.Width / 2
 			hh := n.rect.Height / 2
-			n.children[0] = &node{
-				rect: geom.Rect{
+			n.children[0] = &node[T]{
+				rect: geom.Rect[T]{
 					Point: n.rect.Point,
-					Size: geom.Size{
+					Size: geom.Size[T]{
 						Width:  hw,
 						Height: hh,
 					},
 				},
 				threshold: n.threshold,
 			}
-			n.children[1] = &node{
-				rect: geom.Rect{
-					Point: geom.Point{
+			n.children[1] = &node[T]{
+				rect: geom.Rect[T]{
+					Point: geom.Point[T]{
 						X: n.rect.X + hw,
 						Y: n.rect.Y,
 					},
-					Size: geom.Size{
+					Size: geom.Size[T]{
 						Width:  n.rect.Width - hw,
 						Height: hh,
 					},
 				},
 				threshold: n.threshold,
 			}
-			n.children[2] = &node{
-				rect: geom.Rect{
-					Point: geom.Point{
+			n.children[2] = &node[T]{
+				rect: geom.Rect[T]{
+					Point: geom.Point[T]{
 						X: n.rect.X,
 						Y: n.rect.Y + hh,
 					},
-					Size: geom.Size{
+					Size: geom.Size[T]{
 						Width:  hw,
 						Height: n.rect.Height - hh,
 					},
 				},
 				threshold: n.threshold,
 			}
-			n.children[3] = &node{
-				rect: geom.Rect{
-					Point: geom.Point{
+			n.children[3] = &node[T]{
+				rect: geom.Rect[T]{
+					Point: geom.Point[T]{
 						X: n.rect.X + hw,
 						Y: n.rect.Y + hh,
 					},
-					Size: geom.Size{
+					Size: geom.Size[T]{
 						Width:  n.rect.Width - hw,
 						Height: n.rect.Height - hh,
 					},
@@ -124,7 +127,7 @@ func (n *node) splitIfNeeded() {
 				threshold: n.threshold,
 			}
 			contents := n.contents
-			n.contents = make([]Node, 0)
+			n.contents = make([]Node[T], 0)
 			for _, one := range contents {
 				n.insert(one)
 			}
@@ -132,7 +135,7 @@ func (n *node) splitIfNeeded() {
 	}
 }
 
-func (n *node) containsPoint(pt geom.Point) bool {
+func (n *node[T]) containsPoint(pt geom.Point[T]) bool {
 	if n.rect.ContainsPoint(pt) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsPoint(pt) {
@@ -150,7 +153,7 @@ func (n *node) containsPoint(pt geom.Point) bool {
 	return false
 }
 
-func (n *node) findContainsPoint(pt geom.Point, result []Node) []Node {
+func (n *node[T]) findContainsPoint(pt geom.Point[T], result []Node[T]) []Node[T] {
 	if n.rect.ContainsPoint(pt) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsPoint(pt) {
@@ -166,7 +169,7 @@ func (n *node) findContainsPoint(pt geom.Point, result []Node) []Node {
 	return result
 }
 
-func (n *node) matchedContainsPoint(matcher Matcher, pt geom.Point) bool {
+func (n *node[T]) matchedContainsPoint(matcher Matcher[T], pt geom.Point[T]) bool {
 	if n.rect.ContainsPoint(pt) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsPoint(pt) && matcher.Matches(one) {
@@ -184,7 +187,7 @@ func (n *node) matchedContainsPoint(matcher Matcher, pt geom.Point) bool {
 	return false
 }
 
-func (n *node) findMatchedContainsPoint(matcher Matcher, pt geom.Point, result []Node) []Node {
+func (n *node[T]) findMatchedContainsPoint(matcher Matcher[T], pt geom.Point[T], result []Node[T]) []Node[T] {
 	if n.rect.ContainsPoint(pt) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsPoint(pt) && matcher.Matches(one) {
@@ -200,7 +203,7 @@ func (n *node) findMatchedContainsPoint(matcher Matcher, pt geom.Point, result [
 	return result
 }
 
-func (n *node) intersects(rect geom.Rect) bool {
+func (n *node[T]) intersects(rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().Intersects(rect) {
@@ -218,7 +221,7 @@ func (n *node) intersects(rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findIntersects(rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findIntersects(rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().Intersects(rect) {
@@ -234,7 +237,7 @@ func (n *node) findIntersects(rect geom.Rect, result []Node) []Node {
 	return result
 }
 
-func (n *node) matchedIntersects(matcher Matcher, rect geom.Rect) bool {
+func (n *node[T]) matchedIntersects(matcher Matcher[T], rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().Intersects(rect) && matcher.Matches(one) {
@@ -252,7 +255,7 @@ func (n *node) matchedIntersects(matcher Matcher, rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findMatchedIntersects(matcher Matcher, rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findMatchedIntersects(matcher Matcher[T], rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().Intersects(rect) && matcher.Matches(one) {
@@ -268,7 +271,7 @@ func (n *node) findMatchedIntersects(matcher Matcher, rect geom.Rect, result []N
 	return result
 }
 
-func (n *node) containsRect(rect geom.Rect) bool {
+func (n *node[T]) containsRect(rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsRect(rect) {
@@ -286,7 +289,7 @@ func (n *node) containsRect(rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findContainsRect(rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findContainsRect(rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsRect(rect) {
@@ -302,7 +305,7 @@ func (n *node) findContainsRect(rect geom.Rect, result []Node) []Node {
 	return result
 }
 
-func (n *node) matchedContainsRect(matcher Matcher, rect geom.Rect) bool {
+func (n *node[T]) matchedContainsRect(matcher Matcher[T], rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsRect(rect) && matcher.Matches(one) {
@@ -320,7 +323,7 @@ func (n *node) matchedContainsRect(matcher Matcher, rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findMatchedContainsRect(matcher Matcher, rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findMatchedContainsRect(matcher Matcher[T], rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if one.Bounds().ContainsRect(rect) && matcher.Matches(one) {
@@ -336,7 +339,7 @@ func (n *node) findMatchedContainsRect(matcher Matcher, rect geom.Rect, result [
 	return result
 }
 
-func (n *node) containedByRect(rect geom.Rect) bool {
+func (n *node[T]) containedByRect(rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if rect.ContainsRect(one.Bounds()) {
@@ -354,7 +357,7 @@ func (n *node) containedByRect(rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findContainedByRect(rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findContainedByRect(rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if rect.ContainsRect(one.Bounds()) {
@@ -370,7 +373,7 @@ func (n *node) findContainedByRect(rect geom.Rect, result []Node) []Node {
 	return result
 }
 
-func (n *node) matchedContainedByRect(matcher Matcher, rect geom.Rect) bool {
+func (n *node[T]) matchedContainedByRect(matcher Matcher[T], rect geom.Rect[T]) bool {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if rect.ContainsRect(one.Bounds()) && matcher.Matches(one) {
@@ -388,7 +391,7 @@ func (n *node) matchedContainedByRect(matcher Matcher, rect geom.Rect) bool {
 	return false
 }
 
-func (n *node) findMatchedContainedByRect(matcher Matcher, rect geom.Rect, result []Node) []Node {
+func (n *node[T]) findMatchedContainedByRect(matcher Matcher[T], rect geom.Rect[T], result []Node[T]) []Node[T] {
 	if n.rect.Intersects(rect) {
 		for _, one := range n.contents {
 			if rect.ContainsRect(one.Bounds()) && matcher.Matches(one) {

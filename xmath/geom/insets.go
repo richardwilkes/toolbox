@@ -11,33 +11,35 @@ package geom
 
 import (
 	"fmt"
+
+	"github.com/richardwilkes/toolbox/xmath"
 )
 
 // Insets defines margins on each side of a rectangle.
-type Insets struct {
-	Top    float64 `json:"top"`
-	Left   float64 `json:"left"`
-	Bottom float64 `json:"bottom"`
-	Right  float64 `json:"right"`
+type Insets[T xmath.Numeric] struct {
+	Top    T `json:"top"`
+	Left   T `json:"left"`
+	Bottom T `json:"bottom"`
+	Right  T `json:"right"`
 }
 
 // NewUniformInsets creates a new Insets whose edges all have the same value.
-func NewUniformInsets(amount float64) Insets {
-	return Insets{Top: amount, Left: amount, Bottom: amount, Right: amount}
+func NewUniformInsets[T xmath.Numeric](amount T) Insets[T] {
+	return Insets[T]{Top: amount, Left: amount, Bottom: amount, Right: amount}
 }
 
 // NewHorizontalInsets creates a new Insets whose left and right edges have the specified value.
-func NewHorizontalInsets(amount float64) Insets {
-	return Insets{Left: amount, Right: amount}
+func NewHorizontalInsets[T xmath.Numeric](amount T) Insets[T] {
+	return Insets[T]{Left: amount, Right: amount}
 }
 
 // NewVerticalInsets creates a new Insets whose top and bottom edges have the specified value.
-func NewVerticalInsets(amount float64) Insets {
-	return Insets{Top: amount, Bottom: amount}
+func NewVerticalInsets[T xmath.Numeric](amount T) Insets[T] {
+	return Insets[T]{Top: amount, Bottom: amount}
 }
 
 // Add modifies this Insets by adding the supplied Insets. Returns itself for easy chaining.
-func (i *Insets) Add(insets Insets) *Insets {
+func (i *Insets[T]) Add(insets Insets[T]) *Insets[T] {
 	i.Top += insets.Top
 	i.Left += insets.Left
 	i.Bottom += insets.Bottom
@@ -46,7 +48,7 @@ func (i *Insets) Add(insets Insets) *Insets {
 }
 
 // Subtract modifies this Insets by subtracting the supplied Insets. Returns itself for easy chaining.
-func (i *Insets) Subtract(insets Insets) *Insets {
+func (i *Insets[T]) Subtract(insets Insets[T]) *Insets[T] {
 	i.Top -= insets.Top
 	i.Left -= insets.Left
 	i.Bottom -= insets.Bottom
@@ -55,6 +57,6 @@ func (i *Insets) Subtract(insets Insets) *Insets {
 }
 
 // String implements the fmt.Stringer interface.
-func (i Insets) String() string {
-	return fmt.Sprintf("%f,%f,%f,%f", i.Top, i.Left, i.Bottom, i.Right)
+func (i *Insets[T]) String() string {
+	return fmt.Sprintf("%v,%v,%v,%v", i.Top, i.Left, i.Bottom, i.Right)
 }

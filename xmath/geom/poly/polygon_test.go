@@ -14,47 +14,48 @@ import (
 	"testing"
 	"time"
 
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/toolbox/xmath/geom/poly"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContains(t *testing.T) {
-	p := poly.Polygon{
+	p := poly.Polygon[float64]{
 		{{X: 200, Y: 20}, {X: 300, Y: 20}, {X: 300, Y: 120}, {X: 200, Y: 120}},
 		{{X: 250, Y: 50}, {X: 280, Y: 50}, {X: 280, Y: 80}, {X: 250, Y: 80}},
 		{{X: 260, Y: 60}, {X: 290, Y: 60}, {X: 290, Y: 90}, {X: 260, Y: 90}},
 		{{X: 290, Y: 110}, {X: 320, Y: 110}, {X: 320, Y: 140}, {X: 290, Y: 140}},
 	}
-	assert.False(t, p.Contains(geom.Point{X: 199, Y: 20}))
-	assert.True(t, p.Contains(geom.Point{X: 200, Y: 20}))
-	assert.True(t, p.Contains(geom.Point{X: 300, Y: 120}))
-	assert.True(t, p.Contains(geom.Point{X: 250, Y: 50}))
-	assert.True(t, p.Contains(geom.Point{X: 260, Y: 60}))
-	assert.True(t, p.Contains(geom.Point{X: 290, Y: 110}))
-	assert.True(t, p.Contains(geom.Point{X: 319, Y: 139}))
-	assert.False(t, p.Contains(geom.Point{X: 321, Y: 140}))
-	assert.False(t, p.Contains(geom.Point{X: 320, Y: 141}))
+	assert.False(t, p.Contains(geom.Point[float64]{X: 199, Y: 20}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 200, Y: 20}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 300, Y: 120}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 250, Y: 50}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 260, Y: 60}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 290, Y: 110}))
+	assert.True(t, p.Contains(geom.Point[float64]{X: 319, Y: 139}))
+	assert.False(t, p.Contains(geom.Point[float64]{X: 321, Y: 140}))
+	assert.False(t, p.Contains(geom.Point[float64]{X: 320, Y: 141}))
 
-	assert.False(t, p.ContainsEvenOdd(geom.Point{X: 199, Y: 20}))
-	assert.True(t, p.ContainsEvenOdd(geom.Point{X: 200, Y: 20}))
-	assert.True(t, p.ContainsEvenOdd(geom.Point{X: 300, Y: 120}))
-	assert.False(t, p.ContainsEvenOdd(geom.Point{X: 250, Y: 50}))
-	assert.True(t, p.ContainsEvenOdd(geom.Point{X: 260, Y: 60}))
-	assert.False(t, p.ContainsEvenOdd(geom.Point{X: 290, Y: 110}))
-	assert.True(t, p.ContainsEvenOdd(geom.Point{X: 319, Y: 139}))
-	assert.False(t, p.ContainsEvenOdd(geom.Point{X: 321, Y: 140}))
-	assert.False(t, p.ContainsEvenOdd(geom.Point{X: 320, Y: 141}))
+	assert.False(t, p.ContainsEvenOdd(geom.Point[float64]{X: 199, Y: 20}))
+	assert.True(t, p.ContainsEvenOdd(geom.Point[float64]{X: 200, Y: 20}))
+	assert.True(t, p.ContainsEvenOdd(geom.Point[float64]{X: 300, Y: 120}))
+	assert.False(t, p.ContainsEvenOdd(geom.Point[float64]{X: 250, Y: 50}))
+	assert.True(t, p.ContainsEvenOdd(geom.Point[float64]{X: 260, Y: 60}))
+	assert.False(t, p.ContainsEvenOdd(geom.Point[float64]{X: 290, Y: 110}))
+	assert.True(t, p.ContainsEvenOdd(geom.Point[float64]{X: 319, Y: 139}))
+	assert.False(t, p.ContainsEvenOdd(geom.Point[float64]{X: 321, Y: 140}))
+	assert.False(t, p.ContainsEvenOdd(geom.Point[float64]{X: 320, Y: 141}))
 }
 
 func TestUnion(t *testing.T) {
-	p1 := poly.Polygon{{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 1}}}
-	p2 := poly.Polygon{
+	p1 := poly.Polygon[float64]{{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 1}}}
+	p2 := poly.Polygon[float64]{
 		{{X: 2, Y: 1}, {X: 2, Y: 2}, {X: 3, Y: 2}, {X: 3, Y: 1}},
 		{{X: 1, Y: 2}, {X: 1, Y: 3}, {X: 2, Y: 3}, {X: 2, Y: 2}},
 		{{X: 2, Y: 2}, {X: 2, Y: 3}, {X: 3, Y: 3}, {X: 3, Y: 2}},
 	}
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 3, Y: 2},
 		{X: 3, Y: 1},
 		{X: 1, Y: 1},
@@ -63,11 +64,11 @@ func TestUnion(t *testing.T) {
 		{X: 3, Y: 3},
 	}}, p1.Union(p2))
 
-	p1 = poly.Polygon{{{X: 2, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 2}}}
-	p2 = poly.Polygon{{{X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 3}, {X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 3}}}
+	p1 = poly.Polygon[float64]{{{X: 2, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 2}}}
+	p2 = poly.Polygon[float64]{{{X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 3}, {X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 3}}}
 	assert.Equal(t, p1, p1.Union(p2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 90.0944951638784, Y: 79.13636755015634},
 		{X: 55.094495163878435, Y: 139.75814581506702},
 		{X: 66.59206311550543, Y: 159.6725176707606},
@@ -75,7 +76,7 @@ func TestUnion(t *testing.T) {
 		{X: 160.09449516387843, Y: 200.37992407997774},
 	}}, polygon1.Union(polygon2))
 
-	p1 = poly.Polygon{{
+	p1 = poly.Polygon[float64]{{
 		{X: 70.78432620601497, Y: -7.668842337087888},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 22.504998288170377, Y: -11.102347436334847},
@@ -85,7 +86,7 @@ func TestUnion(t *testing.T) {
 		{X: -16.386530327112805, Y: 33.142790410257575},
 		{X: -28.102259079650896, Y: 61.42706165771948},
 	}}
-	p2 = poly.Polygon{{
+	p2 = poly.Polygon[float64]{{
 		{X: 22.504998288170377, Y: -11.102347436334847},
 		{X: 14.215783711091163, Y: -7.668842337087877},
 		{X: 2.500054958553072, Y: 20.615428910374025},
@@ -97,7 +98,7 @@ func TestUnion(t *testing.T) {
 		{X: 45.01393469004752, Y: -1.778840704083887},
 		{X: 22.504998288170377, Y: -11.102347436334847},
 	}}
-	assert.InDeltaSlice(t, flatten(poly.Polygon{{
+	assert.InDeltaSlice(t, flatten(poly.Polygon[float64]{{
 		{X: 70.78432620601497, Y: -7.668842337087888},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 22.504998288170377, Y: -11.102347436334847},
@@ -109,7 +110,7 @@ func TestUnion(t *testing.T) {
 		{X: -28.102259079650896, Y: 61.42706165771948},
 	}}), flatten(p1.Union(p2)), 0.0000001)
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 82.50005495855308, Y: 20.61542891037402},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 2.500054958553072, Y: 20.615428910374025},
@@ -119,7 +120,7 @@ func TestUnion(t *testing.T) {
 		{X: 42.50005495855307, Y: 60.61542891037402},
 	}}, polygon3.Union(polygon4))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 2, Y: 0.75},
 		{X: 3, Y: 0.75},
 		{X: 3, Y: 0.25},
@@ -132,7 +133,7 @@ func TestUnion(t *testing.T) {
 		{X: 2, Y: 1},
 	}}, rect1.Union(rect2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 24.000000000000746, Y: 23},
 		{X: 36, Y: 23},
 		{X: 36, Y: 7},
@@ -171,34 +172,34 @@ func TestUnion(t *testing.T) {
 }
 
 func TestIntersect(t *testing.T) {
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 82.84661138052363, Y: 131.51881422166852},
 		{X: 66.59206311550543, Y: 159.6725176707606},
 		{X: 90.09449516387845, Y: 200.37992407997774},
 		{X: 160.09449516387843, Y: 200.37992407997774},
 	}}, polygon1.Intersect(polygon2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 36.852886624296644, Y: 46.382207361667014},
 		{X: 11.897740920349097, Y: 21.42706165771947},
 		{X: 7.60471431312381, Y: 25.720088264944764},
 		{X: 12.770244087304373, Y: 30.885618039125326},
 		{X: 32.55986001707135, Y: 50.6752339688923},
-	}}, polygon3.Intersect(poly.Polygon{{
+	}}, polygon3.Intersect(poly.Polygon[float64]{{
 		{X: 7.604714313123809, Y: 25.720088264944764},
 		{X: 11.897740920349097, Y: 21.42706165771947},
 		{X: 36.852886624296644, Y: 46.382207361667014},
 		{X: 32.55986001707135, Y: 50.6752339688923},
 	}}))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 2, Y: 0.25},
 		{X: 0, Y: 0.25},
 		{X: 0, Y: 0.75},
 		{X: 2, Y: 0.75},
 	}}, rect1.Intersect(rect2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 24.83622770614123, Y: 22.956175162946227},
 		{X: 25.66329352654208, Y: 22.825180805870485},
 		{X: 26.472135954999587, Y: 22.608452130361268},
@@ -233,17 +234,17 @@ func TestIntersect(t *testing.T) {
 		{X: 24.000000000000746, Y: 23},
 	}}, rect3.Intersect(circle))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 10, Y: 5},
 		{X: 5, Y: 0},
 		{X: 0, Y: 5},
 		{X: 5, Y: 10},
-	}}, poly.Polygon{{
+	}}, poly.Polygon[float64]{{
 		{X: 0, Y: 10},
 		{X: 0, Y: 0},
 		{X: 10, Y: 0},
 		{X: 10, Y: 10},
-	}}.Intersect(poly.Polygon{{
+	}}.Intersect(poly.Polygon[float64]{{
 		{X: 0, Y: 5},
 		{X: 5, Y: 0},
 		{X: 10, Y: 5},
@@ -252,7 +253,7 @@ func TestIntersect(t *testing.T) {
 }
 
 func TestSubtract(t *testing.T) {
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 90.0944951638784, Y: 79.13636755015634},
 		{X: 55.094495163878435, Y: 139.75814581506702},
 		{X: 66.59206311550543, Y: 159.6725176707606},
@@ -260,7 +261,7 @@ func TestSubtract(t *testing.T) {
 		{X: 160.09449516387843, Y: 200.37992407997774},
 	}}, polygon1.Subtract(polygon2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 82.50005495855308, Y: 20.61542891037402},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 2.500054958553072, Y: 20.615428910374025},
@@ -272,7 +273,7 @@ func TestSubtract(t *testing.T) {
 		{X: 42.50005495855307, Y: 60.61542891037402},
 	}}, polygon3.Subtract(polygon4))
 
-	p1 := poly.Polygon{{
+	p1 := poly.Polygon[float64]{{
 		{X: 38.5721239031346, Y: 172.33955556881023},
 		{X: 39.99999999999999, Y: 171.3397459621556},
 		{X: 41.57979856674331, Y: 170.60307379214092},
@@ -283,7 +284,7 @@ func TestSubtract(t *testing.T) {
 		{X: 50, Y: 171.3397459621556},
 		{X: 51.42787609686539, Y: 172.33955556881023},
 	}}
-	p2 := poly.Polygon{{
+	p2 := poly.Polygon[float64]{{
 		{X: 51.42787609686539, Y: 172.33955556881023},
 		{X: 50, Y: 171.3397459621556},
 		{X: 48.42020143325668, Y: 170.60307379214092},
@@ -294,7 +295,7 @@ func TestSubtract(t *testing.T) {
 		{X: 42.65192246987792, Y: 170.7635182233307},
 		{X: 42.5, Y: 172},
 	}}
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 42.5, Y: 172},
 		{X: 42.65192246987792, Y: 170.7635182233307},
 		{X: 42.78116786015871, Y: 170.28116786015872},
@@ -305,7 +306,7 @@ func TestSubtract(t *testing.T) {
 		{X: 51.42787609686539, Y: 172.33955556881023},
 	}}, p1.Subtract(p2))
 
-	assert.Equal(t, poly.Polygon{
+	assert.Equal(t, poly.Polygon[float64]{
 		{
 			{X: 2, Y: 0.75},
 			{X: 0, Y: 0.75},
@@ -320,7 +321,7 @@ func TestSubtract(t *testing.T) {
 		},
 	}, rect1.Subtract(rect2))
 
-	assert.Equal(t, poly.Polygon{{
+	assert.Equal(t, poly.Polygon[float64]{{
 		{X: 36, Y: 7},
 		{X: 24, Y: 7},
 		{X: 24.83622770614123, Y: 7.043824837053814},
@@ -356,17 +357,17 @@ func TestSubtract(t *testing.T) {
 		{X: 36, Y: 23},
 	}}, rect3.Subtract(circle))
 
-	p1 = poly.Polygon{{
+	p1 = poly.Polygon[float64]{{
 		{X: 114, Y: 0},
 		{X: 161, Y: 0},
 		{X: 114, Y: 168},
 	}}
-	p2 = poly.Polygon{{
+	p2 = poly.Polygon[float64]{{
 		{X: 99, Y: 164},
 		{X: 114, Y: 108},
 		{X: 121, Y: 164},
 	}}
-	assert.Equal(t, poly.Polygon{
+	assert.Equal(t, poly.Polygon[float64]{
 		{
 			{X: 115.11904761904762, Y: 164},
 			{X: 114, Y: 164},
@@ -380,17 +381,17 @@ func TestSubtract(t *testing.T) {
 		},
 	}, p1.Subtract(p2))
 
-	p1 = poly.Polygon{{
+	p1 = poly.Polygon[float64]{{
 		{X: 426694.6365274183, Y: -668547.1611580737},
 		{X: 426714.57523030025, Y: -668548.9238652373},
 		{X: 426745.39648089616, Y: -668550.4651249861},
 	}}
-	p2 = poly.Polygon{{
+	p2 = poly.Polygon[float64]{{
 		{X: 426714.5752302991, Y: -668548.9238652373},
 		{X: 426744.63718662335, Y: -668550.0591896093},
 		{X: 426745.3964821229, Y: -668550.4652243527},
 	}}
-	assert.Equal(t, poly.Polygon{
+	assert.Equal(t, poly.Polygon[float64]{
 		{
 			{X: 426731.58951938874, Y: -668549.5664294426},
 			{X: 426714.57523030386, Y: -668548.9238652375},
@@ -406,7 +407,7 @@ func TestSubtract(t *testing.T) {
 }
 
 func TestXor(t *testing.T) {
-	assert.Equal(t, poly.Polygon{
+	assert.Equal(t, poly.Polygon[float64]{
 		{
 			{X: 2, Y: 0.75},
 			{X: 3, Y: 0.75},
@@ -425,7 +426,7 @@ func TestXor(t *testing.T) {
 		},
 	}, rect1.Xor(rect2))
 
-	assert.Equal(t, poly.Polygon{
+	assert.Equal(t, poly.Polygon[float64]{
 		{
 			{X: 24.000000000000746, Y: 23},
 			{X: 36, Y: 23},
@@ -498,7 +499,7 @@ func TestXor(t *testing.T) {
 }
 
 func TestNonReductiveSegmentDivisions(t *testing.T) {
-	cases := [][]poly.Polygon{
+	cases := [][]poly.Polygon[float64]{
 		{
 			{{
 				{X: 608000, Y: -113151.36476426799},
@@ -659,7 +660,7 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 			angleRadians := 2 * math.Pi * float64(angle) / 360
 			subject := rotate(c[0], angleRadians)
 			clipping := rotate(c[1], angleRadians)
-			unionChan := make(chan poly.Polygon)
+			unionChan := make(chan poly.Polygon[float64])
 			go func() {
 				unionChan <- subject.Union(clipping)
 			}()
@@ -668,7 +669,7 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 			case <-time.After(1 * time.Second):
 				assert.Fail(t, "Union timed out", "Case %d, angle %d", i, angle)
 			}
-			intersectChan := make(chan poly.Polygon)
+			intersectChan := make(chan poly.Polygon[float64])
 			go func() {
 				intersectChan <- subject.Intersect(clipping)
 			}()
@@ -677,7 +678,7 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 			case <-time.After(1 * time.Second):
 				assert.Fail(t, "Intersect timed out", "Case %d, angle %d", i, angle)
 			}
-			subtractChan := make(chan poly.Polygon)
+			subtractChan := make(chan poly.Polygon[float64])
 			go func() {
 				subtractChan <- subject.Intersect(clipping)
 			}()
@@ -686,7 +687,7 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 			case <-time.After(1 * time.Second):
 				assert.Fail(t, "Subtract timed out", "Case %d, angle %d", i, angle)
 			}
-			xorChan := make(chan poly.Polygon)
+			xorChan := make(chan poly.Polygon[float64])
 			go func() {
 				xorChan <- subject.Intersect(clipping)
 			}()
@@ -699,14 +700,14 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 	}
 }
 
-func rotate(p poly.Polygon, radians float64) poly.Polygon {
+func rotate(p poly.Polygon[float64], radians float64) poly.Polygon[float64] {
 	result := p.Clone()
 	for i, contour := range p {
-		result[i] = make(poly.Contour, len(contour))
+		result[i] = make(poly.Contour[float64], len(contour))
 		for j, point := range contour {
-			result[i][j] = geom.Point{
-				X: point.X*math.Cos(radians) - point.Y*math.Sin(radians),
-				Y: point.Y*math.Cos(radians) + point.X*math.Sin(radians),
+			result[i][j] = geom.Point[float64]{
+				X: point.X*xmath.Cos(radians) - point.Y*xmath.Sin(radians),
+				Y: point.Y*xmath.Cos(radians) + point.X*xmath.Sin(radians),
 			}
 		}
 	}
@@ -714,7 +715,7 @@ func rotate(p poly.Polygon, radians float64) poly.Polygon {
 }
 
 var (
-	rect1 = poly.Polygon{
+	rect1 = poly.Polygon[float64]{
 		{
 			{X: 0, Y: 0},
 			{X: 1, Y: 0},
@@ -728,19 +729,19 @@ var (
 			{X: 1, Y: 1},
 		},
 	}
-	rect2 = poly.Polygon{{
+	rect2 = poly.Polygon[float64]{{
 		{X: 0, Y: 0.25},
 		{X: 3, Y: 0.25},
 		{X: 3, Y: 0.75},
 		{X: 0, Y: 0.75},
 	}}
-	rect3 = poly.Polygon{{
+	rect3 = poly.Polygon[float64]{{
 		{X: 24, Y: 7},
 		{X: 36, Y: 7},
 		{X: 36, Y: 23},
 		{X: 24, Y: 23},
 	}}
-	circle = poly.Polygon{{
+	circle = poly.Polygon[float64]{{
 		{X: 24, Y: 7},
 		{X: 24.83622770614123, Y: 7.043824837053814},
 		{X: 25.66329352654208, Y: 7.174819194129555},
@@ -802,25 +803,25 @@ var (
 		{X: 22.33670647345792, Y: 7.1748191941295545},
 		{X: 23.16377229385877, Y: 7.043824837053813},
 	}}
-	polygon1 = poly.Polygon{{
+	polygon1 = poly.Polygon[float64]{{
 		{X: 160.09449516387843, Y: 200.37992407997774},
 		{X: 90.09449516387845, Y: 200.37992407997774},
 		{X: 55.094495163878435, Y: 139.75814581506702},
 		{X: 90.0944951638784, Y: 79.13636755015634},
 	}}
-	polygon2 = poly.Polygon{{
+	polygon2 = poly.Polygon[float64]{{
 		{X: 82.84661138052363, Y: 131.51881422166852},
 		{X: 66.59206311550543, Y: 159.6725176707606},
 		{X: 90.09449516387845, Y: 200.37992407997774},
 		{X: 160.09449516387843, Y: 200.37992407997774},
 	}}
-	polygon3 = poly.Polygon{{
+	polygon3 = poly.Polygon[float64]{{
 		{X: 2.500054958553072, Y: 20.615428910374025},
 		{X: 42.500054958553065, Y: -19.38457108962598},
 		{X: 82.50005495855308, Y: 20.61542891037402},
 		{X: 42.50005495855307, Y: 60.61542891037402},
 	}}
-	polygon4 = poly.Polygon{{
+	polygon4 = poly.Polygon[float64]{{
 		{X: 7.604714313123809, Y: 25.720088264944764},
 		{X: 32.55986001707135, Y: 50.6752339688923},
 		{X: 36.852886624296644, Y: 46.382207361667014},
@@ -828,7 +829,7 @@ var (
 	}}
 )
 
-func flatten(p poly.Polygon) []float64 {
+func flatten(p poly.Polygon[float64]) []float64 {
 	var s []float64
 	for _, c := range p {
 		for _, pt := range c {

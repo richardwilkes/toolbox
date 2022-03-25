@@ -12,7 +12,9 @@ package poly
 import (
 	"math"
 
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -51,13 +53,13 @@ const (
 )
 
 // Polygon holds one or more contour lines. The polygon may contain holes and may be self-intersecting.
-type Polygon []Contour
+type Polygon[T constraints.Float] []Contour[T]
 
 // CalcEllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
 // radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
-func CalcEllipseSegmentCount(r, e float64) int {
+func CalcEllipseSegmentCount[T constraints.Float](r, e T) int {
 	d := 1 - e/r
-	n := int(math.Ceil(2 * math.Pi / math.Acos(2*d*d-1)))
+	n := int(xmath.Ceil(2 * math.Pi / xmath.Acos(2*d*d-1)))
 	if n < 4 {
 		n = 4
 	}
@@ -66,42 +68,42 @@ func CalcEllipseSegmentCount(r, e float64) int {
 
 // ApproximateEllipseAuto creates a polygon that approximates an ellipse, automatically choose the number of segments to
 // break the ellipse contour into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
-func ApproximateEllipseAuto(bounds geom.Rect) Polygon {
-	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(math.Max(bounds.Width, bounds.Height)/2, 0.2))
+func ApproximateEllipseAuto[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
+	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(xmath.Max(bounds.Width, bounds.Height)/2, 0.2))
 }
 
 // ApproximateEllipse creates a polygon that approximates an ellipse. 'sections' indicates how many segments to break
 // the ellipse contour into.
-func ApproximateEllipse(bounds geom.Rect, sections int) Polygon {
+func ApproximateEllipse[T constraints.Float](bounds geom.Rect[T], sections int) Polygon[T] {
 	halfWidth := bounds.Width / 2
 	halfHeight := bounds.Height / 2
-	inc := math.Pi * 2 / float64(sections)
+	inc := math.Pi * 2 / T(sections)
 	center := bounds.Center()
-	contour := make(Contour, sections)
-	var angle float64
+	contour := make(Contour[T], sections)
+	var angle T
 	for i := 0; i < sections; i++ {
-		contour[i] = geom.Point{
-			X: center.X + math.Cos(angle)*halfWidth,
-			Y: center.Y + math.Sin(angle)*halfHeight,
+		contour[i] = geom.Point[T]{
+			X: center.X + xmath.Cos(angle)*halfWidth,
+			Y: center.Y + xmath.Sin(angle)*halfHeight,
 		}
 		angle += inc
 	}
-	return Polygon{contour}
+	return Polygon[T]{contour}
 }
 
 // Rect creates a new polygon in the shape of a rectangle.
-func Rect(bounds geom.Rect) Polygon {
-	return Polygon{Contour{
+func Rect[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
+	return Polygon[T]{Contour[T]{
 		bounds.Point,
-		geom.Point{X: bounds.X, Y: bounds.Bottom() - 1},
-		geom.Point{X: bounds.Right() - 1, Y: bounds.Bottom() - 1},
-		geom.Point{X: bounds.Right() - 1, Y: bounds.Y},
+		geom.Point[T]{X: bounds.X, Y: bounds.Bottom() - 1},
+		geom.Point[T]{X: bounds.Right() - 1, Y: bounds.Bottom() - 1},
+		geom.Point[T]{X: bounds.Right() - 1, Y: bounds.Y},
 	}}
 }
 
 // Clone returns a duplicate of this polygon.
-func (p Polygon) Clone() Polygon {
-	clone := Polygon(make([]Contour, len(p)))
+func (p Polygon[T]) Clone() Polygon[T] {
+	clone := Polygon[T](make([]Contour[T], len(p)))
 	for i := range p {
 		clone[i] = p[i].Clone()
 	}
@@ -109,9 +111,9 @@ func (p Polygon) Clone() Polygon {
 }
 
 // Bounds returns the bounding rectangle of this polygon.
-func (p Polygon) Bounds() geom.Rect {
+func (p Polygon[T]) Bounds() geom.Rect[T] {
 	if len(p) == 0 {
-		return geom.Rect{}
+		return geom.Rect[T]{}
 	}
 	b := p[0].Bounds()
 	for _, c := range p[1:] {
@@ -121,7 +123,7 @@ func (p Polygon) Bounds() geom.Rect {
 }
 
 // Contains returns true if the point is contained by the polygon.
-func (p Polygon) Contains(pt geom.Point) bool {
+func (p Polygon[T]) Contains(pt geom.Point[T]) bool {
 	for i := range p {
 		if p[i].Contains(pt) {
 			return true
@@ -132,7 +134,7 @@ func (p Polygon) Contains(pt geom.Point) bool {
 
 // ContainsEvenOdd returns true if the point is contained by the polygon using the even-odd rule.
 // https://en.wikipedia.org/wiki/Even-odd_rule
-func (p Polygon) ContainsEvenOdd(pt geom.Point) bool {
+func (p Polygon[T]) ContainsEvenOdd(pt geom.Point[T]) bool {
 	var count int
 	for i := range p {
 		if p[i].Contains(pt) {
@@ -143,27 +145,27 @@ func (p Polygon) ContainsEvenOdd(pt geom.Point) bool {
 }
 
 // Union returns the union of both polygons.
-func (p Polygon) Union(other Polygon) Polygon {
+func (p Polygon[T]) Union(other Polygon[T]) Polygon[T] {
 	return p.construct(unionOp, other)
 }
 
 // Intersect returns the intersection of both polygons.
-func (p Polygon) Intersect(other Polygon) Polygon {
+func (p Polygon[T]) Intersect(other Polygon[T]) Polygon[T] {
 	return p.construct(intersectOp, other)
 }
 
 // Subtract returns the result of removing the other polygon from this polygon.
-func (p Polygon) Subtract(other Polygon) Polygon {
+func (p Polygon[T]) Subtract(other Polygon[T]) Polygon[T] {
 	return p.construct(subtractOp, other)
 }
 
 // Xor returns the result of xor'ing this polygon with the other polygon.
-func (p Polygon) Xor(other Polygon) Polygon {
+func (p Polygon[T]) Xor(other Polygon[T]) Polygon[T] {
 	return p.construct(xorOp, other)
 }
 
-func (p Polygon) construct(op clipOp, other Polygon) Polygon {
-	var result Polygon
+func (p Polygon[T]) construct(op clipOp, other Polygon[T]) Polygon[T] {
+	var result Polygon[T]
 
 	// Short-circuit the work if we can trivially determine the result is an empty polygon.
 	if (len(p) == 0 && len(other) == 0) ||
@@ -173,7 +175,7 @@ func (p Polygon) construct(op clipOp, other Polygon) Polygon {
 	}
 
 	// Build the local minima table and the scan beam table
-	sbTree := &scanBeamTree{}
+	sbTree := &scanBeamTree[T]{}
 	subjNonContributing, clipNonContributing := p.identifyNonContributingContours(op, other)
 	lmt := buildLocalMinimaTable(nil, sbTree, p, subjNonContributing, subject, op)
 	if lmt = buildLocalMinimaTable(lmt, sbTree, other, clipNonContributing, clipping, op); lmt == nil {
@@ -182,15 +184,15 @@ func (p Polygon) construct(op clipOp, other Polygon) Polygon {
 	sbt := sbTree.buildScanBeamTable()
 
 	// Process each scan beam
-	var aet *edgeNode
-	var outPoly *polygonNode
+	var aet *edgeNode[T]
+	var outPoly *polygonNode[T]
 	localMin := lmt
 	i := 0
 	for i < len(sbt) {
 
 		// Set yb and yt to the bottom and top of the scanbeam
-		var yt, dy float64
-		var bPt geom.Point
+		var yt, dy T
+		var bPt geom.Point[T]
 		bPt.Y = sbt[i]
 		i++
 		if i < len(sbt) {
@@ -228,17 +230,17 @@ func (p Polygon) construct(op clipOp, other Polygon) Polygon {
 	if outPoly != nil {
 		return outPoly.generate()
 	}
-	return Polygon{}
+	return Polygon[T]{}
 }
 
-func (p Polygon) identifyNonContributingContours(op clipOp, clip Polygon) (subjNonContributing, clipNonContributing []bool) {
+func (p Polygon[T]) identifyNonContributingContours(op clipOp, clip Polygon[T]) (subjNonContributing, clipNonContributing []bool) {
 	subjNonContributing = make([]bool, len(p))
 	clipNonContributing = make([]bool, len(clip))
 	if (op == intersectOp || op == subtractOp) && len(p) > 0 && len(clip) > 0 {
 
 		// Check all subject contour bounding boxes against clip boxes
 		overlaps := make([]bool, len(p)*len(clip))
-		boxes := make([]geom.Rect, len(clip))
+		boxes := make([]geom.Rect[T], len(clip))
 		for i, c := range clip {
 			boxes[i] = c.Bounds()
 		}
@@ -293,7 +295,7 @@ func calcVertexType(tr, tl, br, bl bool) vertexType {
 	return vt
 }
 
-func existsState(edge *edgeNode, which int) (int, bool) {
+func existsState[T constraints.Float](edge *edgeNode[T], which int) (int, bool) {
 	state := 0
 	if edge.bundleAbove[which] {
 		state = 1

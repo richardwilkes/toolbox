@@ -10,17 +10,15 @@
 package poly
 
 import (
-	"math"
-
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
-
-const float64Epsilon = 2.2204460492503131e-16
 
 // Epsilon controls how close a point has to be to be considered the same as another. If performance becomes an issue,
 // you can increase this value, which will cause more points to merge together, reducing the amount of work that must be
 // done. Don't raise it too high, though, as it can distort the resulting polygon.
-var Epsilon = float64Epsilon
+const Epsilon = 2.2204460492503131e-16
 
 type horizontalEdgeStates int
 
@@ -44,20 +42,20 @@ const (
 	bundleTail
 )
 
-type edgeNode struct {
-	vertex      geom.Point
-	bot         geom.Point
-	top         geom.Point
-	xb          float64
-	xt          float64
-	dx          float64
-	outAbove    *polygonNode
-	outBelow    *polygonNode
-	prev        *edgeNode
-	next        *edgeNode
-	pred        *edgeNode
-	successor   *edgeNode
-	nextBound   *edgeNode
+type edgeNode[T constraints.Float] struct {
+	vertex      geom.Point[T]
+	bot         geom.Point[T]
+	top         geom.Point[T]
+	xb          T
+	xt          T
+	dx          T
+	outAbove    *polygonNode[T]
+	outBelow    *polygonNode[T]
+	prev        *edgeNode[T]
+	next        *edgeNode[T]
+	pred        *edgeNode[T]
+	successor   *edgeNode[T]
+	nextBound   *edgeNode[T]
 	aboveState  bundleState
 	belowState  bundleState
 	which       int
@@ -67,15 +65,15 @@ type edgeNode struct {
 	clipSide    bool
 }
 
-type sortedEdge struct {
-	edge *edgeNode
-	xb   float64
-	xt   float64
-	dx   float64
-	prev *sortedEdge
+type sortedEdge[T constraints.Float] struct {
+	edge *edgeNode[T]
+	xb   T
+	xt   T
+	dx   T
+	prev *sortedEdge[T]
 }
 
-func (e *edgeNode) insertInto(b **edgeNode) {
+func (e *edgeNode[T]) insertInto(b **edgeNode[T]) {
 	switch {
 	case *b == nil:
 		*b = e
@@ -87,7 +85,7 @@ func (e *edgeNode) insertInto(b **edgeNode) {
 	}
 }
 
-func (e *edgeNode) addEdgeToActiveEdgeTable(aet, prev *edgeNode) *edgeNode {
+func (e *edgeNode[T]) addEdgeToActiveEdgeTable(aet, prev *edgeNode[T]) *edgeNode[T] {
 	switch {
 	case aet == nil:
 		aet = e
@@ -104,9 +102,9 @@ func (e *edgeNode) addEdgeToActiveEdgeTable(aet, prev *edgeNode) *edgeNode {
 	return aet
 }
 
-func (e *edgeNode) addLocalMin(p *polygonNode, pt geom.Point) *polygonNode {
-	v := &vertexNode{pt: pt}
-	result := &polygonNode{
+func (e *edgeNode[T]) addLocalMin(p *polygonNode[T], pt geom.Point[T]) *polygonNode[T] {
+	v := &vertexNode[T]{pt: pt}
+	result := &polygonNode[T]{
 		left:   v,
 		right:  v,
 		next:   p,
@@ -117,9 +115,9 @@ func (e *edgeNode) addLocalMin(p *polygonNode, pt geom.Point) *polygonNode {
 	return result
 }
 
-func (e *edgeNode) buildIntersections(dy float64) *intersection {
-	var se *sortedEdge
-	var it *intersection
+func (e *edgeNode[T]) buildIntersections(dy T) *intersection[T] {
+	var se *sortedEdge[T]
+	var it *intersection[T]
 	for edge := e; edge != nil; edge = edge.next {
 		if edge.aboveState == bundleHead || edge.bundleAbove[clipping] || edge.bundleAbove[subject] {
 			edge.addToSortedEdgeTable(&se, &it, dy)
@@ -128,9 +126,9 @@ func (e *edgeNode) buildIntersections(dy float64) *intersection {
 	return it
 }
 
-func (e *edgeNode) addToSortedEdgeTable(se **sortedEdge, it **intersection, dy float64) {
+func (e *edgeNode[T]) addToSortedEdgeTable(se **sortedEdge[T], it **intersection[T], dy T) {
 	if *se == nil {
-		*se = &sortedEdge{
+		*se = &sortedEdge[T]{
 			edge: e,
 			xb:   e.xb,
 			xt:   e.xt,
@@ -138,8 +136,8 @@ func (e *edgeNode) addToSortedEdgeTable(se **sortedEdge, it **intersection, dy f
 		}
 	} else {
 		den := ((*se).xt - (*se).xb) - (e.xt - e.xb)
-		if e.xt >= (*se).xt || e.dx == (*se).dx || math.Abs(den) <= float64Epsilon {
-			*se = &sortedEdge{
+		if e.xt >= (*se).xt || e.dx == (*se).dx || xmath.Abs(den) <= Epsilon {
+			*se = &sortedEdge[T]{
 				edge: e,
 				xb:   e.xb,
 				xt:   e.xt,
@@ -148,7 +146,7 @@ func (e *edgeNode) addToSortedEdgeTable(se **sortedEdge, it **intersection, dy f
 			}
 		} else {
 			r := (e.xb - (*se).xb) / den
-			addIntersection(it, (*se).edge, e, geom.Point{
+			addIntersection(it, (*se).edge, e, geom.Point[T]{
 				X: (*se).xb + r*((*se).xt-(*se).xb),
 				Y: r * dy,
 			})
@@ -157,16 +155,16 @@ func (e *edgeNode) addToSortedEdgeTable(se **sortedEdge, it **intersection, dy f
 	}
 }
 
-func addIntersection(it **intersection, edge0, edge1 *edgeNode, pt geom.Point) {
+func addIntersection[T constraints.Float](it **intersection[T], edge0, edge1 *edgeNode[T], pt geom.Point[T]) {
 	switch {
 	case *it == nil:
-		*it = &intersection{
+		*it = &intersection[T]{
 			edge0: edge0,
 			edge1: edge1,
 			point: pt,
 		}
 	case (*it).point.Y > pt.Y:
-		*it = &intersection{
+		*it = &intersection[T]{
 			edge0: edge0,
 			edge1: edge1,
 			point: pt,
@@ -177,7 +175,7 @@ func addIntersection(it **intersection, edge0, edge1 *edgeNode, pt geom.Point) {
 	}
 }
 
-func (e *edgeNode) bundleFields(pt geom.Point) {
+func (e *edgeNode[T]) bundleFields(pt geom.Point[T]) {
 	updated := e
 	e.bundleAbove[e.which] = e.top.Y != pt.Y
 	e.bundleAbove[1-e.which] = false
@@ -200,7 +198,7 @@ func (e *edgeNode) bundleFields(pt geom.Point) {
 	}
 }
 
-func (e *edgeNode) process(op clipOp, pt geom.Point, inPoly *polygonNode) (bPt geom.Point, outPoly *polygonNode) {
+func (e *edgeNode[T]) process(op clipOp, pt geom.Point[T], inPoly *polygonNode[T]) (bPt geom.Point[T], outPoly *polygonNode[T]) {
 	bPt = pt
 	outPoly = inPoly
 	var parityClipRight, paritySubjRight bool
@@ -208,8 +206,8 @@ func (e *edgeNode) process(op clipOp, pt geom.Point, inPoly *polygonNode) (bPt g
 		parityClipRight = true
 	}
 	var horiz [2]horizontalEdgeStates
-	var cf *polygonNode
-	px := -math.MaxFloat64
+	var cf *polygonNode[T]
+	px := xmath.MinValue[T]()
 	for edge := e; edge != nil; edge = edge.next {
 		clipExistsState, clipExists := existsState(edge, clipping)
 		subjExistsState, subjExists := existsState(edge, subject)
@@ -360,7 +358,7 @@ func (e *edgeNode) process(op clipOp, pt geom.Point, inPoly *polygonNode) (bPt g
 	return
 }
 
-func (e *edgeNode) deleteTerminatingEdges(pt geom.Point, yt float64) *edgeNode {
+func (e *edgeNode[T]) deleteTerminatingEdges(pt geom.Point[T], yt T) *edgeNode[T] {
 	updated := e
 	for edge := e; edge != nil; edge = edge.next {
 		switch {
@@ -391,7 +389,7 @@ func (e *edgeNode) deleteTerminatingEdges(pt geom.Point, yt float64) *edgeNode {
 	return updated
 }
 
-func (e *edgeNode) prepareForNextScanBeam(yt float64) *edgeNode {
+func (e *edgeNode[T]) prepareForNextScanBeam(yt T) *edgeNode[T] {
 	updated := e
 	for edge := e; edge != nil; edge = edge.next {
 		successorEdge := edge.successor
@@ -423,7 +421,7 @@ func (e *edgeNode) prepareForNextScanBeam(yt float64) *edgeNode {
 	return updated
 }
 
-func (e *edgeNode) swapIntersectingEdgeBundles(inter *intersection) *edgeNode {
+func (e *edgeNode[T]) swapIntersectingEdgeBundles(inter *intersection[T]) *edgeNode[T] {
 	result := e
 	e0 := inter.edge0
 	e1 := inter.edge1
@@ -506,8 +504,8 @@ func (e *edgeNode) swapIntersectingEdgeBundles(inter *intersection) *edgeNode {
 	return result
 }
 
-func mostlyEqual(a, b float64) bool {
-	return math.Abs(a-b) <= Epsilon
+func mostlyEqual[T constraints.Float](a, b T) bool {
+	return xmath.Abs(a-b) <= Epsilon
 }
 
 func calcNextHState(existsState int, current horizontalEdgeStates, parityRight bool) horizontalEdgeStates {

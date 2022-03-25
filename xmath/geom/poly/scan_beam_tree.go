@@ -9,25 +9,27 @@
 
 package poly
 
-type scanBeamTree struct {
-	root    *scanBeamNode
+import "golang.org/x/exp/constraints"
+
+type scanBeamTree[T constraints.Float] struct {
+	root    *scanBeamNode[T]
 	entries int
 }
 
-type scanBeamNode struct {
-	y    float64
-	less *scanBeamNode
-	more *scanBeamNode
+type scanBeamNode[T constraints.Float] struct {
+	y    T
+	less *scanBeamNode[T]
+	more *scanBeamNode[T]
 }
 
-func (sbt *scanBeamTree) add(y float64) {
+func (sbt *scanBeamTree[T]) add(y T) {
 	sbt.addToScanBeamTreeAt(&sbt.root, y)
 }
 
-func (sbt *scanBeamTree) addToScanBeamTreeAt(node **scanBeamNode, y float64) {
+func (sbt *scanBeamTree[T]) addToScanBeamTreeAt(node **scanBeamNode[T], y T) {
 	switch {
 	case *node == nil:
-		*node = &scanBeamNode{y: y}
+		*node = &scanBeamNode[T]{y: y}
 		sbt.entries++
 	case (*node).y > y:
 		sbt.addToScanBeamTreeAt(&(*node).less, y)
@@ -37,15 +39,15 @@ func (sbt *scanBeamTree) addToScanBeamTreeAt(node **scanBeamNode, y float64) {
 	}
 }
 
-func (sbt *scanBeamTree) buildScanBeamTable() []float64 {
-	table := make([]float64, sbt.entries)
+func (sbt *scanBeamTree[T]) buildScanBeamTable() []T {
+	table := make([]T, sbt.entries)
 	if sbt.root != nil {
 		sbt.root.buildScanBeamTableEntries(0, table)
 	}
 	return table
 }
 
-func (sbn *scanBeamNode) buildScanBeamTableEntries(index int, table []float64) int {
+func (sbn *scanBeamNode[T]) buildScanBeamTableEntries(index int, table []T) int {
 	if sbn.less != nil {
 		index = sbn.less.buildScanBeamTableEntries(index, table)
 	}

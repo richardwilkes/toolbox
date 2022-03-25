@@ -9,35 +9,38 @@
 
 package poly
 
-import "github.com/richardwilkes/toolbox/xmath/geom"
+import (
+	"github.com/richardwilkes/toolbox/xmath/geom"
+	"golang.org/x/exp/constraints"
+)
 
-type vertexNode struct {
-	pt   geom.Point
-	next *vertexNode
+type vertexNode[T constraints.Float] struct {
+	pt   geom.Point[T]
+	next *vertexNode[T]
 }
 
-type polygonNode struct {
-	left   *vertexNode
-	right  *vertexNode
-	next   *polygonNode
-	proxy  *polygonNode
+type polygonNode[T constraints.Float] struct {
+	left   *vertexNode[T]
+	right  *vertexNode[T]
+	next   *polygonNode[T]
+	proxy  *polygonNode[T]
 	active bool
 }
 
-func (p *polygonNode) addLeft(pt geom.Point) {
-	p.proxy.left = &vertexNode{
+func (p *polygonNode[T]) addLeft(pt geom.Point[T]) {
+	p.proxy.left = &vertexNode[T]{
 		pt:   pt,
 		next: p.proxy.left,
 	}
 }
 
-func (p *polygonNode) addRight(pt geom.Point) {
-	v := &vertexNode{pt: pt}
+func (p *polygonNode[T]) addRight(pt geom.Point[T]) {
+	v := &vertexNode[T]{pt: pt}
 	p.proxy.right.next = v
 	p.proxy.right = v
 }
 
-func (p *polygonNode) mergeLeft(other, list *polygonNode) {
+func (p *polygonNode[T]) mergeLeft(other, list *polygonNode[T]) {
 	if p.proxy != other.proxy {
 		p.proxy.right.next = other.proxy.left
 		other.proxy.left = p.proxy.left
@@ -50,7 +53,7 @@ func (p *polygonNode) mergeLeft(other, list *polygonNode) {
 	}
 }
 
-func (p *polygonNode) mergeRight(other, list *polygonNode) {
+func (p *polygonNode[T]) mergeRight(other, list *polygonNode[T]) {
 	if p.proxy != other.proxy {
 		other.proxy.right.next = p.proxy.left
 		other.proxy.right = p.proxy.right
@@ -63,14 +66,14 @@ func (p *polygonNode) mergeRight(other, list *polygonNode) {
 	}
 }
 
-func (p *polygonNode) generate() Polygon {
+func (p *polygonNode[T]) generate() Polygon[T] {
 	contourCount := 0
 	ptCounts := make([]int, 0, 32)
 
 	// Count the points of each contour and disable any that don't have enough points.
 	for poly := p; poly != nil; poly = poly.next {
 		if poly.active {
-			var prev *vertexNode
+			var prev *vertexNode[T]
 			ptCount := 0
 			for v := poly.proxy.left; v != nil; v = v.next {
 				if prev == nil || prev.pt != v.pt {
@@ -87,18 +90,18 @@ func (p *polygonNode) generate() Polygon {
 		}
 	}
 	if contourCount == 0 {
-		return Polygon{}
+		return Polygon[T]{}
 	}
 
 	// Create the polygon
-	result := make([]Contour, contourCount)
+	result := make([]Contour[T], contourCount)
 	ci := 0
 	for poly := p; poly != nil; poly = poly.next {
 		if !poly.active {
 			continue
 		}
-		var prev *vertexNode
-		result[ci] = make([]geom.Point, ptCounts[ci])
+		var prev *vertexNode[T]
+		result[ci] = make([]geom.Point[T], ptCounts[ci])
 		v := len(result[ci]) - 1
 		for vtx := poly.proxy.left; vtx != nil; vtx = vtx.next {
 			if prev == nil || prev.pt != vtx.pt {

@@ -342,7 +342,7 @@ func (b *BitSet) NextClear(start int) int {
 		firstBit = 0
 		i++
 	}
-	return MaxInt(max*dataBitsPerWord, start)
+	return Max(max*dataBitsPerWord, start)
 }
 
 // Trim the BitSet down to the minimum required to store the set bits.

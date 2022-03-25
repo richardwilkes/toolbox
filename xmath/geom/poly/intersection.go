@@ -9,16 +9,19 @@
 
 package poly
 
-import "github.com/richardwilkes/toolbox/xmath/geom"
+import (
+	"github.com/richardwilkes/toolbox/xmath/geom"
+	"golang.org/x/exp/constraints"
+)
 
-type intersection struct {
-	edge0 *edgeNode
-	edge1 *edgeNode
-	point geom.Point
-	next  *intersection
+type intersection[T constraints.Float] struct {
+	edge0 *edgeNode[T]
+	edge1 *edgeNode[T]
+	point geom.Point[T]
+	next  *intersection[T]
 }
 
-func (inter *intersection) process(op clipOp, pt geom.Point, outPoly *polygonNode) *polygonNode {
+func (inter *intersection[T]) process(op clipOp, pt geom.Point[T], outPoly *polygonNode[T]) *polygonNode[T] {
 	e0 := inter.edge0
 	e1 := inter.edge1
 

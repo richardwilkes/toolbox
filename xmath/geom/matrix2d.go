@@ -10,56 +10,55 @@
 package geom
 
 import (
-	"math"
-
 	"github.com/richardwilkes/toolbox/xmath"
+	"golang.org/x/exp/constraints"
 )
 
 // Matrix2D provides a 2D matrix.
-type Matrix2D struct {
-	ScaleX float64
-	SkewX  float64
-	TransX float64
-	SkewY  float64
-	ScaleY float64
-	TransY float64
+type Matrix2D[T constraints.Float] struct {
+	ScaleX T
+	SkewX  T
+	TransX T
+	SkewY  T
+	ScaleY T
+	TransY T
 }
 
 // NewIdentityMatrix2D creates a new identity transformation 2D matrix.
-func NewIdentityMatrix2D() *Matrix2D {
-	return &Matrix2D{ScaleX: 1, ScaleY: 1}
+func NewIdentityMatrix2D[T constraints.Float]() *Matrix2D[T] {
+	return &Matrix2D[T]{ScaleX: 1, ScaleY: 1}
 }
 
 // NewTranslationMatrix2D creates a new 2D matrix that translates by 'tx' and 'ty'.
-func NewTranslationMatrix2D(tx, ty float64) *Matrix2D {
-	return &Matrix2D{ScaleX: 1, ScaleY: 1, TransX: tx, TransY: ty}
+func NewTranslationMatrix2D[T constraints.Float](tx, ty T) *Matrix2D[T] {
+	return &Matrix2D[T]{ScaleX: 1, ScaleY: 1, TransX: tx, TransY: ty}
 }
 
 // NewScaleMatrix2D creates a new 2D matrix that scales by 'sx' and 'sy'.
-func NewScaleMatrix2D(sx, sy float64) *Matrix2D {
-	return &Matrix2D{ScaleX: sx, ScaleY: sy}
+func NewScaleMatrix2D[T constraints.Float](sx, sy T) *Matrix2D[T] {
+	return &Matrix2D[T]{ScaleX: sx, ScaleY: sy}
 }
 
 // NewRotationMatrix2D creates a new 2D matrix that rotates by 'radians'. Positive values are clockwise.
-func NewRotationMatrix2D(radians float64) *Matrix2D {
-	s := math.Sin(radians)
-	c := math.Cos(radians)
-	return &Matrix2D{ScaleX: c, SkewX: -s, SkewY: s, ScaleY: c}
+func NewRotationMatrix2D[T constraints.Float](radians T) *Matrix2D[T] {
+	s := xmath.Sin(radians)
+	c := xmath.Cos(radians)
+	return &Matrix2D[T]{ScaleX: c, SkewX: -s, SkewY: s, ScaleY: c}
 }
 
 // NewRotationByDegreesMatrix2D creates a new 2D matrix that rotates by 'degrees'. Positive values are clockwise.
-func NewRotationByDegreesMatrix2D(degrees float64) *Matrix2D {
-	return NewRotationMatrix2D(degrees * xmath.DegreesToRadians)
+func NewRotationByDegreesMatrix2D[T constraints.Float](degrees T) *Matrix2D[T] {
+	return NewRotationMatrix2D[T](degrees * xmath.DegreesToRadians)
 }
 
 // Translate this matrix by 'tx' and 'ty'.
-func (m *Matrix2D) Translate(tx, ty float64) {
+func (m *Matrix2D[T]) Translate(tx, ty T) {
 	m.TransX += tx
 	m.TransY += ty
 }
 
 // Scale this matrix by 'sx' and 'sy'.
-func (m *Matrix2D) Scale(sx, sy float64) {
+func (m *Matrix2D[T]) Scale(sx, sy T) {
 	m.ScaleX *= sx
 	m.SkewX *= sx
 	m.TransX *= sx
@@ -69,9 +68,9 @@ func (m *Matrix2D) Scale(sx, sy float64) {
 }
 
 // Rotate this matrix by 'radians'. Positive values are clockwise.
-func (m *Matrix2D) Rotate(radians float64) {
-	s := math.Sin(radians)
-	c := math.Cos(radians)
+func (m *Matrix2D[T]) Rotate(radians T) {
+	s := xmath.Sin(radians)
+	c := xmath.Cos(radians)
 	x := m.ScaleX*c - s*m.SkewY
 	m.SkewY = m.ScaleX*s + m.SkewY*c
 	m.ScaleX = x
@@ -84,7 +83,7 @@ func (m *Matrix2D) Rotate(radians float64) {
 }
 
 // Multiply this matrix by 'other'.
-func (m *Matrix2D) Multiply(other *Matrix2D) {
+func (m *Matrix2D[T]) Multiply(other *Matrix2D[T]) {
 	x := m.ScaleX*other.ScaleX + m.SkewY*other.SkewX
 	m.SkewY = m.ScaleX*other.SkewY + m.SkewY*other.ScaleY
 	m.ScaleX = x
@@ -98,7 +97,7 @@ func (m *Matrix2D) Multiply(other *Matrix2D) {
 
 // TransformDistance returns the result of transforming the distance vector by this matrix. This is similar to
 // TransformPoint(), except that the translation components of the transformation are ignored.
-func (m *Matrix2D) TransformDistance(distance Size) Size {
+func (m *Matrix2D[T]) TransformDistance(distance Size[T]) Size[T] {
 	x := m.ScaleX*distance.Width + m.SkewX*distance.Height
 	distance.Height = m.SkewY*distance.Width + m.ScaleY*distance.Height
 	distance.Width = x
@@ -106,7 +105,7 @@ func (m *Matrix2D) TransformDistance(distance Size) Size {
 }
 
 // TransformPoint returns the result of transforming the point by this matrix.
-func (m *Matrix2D) TransformPoint(where Point) Point {
+func (m *Matrix2D[T]) TransformPoint(where Point[T]) Point[T] {
 	x := m.ScaleX*where.X + m.SkewX*where.Y + m.TransX
 	where.Y = m.SkewY*where.X + m.ScaleY*where.Y + m.TransY
 	where.X = x

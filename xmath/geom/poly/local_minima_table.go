@@ -9,15 +9,18 @@
 
 package poly
 
-import "github.com/richardwilkes/toolbox/xmath/geom"
+import (
+	"github.com/richardwilkes/toolbox/xmath/geom"
+	"golang.org/x/exp/constraints"
+)
 
-type localMinimaNode struct {
-	y          float64
-	firstBound *edgeNode
-	next       *localMinimaNode
+type localMinimaNode[T constraints.Float] struct {
+	y          T
+	firstBound *edgeNode[T]
+	next       *localMinimaNode[T]
 }
 
-func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon, nc []bool, which int, op clipOp) *localMinimaNode {
+func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree *scanBeamTree[T], p Polygon[T], nc []bool, which int, op clipOp) *localMinimaNode[T] {
 	if len(p) == 0 {
 		return lmt
 	}
@@ -31,7 +34,7 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 			}
 		}
 	}
-	edges := make([]edgeNode, count)
+	edges := make([]edgeNode[T], count)
 	edgeIndex := 0
 	for ci := range p {
 		if !nc[ci] {
@@ -154,19 +157,19 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 	return lmt
 }
 
-func (n *localMinimaNode) insertBound(y float64, e *edgeNode) *localMinimaNode {
+func (n *localMinimaNode[T]) insertBound(y T, e *edgeNode[T]) *localMinimaNode[T] {
 	lmn, en := n.boundList(y)
 	e.insertInto(en)
 	return lmn
 }
 
-func (n *localMinimaNode) boundList(y float64) (lmn *localMinimaNode, en **edgeNode) {
+func (n *localMinimaNode[T]) boundList(y T) (lmn *localMinimaNode[T], en **edgeNode[T]) {
 	switch {
 	case n == nil:
-		lmn = &localMinimaNode{y: y}
+		lmn = &localMinimaNode[T]{y: y}
 		return lmn, &lmn.firstBound
 	case y < n.y:
-		lmn = &localMinimaNode{
+		lmn = &localMinimaNode[T]{
 			y:    y,
 			next: n,
 		}
@@ -179,7 +182,7 @@ func (n *localMinimaNode) boundList(y float64) (lmn *localMinimaNode, en **edgeN
 	}
 }
 
-func optimal(v []geom.Point, i, n int) bool {
+func optimal[T constraints.Float](v []geom.Point[T], i, n int) bool {
 	return v[previousIndex(i, n)].Y != v[i].Y || v[nextIndex(i, n)].Y != v[i].Y
 }
 

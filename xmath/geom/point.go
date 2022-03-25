@@ -12,57 +12,70 @@ package geom
 import (
 	"fmt"
 	"math"
+	"reflect"
+
+	"github.com/richardwilkes/toolbox/xmath"
 )
 
 // Point defines a location.
-type Point struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+type Point[T xmath.Numeric] struct {
+	X T `json:"x"`
+	Y T `json:"y"`
 }
 
 // NewPoint creates a new Point.
-func NewPoint(x, y float64) Point {
-	return Point{
+func NewPoint[T xmath.Numeric](x, y T) Point[T] {
+	return Point[T]{
 		X: x,
 		Y: y,
 	}
 }
 
 // NewPointPtr creates a new *Point.
-func NewPointPtr(x, y float64) *Point {
-	p := NewPoint(x, y)
+func NewPointPtr[T xmath.Numeric](x, y T) *Point[T] {
+	p := NewPoint[T](x, y)
 	return &p
 }
 
 // Align modifies this Point to align with integer coordinates. Returns itself for easy chaining.
-func (p *Point) Align() *Point {
-	p.X = math.Floor(p.X)
-	p.Y = math.Floor(p.Y)
+func (p *Point[T]) Align() *Point[T] {
+	switch reflect.TypeOf(p.X).Kind() {
+	case reflect.Float32, reflect.Float64:
+		p.X = T(math.Floor(reflect.ValueOf(p.X).Float()))
+		p.Y = T(math.Floor(reflect.ValueOf(p.Y).Float()))
+	}
 	return p
 }
 
 // Add modifies this Point by adding the supplied coordinates. Returns itself for easy chaining.
-func (p *Point) Add(pt Point) *Point {
+func (p *Point[T]) Add(pt Point[T]) *Point[T] {
 	p.X += pt.X
 	p.Y += pt.Y
 	return p
 }
 
 // Subtract modifies this Point by subtracting the supplied coordinates. Returns itself for easy chaining.
-func (p *Point) Subtract(pt Point) *Point {
+func (p *Point[T]) Subtract(pt Point[T]) *Point[T] {
 	p.X -= pt.X
 	p.Y -= pt.Y
 	return p
 }
 
 // Negate modifies this Point by negating both the X and Y coordinates.
-func (p *Point) Negate() *Point {
+func (p *Point[T]) Negate() *Point[T] {
 	p.X = -p.X
 	p.Y = -p.Y
 	return p
 }
 
 // String implements the fmt.Stringer interface.
-func (p Point) String() string {
+func (p *Point[T]) String() string {
 	return fmt.Sprintf("%v,%v", p.X, p.Y)
+}
+
+func (p Point[T]) toPoint64() Point[float64] {
+	return Point[float64]{
+		X: reflect.ValueOf(p.X).Float(),
+		Y: reflect.ValueOf(p.Y).Float(),
+	}
 }
