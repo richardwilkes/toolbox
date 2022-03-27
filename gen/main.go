@@ -27,6 +27,11 @@ import (
 
 //go:generate go run main.go
 
+const (
+	rootDir  = ".."
+	fixedDir = "xmath/fixed"
+)
+
 type fixedTestInfo struct {
 	Bits   int
 	Digits int
@@ -42,54 +47,37 @@ func main() {
 		jot.FatalIfErr(os.Remove(one))
 	}
 	tmpl := template.New("").Funcs(template.FuncMap{
-		"first_to_upper": txt.FirstToUpper,
-		"name":           toName,
-		"wrap_comment":   wrapCommentWithLength,
-		"repeat":         strings.Repeat,
-		"add":            add,
-		"sub":            sub,
+		"wrap_comment": func(in string, length int) string { return txt.Wrap("// ", in, length) },
+		"repeat":       strings.Repeat,
+		"add":          func(left, right int) int { return left + right },
+		"sub":          func(left, right int) int { return left - right },
 	})
 	tmpls, err := tmpl.ParseGlob("tmpl/*.go.tmpl")
 	jot.FatalIfErr(errs.Wrap(err))
 	for _, one := range fixed64Digits {
-		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed64.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen.go", one), one))
-		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl", fmt.Sprintf("../xmath/fixed/F64d%d_gen_test.go", one), &fixedTestInfo{Bits: 64, Digits: one}))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed64.go.tmpl",
+			fmt.Sprintf("%s/%s/F64d%d_gen.go", rootDir, fixedDir, one), one))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl",
+			fmt.Sprintf("%s/%s/F64d%d_gen_test.go", rootDir, fixedDir, one), &fixedTestInfo{Bits: 64, Digits: one}))
 	}
 	for _, one := range fixed128Digits {
-		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed128.go.tmpl", fmt.Sprintf("../xmath/fixed/F128d%d_gen.go", one), one))
-		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl", fmt.Sprintf("../xmath/fixed/F128d%d_gen_test.go", one), &fixedTestInfo{Bits: 128, Digits: one}))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed128.go.tmpl",
+			fmt.Sprintf("%s/%s/F128d%d_gen.go", rootDir, fixedDir, one), one))
+		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl",
+			fmt.Sprintf("%s/%s/F128d%d_gen_test.go", rootDir, fixedDir, one), &fixedTestInfo{Bits: 128, Digits: one}))
 	}
 	atexit.Exit(0)
 }
 
-func toName(in string) string {
-	if i := strings.Index(in, "."); i != -1 {
-		return strings.ToLower(in[i+1:])
-	}
-	return in
-}
-
-func wrapCommentWithLength(in string, length int) string {
-	return txt.Wrap("// ", in, length)
-}
-
-func add(left, right int) int {
-	return left + right
-}
-
-func sub(left, right int) int {
-	return left - right
-}
-
 func collectGenFiles() []string {
 	var result []string
-	rootPath, err := filepath.Abs("..")
+	rootPath, err := filepath.Abs(rootDir)
 	jot.FatalIfErr(err)
 	jot.FatalIfErr(filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if info != nil {
 			name := strings.ToLower(info.Name())
 			if info.IsDir() {
-				if path != rootPath && (name == ".git" || name == ".cvs") {
+				if strings.HasPrefix(name, ".") {
 					return filepath.SkipDir
 				}
 				return nil
