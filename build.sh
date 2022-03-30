@@ -12,8 +12,6 @@ set -eo pipefail
 
 trap 'echo -e "\033[33;5mBuild failed on build.sh:$LINENO\033[0m"' ERR
 
-GOLANGCI_LINT_VERSION=1.45.0
-
 for arg in "$@"
 do
   case "$arg" in
@@ -55,6 +53,7 @@ fi
 
 # Run the linters
 if [ "$LINT"x == "1x" ]; then
+  GOLANGCI_LINT_VERSION=1.45.2
   TOOLS_DIR=$PWD/tools
   if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "${GOLANGCI_LINT_VERSION}x" ]; then
     echo -e "\033[33mInstalling version $GOLANGCI_LINT_VERSION of golangci-lint into $TOOLS_DIR...\033[0m"
@@ -67,4 +66,4 @@ fi
 
 # Install executables
 echo -e "\033[33mInstalling executables...\033[0m"
-go install -ldflags=all="$LINK_FLAGS" ./i18n/i18n
+go install -v ./i18n/i18n

@@ -79,7 +79,7 @@ func init() {
 	var vcsRevision string
 	var vcsTime time.Time
 	if info, ok := debug.ReadBuildInfo(); ok {
-		if AppVersion == "" {
+		if AppVersion == "" && info.Main.Version != "(devel)" {
 			AppVersion = strings.TrimLeft(info.Main.Version, "v")
 		}
 		for _, setting := range info.Settings {
@@ -100,22 +100,23 @@ func init() {
 		}
 	}
 	if AppVersion == "" {
-		AppVersion = "(devel)"
+		AppVersion = "0.0"
 	}
 	if GitVersion == "" && vcsRevision != "" {
 		GitVersion = vcsRevision
 	}
-	if !VCSModified && !vcsTime.IsZero() {
-		if BuildNumber == "" {
-			BuildNumber = vcsTime.Format("20060102150405")
-		}
-		year := strconv.Itoa(vcsTime.Year())
-		if CopyrightStartYear == "" {
-			CopyrightStartYear = year
-		}
-		if CopyrightEndYear == "" {
-			CopyrightEndYear = year
-		}
+	if VCSModified || vcsTime.IsZero() {
+		vcsTime = time.Now()
+	}
+	if BuildNumber == "" {
+		BuildNumber = vcsTime.Format("20060102150405")
+	}
+	year := strconv.Itoa(vcsTime.Year())
+	if CopyrightStartYear == "" {
+		CopyrightStartYear = year
+	}
+	if CopyrightEndYear == "" {
+		CopyrightEndYear = year
 	}
 }
 
