@@ -15,12 +15,6 @@ import (
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d1"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d2"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d3"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d5"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d6"
 )
 
 // FixedOperators returns standard operators that work with 64-bit fixed-point values.
@@ -58,7 +52,7 @@ func fixedNot[T fixed.F64](arg interface{}) (interface{}, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
-	v, err := fixedFrom[T](arg)
+	v, err := FixedFrom[T](arg)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +63,7 @@ func fixedNot[T fixed.F64](arg interface{}) (interface{}, error) {
 }
 
 func fixedLogicalOr[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +71,7 @@ func fixedLogicalOr[T fixed.F64](left, right interface{}) (interface{}, error) {
 		return true, nil
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +79,7 @@ func fixedLogicalOr[T fixed.F64](left, right interface{}) (interface{}, error) {
 }
 
 func fixedLogicalAnd[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +87,7 @@ func fixedLogicalAnd[T fixed.F64](left, right interface{}) (interface{}, error) 
 		return false, nil
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +96,9 @@ func fixedLogicalAnd[T fixed.F64](left, right interface{}) (interface{}, error) 
 
 func fixedEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) == fmt.Sprintf("%v", right), nil
@@ -114,9 +108,9 @@ func fixedEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 
 func fixedNotEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) != fmt.Sprintf("%v", right), nil
@@ -126,9 +120,9 @@ func fixedNotEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 
 func fixedGreaterThan[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) > fmt.Sprintf("%v", right), nil
@@ -138,9 +132,9 @@ func fixedGreaterThan[T fixed.F64](left, right interface{}) (interface{}, error)
 
 func fixedGreaterThanOrEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) >= fmt.Sprintf("%v", right), nil
@@ -150,9 +144,9 @@ func fixedGreaterThanOrEqual[T fixed.F64](left, right interface{}) (interface{},
 
 func fixedLessThan[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) < fmt.Sprintf("%v", right), nil
@@ -162,9 +156,9 @@ func fixedLessThan[T fixed.F64](left, right interface{}) (interface{}, error) {
 
 func fixedLessThanOrEqual[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) <= fmt.Sprintf("%v", right), nil
@@ -174,9 +168,9 @@ func fixedLessThanOrEqual[T fixed.F64](left, right interface{}) (interface{}, er
 
 func fixedAdd[T fixed.F64](left, right interface{}) (interface{}, error) {
 	var r T
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err == nil {
-		r, err = fixedFrom[T](right)
+		r, err = FixedFrom[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v%v", left, right), nil
@@ -185,16 +179,16 @@ func fixedAdd[T fixed.F64](left, right interface{}) (interface{}, error) {
 }
 
 func fixedAddUnary[T fixed.F64](arg interface{}) (interface{}, error) {
-	return fixedFrom[T](arg)
+	return FixedFrom[T](arg)
 }
 
 func fixedSubtract[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +196,7 @@ func fixedSubtract[T fixed.F64](left, right interface{}) (interface{}, error) {
 }
 
 func fixedSubtractUnary[T fixed.F64](arg interface{}) (interface{}, error) {
-	v, err := fixedFrom[T](arg)
+	v, err := FixedFrom[T](arg)
 	if err != nil {
 		return nil, err
 	}
@@ -210,117 +204,104 @@ func fixedSubtractUnary[T fixed.F64](arg interface{}) (interface{}, error) {
 }
 
 func fixedMultiply[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
-	return interface{}(l).(interface{ Mul(T) T }).Mul(r), nil
+	return interface{}(&l).(interface{ Mul(T) T }).Mul(r), nil
 }
 
 func fixedDivide[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
 	if r == 0 {
 		return nil, errs.New("divide by zero")
 	}
-	return interface{}(l).(interface{ Div(T) T }), nil
+	return interface{}(&l).(interface{ Div(T) T }), nil
 }
 
 func fixedDivideAllowDivideByZero[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
 	if r == 0 {
 		return r, nil
 	}
-	return interface{}(l).(interface{ Div(T) T }).Div(r), nil
+	return interface{}(&l).(interface{ Div(T) T }).Div(r), nil
 }
 
 func fixedModulo[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
 	if r == 0 {
 		return nil, errs.New("divide by zero")
 	}
-	return interface{}(l).(interface{ Mod(T) T }).Mod(r), nil
+	return interface{}(&l).(interface{ Mod(T) T }).Mod(r), nil
 }
 
 func fixedModuloAllowDivideByZero[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
 	if r == 0 {
 		return r, nil
 	}
-	return interface{}(l).(interface{ Mod(T) T }).Mod(r), nil
+	return interface{}(&l).(interface{ Mod(T) T }).Mod(r), nil
 }
 
 func fixedPower[T fixed.F64](left, right interface{}) (interface{}, error) {
-	l, err := fixedFrom[T](left)
+	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
 	}
 	var r T
-	r, err = fixedFrom[T](right)
+	r, err = FixedFrom[T](right)
 	if err != nil {
 		return nil, err
 	}
-	return fixedFromFloat64[T](math.Pow(interface{}(l).(interface{ AsFloat64() float64 }).AsFloat64(),
-		interface{}(r).(interface{ AsFloat64() float64 }).AsFloat64()))
+	return FixedFromFloat64[T](math.Pow(interface{}(&l).(interface{ AsFloat64() float64 }).AsFloat64(),
+		interface{}(&r).(interface{ AsFloat64() float64 }).AsFloat64())), nil
 }
 
-func fixedFromFloat64[T fixed.F64](value float64) (T, error) {
+// FixedFromFloat64 converts the value into one of the fixed.F64 types.
+func FixedFromFloat64[T fixed.F64](value float64) T {
 	var t T
-	switch interface{}(t).(type) {
-	case f64d1.Int:
-		return T(f64d1.FromFloat64(value)), nil
-	case f64d2.Int:
-		return T(f64d2.FromFloat64(value)), nil
-	case f64d3.Int:
-		return T(f64d3.FromFloat64(value)), nil
-	case f64d4.Int:
-		return T(f64d4.FromFloat64(value)), nil
-	case f64d5.Int:
-		return T(f64d5.FromFloat64(value)), nil
-	case f64d6.Int:
-		return T(f64d6.FromFloat64(value)), nil
-	default:
-		return 0, errs.New("unknown type")
-	}
+	return interface{}(&t).(interface{ FromFloat64(float64) T }).FromFloat64(value)
 }
 
-func fixedFrom[T fixed.F64](arg interface{}) (T, error) {
+// FixedFrom attempts to convert the arg into one of the fixed.F64 types.
+func FixedFrom[T fixed.F64](arg interface{}) (T, error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {
@@ -332,28 +313,7 @@ func fixedFrom[T fixed.F64](arg interface{}) (T, error) {
 		return a, nil
 	case string:
 		var t T
-		switch interface{}(t).(type) {
-		case f64d1.Int:
-			v, err := f64d1.FromString(a)
-			return T(v), err
-		case f64d2.Int:
-			v, err := f64d2.FromString(a)
-			return T(v), err
-		case f64d3.Int:
-			v, err := f64d3.FromString(a)
-			return T(v), err
-		case f64d4.Int:
-			v, err := f64d4.FromString(a)
-			return T(v), err
-		case f64d5.Int:
-			v, err := f64d5.FromString(a)
-			return T(v), err
-		case f64d6.Int:
-			v, err := f64d6.FromString(a)
-			return T(v), err
-		default:
-			return 0, errs.New("unknown type")
-		}
+		return interface{}(&t).(interface{ FromString(string) (T, error) }).FromString(a)
 	default:
 		return 0, errs.Newf("not a number: %v", arg)
 	}

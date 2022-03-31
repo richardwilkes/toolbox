@@ -372,3 +372,28 @@ func (f *Int) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*f = v
 	return nil
 }
+
+// FromFloat64 creates a new value from a float64. Here as a convenience for the eval package.
+func (f *Int) FromFloat64(value float64) Int {
+	return FromFloat64(value)
+}
+
+// FromFloat32 creates a new value from a float32. Here as a convenience for the eval package.
+func (f *Int) FromFloat32(value float32) Int {
+	return FromFloat32(value)
+}
+
+// FromInt64 creates a new value from an int64. Here as a convenience for the eval package.
+func (f *Int) FromInt64(value int64) Int {
+	return FromInt64(value)
+}
+
+// FromInt creates a new value from an int. Here as a convenience for the eval package.
+func (f *Int) FromInt(value int) Int {
+	return FromInt(value)
+}
+
+// FromString creates a new value from a string. Here as a convenience for the eval package.
+func (f *Int) FromString(str string) (Int, error) {
+    return FromString(str)
+}
