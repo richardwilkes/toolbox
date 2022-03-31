@@ -12,6 +12,7 @@ package errs_test
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -105,6 +106,30 @@ func TestWrap(t *testing.T) {
 	result := errs.Wrap(notError)
 	require.NotNil(t, result)
 	require.Equal(t, 1, strings.Count(result.Error(), "\n"), "Should have 1 embedded return")
+}
+
+func TestIs(t *testing.T) {
+	err := errs.Wrap(os.ErrNotExist)
+	require.NotNil(t, err)
+	require.True(t, errors.Is(err, os.ErrNotExist))
+	require.False(t, errors.Is(err, os.ErrClosed))
+}
+
+type customErr struct {
+	value string
+}
+
+func (e *customErr) Error() string {
+	return e.value
+}
+
+func TestAs(t *testing.T) {
+	original := &customErr{value: "err"}
+	wrapped := errs.Wrap(original)
+	require.NotNil(t, wrapped)
+	var target *customErr
+	require.True(t, errors.As(wrapped, &target))
+	require.Equal(t, original, target)
 }
 
 func TestNew(t *testing.T) {

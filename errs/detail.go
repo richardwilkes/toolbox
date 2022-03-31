@@ -26,6 +26,7 @@ type detail struct {
 	message string
 	stack   []uintptr
 	cause   error
+	wrapped bool
 }
 
 // Error implements the error interface.
@@ -105,7 +106,7 @@ func (d *detail) detail(includeMessage, trimRuntime bool) string {
 			break
 		}
 	}
-	if d.cause != nil {
+	if d.cause != nil && !d.wrapped {
 		buffer.WriteString("\n  Caused by: ")
 		if detailed, ok := d.cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 			buffer.WriteString(detailed.Detail(trimRuntime))
