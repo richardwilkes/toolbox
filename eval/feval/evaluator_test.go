@@ -7,12 +7,12 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package float64eval_test
+package feval_test
 
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/eval/float64eval"
+	"github.com/richardwilkes/toolbox/eval/feval"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,7 +55,7 @@ func TestEvaluator(t *testing.T) {
 		2.01,
 		102,
 	}
-	e := float64eval.NewEvaluator(resolver{}, true)
+	e := feval.NewEvaluator[float64](resolver{}, true)
 	for i, d := range data {
 		result, err := e.Evaluate(d)
 		assert.NoError(t, err, "index %d", i)
@@ -79,7 +79,7 @@ func TestEvaluator(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, true, result)
 
-	e = float64eval.NewEvaluator(nil, false)
+	e = feval.NewEvaluator[float64](nil, false)
 	_, err = e.Evaluate("1 / 0")
 	assert.Error(t, err)
 }

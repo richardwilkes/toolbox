@@ -7,15 +7,18 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package float64eval
+package feval
 
-import "github.com/richardwilkes/toolbox/eval"
+import (
+	"github.com/richardwilkes/toolbox/eval"
+	"golang.org/x/exp/constraints"
+)
 
 // NewEvaluator creates a new evaluator whose number type is float64.
-func NewEvaluator(resolver eval.VariableResolver, divideByZeroReturnsZero bool) *eval.Evaluator {
+func NewEvaluator[T constraints.Float](resolver eval.VariableResolver, divideByZeroReturnsZero bool) *eval.Evaluator {
 	return &eval.Evaluator{
 		Resolver:  resolver,
-		Operators: Operators(divideByZeroReturnsZero),
-		Functions: Functions(),
+		Operators: Operators[T](divideByZeroReturnsZero),
+		Functions: Functions[T](),
 	}
 }
