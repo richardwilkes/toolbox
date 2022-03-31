@@ -1,3 +1,5 @@
+// Code created from "fixed64.go.tmpl" - don't edit by hand
+//
 // Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,116 +9,110 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package f128d{{.}}
+package f64d5
 
 import (
 	"fmt"
-	"math/big"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xmath/fixed/internal"
-	"github.com/richardwilkes/toolbox/xmath/num"
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	multiplierBigInt = new(big.Int).Exp(big.NewInt(10), big.NewInt({{.}}), nil)
-	multiplierBigFloat = new(big.Float).SetPrec(128).SetInt(multiplierBigInt)
-	multiplier = num.Int128FromBigInt(multiplierBigInt)
+const (
+	multiplier = 100000
 	// Max holds the maximum value.
-	Max = Int{data: num.MaxInt128}
+	Max = Int(1<<63 - 1)
 	// Min holds the minimum value.
-	Min = Int{data: num.MinInt128}
+	Min = Int(^(1<<63 - 1))
 )
 
 // Some commonly used values.
 var (
-	One     = FromInt(1)
-	Half    = FromStringForced("0.5")
-	NegHalf = Half.Neg()
+	One     = Int(multiplier)
+	Half    = Int(multiplier / 2)
+	NegHalf = -Half
 )
 
-{{wrap_comment (printf "Int holds a fixed-point value that contains up to %d decimal places. Values are truncated, not rounded." .) 120}}
-type Int struct {
-	data num.Int128
-}
+// Int holds a fixed-point value that contains up to 5 decimal places. Values are truncated, not rounded. Values can be
+// added and subtracted directly. For multiplication and division, the provided Mul() and Div() methods should be used.
+type Int int64
 
 // FromFloat64 creates a new value from a float64.
 func FromFloat64(value float64) Int {
-	f, _ := FromString(new(big.Float).SetPrec(128).SetFloat64(value).Text('f', {{add . 1}}))  //nolint:errcheck // Failure means 0
-	return f
+	return Int(value * multiplier)
 }
 
 // FromFloat32 creates a new value from a float32.
 func FromFloat32(value float32) Int {
-    return FromFloat64(float64(value))
+	return Int(float64(value) * multiplier)
 }
 
 // FromInt64 creates a new value from an int64.
 func FromInt64(value int64) Int {
-	return Int{data: num.Int128From64(value).Mul(multiplier)}
+	return Int(value * multiplier)
 }
 
 // FromInt creates a new value from an int.
 func FromInt(value int) Int {
-    return FromInt64(int64(value))
+	return Int(int64(value) * multiplier)
 }
 
 // FromString creates a new value from a string.
 func FromString(str string) (Int, error) {
 	if str == "" {
-		return Int{}, errs.New("empty string is not valid")
+		return 0, errs.New("empty string is not valid")
 	}
 	if strings.ContainsAny(str, "Ee") {
 		// Given a floating-point value with an exponent, which technically
 		// isn't valid input, but we'll try to convert it anyway.
 		f, err := strconv.ParseFloat(str, 64)
 		if err != nil {
-			return Int{}, err
+			return 0, err
 		}
 		return FromFloat64(f), nil
 	}
 	parts := strings.SplitN(str, ".", 2)
+	var value, fraction int64
 	var neg bool
-	value := new(big.Int)
-	fraction := new(big.Int)
+	var err error
 	switch parts[0] {
 	case "":
 	case "-", "-0":
 		neg = true
 	default:
-		if _, ok := value.SetString(parts[0], 10); !ok {
-			return Int{}, errs.Newf("invalid value: %s", str)
+		if value, err = strconv.ParseInt(parts[0], 10, 64); err != nil {
+			return 0, errs.Wrap(err)
 		}
-		if value.Sign() < 0 {
+		if value < 0 {
 			neg = true
-			value.Neg(value)
+			value = -value
 		}
-		value.Mul(value, multiplierBigInt)
+		value *= multiplier
 	}
 	if len(parts) > 1 {
 		var buffer strings.Builder
 		buffer.WriteString("1")
 		buffer.WriteString(parts[1])
-		for buffer.Len() < {{.}}+1 {
+		for buffer.Len() < 5+1 {
 			buffer.WriteString("0")
 		}
 		frac := buffer.String()
-		if len(frac) > {{.}}+1 {
-			frac = frac[:{{.}}+1]
+		if len(frac) > 5+1 {
+			frac = frac[:5+1]
 		}
-		if _, ok := fraction.SetString(frac, 10); !ok {
-			return Int{}, errs.Newf("invalid value: %s", str)
+		if fraction, err = strconv.ParseInt(frac, 10, 64); err != nil {
+			return 0, errs.Wrap(err)
 		}
-		value.Add(value, fraction).Sub(value, multiplierBigInt)
+		value += fraction - multiplier
 	}
 	if neg {
-		value.Neg(value)
+		value = -value
 	}
-	return Int{data: num.Int128FromBigInt(value)}, nil
+	return Int(value), nil
 }
 
 // FromStringForced creates a new value from a string.
@@ -125,81 +121,39 @@ func FromStringForced(str string) Int {
 	return f
 }
 
-// Add adds this value to the passed-in value, returning a new value.
-func (f Int) Add(value Int) Int {
-	return Int{data: f.data.Add(value.data)}
-}
-
-// Sub subtracts the passed-in value from this value, returning a new value.
-func (f Int) Sub(value Int) Int {
-	return Int{data: f.data.Sub(value.data)}
-}
-
 // Mul multiplies this value by the passed-in value, returning a new value.
 func (f Int) Mul(value Int) Int {
-	return Int{data: f.data.Mul(value.data).Div(multiplier)}
+	return f * value / multiplier
 }
 
 // Div divides this value by the passed-in value, returning a new value.
 func (f Int) Div(value Int) Int {
-	return Int{data: f.data.Mul(multiplier).Div(value.data)}
+	return f * multiplier / value
 }
 
-{{wrap_comment "Mod returns the remainder after subtracting all full multiples of the passed-in value." 120}}
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int) Mod(value Int) Int {
-	return f.Sub(value.Mul(f.Div(value).Trunc()))
-}
-
-// Neg negates this value, returning a new value.
-func (f Int) Neg() Int {
-	return Int{data: f.data.Neg()}
+	return f - (value.Mul(f.Div(value).Trunc()))
 }
 
 // Abs returns the absolute value of this value.
 func (f Int) Abs() Int {
-	return Int{data: f.data.Abs()}
-}
-
-// Cmp returns 1 if i > n, 0 if i == n, and -1 if i < n.
-func (f Int) Cmp(n Int) int {
-	return f.data.Cmp(n.data)
-}
-
-// GreaterThan returns true if i > n.
-func (f Int) GreaterThan(n Int) bool {
-	return f.data.GreaterThan(n.data)
-}
-
-// GreaterThanOrEqual returns true if i >= n.
-func (f Int) GreaterThanOrEqual(n Int) bool {
-	return f.data.GreaterThanOrEqual(n.data)
-}
-
-// Equal returns true if i == n.
-func (f Int) Equal(n Int) bool {
-	return f.data.Equal(n.data)
-}
-
-// LessThan returns true if i < n.
-func (f Int) LessThan(n Int) bool {
-	return f.data.LessThan(n.data)
-}
-
-// LessThanOrEqual returns true if i <= n.
-func (f Int) LessThanOrEqual(n Int) bool {
-	return f.data.LessThanOrEqual(n.data)
+	if f < 0 {
+		return -f
+	}
+	return f
 }
 
 // Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f Int) Trunc() Int {
-	return Int{data: f.data.Div(multiplier).Mul(multiplier)}
+	return f / multiplier * multiplier
 }
 
 // Ceil returns the value rounded up to the nearest whole number.
 func (f Int) Ceil() Int {
 	v := f.Trunc()
-	if f.GreaterThan(Int{}) && f != v {
-	    v = v.Add(One)
+	if f > 0 && f != v {
+		v += One
 	}
 	return v
 }
@@ -207,18 +161,18 @@ func (f Int) Ceil() Int {
 // Round returns the nearest integer, rounding half away from zero.
 func (f Int) Round() Int {
 	value := f.Trunc()
-	rem := f.Sub(value)
-	if rem.GreaterThanOrEqual(Half) {
-		value = value.Add(One)
-	} else if rem.LessThan(NegHalf) {
-		value = value.Sub(One)
+	rem := f - value //nolint:ifshort // don't want to embed this in the if
+	if rem >= Half {
+		value += One
+	} else if rem < NegHalf {
+		value -= One
 	}
 	return value
 }
 
 // Min returns the minimum of this value or its argument.
 func (f Int) Min(value Int) Int {
-    if f.data.LessThan(value.data) {
+	if f < value {
 		return f
 	}
 	return value
@@ -226,7 +180,7 @@ func (f Int) Min(value Int) Int {
 
 // Max returns the maximum of this value or its argument.
 func (f Int) Max(value Int) Int {
-	if f.data.GreaterThan(value.data) {
+	if f > value {
 		return f
 	}
 	return value
@@ -234,10 +188,11 @@ func (f Int) Max(value Int) Int {
 
 // AsInt64 returns the truncated equivalent integer to this value.
 func (f Int) AsInt64() int64 {
-	return f.data.Div(multiplier).AsInt64()
+	return int64(f / multiplier)
 }
 
-{{wrap_comment "Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an int64." 120}}
+// Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an
+// int64.
 func (f Int) Int64() (int64, error) {
 	n := f.AsInt64()
 	if FromInt64(n) != f {
@@ -248,10 +203,10 @@ func (f Int) Int64() (int64, error) {
 
 // AsInt returns the truncated equivalent integer to this value.
 func (f Int) AsInt() int {
-	return int(f.data.Div(multiplier).AsInt64())
+	return int(f / multiplier)
 }
 
-{{wrap_comment "Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int." 120}}
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
 func (f Int) Int() (int, error) {
 	n := f.AsInt()
 	if FromInt(n) != f {
@@ -262,11 +217,11 @@ func (f Int) Int() (int, error) {
 
 // AsFloat64 returns the floating-point equivalent to this value.
 func (f Int) AsFloat64() float64 {
-	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierBigFloat).Float64()
-	return f64
+	return float64(f) / multiplier
 }
 
-{{wrap_comment "Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a float64." 120}}
+// Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a
+// float64.
 func (f Int) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
@@ -277,11 +232,11 @@ func (f Int) Float64() (float64, error) {
 
 // AsFloat32 returns the floating-point equivalent to this value.
 func (f Int) AsFloat32() float32 {
-	f64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(), multiplierBigFloat).Float32()
-	return f64
+	return float32(f.AsFloat64())
 }
 
-{{wrap_comment "Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a float32." 120}}
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
 func (f Int) Float32() (float32, error) {
 	n := f.AsFloat32()
 	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
@@ -290,31 +245,26 @@ func (f Int) Float32() (float32, error) {
 	return n, nil
 }
 
-{{wrap_comment "CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive" 120}}
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
 func (f Int) CommaWithSign() string {
-    if f.data.Sign() >= 0 {
+	if f >= 0 {
 		return "+" + f.Comma()
 	}
 	return f.Comma()
 }
 
-{{wrap_comment "Comma returns the same as String(), but with commas for values of 1000 and greater." 120}}
+// Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f Int) Comma() string {
-	var iStr string
-	integer := f.data.Div(multiplier)
-	if integer.IsInt64() {
-		iStr = humanize.Comma(integer.AsInt64())
-	} else {
-		iStr = humanize.BigComma(integer.AsBigInt())
+	integer := f / multiplier
+	fraction := f % multiplier
+	if fraction == 0 {
+		return humanize.Comma(int64(integer))
 	}
-	fraction := f.data.Sub(integer.Mul(multiplier))
-	if fraction.IsZero() {
-		return iStr
+	if fraction < 0 {
+		fraction = -fraction
 	}
-	if fraction.Sign() < 0 {
-		fraction = fraction.Neg()
-	}
-	fStr := fraction.Add(multiplier).String()
+	fraction += multiplier
+	fStr := strconv.FormatInt(int64(fraction), 10)
 	for i := len(fStr) - 1; i > 0; i-- {
 		if fStr[i] != '0' {
 			fStr = fStr[1 : i+1]
@@ -322,33 +272,33 @@ func (f Int) Comma() string {
 		}
 	}
 	var neg string
-	if integer.IsZero() && f.data.Sign() < 0 {
+	if integer == 0 && f < 0 {
 		neg = "-"
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
+	return fmt.Sprintf("%s%s.%s", neg, humanize.Comma(int64(integer)), fStr)
 }
 
-{{wrap_comment "StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive" 120}}
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
 func (f Int) StringWithSign() string {
-    if f.data.Sign() >= 0 {
+	if f >= 0 {
 		return "+" + f.String()
 	}
 	return f.String()
 }
 
 func (f Int) String() string {
-	integer := f.data.Div(multiplier)
-	iStr := integer.String()
-	fraction := f.data.Sub(integer.Mul(multiplier))
-	if fraction.IsZero() {
-		return iStr
+	integer := f / multiplier
+	fraction := f % multiplier
+	if fraction == 0 {
+		return strconv.FormatInt(int64(integer), 10)
 	}
-	if fraction.Sign() < 0 {
-		fraction = fraction.Neg()
+	if fraction < 0 {
+		fraction = -fraction
 	}
-	fStr := fraction.Add(multiplier).String()
+	fraction += multiplier
+	fStr := strconv.FormatInt(int64(fraction), 10)
 	for i := len(fStr) - 1; i > 0; i-- {
 		if fStr[i] != '0' {
 			fStr = fStr[1 : i+1]
@@ -356,12 +306,12 @@ func (f Int) String() string {
 		}
 	}
 	var neg string
-	if integer.IsZero() && f.data.Sign() < 0 {
+	if integer == 0 && f < 0 {
 		neg = "-"
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
+	return fmt.Sprintf("%s%d.%s", neg, integer, fStr)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.

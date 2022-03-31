@@ -15,10 +15,10 @@ import (
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
-// Operators returns standard operators that work with fixed.F64d4.
+// Operators returns standard operators that work with f64d4.Int.
 func Operators(divideByZeroReturnsZero bool) []*eval.Operator {
 	var divide, modulo eval.OpFunc
 	if divideByZeroReturnsZero {
@@ -73,7 +73,7 @@ func Or(left, right interface{}) (interface{}, error) {
 	if l != 0 {
 		return true, nil
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func And(left, right interface{}) (interface{}, error) {
 	if l == 0 {
 		return false, nil
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func And(left, right interface{}) (interface{}, error) {
 
 // Equal ==
 func Equal(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -113,7 +113,7 @@ func Equal(left, right interface{}) (interface{}, error) {
 
 // NotEqual !=
 func NotEqual(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -126,7 +126,7 @@ func NotEqual(left, right interface{}) (interface{}, error) {
 
 // GreaterThan >
 func GreaterThan(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -139,7 +139,7 @@ func GreaterThan(left, right interface{}) (interface{}, error) {
 
 // GreaterThanOrEqual >=
 func GreaterThanOrEqual(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -152,7 +152,7 @@ func GreaterThanOrEqual(left, right interface{}) (interface{}, error) {
 
 // LessThan <
 func LessThan(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -165,7 +165,7 @@ func LessThan(left, right interface{}) (interface{}, error) {
 
 // LessThanOrEqual <=
 func LessThanOrEqual(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -178,7 +178,7 @@ func LessThanOrEqual(left, right interface{}) (interface{}, error) {
 
 // Add + (addition)
 func Add(left, right interface{}) (interface{}, error) {
-	var r fixed.F64d4
+	var r f64d4.Int
 	l, err := NumberFrom(left)
 	if err == nil {
 		r, err = NumberFrom(right)
@@ -200,7 +200,7 @@ func Subtract(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -223,7 +223,7 @@ func Multiply(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func Divide(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -254,7 +254,7 @@ func DivideAllowDivideByZero(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func Modulo(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func ModuloAllowDivideByZero(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
@@ -305,26 +305,26 @@ func Power(left, right interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r fixed.F64d4
+	var r f64d4.Int
 	r, err = NumberFrom(right)
 	if err != nil {
 		return nil, err
 	}
-	return fixed.F64d4FromFloat64(math.Pow(l.AsFloat64(), r.AsFloat64())), nil
+	return f64d4.FromFloat64(math.Pow(l.AsFloat64(), r.AsFloat64())), nil
 }
 
 // NumberFrom attempts to extract a number from arg.
-func NumberFrom(arg interface{}) (fixed.F64d4, error) {
+func NumberFrom(arg interface{}) (f64d4.Int, error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {
-			return fixed.F64d4FromInt64(1), nil
+			return f64d4.One, nil
 		}
-		return fixed.F64d4(0), nil
-	case fixed.F64d4:
+		return 0, nil
+	case f64d4.Int:
 		return a, nil
 	case string:
-		return fixed.F64d4FromString(a)
+		return f64d4.FromString(a)
 	default:
 		return 0, errs.Newf("not a number: %v", arg)
 	}

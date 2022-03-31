@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/eval/f64d4eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +41,7 @@ func TestEvaluator(t *testing.T) {
 	for i := 0; i < len(data); i += 2 {
 		result, err := e.Evaluate(data[i])
 		assert.NoError(t, err, "index %d", i)
-		assert.Equal(t, fixed.F64d4FromStringForced(data[i+1]), result, "index %d", i)
+		assert.Equal(t, f64d4.FromStringForced(data[i+1]), result, "index %d", i)
 	}
 
 	data = []string{

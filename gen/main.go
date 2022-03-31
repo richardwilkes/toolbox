@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -37,11 +38,6 @@ type fixedTestInfo struct {
 	Digits int
 }
 
-var (
-	fixed64Digits  = []int{2, 3, 4, 6}
-	fixed128Digits = []int{2, 3, 4, 6, 16}
-)
-
 func main() {
 	for _, one := range collectGenFiles() {
 		jot.FatalIfErr(os.Remove(one))
@@ -51,20 +47,21 @@ func main() {
 		"repeat":       strings.Repeat,
 		"add":          func(left, right int) int { return left + right },
 		"sub":          func(left, right int) int { return left - right },
+		"multiplier":   func(digits int) int64 { return int64(math.Pow(10, float64(digits))) },
 	})
 	tmpls, err := tmpl.ParseGlob("tmpl/*.go.tmpl")
 	jot.FatalIfErr(errs.Wrap(err))
-	for _, one := range fixed64Digits {
+	for i := 1; i < 7; i++ {
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed64.go.tmpl",
-			fmt.Sprintf("%s/%s/F64d%d_gen.go", rootDir, fixedDir, one), one))
+			fmt.Sprintf("%s/%s/f64d%d/fixed_gen.go", rootDir, fixedDir, i), i))
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl",
-			fmt.Sprintf("%s/%s/F64d%d_gen_test.go", rootDir, fixedDir, one), &fixedTestInfo{Bits: 64, Digits: one}))
+			fmt.Sprintf("%s/%s/f64d%d/fixed_gen_test.go", rootDir, fixedDir, i), &fixedTestInfo{Bits: 64, Digits: i}))
 	}
-	for _, one := range fixed128Digits {
+	for i := 1; i < 17; i++ {
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed128.go.tmpl",
-			fmt.Sprintf("%s/%s/F128d%d_gen.go", rootDir, fixedDir, one), one))
+			fmt.Sprintf("%s/%s/f128d%d/fixed_gen.go", rootDir, fixedDir, i), i))
 		jot.FatalIfErr(writeGoTemplate(tmpls, "fixed_test.go.tmpl",
-			fmt.Sprintf("%s/%s/F128d%d_gen_test.go", rootDir, fixedDir, one), &fixedTestInfo{Bits: 128, Digits: one}))
+			fmt.Sprintf("%s/%s/f128d%d/fixed_gen_test.go", rootDir, fixedDir, i), &fixedTestInfo{Bits: 128, Digits: i}))
 	}
 	atexit.Exit(0)
 }

@@ -1,3 +1,5 @@
+// Code created from "fixed128.go.tmpl" - don't edit by hand
+//
 // Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,7 +9,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package f128d{{.}}
+package f128d7
 
 import (
 	"fmt"
@@ -23,9 +25,9 @@ import (
 )
 
 var (
-	multiplierBigInt = new(big.Int).Exp(big.NewInt(10), big.NewInt({{.}}), nil)
+	multiplierBigInt   = new(big.Int).Exp(big.NewInt(10), big.NewInt(7), nil)
 	multiplierBigFloat = new(big.Float).SetPrec(128).SetInt(multiplierBigInt)
-	multiplier = num.Int128FromBigInt(multiplierBigInt)
+	multiplier         = num.Int128FromBigInt(multiplierBigInt)
 	// Max holds the maximum value.
 	Max = Int{data: num.MaxInt128}
 	// Min holds the minimum value.
@@ -39,20 +41,20 @@ var (
 	NegHalf = Half.Neg()
 )
 
-{{wrap_comment (printf "Int holds a fixed-point value that contains up to %d decimal places. Values are truncated, not rounded." .) 120}}
+// Int holds a fixed-point value that contains up to 7 decimal places. Values are truncated, not rounded.
 type Int struct {
 	data num.Int128
 }
 
 // FromFloat64 creates a new value from a float64.
 func FromFloat64(value float64) Int {
-	f, _ := FromString(new(big.Float).SetPrec(128).SetFloat64(value).Text('f', {{add . 1}}))  //nolint:errcheck // Failure means 0
+	f, _ := FromString(new(big.Float).SetPrec(128).SetFloat64(value).Text('f', 8)) //nolint:errcheck // Failure means 0
 	return f
 }
 
 // FromFloat32 creates a new value from a float32.
 func FromFloat32(value float32) Int {
-    return FromFloat64(float64(value))
+	return FromFloat64(float64(value))
 }
 
 // FromInt64 creates a new value from an int64.
@@ -62,7 +64,7 @@ func FromInt64(value int64) Int {
 
 // FromInt creates a new value from an int.
 func FromInt(value int) Int {
-    return FromInt64(int64(value))
+	return FromInt64(int64(value))
 }
 
 // FromString creates a new value from a string.
@@ -101,12 +103,12 @@ func FromString(str string) (Int, error) {
 		var buffer strings.Builder
 		buffer.WriteString("1")
 		buffer.WriteString(parts[1])
-		for buffer.Len() < {{.}}+1 {
+		for buffer.Len() < 7+1 {
 			buffer.WriteString("0")
 		}
 		frac := buffer.String()
-		if len(frac) > {{.}}+1 {
-			frac = frac[:{{.}}+1]
+		if len(frac) > 7+1 {
+			frac = frac[:7+1]
 		}
 		if _, ok := fraction.SetString(frac, 10); !ok {
 			return Int{}, errs.Newf("invalid value: %s", str)
@@ -145,7 +147,7 @@ func (f Int) Div(value Int) Int {
 	return Int{data: f.data.Mul(multiplier).Div(value.data)}
 }
 
-{{wrap_comment "Mod returns the remainder after subtracting all full multiples of the passed-in value." 120}}
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int) Mod(value Int) Int {
 	return f.Sub(value.Mul(f.Div(value).Trunc()))
 }
@@ -199,7 +201,7 @@ func (f Int) Trunc() Int {
 func (f Int) Ceil() Int {
 	v := f.Trunc()
 	if f.GreaterThan(Int{}) && f != v {
-	    v = v.Add(One)
+		v = v.Add(One)
 	}
 	return v
 }
@@ -218,7 +220,7 @@ func (f Int) Round() Int {
 
 // Min returns the minimum of this value or its argument.
 func (f Int) Min(value Int) Int {
-    if f.data.LessThan(value.data) {
+	if f.data.LessThan(value.data) {
 		return f
 	}
 	return value
@@ -237,7 +239,8 @@ func (f Int) AsInt64() int64 {
 	return f.data.Div(multiplier).AsInt64()
 }
 
-{{wrap_comment "Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an int64." 120}}
+// Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an
+// int64.
 func (f Int) Int64() (int64, error) {
 	n := f.AsInt64()
 	if FromInt64(n) != f {
@@ -251,7 +254,7 @@ func (f Int) AsInt() int {
 	return int(f.data.Div(multiplier).AsInt64())
 }
 
-{{wrap_comment "Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int." 120}}
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
 func (f Int) Int() (int, error) {
 	n := f.AsInt()
 	if FromInt(n) != f {
@@ -266,7 +269,8 @@ func (f Int) AsFloat64() float64 {
 	return f64
 }
 
-{{wrap_comment "Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a float64." 120}}
+// Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a
+// float64.
 func (f Int) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
@@ -281,7 +285,8 @@ func (f Int) AsFloat32() float32 {
 	return f64
 }
 
-{{wrap_comment "Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a float32." 120}}
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
 func (f Int) Float32() (float32, error) {
 	n := f.AsFloat32()
 	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
@@ -290,15 +295,15 @@ func (f Int) Float32() (float32, error) {
 	return n, nil
 }
 
-{{wrap_comment "CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive" 120}}
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
 func (f Int) CommaWithSign() string {
-    if f.data.Sign() >= 0 {
+	if f.data.Sign() >= 0 {
 		return "+" + f.Comma()
 	}
 	return f.Comma()
 }
 
-{{wrap_comment "Comma returns the same as String(), but with commas for values of 1000 and greater." 120}}
+// Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f Int) Comma() string {
 	var iStr string
 	integer := f.data.Div(multiplier)
@@ -330,9 +335,9 @@ func (f Int) Comma() string {
 	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
-{{wrap_comment "StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive" 120}}
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
 func (f Int) StringWithSign() string {
-    if f.data.Sign() >= 0 {
+	if f.data.Sign() >= 0 {
 		return "+" + f.String()
 	}
 	return f.String()

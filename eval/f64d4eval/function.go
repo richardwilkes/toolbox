@@ -14,10 +14,10 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
-// Functions returns standard functions that work with fixed.F64d4.
+// Functions returns standard functions that work with f64d4.Int.
 func Functions() map[string]eval.Function {
 	return map[string]eval.Function{
 		"abs":   Absolute,
@@ -92,7 +92,7 @@ func If(e *eval.Evaluator, arguments string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var value fixed.F64d4
+	var value f64d4.Int
 	if value, err = NumberFrom(evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
 			if s != "" && !strings.EqualFold(s, "false") {
@@ -111,7 +111,7 @@ func If(e *eval.Evaluator, arguments string) (interface{}, error) {
 
 // Maximum returns the maximum value of its input arguments.
 func Maximum(e *eval.Evaluator, arguments string) (interface{}, error) {
-	max := fixed.F64d4Min
+	max := f64d4.Min
 	for arguments != "" {
 		var arg string
 		arg, arguments = eval.NextArg(arguments)
@@ -126,7 +126,7 @@ func Maximum(e *eval.Evaluator, arguments string) (interface{}, error) {
 
 // Minimum returns the minimum value of its input arguments.
 func Minimum(e *eval.Evaluator, arguments string) (interface{}, error) {
-	min := fixed.F64d4Max
+	min := f64d4.Max
 	for arguments != "" {
 		var arg string
 		arg, arguments = eval.NextArg(arguments)
@@ -150,7 +150,7 @@ func NaturalLogSum1(e *eval.Evaluator, arguments string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fixed.F64d4FromFloat64(math.Log((value + fixed.F64d4FromInt(1)).AsFloat64())), nil
+	return f64d4.FromFloat64(math.Log((value + f64d4.FromInt(1)).AsFloat64())), nil
 }
 
 // Round returns the nearest integer, rounding half away from zero.
@@ -167,7 +167,7 @@ func SquareRoot(e *eval.Evaluator, arguments string) (interface{}, error) {
 	return singleNumberFunc(e, arguments, math.Sqrt)
 }
 
-func evalToNumber(e *eval.Evaluator, arg string) (fixed.F64d4, error) {
+func evalToNumber(e *eval.Evaluator, arg string) (f64d4.Int, error) {
 	evaluated, err := e.EvaluateNew(arg)
 	if err != nil {
 		return 0, err
@@ -180,5 +180,5 @@ func singleNumberFunc(e *eval.Evaluator, arguments string, f func(float64) float
 	if err != nil {
 		return nil, err
 	}
-	return fixed.F64d4FromFloat64(f(value.AsFloat64())), nil
+	return f64d4.FromFloat64(f(value.AsFloat64())), nil
 }
