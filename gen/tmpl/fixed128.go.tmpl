@@ -145,7 +145,7 @@ func (f Int) Div(value Int) Int {
 	return Int{data: f.data.Mul(multiplier).Div(value.data)}
 }
 
-{{wrap_comment "Mod returns the remainder after subtracting all full multiples of the passed-in value." 120}}
+// Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int) Mod(value Int) Int {
 	return f.Sub(value.Mul(f.Div(value).Trunc()))
 }
@@ -232,12 +232,23 @@ func (f Int) Max(value Int) Int {
 	return value
 }
 
+// Inc returns the value incremented by 1.
+func (f Int) Inc() Int {
+	return f.Add(One)
+}
+
+// Dec returns the value decremented by 1.
+func (f Int) Dec() Int {
+	return f.Sub(One)
+}
+
 // AsInt64 returns the truncated equivalent integer to this value.
 func (f Int) AsInt64() int64 {
 	return f.data.Div(multiplier).AsInt64()
 }
 
-{{wrap_comment "Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an int64." 120}}
+// Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an
+// int64.
 func (f Int) Int64() (int64, error) {
 	n := f.AsInt64()
 	if FromInt64(n) != f {
@@ -251,7 +262,7 @@ func (f Int) AsInt() int {
 	return int(f.data.Div(multiplier).AsInt64())
 }
 
-{{wrap_comment "Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int." 120}}
+// Int is the same as AsInt(), except that it returns an error if the value cannot be represented exactly with an int.
 func (f Int) Int() (int, error) {
 	n := f.AsInt()
 	if FromInt(n) != f {
@@ -266,7 +277,8 @@ func (f Int) AsFloat64() float64 {
 	return f64
 }
 
-{{wrap_comment "Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a float64." 120}}
+// Float64 is the same as AsFloat64(), except that it returns an error if the value cannot be represented exactly with a
+// float64.
 func (f Int) Float64() (float64, error) {
 	n := f.AsFloat64()
 	if strconv.FormatFloat(n, 'g', -1, 64) != f.String() {
@@ -281,7 +293,8 @@ func (f Int) AsFloat32() float32 {
 	return f64
 }
 
-{{wrap_comment "Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a float32." 120}}
+// Float32 is the same as AsFloat32(), except that it returns an error if the value cannot be represented exactly with a
+// float32.
 func (f Int) Float32() (float32, error) {
 	n := f.AsFloat32()
 	if strconv.FormatFloat(float64(n), 'g', -1, 32) != f.String() {
@@ -290,7 +303,7 @@ func (f Int) Float32() (float32, error) {
 	return n, nil
 }
 
-{{wrap_comment "CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive" 120}}
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive.
 func (f Int) CommaWithSign() string {
     if f.data.Sign() >= 0 {
 		return "+" + f.Comma()
@@ -298,7 +311,7 @@ func (f Int) CommaWithSign() string {
 	return f.Comma()
 }
 
-{{wrap_comment "Comma returns the same as String(), but with commas for values of 1000 and greater." 120}}
+// Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f Int) Comma() string {
 	var iStr string
 	integer := f.data.Div(multiplier)
@@ -330,7 +343,7 @@ func (f Int) Comma() string {
 	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
-{{wrap_comment "StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive" 120}}
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
 func (f Int) StringWithSign() string {
     if f.data.Sign() >= 0 {
 		return "+" + f.String()

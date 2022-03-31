@@ -7,17 +7,17 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package feval_test
+package eval_test
 
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/eval/feval"
+	"github.com/richardwilkes/toolbox/eval"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEvaluator(t *testing.T) {
-	data := []string{
+var (
+	testNumberResultExpressions = []string{
 		"1 + 1",
 		"1.3 + 1.5",
 		"1.3+1.5",
@@ -36,6 +36,23 @@ func TestEvaluator(t *testing.T) {
 		"2 + 1e-2",
 		"2 + 1e2",
 	}
+	testStringResultExpressions = []string{
+		"foo + bar",
+		"foo +               \n    bar",
+		"$other",
+		"if($foo > $bar, yes, no)",
+		"if($foo < $bar, yes, no)",
+	}
+	testStringResultExpected = []string{
+		"foobar",
+		"foobar",
+		"22 + 2",
+		"yes",
+		"no",
+	}
+)
+
+func TestFloatEvaluator(t *testing.T) {
 	expected := []float64{
 		2,
 		2.8,
@@ -55,31 +72,23 @@ func TestEvaluator(t *testing.T) {
 		2.01,
 		102,
 	}
-	e := feval.NewEvaluator[float64](resolver{}, true)
-	for i, d := range data {
+	e := eval.NewFloatEvaluator[float64](resolver{}, true)
+	for i, d := range testNumberResultExpressions {
 		result, err := e.Evaluate(d)
 		assert.NoError(t, err, "index %d", i)
 		assert.Equal(t, expected[i], result, "index %d", i)
 	}
-
-	data = []string{
-		"foo + bar", "foobar",
-		"foo +               \n    bar", "foobar",
-		"$other", "22 + 2",
-		"if($foo > $bar, yes, no)", "yes",
-		"if($foo < $bar, yes, no)", "no",
-	}
-	for i := 0; i < len(data); i += 2 {
-		result, err := e.Evaluate(data[i])
+	for i, d := range testStringResultExpressions {
+		result, err := e.Evaluate(d)
 		assert.NoError(t, err, "index %d", i)
-		assert.Equal(t, data[i+1], result, "index %d", i)
+		assert.Equal(t, testStringResultExpected[i], result, "index %d", i)
 	}
 
 	result, err := e.Evaluate("2 > 1")
 	assert.NoError(t, err)
 	assert.Equal(t, true, result)
 
-	e = feval.NewEvaluator[float64](nil, false)
+	e = eval.NewFloatEvaluator[float64](nil, false)
 	_, err = e.Evaluate("1 / 0")
 	assert.Error(t, err)
 }

@@ -61,8 +61,8 @@ func Not(f UnaryOpFunc) *Operator {
 	}
 }
 
-// Or ||
-func Or(f OpFunc) *Operator {
+// LogicalOr ||
+func LogicalOr(f OpFunc) *Operator {
 	return &Operator{
 		Symbol:     "||",
 		Precedence: 10,
@@ -70,8 +70,8 @@ func Or(f OpFunc) *Operator {
 	}
 }
 
-// And &&
-func And(f OpFunc) *Operator {
+// LogicalAnd &&
+func LogicalAnd(f OpFunc) *Operator {
 	return &Operator{
 		Symbol:     "&&",
 		Precedence: 20,

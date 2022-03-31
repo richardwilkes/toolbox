@@ -234,6 +234,16 @@ func (f Int) Max(value Int) Int {
 	return value
 }
 
+// Inc returns the value incremented by 1.
+func (f Int) Inc() Int {
+	return f.Add(One)
+}
+
+// Dec returns the value decremented by 1.
+func (f Int) Dec() Int {
+	return f.Sub(One)
+}
+
 // AsInt64 returns the truncated equivalent integer to this value.
 func (f Int) AsInt64() int64 {
 	return f.data.Div(multiplier).AsInt64()
@@ -295,7 +305,7 @@ func (f Int) Float32() (float32, error) {
 	return n, nil
 }
 
-// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive.
 func (f Int) CommaWithSign() string {
 	if f.data.Sign() >= 0 {
 		return "+" + f.Comma()
@@ -335,7 +345,7 @@ func (f Int) Comma() string {
 	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
 func (f Int) StringWithSign() string {
 	if f.data.Sign() >= 0 {
 		return "+" + f.String()

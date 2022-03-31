@@ -12,11 +12,12 @@ package eval_test
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/eval/f64d4eval"
+	"github.com/richardwilkes/toolbox/eval"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
 )
 
 func Example() {
-	e := f64d4eval.NewEvaluator(nil, true)
+	e := eval.NewFixedEvaluator[f64d4.Int](nil, true)
 	result, err := e.Evaluate("1 + sqrt(2)")
 	if err != nil {
 		panic(err)

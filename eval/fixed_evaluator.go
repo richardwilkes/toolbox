@@ -7,18 +7,17 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package feval
+package eval
 
 import (
-	"github.com/richardwilkes/toolbox/eval"
-	"golang.org/x/exp/constraints"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
 )
 
-// NewEvaluator creates a new evaluator whose number type is float64.
-func NewEvaluator[T constraints.Float](resolver eval.VariableResolver, divideByZeroReturnsZero bool) *eval.Evaluator {
-	return &eval.Evaluator{
+// NewFixedEvaluator creates a new evaluator whose number type is one of the Fixed64 types.
+func NewFixedEvaluator[T fixed.F64](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
+	return &Evaluator{
 		Resolver:  resolver,
-		Operators: Operators[T](divideByZeroReturnsZero),
-		Functions: Functions[T](),
+		Operators: FixedOperators[T](divideByZeroReturnsZero),
+		Functions: FixedFunctions[T](),
 	}
 }

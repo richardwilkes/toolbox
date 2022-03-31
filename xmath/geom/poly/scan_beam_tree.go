@@ -47,14 +47,14 @@ func (sbt *scanBeamTree[T]) buildScanBeamTable() []T {
 	return table
 }
 
-func (sbn *scanBeamNode[T]) buildScanBeamTableEntries(index int, table []T) int {
-	if sbn.less != nil {
-		index = sbn.less.buildScanBeamTableEntries(index, table)
+func (sbt *scanBeamNode[T]) buildScanBeamTableEntries(index int, table []T) int {
+	if sbt.less != nil {
+		index = sbt.less.buildScanBeamTableEntries(index, table)
 	}
-	table[index] = sbn.y
+	table[index] = sbt.y
 	index++
-	if sbn.more != nil {
-		index = sbn.more.buildScanBeamTableEntries(index, table)
+	if sbt.more != nil {
+		index = sbt.more.buildScanBeamTableEntries(index, table)
 	}
 	return index
 }

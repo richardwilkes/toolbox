@@ -7,15 +7,17 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package f64d4eval
+package eval
 
-import "github.com/richardwilkes/toolbox/eval"
+import (
+	"golang.org/x/exp/constraints"
+)
 
-// NewEvaluator creates a new evaluator whose number type is fixed.F64d4.
-func NewEvaluator(resolver eval.VariableResolver, divideByZeroReturnsZero bool) *eval.Evaluator {
-	return &eval.Evaluator{
+// NewFloatEvaluator creates a new evaluator whose number type is one of the constraints.Float types.
+func NewFloatEvaluator[T constraints.Float](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
+	return &Evaluator{
 		Resolver:  resolver,
-		Operators: Operators(divideByZeroReturnsZero),
-		Functions: Functions(),
+		Operators: FloatOperators[T](divideByZeroReturnsZero),
+		Functions: FloatFunctions[T](),
 	}
 }

@@ -186,13 +186,23 @@ func (f Int) Max(value Int) Int {
 	return value
 }
 
+// Inc returns the value incremented by 1.
+func (f Int) Inc() Int {
+	return f + One
+}
+
+// Dec returns the value decremented by 1.
+func (f Int) Dec() Int {
+	return f - One
+}
+
 // AsInt64 returns the truncated equivalent integer to this value.
 func (f Int) AsInt64() int64 {
 	return int64(f / multiplier)
 }
 
 // Int64 is the same as AsInt64(), except that it returns an error if the value cannot be represented exactly with an
-// int64.
+// int64
 func (f Int) Int64() (int64, error) {
 	n := f.AsInt64()
 	if FromInt64(n) != f {
