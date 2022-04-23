@@ -60,3 +60,13 @@ func (i *Insets[T]) Subtract(insets Insets[T]) *Insets[T] {
 func (i *Insets[T]) String() string {
 	return fmt.Sprintf("%v,%v,%v,%v", i.Top, i.Left, i.Bottom, i.Right)
 }
+
+// Width returns the sum of the left and right insets.
+func (i *Insets[T]) Width() T {
+	return i.Left + i.Right
+}
+
+// Height returns the sum of the top and bottom insets.
+func (i *Insets[T]) Height() T {
+	return i.Top + i.Bottom
+}

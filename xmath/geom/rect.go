@@ -240,11 +240,11 @@ func (r *Rect[T]) InsetUniform(amount T) *Rect[T] {
 func (r *Rect[T]) Inset(insets Insets[T]) *Rect[T] {
 	r.X += insets.Left
 	r.Y += insets.Top
-	r.Width -= insets.Left + insets.Right
+	r.Width -= insets.Width()
 	if r.Width <= 0 {
 		r.Width = 0
 	}
-	r.Height -= insets.Top + insets.Bottom
+	r.Height -= insets.Height()
 	if r.Height < 0 {
 		r.Height = 0
 	}

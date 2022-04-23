@@ -46,8 +46,8 @@ func (s *Size[T]) Add(size Size[T]) *Size[T] {
 
 // AddInsets modifies this Size by expanding it to accommodate the specified insets. Returns itself for easy chaining.
 func (s *Size[T]) AddInsets(insets Insets[T]) *Size[T] {
-	s.Width += insets.Left + insets.Right
-	s.Height += insets.Top + insets.Bottom
+	s.Width += insets.Width()
+	s.Height += insets.Height()
 	return s
 }
 
@@ -61,8 +61,8 @@ func (s *Size[T]) Subtract(size Size[T]) *Size[T] {
 // SubtractInsets modifies this Size by reducing it to accommodate the specified insets. Returns itself for easy
 // chaining.
 func (s *Size[T]) SubtractInsets(insets Insets[T]) *Size[T] {
-	s.Width -= insets.Left + insets.Right
-	s.Height -= insets.Top + insets.Bottom
+	s.Width -= insets.Width()
+	s.Height -= insets.Height()
 	return s
 }
 
