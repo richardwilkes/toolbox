@@ -9,6 +9,8 @@
 
 package txt
 
+import "strings"
+
 // StringSliceToMap returns a map created from the strings of a slice.
 func StringSliceToMap(slice []string) map[string]bool {
 	m := make(map[string]bool, len(slice))
@@ -48,4 +50,14 @@ func RunesEqual(left, right []rune) bool {
 		}
 	}
 	return true
+}
+
+// CaselessSliceContains returns true if the target is within the slice, regardless of case.
+func CaselessSliceContains(slice []string, target string) bool {
+	for _, one := range slice {
+		if strings.EqualFold(one, target) {
+			return true
+		}
+	}
+	return false
 }
