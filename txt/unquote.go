@@ -13,9 +13,9 @@ import (
 	"unicode/utf8"
 )
 
-// Unquote strips up to one set of surrounding double quotes from the bytes and returns them as a string. For a more
-// capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
-func Unquote(text []byte) string {
+// UnquoteBytes strips up to one set of surrounding double quotes from the bytes and returns them as a string. For a
+// more capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
+func UnquoteBytes(text []byte) []byte {
 	if len(text) > 1 {
 		if ch, _ := utf8.DecodeRune(text); ch == '"' {
 			if ch, _ = utf8.DecodeLastRune(text); ch == '"' {
@@ -23,5 +23,18 @@ func Unquote(text []byte) string {
 			}
 		}
 	}
-	return string(text)
+	return text
+}
+
+// Unquote strips up to one set of surrounding double quotes from the bytes and returns them as a string. For a more
+// capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
+func Unquote(text string) string {
+	if len(text) > 1 {
+		if ch, _ := utf8.DecodeRuneInString(text); ch == '"' {
+			if ch, _ = utf8.DecodeLastRuneInString(text); ch == '"' {
+				text = text[1 : len(text)-1]
+			}
+		}
+	}
+	return text
 }

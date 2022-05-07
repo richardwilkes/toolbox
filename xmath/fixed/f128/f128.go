@@ -375,7 +375,7 @@ func (f Int[T]) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (f *Int[T]) UnmarshalText(text []byte) error {
-	f1, err := FromString[T](txt.Unquote(text))
+	f1, err := FromString[T](txt.Unquote(string(text)))
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,7 @@ func (f Int[T]) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (f *Int[T]) UnmarshalJSON(in []byte) error {
-	v, err := FromString[T](txt.Unquote(in))
+	v, err := FromString[T](txt.Unquote(string(in)))
 	if err != nil {
 		return err
 	}
