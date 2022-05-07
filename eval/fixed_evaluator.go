@@ -9,12 +9,10 @@
 
 package eval
 
-import (
-	"github.com/richardwilkes/toolbox/xmath/fixed"
-)
+import "github.com/richardwilkes/toolbox/xmath/fixed"
 
-// NewFixedEvaluator creates a new evaluator whose number type is one of the Fixed64 types.
-func NewFixedEvaluator[T fixed.F64](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
+// NewFixedEvaluator creates a new evaluator whose number type is one of the fixed types.
+func NewFixedEvaluator[T fixed.Dx](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
 	return &Evaluator{
 		Resolver:  resolver,
 		Operators: FixedOperators[T](divideByZeroReturnsZero),

@@ -13,7 +13,8 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64d4"
+	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,11 +38,11 @@ func TestFixedEvaluator(t *testing.T) {
 		"2.01",
 		"102",
 	}
-	e := eval.NewFixedEvaluator[f64d4.Int](resolver{}, true)
+	e := eval.NewFixedEvaluator[fixed.D4](resolver{}, true)
 	for i, d := range testNumberResultExpressions {
 		result, err := e.Evaluate(d)
 		assert.NoError(t, err, "index %d", i)
-		assert.Equal(t, f64d4.FromStringForced(expected[i]), result, "index %d", i)
+		assert.Equal(t, f64.FromStringForced[fixed.D4](expected[i]), result, "index %d", i)
 	}
 	for i, d := range testStringResultExpressions {
 		result, err := e.Evaluate(d)
@@ -53,7 +54,7 @@ func TestFixedEvaluator(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, true, result)
 
-	e = eval.NewFixedEvaluator[f64d4.Int](nil, false)
+	e = eval.NewFixedEvaluator[fixed.D4](nil, false)
 	_, err = e.Evaluate("1 / 0")
 	assert.Error(t, err)
 }

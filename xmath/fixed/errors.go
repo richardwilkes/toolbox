@@ -7,20 +7,10 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package internal
+package fixed
 
-import (
-	"unicode/utf8"
-)
+import "errors"
 
-// Unquote strips up to one set of surrounding double quotes from the bytes and returns them as a string.
-func Unquote(text []byte) string {
-	if len(text) > 1 {
-		if ch, _ := utf8.DecodeRune(text); ch == '"' {
-			if ch, _ = utf8.DecodeLastRune(text); ch == '"' {
-				text = text[1 : len(text)-1]
-			}
-		}
-	}
-	return string(text)
-}
+// ErrDoesNotFitInRequestedType is returned from the fixed-point CheckedAs() functions if the requested type cannot
+// exactly represent the value.
+var ErrDoesNotFitInRequestedType = errors.New("does not fit in requested type")

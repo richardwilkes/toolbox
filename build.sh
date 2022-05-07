@@ -37,8 +37,6 @@ done
 
 # Build the code
 echo -e "\033[33mBuilding Go code...\033[0m"
-find . -iname "*_gen.go" -exec /bin/rm {} \;
-go generate ./gen
 go build -v ./...
 
 # Run the tests
