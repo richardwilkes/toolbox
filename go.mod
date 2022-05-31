@@ -10,7 +10,7 @@ require (
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/exp v0.0.0-20220518171630-0b5c67f07fdf
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9
-	gopkg.in/yaml.v3 v3.0.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
