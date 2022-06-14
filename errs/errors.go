@@ -101,7 +101,7 @@ func New(message string) *Error {
 }
 
 // Newf creates a new detailed error using fmt.Sprintf() to format the message.
-func Newf(format string, v ...interface{}) *Error {
+func Newf(format string, v ...any) *Error {
 	return New(fmt.Sprintf(format, v...))
 }
 
@@ -119,7 +119,7 @@ func NewWithCause(message string, cause error) *Error {
 }
 
 // NewWithCausef creates a new detailed error with an underlying 'cause' and using fmt.Sprintf() to format the message.
-func NewWithCausef(cause error, format string, v ...interface{}) *Error {
+func NewWithCausef(cause error, format string, v ...any) *Error {
 	return NewWithCause(fmt.Sprintf(format, v...), cause)
 }
 

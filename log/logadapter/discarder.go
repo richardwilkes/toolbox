@@ -19,44 +19,44 @@ import (
 type Discarder struct{}
 
 // Debug logs a debug message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Debug(v ...interface{}) {
+func (d *Discarder) Debug(v ...any) {
 }
 
 // Debugf logs a debug message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Debugf(format string, v ...interface{}) {
+func (d *Discarder) Debugf(format string, v ...any) {
 }
 
 // Info logs an informational message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Info(v ...interface{}) {
+func (d *Discarder) Info(v ...any) {
 }
 
 // Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Infof(format string, v ...interface{}) {
+func (d *Discarder) Infof(format string, v ...any) {
 }
 
 // Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Warn(v ...interface{}) {
+func (d *Discarder) Warn(v ...any) {
 }
 
 // Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Warnf(format string, v ...interface{}) {
+func (d *Discarder) Warnf(format string, v ...any) {
 }
 
 // Error logs an error message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Error(v ...interface{}) {
+func (d *Discarder) Error(v ...any) {
 }
 
 // Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Errorf(format string, v ...interface{}) {
+func (d *Discarder) Errorf(format string, v ...any) {
 }
 
 // Fatal logs a fatal error message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Fatal(status int, v ...interface{}) {
+func (d *Discarder) Fatal(status int, v ...any) {
 	atexit.Exit(status)
 }
 
 // Fatalf logs a fatal error message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Fatalf(status int, format string, v ...interface{}) {
+func (d *Discarder) Fatalf(status int, format string, v ...any) {
 	atexit.Exit(status)
 }
 
@@ -68,20 +68,20 @@ func (d *discarderTiming) End() time.Duration {
 	return time.Since(d.started)
 }
 
-func (d *discarderTiming) EndWithMsg(v ...interface{}) time.Duration {
+func (d *discarderTiming) EndWithMsg(v ...any) time.Duration {
 	return time.Since(d.started)
 }
 
-func (d *discarderTiming) EndWithMsgf(format string, v ...interface{}) time.Duration {
+func (d *discarderTiming) EndWithMsgf(format string, v ...any) time.Duration {
 	return time.Since(d.started)
 }
 
 // Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
-func (d *Discarder) Time(v ...interface{}) Timing {
+func (d *Discarder) Time(v ...any) Timing {
 	return &discarderTiming{started: time.Now()}
 }
 
 // Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
-func (d *Discarder) Timef(format string, v ...interface{}) Timing {
+func (d *Discarder) Timef(format string, v ...any) Timing {
 	return &discarderTiming{started: time.Now()}
 }

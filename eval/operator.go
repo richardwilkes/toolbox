@@ -15,10 +15,10 @@ import (
 )
 
 // OpFunc provides a signature for an Operator's Evaluate function.
-type OpFunc func(left, right interface{}) (interface{}, error)
+type OpFunc func(left, right any) (any, error)
 
 // UnaryOpFunc provides a signature for an Operator's EvaluateUnary function.
-type UnaryOpFunc func(arg interface{}) (interface{}, error)
+type UnaryOpFunc func(arg any) (any, error)
 
 // Operator provides an operator implementation for the Evaluator.
 type Operator struct {

@@ -45,7 +45,7 @@ type Server struct {
 	WebServer           *http.Server
 	Ports               []int
 	ShutdownCallback    func()
-	StartedChan         chan interface{} // If not nil, will be closed once the server is ready to accept connections
+	StartedChan         chan any // If not nil, will be closed once the server is ready to accept connections
 	addresses           []string
 	port                int
 }

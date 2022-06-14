@@ -22,7 +22,7 @@ import (
 )
 
 // LoadJSON data from the specified path.
-func LoadJSON(path string, data interface{}) error {
+func LoadJSON(path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -31,7 +31,7 @@ func LoadJSON(path string, data interface{}) error {
 }
 
 // LoadJSONFromFS data from the specified filesystem path.
-func LoadJSONFromFS(fsys fs.FS, path string, data interface{}) error {
+func LoadJSONFromFS(fsys fs.FS, path string, data any) error {
 	f, err := fsys.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -39,7 +39,7 @@ func LoadJSONFromFS(fsys fs.FS, path string, data interface{}) error {
 	return loadJSON(f, path, data)
 }
 
-func loadJSON(r io.ReadCloser, path string, data interface{}) error {
+func loadJSON(r io.ReadCloser, path string, data any) error {
 	defer xio.CloseIgnoringErrors(r)
 	if err := json.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
 		return errs.NewWithCause(path, err)
@@ -48,12 +48,12 @@ func loadJSON(r io.ReadCloser, path string, data interface{}) error {
 }
 
 // SaveJSON data to the specified path.
-func SaveJSON(path string, data interface{}, format bool) error {
+func SaveJSON(path string, data any, format bool) error {
 	return SaveJSONWithMode(path, data, format, 0o644)
 }
 
 // SaveJSONWithMode data to the specified path.
-func SaveJSONWithMode(path string, data interface{}, format bool, mode os.FileMode) error {
+func SaveJSONWithMode(path string, data any, format bool, mode os.FileMode) error {
 	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)
 		if format {

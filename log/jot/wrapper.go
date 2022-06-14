@@ -30,62 +30,62 @@ func (lgr *Logger) SetMinimumLevel(level Level) {
 }
 
 // Debug logs a debug message. Arguments are handled in the manner of fmt.Print.
-func (lgr *Logger) Debug(v ...interface{}) {
+func (lgr *Logger) Debug(v ...any) {
 	Debug(v...)
 }
 
 // Debugf logs a debug message. Arguments are handled in the manner of fmt.Printf.
-func (lgr *Logger) Debugf(format string, v ...interface{}) {
+func (lgr *Logger) Debugf(format string, v ...any) {
 	Debugf(format, v...)
 }
 
 // Info logs an informational message. Arguments are handled in the manner of fmt.Print.
-func (lgr *Logger) Info(v ...interface{}) {
+func (lgr *Logger) Info(v ...any) {
 	Info(v...)
 }
 
 // Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
-func (lgr *Logger) Infof(format string, v ...interface{}) {
+func (lgr *Logger) Infof(format string, v ...any) {
 	Infof(format, v...)
 }
 
 // Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
-func (lgr *Logger) Warn(v ...interface{}) {
+func (lgr *Logger) Warn(v ...any) {
 	Warn(v...)
 }
 
 // Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
-func (lgr *Logger) Warnf(format string, v ...interface{}) {
+func (lgr *Logger) Warnf(format string, v ...any) {
 	Warnf(format, v...)
 }
 
 // Error logs an error message. Arguments are handled in the manner of fmt.Print.
-func (lgr *Logger) Error(v ...interface{}) {
+func (lgr *Logger) Error(v ...any) {
 	Error(v...)
 }
 
 // Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
-func (lgr *Logger) Errorf(format string, v ...interface{}) {
+func (lgr *Logger) Errorf(format string, v ...any) {
 	Errorf(format, v...)
 }
 
 // Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
-func (lgr *Logger) Fatal(status int, v ...interface{}) {
+func (lgr *Logger) Fatal(status int, v ...any) {
 	Fatal(status, v...)
 }
 
 // Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
-func (lgr *Logger) Fatalf(status int, format string, v ...interface{}) {
+func (lgr *Logger) Fatalf(status int, format string, v ...any) {
 	Fatalf(status, format, v...)
 }
 
 // Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
-func (lgr *Logger) Time(v ...interface{}) logadapter.Timing {
+func (lgr *Logger) Time(v ...any) logadapter.Timing {
 	return Time(v...)
 }
 
 // Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
-func (lgr *Logger) Timef(format string, v ...interface{}) logadapter.Timing {
+func (lgr *Logger) Timef(format string, v ...any) logadapter.Timing {
 	return Timef(format, v...)
 }
 

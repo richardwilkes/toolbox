@@ -399,7 +399,7 @@ func (f *Int[T]) UnmarshalJSON(in []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (f Int[T]) MarshalYAML() (interface{}, error) {
+func (f Int[T]) MarshalYAML() (any, error) {
 	return yaml.Node{
 		Kind:  yaml.ScalarNode,
 		Value: f.String(),
@@ -407,7 +407,7 @@ func (f Int[T]) MarshalYAML() (interface{}, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (f *Int[T]) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (f *Int[T]) UnmarshalYAML(unmarshal func(any) error) error {
 	var str string
 	if err := unmarshal(&str); err != nil {
 		return err

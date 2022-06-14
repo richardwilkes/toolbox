@@ -20,7 +20,7 @@ import (
 
 // Data provides conveniences for working with JSON data.
 type Data struct {
-	obj interface{}
+	obj any
 }
 
 // MustParse is the same as calling Parse, but without the error code on return.
@@ -35,7 +35,7 @@ func MustParse(data []byte) *Data {
 // Parse JSON data from bytes. If the data can't be loaded, a valid, empty Data will still be returned, along with an
 // error.
 func Parse(data []byte) (*Data, error) {
-	var obj interface{}
+	var obj any
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.UseNumber()
 	if err := decoder.Decode(&obj); err != nil {
@@ -56,7 +56,7 @@ func MustParseStream(in io.Reader) *Data {
 // ParseStream parses JSON data from the stream. If the data can't be loaded, a valid, empty Data will still be
 // returned, along with an error.
 func ParseStream(in io.Reader) (*Data, error) {
-	var obj interface{}
+	var obj any
 	decoder := json.NewDecoder(in)
 	decoder.UseNumber()
 	if err := decoder.Decode(&obj); err != nil {
@@ -66,7 +66,7 @@ func ParseStream(in io.Reader) (*Data, error) {
 }
 
 // Raw returns the underlying data.
-func (j *Data) Raw() interface{} {
+func (j *Data) Raw() any {
 	return j.obj
 }
 
@@ -83,12 +83,12 @@ func (j *Data) path(path ...string) *Data {
 	}
 	obj := j.obj
 	for i := 0; i < len(path); i++ {
-		if m, ok := obj.(map[string]interface{}); ok {
+		if m, ok := obj.(map[string]any); ok {
 			obj = m[path[i]]
 		} else {
-			var a []interface{}
-			if a, ok = obj.([]interface{}); ok {
-				t := make([]interface{}, 0)
+			var a []any
+			if a, ok = obj.([]any); ok {
+				t := make([]any, 0)
 				for _, one := range a {
 					tj := &Data{obj: one}
 					if result := tj.path(path[i:]...).obj; result != nil {
@@ -112,19 +112,19 @@ func (j *Data) Exists(path string) bool {
 
 // IsArray returns true if this is a Data array.
 func (j *Data) IsArray() bool {
-	_, ok := j.obj.([]interface{})
+	_, ok := j.obj.([]any)
 	return ok
 }
 
 // IsMap returns true if this is a Data map.
 func (j *Data) IsMap() bool {
-	_, ok := j.obj.(map[string]interface{})
+	_, ok := j.obj.(map[string]any)
 	return ok
 }
 
 // Keys returns the keys of a map, or an empty slice if this is not a map.
 func (j *Data) Keys() []string {
-	if m, ok := j.obj.(map[string]interface{}); ok {
+	if m, ok := j.obj.(map[string]any); ok {
 		keys := make([]string, 0, len(m))
 		for key := range m {
 			keys = append(keys, key)
@@ -136,10 +136,10 @@ func (j *Data) Keys() []string {
 
 // Size returns the number of elements in an array or map, or 0 if this is neither type.
 func (j *Data) Size() int {
-	if m, ok := j.obj.(map[string]interface{}); ok {
+	if m, ok := j.obj.(map[string]any); ok {
 		return len(m)
 	}
-	if a, ok := j.obj.([]interface{}); ok {
+	if a, ok := j.obj.([]any); ok {
 		return len(a)
 	}
 	return 0
@@ -148,7 +148,7 @@ func (j *Data) Size() int {
 // Index returns the object at the specified index within an array, or nil if this isn't an array or the index isn't
 // valid.
 func (j *Data) Index(index int) *Data {
-	if a, ok := j.obj.([]interface{}); ok {
+	if a, ok := j.obj.([]any); ok {
 		if index >= 0 && index < len(a) {
 			return &Data{obj: a[index]}
 		}
@@ -247,20 +247,20 @@ func (j *Data) Int64Relaxed(path string) int64 {
 }
 
 // Unmarshal parses the data at the path and stores the result into value.
-func (j *Data) Unmarshal(path string, value interface{}) error {
+func (j *Data) Unmarshal(path string, value any) error {
 	return json.Unmarshal(j.Path(path).Bytes(), value)
 }
 
 // NewMap creates a map at the specified path. Any parts of the path that do not exist will be created. Returns true if
 // successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) NewMap(path string) bool {
-	return j.set(path, make(map[string]interface{}))
+	return j.set(path, make(map[string]any))
 }
 
 // NewArray creates an array at the specified path. Any parts of the path that do not exist will be created. Returns
 // true if successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) NewArray(path string) bool {
-	return j.set(path, make([]interface{}, 0))
+	return j.set(path, make([]any, 0))
 }
 
 // SetStr a string at the specified path. Any parts of the path that do not exist will be created. Returns true if
@@ -290,28 +290,28 @@ func (j *Data) SetInt64(path string, value int64) bool {
 // Set a Data value at the specified path. Any parts of the path that do not exist will be created. Returns true if
 // successful, or false if a collision occurs with a non-object type while traversing the path.
 func (j *Data) Set(path string, value *Data) bool {
-	var v interface{}
+	var v any
 	if value != nil {
 		v = value.obj
 	}
 	return j.set(path, v)
 }
 
-func (j *Data) set(path string, value interface{}) bool {
+func (j *Data) set(path string, value any) bool {
 	paths := strings.Split(path, ".")
 	if len(paths) == 0 {
 		j.obj = value
 	} else {
 		if j.obj == nil {
-			j.obj = make(map[string]interface{})
+			j.obj = make(map[string]any)
 		}
 		obj := j.obj
 		for i := 0; i < len(paths); i++ {
-			if m, ok := obj.(map[string]interface{}); ok {
+			if m, ok := obj.(map[string]any); ok {
 				if i == len(paths)-1 {
 					m[paths[i]] = value
 				} else if m[paths[i]] == nil {
-					m[paths[i]] = make(map[string]interface{})
+					m[paths[i]] = make(map[string]any)
 				}
 				obj = m[paths[i]]
 			} else {
@@ -325,13 +325,13 @@ func (j *Data) set(path string, value interface{}) bool {
 // AppendMap appends a new map to an array at the specified path. The array must already exist. Returns true if
 // successful.
 func (j *Data) AppendMap(path string) bool {
-	return j.append(path, make(map[string]interface{}))
+	return j.append(path, make(map[string]any))
 }
 
 // AppendArray appends a new array to an array at the specified path. The array must already exist. Returns true if
 // successful.
 func (j *Data) AppendArray(path string) bool {
-	return j.append(path, make([]interface{}, 0))
+	return j.append(path, make([]any, 0))
 }
 
 // AppendStr appends a string to an array at the specified path. The array must already exist. Returns true if
@@ -360,15 +360,15 @@ func (j *Data) AppendInt64(path string, value int64) bool {
 
 // Append a Data value to an array at the specified path. The array must already exist. Returns true if successful.
 func (j *Data) Append(path string, value *Data) bool {
-	var v interface{}
+	var v any
 	if value != nil {
 		v = value.obj
 	}
 	return j.append(path, v)
 }
 
-func (j *Data) append(path string, value interface{}) bool {
-	if array, ok := j.Path(path).obj.([]interface{}); ok {
+func (j *Data) append(path string, value any) bool {
+	if array, ok := j.Path(path).obj.([]any); ok {
 		return j.set(path, append(array, value))
 	}
 	return false
@@ -386,7 +386,7 @@ func (j *Data) Delete(path string) bool {
 	}
 	obj := j.obj
 	for i := 0; i < len(paths); i++ {
-		if m, ok := obj.(map[string]interface{}); ok {
+		if m, ok := obj.(map[string]any); ok {
 			if i == len(paths)-1 {
 				if _, ok = m[paths[i]]; ok {
 					delete(m, paths[i])

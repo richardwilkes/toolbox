@@ -107,7 +107,7 @@ func SetMinimumLevel(level Level) {
 }
 
 // Debug logs a debugging message. Arguments are handled in the manner of fmt.Print.
-func Debug(v ...interface{}) {
+func Debug(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: DEBUG,
@@ -116,7 +116,7 @@ func Debug(v ...interface{}) {
 }
 
 // Debugf logs a debugging message. Arguments are handled in the manner of fmt.Printf.
-func Debugf(format string, v ...interface{}) {
+func Debugf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: DEBUG,
@@ -125,7 +125,7 @@ func Debugf(format string, v ...interface{}) {
 }
 
 // Info logs an informational message. Arguments are handled in the manner of fmt.Print.
-func Info(v ...interface{}) {
+func Info(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: INFO,
@@ -134,7 +134,7 @@ func Info(v ...interface{}) {
 }
 
 // Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
-func Infof(format string, v ...interface{}) {
+func Infof(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: INFO,
@@ -143,7 +143,7 @@ func Infof(format string, v ...interface{}) {
 }
 
 // Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
-func Warn(v ...interface{}) {
+func Warn(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: WARN,
@@ -152,7 +152,7 @@ func Warn(v ...interface{}) {
 }
 
 // Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
-func Warnf(format string, v ...interface{}) {
+func Warnf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: WARN,
@@ -161,7 +161,7 @@ func Warnf(format string, v ...interface{}) {
 }
 
 // Error logs an error message. Arguments are handled in the manner of fmt.Print.
-func Error(v ...interface{}) {
+func Error(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: ERROR,
@@ -170,7 +170,7 @@ func Error(v ...interface{}) {
 }
 
 // Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
-func Errorf(format string, v ...interface{}) {
+func Errorf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: ERROR,
@@ -179,7 +179,7 @@ func Errorf(format string, v ...interface{}) {
 }
 
 // Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
-func Fatal(status int, v ...interface{}) {
+func Fatal(status int, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: FATAL,
@@ -189,7 +189,7 @@ func Fatal(status int, v ...interface{}) {
 }
 
 // Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
-func Fatalf(status int, format string, v ...interface{}) {
+func Fatalf(status int, format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
 		level: FATAL,

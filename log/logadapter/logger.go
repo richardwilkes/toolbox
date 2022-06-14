@@ -17,45 +17,45 @@ import "time"
 // directly or provide an adapter to use.
 type DebugLogger interface {
 	// Debug logs a debugging message. Arguments are handled in the manner of fmt.Print.
-	Debug(v ...interface{})
+	Debug(v ...any)
 	// Debugf logs a debugging message. Arguments are handled in the manner of fmt.Printf.
-	Debugf(format string, v ...interface{})
+	Debugf(format string, v ...any)
 }
 
 // InfoLogger defines an API to use for logging informational messages, which actual logging implementations can
 // implement directly or provide an adapter to use.
 type InfoLogger interface {
 	// Info logs an informational message. Arguments are handled in the manner of fmt.Print.
-	Info(v ...interface{})
+	Info(v ...any)
 	// Infof logs an informational message. Arguments are handled in the manner of fmt.Print.
-	Infof(format string, v ...interface{})
+	Infof(format string, v ...any)
 }
 
 // WarnLogger defines an API to use for logging warning messages, which actual logging implementations can implement
 // directly or provide an adapter to use.
 type WarnLogger interface {
 	// Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
-	Warn(v ...interface{})
+	Warn(v ...any)
 	// Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
-	Warnf(format string, v ...interface{})
+	Warnf(format string, v ...any)
 }
 
 // ErrorLogger defines an API to use for logging error messages, which actual logging implementations can implement
 // directly or provide an adapter to use.
 type ErrorLogger interface {
 	// Error logs an error message. Arguments are handled in the manner of fmt.Print.
-	Error(v ...interface{})
+	Error(v ...any)
 	// Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
-	Errorf(format string, v ...interface{})
+	Errorf(format string, v ...any)
 }
 
 // FatalLogger defines an API to use for logging fatal error messages, which actual logging implementations can
 // implement directly or provide an adapter to use.
 type FatalLogger interface {
 	// Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
-	Fatal(status int, v ...interface{})
+	Fatal(status int, v ...any)
 	// Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
-	Fatalf(status int, format string, v ...interface{})
+	Fatalf(status int, format string, v ...any)
 }
 
 // Timing is used to record the duration between two events. One of End(), EndWithMsg(), or EndWithMsgf() should be
@@ -65,20 +65,20 @@ type Timing interface {
 	End() time.Duration
 	// EndWithMsg finishes timing an event and logs an informational message. Arguments are handled in the manner of
 	// fmt.Print.
-	EndWithMsg(v ...interface{}) time.Duration
+	EndWithMsg(v ...any) time.Duration
 	// EndWithMsgf finishes timing an event and logs an informational message. Arguments are handled in the manner of
 	// fmt.Printf.
-	EndWithMsgf(format string, v ...interface{}) time.Duration
+	EndWithMsgf(format string, v ...any) time.Duration
 }
 
 // TimingLogger defines an API to use for logging timed data, which actual logging implementations can implement
 // directly or provide an adapter to use.
 type TimingLogger interface {
 	// Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
-	Time(v ...interface{}) Timing
+	Time(v ...any) Timing
 	// Timef starts timing an event and logs an informational message. Arguments are handled in the manner of
 	// fmt.Printf.
-	Timef(format string, v ...interface{}) Timing
+	Timef(format string, v ...any) Timing
 }
 
 // Logger defines an API to use for logging, which actual logging implementations can implement directly or provide an

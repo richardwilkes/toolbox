@@ -37,47 +37,47 @@ func FixedFunctions[T fixed.Dx]() map[string]Function {
 	}
 }
 
-func fixedAbsolute[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedAbsolute[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err
 	}
-	return interface{}(&value).(interface{ Abs() f64.Int[T] }).Abs(), nil
+	return any(&value).(interface{ Abs() f64.Int[T] }).Abs(), nil
 }
 
-func fixedBase2Exponential[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedBase2Exponential[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Exp2)
 }
 
-func fixedBaseEExponential[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedBaseEExponential[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Exp)
 }
 
-func fixedCeiling[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedCeiling[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err
 	}
-	return interface{}(&value).(interface{ Ceil() f64.Int[T] }).Ceil(), nil
+	return any(&value).(interface{ Ceil() f64.Int[T] }).Ceil(), nil
 }
 
-func fixedCubeRoot[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedCubeRoot[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Cbrt)
 }
 
-func fixedDecimalLog[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedDecimalLog[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Log10)
 }
 
-func fixedFloor[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedFloor[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err
 	}
-	return interface{}(&value).(interface{ Trunc() f64.Int[T] }).Trunc(), nil
+	return any(&value).(interface{ Trunc() f64.Int[T] }).Trunc(), nil
 }
 
-func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	var arg string
 	arg, arguments = NextArg(arguments)
 	evaluated, err := e.EvaluateNew(arg)
@@ -88,7 +88,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
 	if value, err = FixedFrom[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
 			if s != "" && !strings.EqualFold(s, "false") {
-				value = interface{}(&value).(interface{ Inc() f64.Int[T] }).Inc()
+				value = any(&value).(interface{ Inc() f64.Int[T] }).Inc()
 			}
 		} else {
 			return nil, err
@@ -101,7 +101,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
 	return e.EvaluateNew(arg)
 }
 
-func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	max := f64.Int[T](f64.Min)
 	for arguments != "" {
 		var arg string
@@ -115,7 +115,7 @@ func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (interface{}, erro
 	return max, nil
 }
 
-func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	min := f64.Int[T](f64.Max)
 	for arguments != "" {
 		var arg string
@@ -129,28 +129,28 @@ func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (interface{}, erro
 	return min, nil
 }
 
-func fixedNaturalLog[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedNaturalLog[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Log)
 }
 
-func fixedNaturalLogSum1[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedNaturalLogSum1[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err
 	}
-	value = interface{}(&value).(interface{ Inc() f64.Int[T] }).Inc()
-	return f64.From[T](math.Log(interface{}(&value).(interface{ AsFloat64() float64 }).AsFloat64())), nil
+	value = any(&value).(interface{ Inc() f64.Int[T] }).Inc()
+	return f64.From[T](math.Log(any(&value).(interface{ AsFloat64() float64 }).AsFloat64())), nil
 }
 
-func fixedRound[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedRound[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err
 	}
-	return interface{}(&value).(interface{ Round() f64.Int[T] }).Round(), nil
+	return any(&value).(interface{ Round() f64.Int[T] }).Round(), nil
 }
 
-func fixedSquareRoot[T fixed.Dx](e *Evaluator, arguments string) (interface{}, error) {
+func fixedSquareRoot[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Sqrt)
 }
 
@@ -162,7 +162,7 @@ func evalToFixed[T fixed.Dx](e *Evaluator, arg string) (f64.Int[T], error) {
 	return FixedFrom[T](evaluated)
 }
 
-func fixedSingleNumberFunc[T fixed.Dx](e *Evaluator, arguments string, f func(float64) float64) (interface{}, error) {
+func fixedSingleNumberFunc[T fixed.Dx](e *Evaluator, arguments string, f func(float64) float64) (any, error) {
 	value, err := evalToFixed[T](e, arguments)
 	if err != nil {
 		return nil, err

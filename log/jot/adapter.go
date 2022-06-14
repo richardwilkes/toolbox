@@ -19,7 +19,7 @@ package jot
 //
 // log.New(&jot.LoggerWriter{Filter: jot.Info}), "", 0)
 type LoggerWriter struct {
-	Filter func(v ...interface{})
+	Filter func(v ...any)
 }
 
 // Write implements the io.Writer interface required by log.Logger.

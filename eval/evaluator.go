@@ -32,14 +32,14 @@ type expressionOperator struct {
 
 type expressionTree struct {
 	evaluator *Evaluator
-	left      interface{}
-	right     interface{}
+	left      any
+	right     any
 	op        *Operator
 	unaryOp   *Operator
 }
 
 // Function provides a signature for a Function.
-type Function func(evaluator *Evaluator, arguments string) (interface{}, error)
+type Function func(evaluator *Evaluator, arguments string) (any, error)
 
 type parsedFunction struct {
 	function Function
@@ -53,12 +53,12 @@ type Evaluator struct {
 	Resolver      VariableResolver
 	Operators     []*Operator
 	Functions     map[string]Function
-	operandStack  []interface{}
+	operandStack  []any
 	operatorStack []*expressionOperator
 }
 
 // Evaluate an expression.
-func (e *Evaluator) Evaluate(expression string) (interface{}, error) {
+func (e *Evaluator) Evaluate(expression string) (any, error) {
 	if err := e.parse(expression); err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (e *Evaluator) Evaluate(expression string) (interface{}, error) {
 
 // EvaluateNew reuses the Resolver, Operators, and Functions from this Evaluator to create a new Evaluator and then
 // resolves an expression with it.
-func (e *Evaluator) EvaluateNew(expression string) (interface{}, error) {
+func (e *Evaluator) EvaluateNew(expression string) (any, error) {
 	other := Evaluator{
 		Resolver:  e.Resolver,
 		Operators: e.Operators,
@@ -276,12 +276,12 @@ func (e *Evaluator) processFunction(expression string, opIndex int) (int, *Opera
 }
 
 func (e *Evaluator) processTree() {
-	var right interface{}
+	var right any
 	if len(e.operandStack) > 0 {
 		right = e.operandStack[len(e.operandStack)-1]
 		e.operandStack = e.operandStack[:len(e.operandStack)-1]
 	}
-	var left interface{}
+	var left any
 	if len(e.operandStack) > 0 {
 		left = e.operandStack[len(e.operandStack)-1]
 		e.operandStack = e.operandStack[:len(e.operandStack)-1]
@@ -296,14 +296,14 @@ func (e *Evaluator) processTree() {
 	})
 }
 
-func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
+func (e *Evaluator) evaluateOperand(operand any) (any, error) {
 	switch op := operand.(type) {
 	case *expressionTree:
 		left, err := op.evaluator.evaluateOperand(op.left)
 		if err != nil {
 			return nil, err
 		}
-		var right interface{}
+		var right any
 		right, err = op.evaluator.evaluateOperand(op.right)
 		if err != nil {
 			return nil, err
@@ -312,7 +312,7 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 			if op.op.Evaluate == nil {
 				return nil, errs.New("operator does not have Evaluate function defined")
 			}
-			var v interface{}
+			var v any
 			v, err = op.op.Evaluate(left, right)
 			if err != nil {
 				return nil, err
@@ -322,7 +322,7 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 			}
 			return v, nil
 		}
-		var v interface{}
+		var v any
 		if op.right == nil {
 			v = left
 		} else {
@@ -356,7 +356,7 @@ func (e *Evaluator) evaluateOperand(operand interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		var v interface{}
+		var v any
 		v, err = op.function(e, s)
 		if err != nil {
 			return nil, err

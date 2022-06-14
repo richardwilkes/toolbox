@@ -20,7 +20,7 @@ import (
 // Target defines the method a target of notifications must implement.
 type Target interface {
 	// HandleNotification is called to deliver a notification.
-	HandleNotification(name string, data, producer interface{})
+	HandleNotification(name string, data, producer any)
 }
 
 // BatchTarget defines the methods a target of notifications that wants to be notified when a batch change occurs must
@@ -194,13 +194,13 @@ func (n *Notifier) SetEnabled(enabled bool) {
 }
 
 // Notify sends a notification to all interested targets.
-func (n *Notifier) Notify(name string, producer interface{}) {
+func (n *Notifier) Notify(name string, producer any) {
 	n.NotifyWithData(name, nil, producer)
 }
 
 // NotifyWithData sends a notification to all interested targets. This is a synchronous notification and will not return
 // until all interested targets handle the notification.
-func (n *Notifier) NotifyWithData(name string, data, producer interface{}) {
+func (n *Notifier) NotifyWithData(name string, data, producer any) {
 	if n.Enabled() {
 		name = normalizeName(name)
 		if len(name) > 0 {
@@ -237,7 +237,7 @@ func (n *Notifier) NotifyWithData(name string, data, producer interface{}) {
 	}
 }
 
-func (n *Notifier) notifyTarget(target Target, name string, data, producer interface{}) {
+func (n *Notifier) notifyTarget(target Target, name string, data, producer any) {
 	defer errs.Recovery(n.recoveryHandler)
 	target.HandleNotification(name, data, producer)
 }

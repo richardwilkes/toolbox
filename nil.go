@@ -12,7 +12,7 @@ package toolbox
 import "reflect"
 
 // IsNil returns true if the interface is nil or if the value it points to is nil.
-func IsNil(i interface{}) bool {
+func IsNil(i any) bool {
 	if i == nil {
 		return true
 	}

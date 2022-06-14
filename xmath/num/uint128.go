@@ -966,12 +966,12 @@ func (u *Uint128) UnmarshalJSON(in []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (u Uint128) MarshalYAML() (interface{}, error) {
+func (u Uint128) MarshalYAML() (any, error) {
 	return u.String(), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (u *Uint128) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *Uint128) UnmarshalYAML(unmarshal func(any) error) error {
 	var str string
 	if err := unmarshal(&str); err != nil {
 		return err

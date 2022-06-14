@@ -23,7 +23,7 @@ import (
 )
 
 // LoadYAML data from the specified path.
-func LoadYAML(path string, data interface{}) error {
+func LoadYAML(path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -32,7 +32,7 @@ func LoadYAML(path string, data interface{}) error {
 }
 
 // LoadYAMLFromFS data from the specified filesystem path.
-func LoadYAMLFromFS(fsys fs.FS, path string, data interface{}) error {
+func LoadYAMLFromFS(fsys fs.FS, path string, data any) error {
 	f, err := fsys.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
@@ -40,7 +40,7 @@ func LoadYAMLFromFS(fsys fs.FS, path string, data interface{}) error {
 	return loadYAML(f, path, data)
 }
 
-func loadYAML(r io.ReadCloser, path string, data interface{}) error {
+func loadYAML(r io.ReadCloser, path string, data any) error {
 	defer xio.CloseIgnoringErrors(r)
 	if err := yaml.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
 		return errs.NewWithCause(path, err)
@@ -49,12 +49,12 @@ func loadYAML(r io.ReadCloser, path string, data interface{}) error {
 }
 
 // SaveYAML data to the specified path.
-func SaveYAML(path string, data interface{}) error {
+func SaveYAML(path string, data any) error {
 	return SaveYAMLWithMode(path, data, 0o644)
 }
 
 // SaveYAMLWithMode data to the specified path.
-func SaveYAMLWithMode(path string, data interface{}, mode os.FileMode) error {
+func SaveYAMLWithMode(path string, data any, mode os.FileMode) error {
 	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)
 		encoder.SetIndent(2)

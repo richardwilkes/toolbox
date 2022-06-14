@@ -50,7 +50,7 @@ func FloatOperators[T constraints.Float](divideByZeroReturnsZero bool) []*Operat
 	}
 }
 
-func floatNot[T constraints.Float](arg interface{}) (interface{}, error) {
+func floatNot[T constraints.Float](arg any) (any, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
@@ -64,7 +64,7 @@ func floatNot[T constraints.Float](arg interface{}) (interface{}, error) {
 	return false, nil
 }
 
-func floatLogicalOr[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatLogicalOr[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func floatLogicalOr[T constraints.Float](left, right interface{}) (interface{}, 
 	return r != 0, nil
 }
 
-func floatLogicalAnd[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatLogicalAnd[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func floatLogicalAnd[T constraints.Float](left, right interface{}) (interface{},
 	return r != 0, nil
 }
 
-func floatEqual[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -108,7 +108,7 @@ func floatEqual[T constraints.Float](left, right interface{}) (interface{}, erro
 	return l == r, nil
 }
 
-func floatNotEqual[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatNotEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -120,7 +120,7 @@ func floatNotEqual[T constraints.Float](left, right interface{}) (interface{}, e
 	return l != r, nil
 }
 
-func floatGreaterThan[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatGreaterThan[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -132,7 +132,7 @@ func floatGreaterThan[T constraints.Float](left, right interface{}) (interface{}
 	return l > r, nil
 }
 
-func floatGreaterThanOrEqual[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatGreaterThanOrEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -144,7 +144,7 @@ func floatGreaterThanOrEqual[T constraints.Float](left, right interface{}) (inte
 	return l >= r, nil
 }
 
-func floatLessThan[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatLessThan[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -156,7 +156,7 @@ func floatLessThan[T constraints.Float](left, right interface{}) (interface{}, e
 	return l < r, nil
 }
 
-func floatLessThanOrEqual[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatLessThanOrEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -168,7 +168,7 @@ func floatLessThanOrEqual[T constraints.Float](left, right interface{}) (interfa
 	return l <= r, nil
 }
 
-func floatAdd[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatAdd[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -180,11 +180,11 @@ func floatAdd[T constraints.Float](left, right interface{}) (interface{}, error)
 	return l + r, nil
 }
 
-func floatAddUnary[T constraints.Float](arg interface{}) (interface{}, error) {
+func floatAddUnary[T constraints.Float](arg any) (any, error) {
 	return floatFrom[T](arg)
 }
 
-func floatSubtract[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatSubtract[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func floatSubtract[T constraints.Float](left, right interface{}) (interface{}, e
 	return l - r, nil
 }
 
-func floatSubtractUnary[T constraints.Float](arg interface{}) (interface{}, error) {
+func floatSubtractUnary[T constraints.Float](arg any) (any, error) {
 	v, err := floatFrom[T](arg)
 	if err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func floatSubtractUnary[T constraints.Float](arg interface{}) (interface{}, erro
 	return -v, nil
 }
 
-func floatMultiply[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatMultiply[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func floatMultiply[T constraints.Float](left, right interface{}) (interface{}, e
 	return l * r, nil
 }
 
-func floatDivide[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatDivide[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -234,7 +234,7 @@ func floatDivide[T constraints.Float](left, right interface{}) (interface{}, err
 	return l / r, nil
 }
 
-func floatDivideAllowDivideByZero[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatDivideAllowDivideByZero[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func floatDivideAllowDivideByZero[T constraints.Float](left, right interface{}) 
 	return l / r, nil
 }
 
-func floatModulo[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatModulo[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -266,7 +266,7 @@ func floatModulo[T constraints.Float](left, right interface{}) (interface{}, err
 	return xmath.Mod(l, r), nil
 }
 
-func floatModuloAllowDivideByZero[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatModuloAllowDivideByZero[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -282,7 +282,7 @@ func floatModuloAllowDivideByZero[T constraints.Float](left, right interface{}) 
 	return xmath.Mod(l, r), nil
 }
 
-func floatPower[T constraints.Float](left, right interface{}) (interface{}, error) {
+func floatPower[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func floatPower[T constraints.Float](left, right interface{}) (interface{}, erro
 	return xmath.Pow(l, r), nil
 }
 
-func floatFrom[T constraints.Float](arg interface{}) (T, error) {
+func floatFrom[T constraints.Float](arg any) (T, error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {

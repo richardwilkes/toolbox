@@ -49,7 +49,7 @@ func FixedOperators[T fixed.Dx](divideByZeroReturnsZero bool) []*Operator {
 	}
 }
 
-func fixedNot[T fixed.Dx](arg interface{}) (interface{}, error) {
+func fixedNot[T fixed.Dx](arg any) (any, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
@@ -63,7 +63,7 @@ func fixedNot[T fixed.Dx](arg interface{}) (interface{}, error) {
 	return false, nil
 }
 
-func fixedLogicalOr[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedLogicalOr[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func fixedLogicalOr[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return r != 0, nil
 }
 
-func fixedLogicalAnd[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedLogicalAnd[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func fixedLogicalAnd[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return r != 0, nil
 }
 
-func fixedEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedEqual[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -107,7 +107,7 @@ func fixedEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l == r, nil
 }
 
-func fixedNotEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedNotEqual[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -119,7 +119,7 @@ func fixedNotEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l != r, nil
 }
 
-func fixedGreaterThan[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedGreaterThan[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -131,7 +131,7 @@ func fixedGreaterThan[T fixed.Dx](left, right interface{}) (interface{}, error) 
 	return l > r, nil
 }
 
-func fixedGreaterThanOrEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedGreaterThanOrEqual[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -143,7 +143,7 @@ func fixedGreaterThanOrEqual[T fixed.Dx](left, right interface{}) (interface{}, 
 	return l >= r, nil
 }
 
-func fixedLessThan[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedLessThan[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -155,7 +155,7 @@ func fixedLessThan[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l < r, nil
 }
 
-func fixedLessThanOrEqual[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedLessThanOrEqual[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -167,7 +167,7 @@ func fixedLessThanOrEqual[T fixed.Dx](left, right interface{}) (interface{}, err
 	return l <= r, nil
 }
 
-func fixedAdd[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedAdd[T fixed.Dx](left, right any) (any, error) {
 	var r f64.Int[T]
 	l, err := FixedFrom[T](left)
 	if err == nil {
@@ -179,11 +179,11 @@ func fixedAdd[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l + r, nil
 }
 
-func fixedAddUnary[T fixed.Dx](arg interface{}) (interface{}, error) {
+func fixedAddUnary[T fixed.Dx](arg any) (any, error) {
 	return FixedFrom[T](arg)
 }
 
-func fixedSubtract[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedSubtract[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func fixedSubtract[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l - r, nil
 }
 
-func fixedSubtractUnary[T fixed.Dx](arg interface{}) (interface{}, error) {
+func fixedSubtractUnary[T fixed.Dx](arg any) (any, error) {
 	v, err := FixedFrom[T](arg)
 	if err != nil {
 		return nil, err
@@ -204,7 +204,7 @@ func fixedSubtractUnary[T fixed.Dx](arg interface{}) (interface{}, error) {
 	return -v, nil
 }
 
-func fixedMultiply[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedMultiply[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func fixedMultiply[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l.Mul(r), nil
 }
 
-func fixedDivide[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedDivide[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func fixedDivide[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l.Div(r), nil
 }
 
-func fixedDivideAllowDivideByZero[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedDivideAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -249,7 +249,7 @@ func fixedDivideAllowDivideByZero[T fixed.Dx](left, right interface{}) (interfac
 	return l.Div(r), nil
 }
 
-func fixedModulo[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedModulo[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -265,7 +265,7 @@ func fixedModulo[T fixed.Dx](left, right interface{}) (interface{}, error) {
 	return l.Mod(r), nil
 }
 
-func fixedModuloAllowDivideByZero[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedModuloAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func fixedModuloAllowDivideByZero[T fixed.Dx](left, right interface{}) (interfac
 	return l.Mod(r), nil
 }
 
-func fixedPower[T fixed.Dx](left, right interface{}) (interface{}, error) {
+func fixedPower[T fixed.Dx](left, right any) (any, error) {
 	l, err := FixedFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func fixedPower[T fixed.Dx](left, right interface{}) (interface{}, error) {
 }
 
 // FixedFrom attempts to convert the arg into one of the fixed.F64 types.
-func FixedFrom[T fixed.Dx](arg interface{}) (f64.Int[T], error) {
+func FixedFrom[T fixed.Dx](arg any) (f64.Int[T], error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {

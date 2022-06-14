@@ -17,7 +17,7 @@ import (
 )
 
 // Logger provides a way to log panics caused by workers in a queue.
-type Logger func(v ...interface{})
+type Logger func(v ...any)
 
 // Task defines a unit of work.
 type Task func()

@@ -38,7 +38,7 @@ const (
 type mapping struct {
 	external   int
 	renew      time.Time
-	notifyChan chan interface{}
+	notifyChan chan any
 }
 
 var (
@@ -125,7 +125,7 @@ func ExternalAddress() (net.IP, error) {
 // to connect to the internal port. If you wish to be notified of changes to the external port mapping, provide a notify
 // channel. It will be sent an int containing the updated external port mapping when it changes or an error if a renewal
 // fails. The channel will only be sent to if it is ready.
-func MapTCP(port int, notifyChan chan interface{}) (int, error) {
+func MapTCP(port int, notifyChan chan any) (int, error) {
 	if err := checkPort(port); err != nil {
 		return 0, err
 	}
@@ -142,7 +142,7 @@ func MapTCP(port int, notifyChan chan interface{}) (int, error) {
 // to connect to the internal port. If you wish to be notified of changes to the external port mapping, provide a notify
 // channel. It will be sent an int containing the updated external port mapping when it changes or an error if a renewal
 // fails. The channel will only be sent to if it is ready.
-func MapUDP(port int, notifyChan chan interface{}) (int, error) {
+func MapUDP(port int, notifyChan chan any) (int, error) {
 	if err := checkPort(port); err != nil {
 		return 0, err
 	}
@@ -203,7 +203,7 @@ func makeUnmapBuffer(op byte, port uint16) []byte {
 	return buffer
 }
 
-func addMapping(internal, external int, notifyChan chan interface{}) {
+func addMapping(internal, external int, notifyChan chan any) {
 	lock.Lock()
 	mappings[internal] = mapping{
 		external:   external,
