@@ -18,8 +18,8 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// OpenBrowser opens 'url' with the user's preferred browser.
-func OpenBrowser(url string) error {
+// Open asks the system to open the provided path or URL.
+func Open(pathOrURL string) error {
 	var cmd string
 	switch runtime.GOOS {
 	case toolbox.MacOS:
@@ -31,8 +31,8 @@ func OpenBrowser(url string) error {
 	default:
 		return errs.New("Unsupported platform")
 	}
-	if err := exec.Command(cmd, url).Start(); err != nil {
-		return errs.NewWithCause("Unable to open "+url, err)
+	if err := exec.Command(cmd, pathOrURL).Start(); err != nil {
+		return errs.NewWithCause("Unable to open "+pathOrURL, err)
 	}
 	return nil
 }
