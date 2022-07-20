@@ -60,7 +60,7 @@ linters:
 #    - gocritic
     - gofumpt
     - goimports
-#    - gosimple
+    - gosimple
     - govet
     - ifshort
     - ineffassign
@@ -69,10 +69,10 @@ linters:
     - prealloc
     - predeclared
     - revive
-#    - staticcheck
+    - staticcheck
 #    - structcheck
     - unconvert
-#    - unused
+    - unused
     - varcheck
 #    - wastedassign
 # Once Go 1.18 support is finalized in golangci-lint, re-enable the above linters
