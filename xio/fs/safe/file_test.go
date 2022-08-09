@@ -10,7 +10,6 @@
 package safe_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,7 +20,7 @@ import (
 )
 
 func TestAbortNonExisting(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "safe_test_")
+	tmpdir, err := os.MkdirTemp("", "safe_test_")
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "abort.txt")
@@ -42,7 +41,7 @@ func removeAll(t *testing.T, path string) {
 }
 
 func TestCommitNonExisting(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "safe_test_")
+	tmpdir, err := os.MkdirTemp("", "safe_test_")
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "commit.txt")
@@ -62,7 +61,7 @@ func TestCommitNonExisting(t *testing.T) {
 }
 
 func TestAbortExisting(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "safe_test_")
+	tmpdir, err := os.MkdirTemp("", "safe_test_")
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "safe.txt")
@@ -83,7 +82,7 @@ func TestAbortExisting(t *testing.T) {
 }
 
 func TestCommitExisting(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "safe_test_")
+	tmpdir, err := os.MkdirTemp("", "safe_test_")
 	require.NoError(t, err)
 	defer removeAll(t, tmpdir)
 	filename := filepath.Join(tmpdir, "safe.txt")

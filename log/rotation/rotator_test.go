@@ -11,7 +11,6 @@ package rotation_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,7 +26,7 @@ const (
 )
 
 func TestRotator(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "rotator_test_")
+	tmpdir, err := os.MkdirTemp("", "rotator_test_")
 	require.NoError(t, err)
 	defer cleanup(t, tmpdir)
 

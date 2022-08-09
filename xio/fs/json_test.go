@@ -10,7 +10,6 @@
 package fs_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestLoadSaveJSON(t *testing.T) {
 		Name:  "Rich",
 		Count: 22,
 	}
-	f, err := ioutil.TempFile("", "json_test")
+	f, err := os.CreateTemp("", "json_test")
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
 	require.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0o600))

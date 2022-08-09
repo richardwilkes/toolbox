@@ -24,6 +24,7 @@ type Numeric interface {
 // Abs returns the absolute value of x.
 //
 // Special cases are:
+//
 //	Abs(±Inf) = +Inf
 //	Abs(NaN) = NaN
 func Abs[T Numeric](x T) T {
@@ -48,6 +49,7 @@ func Acos[T constraints.Float](x T) T {
 // Acosh returns the inverse hyperbolic cosine of x.
 //
 // Special cases are:
+//
 //	Acosh(+Inf) = +Inf
 //	Acosh(x) = NaN if x < 1
 //	Acosh(NaN) = NaN
@@ -58,6 +60,7 @@ func Acosh[T constraints.Float](x T) T {
 // Asin returns the arcsine, in radians, of x.
 //
 // Special cases are:
+//
 //	Asin(±0) = ±0
 //	Asin(x) = NaN if x < -1 or x > 1
 func Asin[T constraints.Float](x T) T {
@@ -67,6 +70,7 @@ func Asin[T constraints.Float](x T) T {
 // Asinh returns the inverse hyperbolic sine of x.
 //
 // Special cases are:
+//
 //	Asinh(±0) = ±0
 //	Asinh(±Inf) = ±Inf
 //	Asinh(NaN) = NaN
@@ -77,6 +81,7 @@ func Asinh[T constraints.Float](x T) T {
 // Atan2 returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value.
 //
 // Special cases are (in order):
+//
 //	Atan2(y, NaN) = NaN
 //	Atan2(NaN, x) = NaN
 //	Atan2(+0, x>=0) = +0
@@ -101,8 +106,9 @@ func Atan2[T constraints.Float](y, x T) T {
 // Atan returns the arctangent, in radians, of x.
 //
 // Special cases are:
-//      Atan(±0) = ±0
-//      Atan(±Inf) = ±Pi/2
+//
+//	Atan(±0) = ±0
+//	Atan(±Inf) = ±Pi/2
 func Atan[T constraints.Float](x T) T {
 	return T(math.Atan(float64(x)))
 }
@@ -110,6 +116,7 @@ func Atan[T constraints.Float](x T) T {
 // Atanh returns the inverse hyperbolic tangent of x.
 //
 // Special cases are:
+//
 //	Atanh(1) = +Inf
 //	Atanh(±0) = ±0
 //	Atanh(-1) = -Inf
@@ -141,6 +148,7 @@ func Copysign[T constraints.Float](x, y T) T {
 // Cos returns the cosine of the radian argument x.
 //
 // Special cases are:
+//
 //	Cos(±Inf) = NaN
 //	Cos(NaN) = NaN
 func Cos[T constraints.Float](x T) T {
@@ -150,6 +158,7 @@ func Cos[T constraints.Float](x T) T {
 // Cosh returns the hyperbolic cosine of x.
 //
 // Special cases are:
+//
 //	Cosh(±0) = 1
 //	Cosh(±Inf) = +Inf
 //	Cosh(NaN) = NaN
@@ -160,6 +169,7 @@ func Cosh[T constraints.Float](x T) T {
 // Dim returns the maximum of x-y or 0.
 //
 // Special cases are:
+//
 //	Dim(+Inf, +Inf) = NaN
 //	Dim(-Inf, -Inf) = NaN
 //	Dim(x, NaN) = Dim(NaN, x) = NaN
@@ -174,6 +184,7 @@ func Dim[T constraints.Float](x, y T) T {
 // Erf returns the error function of x.
 //
 // Special cases are:
+//
 //	Erf(+Inf) = 1
 //	Erf(-Inf) = -1
 //	Erf(NaN) = NaN
@@ -184,6 +195,7 @@ func Erf[T constraints.Float](x T) T {
 // Erfc returns the complementary error function of x.
 //
 // Special cases are:
+//
 //	Erfc(+Inf) = 0
 //	Erfc(-Inf) = 2
 //	Erfc(NaN) = NaN
@@ -194,6 +206,7 @@ func Erfc[T constraints.Float](x T) T {
 // Erfinv returns the inverse error function of x.
 //
 // Special cases are:
+//
 //	Erfinv(1) = +Inf
 //	Erfinv(-1) = -Inf
 //	Erfinv(x) = NaN if x < -1 or x > 1
@@ -205,6 +218,7 @@ func Erfinv[T constraints.Float](x T) T {
 // Erfcinv returns the inverse of Erfc(x).
 //
 // Special cases are:
+//
 //	Erfcinv(0) = +Inf
 //	Erfcinv(2) = -Inf
 //	Erfcinv(x) = NaN if x < 0 or x > 2
@@ -216,8 +230,10 @@ func Erfcinv[T constraints.Float](x T) T {
 // Exp returns e**x, the base-e exponential of x.
 //
 // Special cases are:
+//
 //	Exp(+Inf) = +Inf
 //	Exp(NaN) = NaN
+//
 // Very large values overflow to 0 or +Inf.
 // Very small values underflow to 1.
 func Exp[T constraints.Float](x T) T {
@@ -235,9 +251,11 @@ func Exp2[T constraints.Float](x T) T {
 // It is more accurate than Exp(x) - 1 when x is near zero.
 //
 // Special cases are:
+//
 //	Expm1(+Inf) = +Inf
 //	Expm1(-Inf) = -1
 //	Expm1(NaN) = NaN
+//
 // Very large values overflow to -1 or +Inf.
 func Expm1[T constraints.Float](x T) T {
 	return T(math.Expm1(float64(x)))
@@ -260,6 +278,7 @@ func FMA[T constraints.Float](x, y, z T) T {
 // with the absolute value of frac in the interval [½, 1).
 //
 // Special cases are:
+//
 //	Frexp(±0) = ±0, 0
 //	Frexp(±Inf) = ±Inf, 0
 //	Frexp(NaN) = NaN, 0
@@ -271,6 +290,7 @@ func Frexp[T constraints.Float](f T) (frac T, exp int) {
 // Gamma returns the Gamma function of x.
 //
 // Special cases are:
+//
 //	Gamma(+Inf) = +Inf
 //	Gamma(+0) = +Inf
 //	Gamma(-0) = -Inf
@@ -285,6 +305,7 @@ func Gamma[T constraints.Float](x T) T {
 // unnecessary overflow and underflow.
 //
 // Special cases are:
+//
 //	Hypot(±Inf, q) = +Inf
 //	Hypot(p, ±Inf) = +Inf
 //	Hypot(NaN, q) = NaN
@@ -296,6 +317,7 @@ func Hypot[T constraints.Float](p, q T) T {
 // Ilogb returns the binary exponent of x as an integer.
 //
 // Special cases are:
+//
 //	Ilogb(±Inf) = MaxInt32
 //	Ilogb(0) = MinInt32
 //	Ilogb(NaN) = MaxInt32
@@ -338,6 +360,7 @@ func IsNaN[T constraints.Float](f T) bool {
 // J0 returns the order-zero Bessel function of the first kind.
 //
 // Special cases are:
+//
 //	J0(±Inf) = 0
 //	J0(0) = 1
 //	J0(NaN) = NaN
@@ -348,6 +371,7 @@ func J0[T constraints.Float](x T) T {
 // J1 returns the order-one Bessel function of the first kind.
 //
 // Special cases are:
+//
 //	J1(±Inf) = 0
 //	J1(NaN) = NaN
 func J1[T constraints.Float](x T) T {
@@ -357,6 +381,7 @@ func J1[T constraints.Float](x T) T {
 // Jn returns the order-n Bessel function of the first kind.
 //
 // Special cases are:
+//
 //	Jn(n, ±Inf) = 0
 //	Jn(n, NaN) = NaN
 func Jn[T constraints.Float](n int, x T) T {
@@ -367,6 +392,7 @@ func Jn[T constraints.Float](n int, x T) T {
 // It returns frac × 2**exp.
 //
 // Special cases are:
+//
 //	Ldexp(±0, exp) = ±0
 //	Ldexp(±Inf, exp) = ±Inf
 //	Ldexp(NaN, exp) = NaN
@@ -377,6 +403,7 @@ func Ldexp[T constraints.Float](frac T, exp int) T {
 // Lgamma returns the natural logarithm and sign (-1 or +1) of Gamma(x).
 //
 // Special cases are:
+//
 //	Lgamma(+Inf) = +Inf
 //	Lgamma(0) = +Inf
 //	Lgamma(-integer) = +Inf
@@ -390,6 +417,7 @@ func Lgamma[T constraints.Float](x T) (lgamma T, sign int) {
 // Log returns the natural logarithm of x.
 //
 // Special cases are:
+//
 //	Log(+Inf) = +Inf
 //	Log(0) = -Inf
 //	Log(x < 0) = NaN
@@ -407,6 +435,7 @@ func Log10[T constraints.Float](x T) T {
 // zero.
 //
 // Special cases are:
+//
 //	Log1p(+Inf) = +Inf
 //	Log1p(±0) = ±0
 //	Log1p(-1) = -Inf
@@ -424,6 +453,7 @@ func Log2[T constraints.Float](x T) T {
 // Logb returns the binary exponent of x.
 //
 // Special cases are:
+//
 //	Logb(±Inf) = +Inf
 //	Logb(0) = -Inf
 //	Logb(NaN) = NaN
@@ -434,6 +464,7 @@ func Logb[T constraints.Float](x T) T {
 // Max returns the larger of x or y.
 //
 // Special cases are:
+//
 //	Max(x, +Inf) = Max(+Inf, x) = +Inf
 //	Max(x, NaN) = Max(NaN, x) = NaN
 //	Max(+0, ±0) = Max(±0, +0) = +0
@@ -490,6 +521,7 @@ func MaxValue[T Numeric]() T {
 // Min returns the smaller of x or y.
 //
 // Special cases are:
+//
 //	Min(x, -Inf) = Min(-Inf, x) = -Inf
 //	Min(x, NaN) = Min(NaN, x) = NaN
 //	Min(-0, ±0) = Min(±0, -0) = -0
@@ -536,6 +568,7 @@ func MinValue[T Numeric]() T {
 // that of x.
 //
 // Special cases are:
+//
 //	Mod(±Inf, y) = NaN
 //	Mod(NaN, y) = NaN
 //	Mod(x, 0) = NaN
@@ -549,6 +582,7 @@ func Mod[T constraints.Float](x, y T) T {
 // that sum to f. Both values have the same sign as f.
 //
 // Special cases are:
+//
 //	Modf(±Inf) = ±Inf, NaN
 //	Modf(NaN) = NaN, NaN
 func Modf[T constraints.Float](f T) (i, frac T) {
@@ -568,6 +602,7 @@ func NaN[T constraints.Float]() T {
 // Nextafter returns the next representable float32 value after x towards y.
 //
 // Special cases are:
+//
 //	Nextafter(x, x)   = x
 //	Nextafter(NaN, y) = NaN
 //	Nextafter(x, NaN) = NaN
@@ -581,6 +616,7 @@ func Nextafter[T constraints.Float](x, y T) (r T) {
 // Pow returns x**y, the base-x exponential of y.
 //
 // Special cases are (in order):
+//
 //	Pow(x, ±0) = 1 for any x
 //	Pow(1, y) = 1 for any y
 //	Pow(x, 1) = x for any x
@@ -608,6 +644,7 @@ func Pow[T constraints.Float](x, y T) T {
 // Pow10 returns 10**n, the base-10 exponential of n.
 //
 // Special cases are:
+//
 //	Pow10(n) =    0 for n < -323
 //	Pow10(n) = +Inf for n > 308
 func Pow10[T constraints.Float](n int) T {
@@ -617,6 +654,7 @@ func Pow10[T constraints.Float](n int) T {
 // Remainder returns the IEEE 754 floating-point remainder of x/y.
 //
 // Special cases are:
+//
 //	Remainder(±Inf, y) = NaN
 //	Remainder(NaN, y) = NaN
 //	Remainder(x, 0) = NaN
@@ -629,6 +667,7 @@ func Remainder[T constraints.Float](x, y T) T {
 // Round returns the nearest integer, rounding half away from zero.
 //
 // Special cases are:
+//
 //	Round(±0) = ±0
 //	Round(±Inf) = ±Inf
 //	Round(NaN) = NaN
@@ -639,6 +678,7 @@ func Round[T constraints.Float](x T) T {
 // RoundToEven returns the nearest integer, rounding ties to even.
 //
 // Special cases are:
+//
 //	RoundToEven(±0) = ±0
 //	RoundToEven(±Inf) = ±Inf
 //	RoundToEven(NaN) = NaN
@@ -657,6 +697,7 @@ func Signbit[T constraints.Float](x T) bool {
 // Sin returns the sine of the radian argument x.
 //
 // Special cases are:
+//
 //	Sin(±0) = ±0
 //	Sin(±Inf) = NaN
 //	Sin(NaN) = NaN
@@ -667,6 +708,7 @@ func Sin[T constraints.Float](x T) T {
 // Sincos returns Sin(x), Cos(x).
 //
 // Special cases are:
+//
 //	Sincos(±0) = ±0, 1
 //	Sincos(±Inf) = NaN, NaN
 //	Sincos(NaN) = NaN, NaN
@@ -678,6 +720,7 @@ func Sincos[T constraints.Float](x T) (sin, cos T) {
 // Sinh returns the hyperbolic sine of x.
 //
 // Special cases are:
+//
 //	Sinh(±0) = ±0
 //	Sinh(±Inf) = ±Inf
 //	Sinh(NaN) = NaN
@@ -688,6 +731,7 @@ func Sinh[T constraints.Float](x T) T {
 // Sqrt returns the square root of x.
 //
 // Special cases are:
+//
 //	Sqrt(+Inf) = +Inf
 //	Sqrt(±0) = ±0
 //	Sqrt(x < 0) = NaN
@@ -699,6 +743,7 @@ func Sqrt[T constraints.Float](x T) T {
 // Tan returns the tangent of the radian argument x.
 //
 // Special cases are:
+//
 //	Tan(±0) = ±0
 //	Tan(±Inf) = NaN
 //	Tan(NaN) = NaN
@@ -709,6 +754,7 @@ func Tan[T constraints.Float](x T) T {
 // Tanh returns the hyperbolic tangent of x.
 //
 // Special cases are:
+//
 //	Tanh(±0) = ±0
 //	Tanh(±Inf) = ±1
 //	Tanh(NaN) = NaN
@@ -719,6 +765,7 @@ func Tanh[T constraints.Float](x T) T {
 // Trunc returns the integer value of x.
 //
 // Special cases are:
+//
 //	Trunc(±0) = ±0
 //	Trunc(±Inf) = ±Inf
 //	Trunc(NaN) = NaN
@@ -729,6 +776,7 @@ func Trunc[T constraints.Float](x T) T {
 // Y0 returns the order-zero Bessel function of the second kind.
 //
 // Special cases are:
+//
 //	Y0(+Inf) = 0
 //	Y0(0) = -Inf
 //	Y0(x < 0) = NaN
@@ -740,6 +788,7 @@ func Y0[T constraints.Float](x T) T {
 // Y1 returns the order-one Bessel function of the second kind.
 //
 // Special cases are:
+//
 //	Y1(+Inf) = 0
 //	Y1(0) = -Inf
 //	Y1(x < 0) = NaN
@@ -751,6 +800,7 @@ func Y1[T constraints.Float](x T) T {
 // Yn returns the order-n Bessel function of the second kind.
 //
 // Special cases are:
+//
 //	Yn(n, +Inf) = 0
 //	Yn(n ≥ 0, 0) = -Inf
 //	Yn(n < 0, 0) = +Inf if n is odd, -Inf if n is even

@@ -62,10 +62,9 @@ linters:
     - goimports
     - gosimple
     - govet
-    - ifshort
     - ineffassign
     - misspell
-#    - noctx
+    - noctx
     - prealloc
     - predeclared
     - revive

@@ -17,10 +17,9 @@ import "sort"
 // compared numerically (except that the number of leading zeros is used as a tie-breaker, so "2" < "02").
 //
 // Limitations:
-//  - only ASCII digits (0-9) are considered.
+//   - only ASCII digits (0-9) are considered.
 //
-// Original algorithm:
-//    https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
+// Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
 func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 	i1 := 0
 	i2 := 0

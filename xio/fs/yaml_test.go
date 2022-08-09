@@ -10,7 +10,6 @@
 package fs_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestLoadSaveYAML(t *testing.T) {
 		Name:  "Rich",
 		Count: 22,
 	}
-	f, err := ioutil.TempFile("", "yaml_test")
+	f, err := os.CreateTemp("", "yaml_test")
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
 	require.NoError(t, fs.SaveYAMLWithMode(f.Name(), value, 0o600))

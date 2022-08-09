@@ -11,7 +11,6 @@
 package safe
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -44,7 +43,7 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
 	}
-	f, err := ioutil.TempFile(filepath.Dir(filename), "safe")
+	f, err := os.CreateTemp(filepath.Dir(filename), "safe")
 	if err != nil {
 		return nil, err
 	}

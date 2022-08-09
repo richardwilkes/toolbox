@@ -17,10 +17,10 @@ type RecoveryHandler func(error)
 //
 // Typical usage:
 //
-// func runSomeCode(handler errs.RecoveryHandler) {
-//     defer errs.Recovery(handler)
-//     // ... run the code here ...
-// }
+//	func runSomeCode(handler errs.RecoveryHandler) {
+//	    defer errs.Recovery(handler)
+//	    // ... run the code here ...
+//	}
 func Recovery(handler RecoveryHandler) {
 	if recovered := recover(); recovered != nil && handler != nil {
 		err, ok := recovered.(error)
