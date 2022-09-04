@@ -14,7 +14,8 @@ import (
 	"os/user"
 )
 
-// CurrentUserName returns the current user's name.
+// CurrentUserName returns the current user's name. This will attempt to retrieve the user's display name, but will fall
+// back to the account name if it isn't available.
 func CurrentUserName() string {
 	u, err := user.Current()
 	if err != nil {
