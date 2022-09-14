@@ -12,6 +12,7 @@
 package errs
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"strings"
@@ -45,13 +46,12 @@ type Error struct {
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
 // as-is.
 func Wrap(cause error) error {
-	// Note: even though this function body is identical to WrapTyped(), do not make a call to it here, otherwise the
-	// code that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
-	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
-		return err
+	var errorPtr *Error
+	if errors.As(cause, &errorPtr) {
+		return cause
 	}
 	return &Error{
 		errors: []detail{
@@ -68,11 +68,11 @@ func Wrap(cause error) error {
 // WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
 // returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
 func WrapTyped(cause error) *Error {
-	// Note: even though this function body is identical to Wrap(), do not make a call to it here, otherwise the code
-	// that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
+	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
+	// to avoid losing information and still return a *Error
 	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		return err
 	}
