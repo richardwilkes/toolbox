@@ -12,6 +12,7 @@
 package errs
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"strings"
@@ -50,6 +51,10 @@ func Wrap(cause error) error {
 	if cause == nil {
 		return nil
 	}
+	var errorPtr *Error
+	if errors.As(cause, &errorPtr) {
+		return cause
+	}
 	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		return err
 	}
@@ -73,6 +78,8 @@ func WrapTyped(cause error) *Error {
 	if cause == nil {
 		return nil
 	}
+	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
+	// to avoid losing information and still return a *Error
 	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		return err
 	}

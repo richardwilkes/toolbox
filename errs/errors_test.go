@@ -108,6 +108,35 @@ func TestWrap(t *testing.T) {
 	require.Equal(t, 1, strings.Count(result.Error(), "\n"), "Should have 1 embedded return")
 }
 
+func TestDoubleWrap(t *testing.T) {
+	errError := errs.New("foo")
+
+	// Verify *errs.Error doesn't get wrapped again
+	require.Equal(t, errError, errs.Wrap(errError))
+
+	// Wrap the error using the standard library
+	wrappedErr := fmt.Errorf("bar: %w", errError)
+	require.Equal(t, errError, errors.Unwrap(wrappedErr))
+
+	// Verify that an error with an *errs.Error cause doesn't get wrapped again
+	require.Equal(t, wrappedErr, errs.Wrap(wrappedErr))
+}
+
+func TestDoubleWrapTyped(t *testing.T) {
+	errError := errs.New("foo")
+
+	// Verify *errs.Error doesn't get wrapped again
+	require.Equal(t, errError, errs.WrapTyped(errError))
+
+	// Wrap the error using the standard library
+	wrappedErr := fmt.Errorf("bar: %w", errError)
+	require.Equal(t, errError, errors.Unwrap(wrappedErr))
+
+	// It seems the best thing to do here is to wrap again
+	rewrappedError := errs.WrapTyped(wrappedErr)
+	require.Equal(t, wrappedErr, errors.Unwrap(rewrappedError))
+}
+
 func TestIs(t *testing.T) {
 	err := errs.Wrap(os.ErrNotExist)
 	require.NotNil(t, err)
