@@ -46,8 +46,6 @@ type Error struct {
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
 // as-is.
 func Wrap(cause error) error {
-	// Note: even though this function body is identical to WrapTyped(), do not make a call to it here, otherwise the
-	// code that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
@@ -70,8 +68,6 @@ func Wrap(cause error) error {
 // WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
 // returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
 func WrapTyped(cause error) *Error {
-	// Note: even though this function body is identical to Wrap(), do not make a call to it here, otherwise the code
-	// that trims the stack will be incorrect.
 	if cause == nil {
 		return nil
 	}
