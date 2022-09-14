@@ -13,10 +13,8 @@ package safe
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/xio/fs/internal"
 )
 
 // File provides safe, atomic saving of files. Instead of truncating and overwriting the destination file, it creates a
@@ -43,16 +41,9 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
 	}
-	f, err := os.CreateTemp(filepath.Dir(filename), "safe")
+	f, err := internal.CreateTemp(filepath.Dir(filename), "safe", mode)
 	if err != nil {
 		return nil, err
-	}
-	if runtime.GOOS != toolbox.WindowsOS { // Windows doesn't support changing the mode
-		if err = f.Chmod(mode); err != nil {
-			xio.CloseIgnoringErrors(f)
-			_ = os.Remove(f.Name()) //nolint:errcheck // no need to report this error, too
-			return nil, err
-		}
 	}
 	return &File{
 		File:         f,

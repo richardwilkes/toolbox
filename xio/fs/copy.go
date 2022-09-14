@@ -48,7 +48,7 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 		return err
 	}
 	var f *os.File
-	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644&mask); err != nil {
+	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, (srcMode&mask)|0o200); err != nil {
 		return err
 	}
 	defer func() {
@@ -56,9 +56,6 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 			err = closeErr
 		}
 	}()
-	if err = os.Chmod(f.Name(), srcMode); err != nil {
-		return err
-	}
 	var s *os.File
 	if s, err = os.Open(src); err != nil {
 		return err
