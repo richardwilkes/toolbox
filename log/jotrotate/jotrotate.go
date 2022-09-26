@@ -21,6 +21,9 @@ import (
 	"github.com/richardwilkes/toolbox/xio"
 )
 
+// PathToLog holds the path to the log file that was configured on the command line when using ParseAndSetup().
+var PathToLog string
+
 // ParseAndSetup adds command-line options for controlling logging, parses the command line, then instantiates a rotator
 // and attaches it to jot. Returns the remaining arguments that weren't used for option content.
 func ParseAndSetup(cl *cmdline.CmdLine) []string {
@@ -39,6 +42,7 @@ func ParseAndSetup(cl *cmdline.CmdLine) []string {
 		} else {
 			jot.SetWriter(rotator)
 		}
+		PathToLog = rotator.PathToLog()
 	} else {
 		jot.Error(err)
 	}

@@ -46,6 +46,11 @@ func New(options ...func(*Rotator) error) (*Rotator, error) {
 	return r, nil
 }
 
+// PathToLog returns the path to the log file that will be used.
+func (r *Rotator) PathToLog() string {
+	return r.path
+}
+
 // Write implements io.Writer.
 func (r *Rotator) Write(b []byte) (int, error) {
 	r.lock.Lock()
