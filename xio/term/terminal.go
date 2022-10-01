@@ -31,19 +31,29 @@ func WrapText(out io.Writer, prefix, text string) {
 	}
 	remaining := avail
 	indent := strings.Repeat(" ", len(prefix))
-	for i, token := range strings.Fields(text) {
-		length := len(token) + 1
-		if i != 0 {
-			if length > remaining {
-				fmt.Fprintln(out)
-				fmt.Fprint(out, indent)
-				remaining = avail
-			} else {
+	for _, line := range strings.Split(text, "\n") {
+		for _, ch := range line {
+			if ch == ' ' {
 				fmt.Fprint(out, " ")
+				remaining--
+			} else {
+				break
 			}
 		}
-		fmt.Fprint(out, token)
-		remaining -= length
+		for i, token := range strings.Fields(line) {
+			length := len(token) + 1
+			if i != 0 {
+				if length > remaining {
+					fmt.Fprintln(out)
+					fmt.Fprint(out, indent)
+					remaining = avail
+				} else {
+					fmt.Fprint(out, " ")
+				}
+			}
+			fmt.Fprint(out, token)
+			remaining -= length
+		}
+		fmt.Fprintln(out)
 	}
-	fmt.Fprintln(out)
 }

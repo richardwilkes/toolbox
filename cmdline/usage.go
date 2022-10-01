@@ -105,7 +105,7 @@ func init() {
 	if GitVersion == "" && vcsRevision != "" {
 		GitVersion = vcsRevision
 	}
-	if VCSModified || vcsTime.IsZero() {
+	if vcsTime.IsZero() {
 		vcsTime = time.Now()
 	}
 	if BuildNumber == "" {
@@ -207,6 +207,10 @@ func (cl *CmdLine) DisplayUsage() {
 		one.displayOptions()
 	}
 	cl.displayCommands(2)
+	if cl.UsageTrailer != "" {
+		fmt.Fprintln(cl)
+		term.WrapText(cl, "", cl.UsageTrailer)
+	}
 }
 
 func (cl *CmdLine) displayOptions() {

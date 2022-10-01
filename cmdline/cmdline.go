@@ -29,7 +29,9 @@ type CmdLine struct {
 	// UsageSuffix, if set, will be appended to the 'Usage: ' line of the output.
 	UsageSuffix string
 	// Description, if set, will be inserted after the program identity section, before the usage.
-	Description     string
+	Description string
+	// UsageTrailer, if set, will be appended to the end of the usage output.
+	UsageTrailer    string
 	options         Options
 	cmds            map[string]Cmd
 	parent          *CmdLine
