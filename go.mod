@@ -8,7 +8,7 @@ require (
 	github.com/pkg/term v1.1.0
 	github.com/stretchr/testify v1.8.0
 	github.com/yookoala/realpath v1.0.0
-	golang.org/x/exp v0.0.0-20220930202632-ec3f01382ef9
+	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -16,5 +16,5 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
 )
