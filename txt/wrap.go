@@ -17,21 +17,26 @@ import (
 // exceed the maximum column size and instead will extend past the desired length.
 func Wrap(prefix, text string, maxColumns int) string {
 	var buffer strings.Builder
-	buffer.WriteString(prefix)
-	avail := maxColumns - len(prefix)
-	for i, token := range strings.Fields(text) {
+	for i, line := range strings.Split(text, "\n") {
 		if i != 0 {
-			if 1+len(token) > avail {
-				buffer.WriteByte('\n')
-				buffer.WriteString(prefix)
-				avail = maxColumns - len(prefix)
-			} else {
-				buffer.WriteByte(' ')
-				avail--
-			}
+			buffer.WriteByte('\n')
 		}
-		buffer.WriteString(token)
-		avail -= len(token)
+		buffer.WriteString(prefix)
+		avail := maxColumns - len(prefix)
+		for j, token := range strings.Fields(line) {
+			if j != 0 {
+				if 1+len(token) > avail {
+					buffer.WriteByte('\n')
+					buffer.WriteString(prefix)
+					avail = maxColumns - len(prefix)
+				} else {
+					buffer.WriteByte(' ')
+					avail--
+				}
+			}
+			buffer.WriteString(token)
+			avail -= len(token)
+		}
 	}
 	return buffer.String()
 }
