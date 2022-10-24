@@ -67,17 +67,17 @@ func (f *File) Commit() error {
 	}
 	f.committed = true
 	f.closed = true
-	err := f.Sync()
-	if closeErr := f.File.Close(); closeErr != nil && err == nil {
-		err = closeErr
-	}
+	var err error
 	name := f.Name()
-	if err == nil {
-		err = os.Rename(name, f.originalName)
+	defer func() {
+		if err != nil {
+			_ = os.Remove(name) //nolint:errcheck // no need to report this error, too
+		}
+	}()
+	if err = f.File.Close(); err != nil {
+		return err
 	}
-	if err != nil {
-		_ = os.Remove(name) //nolint:errcheck // no need to report this error, too
-	}
+	err = os.Rename(name, f.originalName)
 	return err
 }
 
