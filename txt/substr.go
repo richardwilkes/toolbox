@@ -32,3 +32,22 @@ func LastN(s string, n int) string {
 	}
 	return string(r[len(r)-n:])
 }
+
+// Truncate the input string to count runes, trimming from the end if keepFirst is true or the start if not. If trimming
+// occurs, a … will be added in place of the trimmed characters.
+func Truncate(s string, count int, keepFirst bool) string {
+	var result string
+	if keepFirst {
+		result = FirstN(s, count)
+	} else {
+		result = LastN(s, count)
+	}
+	if result != s {
+		if keepFirst {
+			result += "…"
+		} else {
+			result = "…" + result
+		}
+	}
+	return result
+}
