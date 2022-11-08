@@ -151,7 +151,7 @@ func load(name string) {
 				hasValue = false
 			}
 			var buffer string
-			if _, err = fmt.Scanf("k:%q", &buffer); err != nil {
+			if _, err = fmt.Sscanf(line, "k:%q", &buffer); err != nil {
 				Log.Errorf("ignoring invalid key on line %d of %s", lineNum, path)
 			} else {
 				if hasKey {
@@ -165,7 +165,7 @@ func load(name string) {
 		} else if strings.HasPrefix(line, "v:") {
 			if hasKey {
 				var buffer string
-				if _, err = fmt.Scanf("v:%q", &buffer); err != nil {
+				if _, err = fmt.Sscanf(line, "v:%q", &buffer); err != nil {
 					Log.Errorf("ignoring invalid value on line %d of %s", lineNum, path)
 				} else {
 					if hasValue {
