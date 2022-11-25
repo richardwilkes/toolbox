@@ -97,7 +97,7 @@ func floatMaximum[T constraints.Float](e *Evaluator, arguments string) (any, err
 		if err != nil {
 			return nil, err
 		}
-		max = xmath.Max(value, xmath.MaxValue[T]())
+		max = xmath.Max(value, max)
 	}
 	return max, nil
 }
@@ -111,7 +111,7 @@ func floatMinimum[T constraints.Float](e *Evaluator, arguments string) (any, err
 		if err != nil {
 			return nil, err
 		}
-		min = xmath.Min(value, xmath.MinValue[T]())
+		min = xmath.Min(value, min)
 	}
 	return min, nil
 }
