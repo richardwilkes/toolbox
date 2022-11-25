@@ -85,7 +85,6 @@ func (e *Evaluator) EvaluateNew(expression string) (any, error) {
 func (e *Evaluator) parse(expression string) error {
 	var unaryOp *Operator
 	haveOperand := false
-	haveOperator := false
 	e.operandStack = nil
 	e.operatorStack = nil
 	i := 0
@@ -102,11 +101,10 @@ func (e *Evaluator) parse(expression string) error {
 				return err
 			}
 			haveOperand = true
-			haveOperator = false
 			unaryOp = nil
 		}
 		if opIndex == i {
-			if op != nil && op.EvaluateUnary != nil && (haveOperator || i == 0) {
+			if op != nil && op.EvaluateUnary != nil && i == 0 {
 				i = opIndex + len(op.Symbol)
 				if unaryOp != nil {
 					return errs.Newf("consecutive unary operators are not allowed at index %d", i)
@@ -121,7 +119,6 @@ func (e *Evaluator) parse(expression string) error {
 			}
 			if op == nil || op.Symbol != ")" {
 				haveOperand = false
-				haveOperator = true
 			}
 		}
 	}
