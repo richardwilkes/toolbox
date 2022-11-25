@@ -13,16 +13,6 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - performance
-      - style
-      - opinionated
-      - experimental
-    disabled-checks:
-      - octalLiteral
-      - sloppyReassign
   gofumpt:
     extra-rules: true
   govet:
@@ -51,13 +41,11 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - depguard
     - errcheck
     - errorlint
     - exportloopref
     - goconst
-#    - gocritic
     - gofumpt
     - goimports
     - gosimple
@@ -69,14 +57,12 @@ linters:
     - predeclared
     - revive
     - staticcheck
-#    - structcheck
+    - typecheck
     - unconvert
     - unused
-    - varcheck
-#    - wastedassign
-# Once Go 1.18 support is finalized in golangci-lint, re-enable the above linters
 issues:
   max-same-issues: 10
   exclude-use-default: false
   exclude:
     - "fieldalignment: struct with \\d+ pointer bytes could be"
+    - "package-comments: should have a package comment"
