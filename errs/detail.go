@@ -17,7 +17,9 @@ import (
 	"strings"
 )
 
-// Causer defines the interface for determining the error the caused an error.
+var _ Causer = &detail{}
+
+// Causer defines the interface for determining the error that caused an error.
 type Causer interface {
 	Cause() error
 }
