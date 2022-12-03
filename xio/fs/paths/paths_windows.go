@@ -19,7 +19,7 @@ func addPlatformAppLogSubDirs(base string) string {
 }
 
 func addPlatformAppDataSubDirs(base string) string {
-	return filepath.Join(base, "AppData")
+	return filepath.Join(base, "AppData", "Local")
 }
 
 // FontDirs returns the standard font directories, in order of priority.
