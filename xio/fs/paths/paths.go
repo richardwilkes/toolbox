@@ -14,9 +14,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 
-	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/cmdline"
 )
 
@@ -35,14 +33,7 @@ func HomeDir() string {
 func AppLogDir() string {
 	path := HomeDir()
 	if path != "." {
-		switch runtime.GOOS {
-		case toolbox.MacOS:
-			path = filepath.Join(path, "Library", "Logs")
-		case toolbox.WindowsOS:
-			path = filepath.Join(path, "AppData", "Logs")
-		default:
-			path = filepath.Join(path, ".logs")
-		}
+		path = addPlatformAppLogSubDirs(path)
 	} else {
 		path = filepath.Join(path, "logs")
 	}
@@ -56,14 +47,7 @@ func AppLogDir() string {
 func AppDataDir() string {
 	path := HomeDir()
 	if path != "." {
-		switch runtime.GOOS {
-		case toolbox.MacOS:
-			path = filepath.Join(path, "Library", "Application Support")
-		case toolbox.WindowsOS:
-			path = filepath.Join(path, "AppData")
-		default:
-			path = filepath.Join(path, ".appdata")
-		}
+		path = addPlatformAppDataSubDirs(path)
 	} else {
 		path = filepath.Join(path, "app_data")
 	}
@@ -71,22 +55,4 @@ func AppDataDir() string {
 		path = filepath.Join(path, cmdline.AppIdentifier)
 	}
 	return path
-}
-
-// FontDirs returns the standard font directories, in order of priority.
-func FontDirs() []string {
-	switch runtime.GOOS {
-	case toolbox.MacOS:
-		return []string{filepath.Join(HomeDir(), "Library", "Fonts"), "/Library/Fonts", "/System/Library/Fonts"}
-	case toolbox.WindowsOS:
-		windir := os.Getenv("WINDIR")
-		if windir == "" {
-			windir = "C:\\Windows"
-		}
-		return []string{filepath.Join(windir, "Fonts")}
-	case toolbox.LinuxOS:
-		return []string{filepath.Join(HomeDir(), ".fonts"), "/usr/local/share/fonts", "/usr/share/fonts"}
-	default:
-		return nil
-	}
 }
