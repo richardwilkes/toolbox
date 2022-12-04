@@ -180,7 +180,7 @@ func (v *GeneralValue) String() string {
 		}
 		return buffer.String()
 	case reflect.String:
-		return fmt.Sprintf("%q", e)
+		return fmt.Sprintf(`"%s"`, e)
 	default:
 		return fmt.Sprintf("%v", e)
 	}
