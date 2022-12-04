@@ -13,9 +13,6 @@ package paths
 import (
 	"os"
 	"os/user"
-	"path/filepath"
-
-	"github.com/richardwilkes/toolbox/cmdline"
 )
 
 // HomeDir returns the home directory. If this cannot be determined for some reason, "." will be returned instead.
@@ -27,32 +24,4 @@ func HomeDir() string {
 		return dir
 	}
 	return "."
-}
-
-// AppLogDir returns the application log directory.
-func AppLogDir() string {
-	path := HomeDir()
-	if path != "." {
-		path = addPlatformAppLogSubDirs(path)
-	} else {
-		path = filepath.Join(path, "logs")
-	}
-	if cmdline.AppIdentifier != "" {
-		path = filepath.Join(path, cmdline.AppIdentifier)
-	}
-	return path
-}
-
-// AppDataDir returns the application data directory.
-func AppDataDir() string {
-	path := HomeDir()
-	if path != "." {
-		path = addPlatformAppDataSubDirs(path)
-	} else {
-		path = filepath.Join(path, "app_data")
-	}
-	if cmdline.AppIdentifier != "" {
-		path = filepath.Join(path, cmdline.AppIdentifier)
-	}
-	return path
 }

@@ -12,14 +12,22 @@ package paths
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/richardwilkes/toolbox/cmdline"
 )
 
-func addPlatformAppLogSubDirs(base string) string {
-	return filepath.Join(base, "AppData", "Logs")
+// AppDataDir returns the application data directory.
+func AppDataDir() string {
+	path := filepath.Join(HomeDir(), "AppData", "Local")
+	if cmdline.AppIdentifier != "" {
+		path = filepath.Join(path, cmdline.AppIdentifier)
+	}
+	return path
 }
 
-func addPlatformAppDataSubDirs(base string) string {
-	return filepath.Join(base, "AppData", "Local")
+// AppLogDir returns the application log directory.
+func AppLogDir() string {
+	return filepath.Join(AppDataDir(), "Logs")
 }
 
 // FontDirs returns the standard font directories, in order of priority.

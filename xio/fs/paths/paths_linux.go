@@ -9,14 +9,28 @@
 
 package paths
 
-import "path/filepath"
+import (
+	"os"
+	"path/filepath"
 
-func addPlatformAppLogSubDirs(base string) string {
-	return filepath.Join(base, ".logs")
+	"github.com/richardwilkes/toolbox/cmdline"
+)
+
+// AppDataDir returns the application data directory.
+func AppDataDir() string {
+	path := os.Getenv("XDG_DATA_HOME")
+	if path == "" {
+		path = filepath.Join(HomeDir(), ".local", "share")
+	}
+	if cmdline.AppIdentifier != "" {
+		path = filepath.Join(path, cmdline.AppIdentifier)
+	}
+	return path
 }
 
-func addPlatformAppDataSubDirs(base string) string {
-	return filepath.Join(base, ".appdata")
+// AppLogDir returns the application log directory.
+func AppLogDir() string {
+	return filepath.Join(AppDataDir(), "Logs")
 }
 
 // FontDirs returns the standard font directories, in order of priority.
