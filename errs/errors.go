@@ -41,7 +41,7 @@ type StackError interface {
 
 // Error holds the detailed error message.
 type Error struct {
-	errors []detail
+	errors []*detail
 }
 
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
@@ -55,7 +55,7 @@ func Wrap(cause error) error {
 		return cause
 	}
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: cause.Error(),
 				stack:   callStack(),
@@ -78,7 +78,7 @@ func WrapTyped(cause error) *Error {
 		return err
 	}
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: cause.Error(),
 				stack:   callStack(),
@@ -92,7 +92,7 @@ func WrapTyped(cause error) *Error {
 // New creates a new detailed error with the 'message'.
 func New(message string) *Error {
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: message,
 				stack:   callStack(),
@@ -109,7 +109,7 @@ func Newf(format string, v ...any) *Error {
 // NewWithCause creates a new detailed error with the 'message' and underlying 'cause'.
 func NewWithCause(message string, cause error) *Error {
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: message,
 				stack:   callStack(),
@@ -139,7 +139,7 @@ func Append(err error, errs ...error) *Error {
 				}
 			default:
 				if typedErr != nil {
-					e.errors = append(e.errors, detail{
+					e.errors = append(e.errors, &detail{
 						message: typedErr.Error(),
 						stack:   callStack(),
 					})
@@ -181,8 +181,7 @@ func (d *Error) Message() string {
 	default:
 		var buffer strings.Builder
 		buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", len(d.errors)))
-		for i := range d.errors {
-			one := &d.errors[i]
+		for _, one := range d.errors {
 			buffer.WriteString("\n- ")
 			buffer.WriteString(one.message)
 		}
@@ -235,8 +234,10 @@ func (d *Error) ErrorOrNil() error {
 // WrappedErrors returns the contained errors.
 func (d *Error) WrappedErrors() []error {
 	result := make([]error, len(d.errors))
-	for i := range d.errors {
-		result[i] = &d.errors[i]
+	for i, one := range d.errors {
+		// Intentionally make a copy of the detail to protect against mutability
+		o := *one
+		result[i] = &o
 	}
 	return result
 }
