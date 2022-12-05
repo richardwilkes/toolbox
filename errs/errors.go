@@ -235,9 +235,7 @@ func (d *Error) ErrorOrNil() error {
 func (d *Error) WrappedErrors() []error {
 	result := make([]error, len(d.errors))
 	for i, one := range d.errors {
-		// Intentionally make a copy of the detail to protect against mutability
-		o := *one
-		result[i] = &o
+		result[i] = one
 	}
 	return result
 }
