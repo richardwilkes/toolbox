@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	_ ErrorWrapper = &Error{}
-	_ StackError   = &Error{}
+	_ ErrorWrapper  = &Error{}
+	_ StackError    = &Error{}
+	_ fmt.Formatter = &Error{}
 )
 
 // ErrorWrapper contains methods for interacting with the wrapped errors.
@@ -40,7 +41,7 @@ type StackError interface {
 
 // Error holds the detailed error message.
 type Error struct {
-	errors []detail
+	errors []*detail
 }
 
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
@@ -54,7 +55,7 @@ func Wrap(cause error) error {
 		return cause
 	}
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: cause.Error(),
 				stack:   callStack(),
@@ -77,7 +78,7 @@ func WrapTyped(cause error) *Error {
 		return err
 	}
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: cause.Error(),
 				stack:   callStack(),
@@ -91,7 +92,7 @@ func WrapTyped(cause error) *Error {
 // New creates a new detailed error with the 'message'.
 func New(message string) *Error {
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: message,
 				stack:   callStack(),
@@ -108,7 +109,7 @@ func Newf(format string, v ...any) *Error {
 // NewWithCause creates a new detailed error with the 'message' and underlying 'cause'.
 func NewWithCause(message string, cause error) *Error {
 	return &Error{
-		errors: []detail{
+		errors: []*detail{
 			{
 				message: message,
 				stack:   callStack(),
@@ -138,7 +139,7 @@ func Append(err error, errs ...error) *Error {
 				}
 			default:
 				if typedErr != nil {
-					e.errors = append(e.errors, detail{
+					e.errors = append(e.errors, &detail{
 						message: typedErr.Error(),
 						stack:   callStack(),
 					})
