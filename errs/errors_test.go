@@ -182,4 +182,15 @@ func TestFormat(t *testing.T) {
 	result = fmt.Sprintf("%+v", err)
 	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
 	assert.Contains(t, result, "[runtime.goexit]")
+
+	wrappedErrors := err.WrappedErrors()
+	require.GreaterOrEqual(t, 1, len(wrappedErrors))
+	assert.Equal(t, "test", fmt.Sprintf("%s", wrappedErrors[0])) //nolint:gocritic // Testing %s, so necessary
+	assert.Equal(t, `"test"`, fmt.Sprintf("%q", wrappedErrors[0]))
+	result = fmt.Sprintf("%v", wrappedErrors[0]) //nolint:gocritic // Testing %v, so necessary
+	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	assert.NotContains(t, result, "[runtime.goexit]")
+	result = fmt.Sprintf("%+v", wrappedErrors[0])
+	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	assert.Contains(t, result, "[runtime.goexit]")
 }

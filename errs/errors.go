@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	_ ErrorWrapper = &Error{}
-	_ StackError   = &Error{}
+	_ ErrorWrapper  = &Error{}
+	_ StackError    = &Error{}
+	_ fmt.Formatter = &Error{}
 )
 
 // ErrorWrapper contains methods for interacting with the wrapped errors.
@@ -180,7 +181,8 @@ func (d *Error) Message() string {
 	default:
 		var buffer strings.Builder
 		buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", len(d.errors)))
-		for _, one := range d.errors {
+		for i := range d.errors {
+			one := &d.errors[i]
 			buffer.WriteString("\n- ")
 			buffer.WriteString(one.message)
 		}
@@ -233,8 +235,8 @@ func (d *Error) ErrorOrNil() error {
 // WrappedErrors returns the contained errors.
 func (d *Error) WrappedErrors() []error {
 	result := make([]error, len(d.errors))
-	for i, one := range d.errors {
-		result[i] = one
+	for i := range d.errors {
+		result[i] = &d.errors[i]
 	}
 	return result
 }

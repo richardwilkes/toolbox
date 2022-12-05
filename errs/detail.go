@@ -17,7 +17,10 @@ import (
 	"strings"
 )
 
-var _ Causer = &detail{}
+var (
+	_ Causer        = &detail{}
+	_ fmt.Formatter = &detail{}
+)
 
 // Causer defines the interface for determining the error that caused an error.
 type Causer interface {
@@ -32,12 +35,12 @@ type detail struct {
 }
 
 // Error implements the error interface.
-func (d detail) Error() string {
+func (d *detail) Error() string {
 	return d.detail(true, true)
 }
 
 // Cause returns the cause of this error, if any.
-func (d detail) Cause() error {
+func (d *detail) Cause() error {
 	return d.cause
 }
 
