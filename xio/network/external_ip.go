@@ -30,7 +30,6 @@ var sites = []string{
 	"http://checkip.amazonaws.com/",
 	"http://ident.me/",
 	"https://canihazip.com/s",
-	"https://tnx.nl/ip",
 }
 
 // ExternalIP returns your IP address as seen by external sites. It does this by iterating through a list of websites
