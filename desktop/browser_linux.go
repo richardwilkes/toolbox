@@ -10,6 +10,12 @@
 // Package desktop provides desktop integration utilities.
 package desktop
 
+import (
+	"os/exec"
+
+	"github.com/richardwilkes/toolbox/errs"
+)
+
 // Open asks the system to open the provided path or URL.
 func Open(pathOrURL string) error {
 	if err := exec.Command("xdg-open", pathOrURL).Start(); err != nil {
