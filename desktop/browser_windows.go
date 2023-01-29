@@ -12,13 +12,23 @@ package desktop
 
 import (
 	"os/exec"
+	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
 )
 
 // Open asks the system to open the provided path or URL.
 func Open(pathOrURL string) error {
-	if err := exec.Command("cmd", "/c", "start", pathOrURL).Start(); err != nil {
+	var cmdName string
+	var args []string
+	if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
+		cmdName = "cmd"
+		args = append(args, "/c", "start")
+	} else {
+		cmdName = "explorer"
+	}
+	args = append(args, pathOrURL)
+	if err := exec.Command(cmdName, args...).Start(); err != nil {
 		return errs.NewWithCause("Unable to open "+pathOrURL, err)
 	}
 	return nil
