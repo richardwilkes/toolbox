@@ -70,7 +70,7 @@ func (s *Server) Port() int {
 
 // LocalBaseURL returns the local base URL that will reach the server.
 func (s *Server) LocalBaseURL() string {
-	return fmt.Sprintf("%s://127.0.0.1:%d", s.Protocol(), s.port)
+	return fmt.Sprintf("%s://%s:%d", s.Protocol(), network.IPv4LoopbackAddress, s.port)
 }
 
 func (s *Server) String() string {

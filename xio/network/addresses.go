@@ -21,6 +21,13 @@ import (
 	"github.com/richardwilkes/toolbox/txt"
 )
 
+// Constants for common network addresses.
+const (
+	IPv4LoopbackAddress = "127.0.0.1"
+	IPv6LoopbackAddress = "::1"
+	LocalHost           = "localhost"
+)
+
 // PrimaryIPAddress returns the primary IP address.
 func PrimaryIPAddress() string {
 	// Try up to 3 times in case of transient errors
@@ -52,7 +59,7 @@ func PrimaryIPAddress() string {
 		}
 		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
 	}
-	return "127.0.0.1"
+	return IPv4LoopbackAddress
 }
 
 // PrimaryAddress returns the primary hostname and its associated IP address and MAC address.
@@ -84,7 +91,7 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 		}
 		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
 	}
-	return "localhost", "127.0.0.1", "00:00:00:00:00:00"
+	return LocalHost, IPv4LoopbackAddress, "00:00:00:00:00:00"
 }
 
 // ActiveAddresses determines the best address for each active network interface. IPv4 addresses will be selected over
@@ -196,10 +203,10 @@ func AddressesForHost(host string) []string {
 			}
 		}
 	}
-	for _, one := range []string{"::", "::1", "127.0.0.1"} {
+	for _, one := range []string{"::", IPv6LoopbackAddress, IPv4LoopbackAddress} {
 		if ss.Contains(one) {
 			delete(ss, one)
-			ss.Add("localhost")
+			ss.Add(LocalHost)
 		}
 	}
 	addrs := ss.Values()
