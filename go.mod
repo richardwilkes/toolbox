@@ -1,6 +1,6 @@
 module github.com/richardwilkes/toolbox
 
-go 1.18
+go 1.19
 
 require (
 	github.com/dustin/go-humanize v1.0.1
@@ -8,8 +8,8 @@ require (
 	github.com/pkg/term v1.1.0
 	github.com/stretchr/testify v1.8.1
 	github.com/yookoala/realpath v1.0.0
-	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
-	golang.org/x/image v0.3.0
+	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/image v0.5.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
