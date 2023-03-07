@@ -46,12 +46,15 @@ type record struct {
 
 func init() {
 	atexit.Register(Flush)
+	// Initialization of `out` was moved outside of the goroutine in case jot isn't actually being used (but is being
+	// initialized as a side-effect of bringing in some other package) to prevent races with other threads that might
+	// be trying to use os.Stderr.
+	out := term.NewANSI(os.Stderr)
 	go func() {
 		levelNames := []string{"DBG", "INF", "WRN", "ERR", "FTL"}
 		levelColors := []term.Color{term.Blue, 0, term.Yellow, term.Red, term.Red}
 		levelStyles := []term.Style{term.Bold, 0, term.Bold, term.Bold, term.Bold | term.Blink}
 		minLevel := DEBUG
-		out := term.NewANSI(os.Stderr)
 		for rec := range logChannel {
 			switch {
 			case rec.writer != nil:
