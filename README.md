@@ -1,3 +1,6 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/richardwilkes/toolbox.svg)](https://pkg.go.dev/github.com/richardwilkes/toolbox)
+[![Go Report Card](https://goreportcard.com/badge/github.com/richardwilkes/toolbox)](https://goreportcard.com/report/github.com/richardwilkes/toolbox)
+
 # toolbox
 Toolbox for Go.
 
