@@ -655,13 +655,13 @@ func (i Int128) Format(s fmt.State, c rune) {
 }
 
 // Scan implements fmt.Scanner.
-func (i *Int128) Scan(state fmt.ScanState, verb rune) error {
+func (i *Int128) Scan(state fmt.ScanState, _ rune) error {
 	t, err := state.Token(true, nil)
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	v, err := Int128FromString(string(t))
-	if err != nil {
+	var v Int128
+	if v, err = Int128FromString(string(t)); err != nil {
 		return errs.Wrap(err)
 	}
 	*i = v
@@ -674,7 +674,7 @@ func (i Int128) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (i *Int128) UnmarshalText(text []byte) (err error) {
+func (i *Int128) UnmarshalText(text []byte) error {
 	v, err := Int128FromString(string(text))
 	if err != nil {
 		return err
