@@ -8,7 +8,7 @@ require (
 	github.com/pkg/term v1.1.0
 	github.com/stretchr/testify v1.8.3
 	github.com/yookoala/realpath v1.0.0
-	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/image v0.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )

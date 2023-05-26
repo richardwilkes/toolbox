@@ -31,7 +31,7 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 		switch {
 		case d1 != d2: // Digits before other characters.
 			return d1 // True if LHS is a digit, false if the RHS is one.
-		case !d1: // && !dig2, because dig1 == dig2
+		case !d1: // && !d2, because d1 == d2
 			// UTF-8 compares byte-wise-lexicographically, no need to decode code-points.
 			if caseInsensitive {
 				if c1 >= 'a' && c1 <= 'z' {
@@ -48,15 +48,22 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 			i2++
 		default: // Digits
 			// Eat zeros.
-			for ; i1 < len(s1) && s1[i1] == '0'; i1++ { //nolint:revive // empty, but still needed
+			for i1 < len(s1) && s1[i1] == '0' {
+				i1++
 			}
-			for ; i2 < len(s2) && s2[i2] == '0'; i2++ { //nolint:revive // empty, but still needed
+			for i1 < len(s1) && s1[i1] == '0' {
+				i1++
+			}
+			for i2 < len(s2) && s2[i2] == '0' {
+				i2++
 			}
 			// Eat all digits.
 			nz1, nz2 := i1, i2
-			for ; i1 < len(s1) && s1[i1] >= '0' && s1[i1] <= '9'; i1++ { //nolint:revive // empty, but still needed
+			for i1 < len(s1) && s1[i1] >= '0' && s1[i1] <= '9' {
+				i1++
 			}
-			for ; i2 < len(s2) && s2[i2] >= '0' && s2[i2] <= '9'; i2++ { //nolint:revive // empty, but still needed
+			for i2 < len(s2) && s2[i2] >= '0' && s2[i2] <= '9' {
+				i2++
 			}
 			// If lengths of numbers with non-zero prefix differ, the shorter one is less.
 			if len1, len2 := i1-nz1, i2-nz2; len1 != len2 {
