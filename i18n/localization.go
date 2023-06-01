@@ -110,11 +110,11 @@ func hierarchy(language string) []string {
 	if s, ok := hierMap[lang]; ok {
 		return s
 	}
-	one := lang
+	one := strings.ReplaceAll(strings.ReplaceAll(lang, "-", "_"), ".", "_")
 	var s []string
 	for {
 		s = append(s, one)
-		if i := strings.LastIndexAny(one, "._"); i != -1 {
+		if i := strings.LastIndex(one, "_"); i != -1 {
 			one = one[:i]
 		} else {
 			break
@@ -192,5 +192,7 @@ func load(name string) {
 			Log.Errorf("ignoring key with missing value on line %d of %s", lastKeyLineStart, path)
 		}
 	}
-	langMap[strings.ToLower(name[:len(name)-len(Extension)])] = translations
+	key = strings.ToLower(name[:len(name)-len(Extension)])
+	key = strings.ReplaceAll(strings.ReplaceAll(key, "-", "_"), ".", "_")
+	langMap[key] = translations
 }
