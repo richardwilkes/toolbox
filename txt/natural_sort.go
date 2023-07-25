@@ -9,7 +9,9 @@
 
 package txt
 
-import "sort"
+import (
+	"golang.org/x/exp/slices"
+)
 
 // NaturalLess compares two strings using natural ordering. This means that "a2" < "a12".
 //
@@ -21,6 +23,19 @@ import "sort"
 //
 // Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
 func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
+	return NaturalCmp(s1, s2, caseInsensitive) < 0
+}
+
+// NaturalCmp compares two strings using natural ordering. This means that "a2" < "a12".
+//
+// Non-digit sequences and numbers are compared separately. The former are compared byte-wise, while the latter are
+// compared numerically (except that the number of leading zeros is used as a tie-breaker, so "2" < "02").
+//
+// Limitations:
+//   - only ASCII digits (0-9) are considered.
+//
+// Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
+func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 	i1 := 0
 	i2 := 0
 	for i1 < len(s1) && i2 < len(s2) {
@@ -30,7 +45,10 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 		d2 := c2 >= '0' && c2 <= '9'
 		switch {
 		case d1 != d2: // Digits before other characters.
-			return d1 // True if LHS is a digit, false if the RHS is one.
+			if d1 { // True if LHS is a digit, false if the RHS is one.
+				return -1
+			}
+			return 1
 		case !d1: // && !d2, because d1 == d2
 			// UTF-8 compares byte-wise-lexicographically, no need to decode code-points.
 			if caseInsensitive {
@@ -42,7 +60,10 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 				}
 			}
 			if c1 != c2 {
-				return c1 < c2
+				if c1 < c2 {
+					return -1
+				}
+				return 1
 			}
 			i1++
 			i2++
@@ -67,34 +88,50 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 			}
 			// If lengths of numbers with non-zero prefix differ, the shorter one is less.
 			if len1, len2 := i1-nz1, i2-nz2; len1 != len2 {
-				return len1 < len2
+				if len1 < len2 {
+					return -1
+				}
+				return 1
 			}
 			// If they're not equal, string comparison is correct.
 			if nr1, nr2 := s1[nz1:i1], s2[nz2:i2]; nr1 != nr2 {
-				return nr1 < nr2
+				if nr1 < nr2 {
+					return -1
+				}
+				return 1
 			}
 			// Otherwise, the one with less zeros is less. Because everything up to the number is equal, comparing the
 			// index after the zeros is sufficient.
 			if nz1 != nz2 {
-				return nz1 < nz2
+				if nz1 < nz2 {
+					return -1
+				}
+				return 1
 			}
 		}
 		// They're identical so far, so continue comparing.
 	}
 	// So far they are identical. At least one is ended. If the other continues, it sorts last. If the are the same
 	// length and the caseInsensitive flag was set, compare again, but without the flag.
-	if caseInsensitive && len(s1) == len(s2) {
-		return NaturalLess(s1, s2, false)
+	switch {
+	case len(s1) == len(s2):
+		if caseInsensitive {
+			return NaturalCmp(s1, s2, false)
+		}
+		return 0
+	case len(s1) < len(s2):
+		return -1
+	default:
+		return 1
 	}
-	return len(s1) < len(s2)
 }
 
 // SortStringsNaturalAscending sorts a slice of strings using NaturalLess in least to most order.
 func SortStringsNaturalAscending(in []string) {
-	sort.Slice(in, func(i, j int) bool { return NaturalLess(in[i], in[j], true) })
+	slices.SortFunc(in, func(a, b string) int { return NaturalCmp(a, b, true) })
 }
 
 // SortStringsNaturalDescending sorts a slice of strings using NaturalLess in most to least order.
 func SortStringsNaturalDescending(in []string) {
-	sort.Slice(in, func(i, j int) bool { return NaturalLess(in[j], in[i], true) })
+	slices.SortFunc(in, func(a, b string) int { return NaturalCmp(b, a, true) })
 }
