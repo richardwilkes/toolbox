@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -79,4 +79,11 @@ func (c Contour[T]) Contains(pt geom.Point[T]) bool {
 		}
 	}
 	return count%2 == 1
+}
+
+func (c Contour[T]) segment(index int) Segment[T] {
+	if index == len(c)-1 {
+		return Segment[T]{c[len(c)-1], c[0]}
+	}
+	return Segment[T]{c[index], c[index+1]}
 }
