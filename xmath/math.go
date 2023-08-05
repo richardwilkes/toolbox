@@ -543,21 +543,38 @@ func MinValue[T Numeric]() T {
 	v := reflect.Indirect(reflect.ValueOf(&t))
 	switch reflect.TypeOf(t).Kind() {
 	case reflect.Int:
-		v.SetInt(math.MinInt)
+		v.SetInt(MinInt)
 	case reflect.Int8:
-		v.SetInt(math.MinInt8)
+		v.SetInt(MinInt8)
 	case reflect.Int16:
-		v.SetInt(math.MinInt16)
+		v.SetInt(MinInt16)
 	case reflect.Int32:
-		v.SetInt(math.MinInt32)
+		v.SetInt(MinInt32)
 	case reflect.Int64:
-		v.SetInt(math.MinInt64)
+		v.SetInt(MinInt64)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		// 0
 	case reflect.Float32:
-		v.SetFloat(-math.MaxFloat32)
+		v.SetFloat(-MaxFloat32)
 	case reflect.Float64:
-		v.SetFloat(-math.MaxFloat64)
+		v.SetFloat(-MaxFloat64)
+	default:
+		panic("unhandled type")
+	}
+	return t
+}
+
+// SmallestPositiveNonZeroValue returns the smallest, positive, non-zero value for the type.
+func SmallestPositiveNonZeroValue[T Numeric]() T {
+	var t T
+	v := reflect.Indirect(reflect.ValueOf(&t))
+	switch reflect.TypeOf(t).Kind() {
+	case reflect.Float32:
+		v.SetFloat(SmallestNonzeroFloat32)
+	case reflect.Float64:
+		v.SetFloat(SmallestNonzeroFloat64)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		v.SetInt(1)
 	default:
 		panic("unhandled type")
 	}
@@ -808,4 +825,25 @@ func Y1[T constraints.Float](x T) T {
 //	Yn(n, NaN) = NaN
 func Yn[T constraints.Float](n int, x T) T {
 	return T(math.Yn(n, float64(x)))
+}
+
+// EqualWithin returns true if a and b are within the given tolerance of each other.
+func EqualWithin[T constraints.Float](a, b, tolerance T) bool {
+	if a == b {
+		return true
+	}
+	delta := Abs(a - b)
+	if delta <= tolerance {
+		return true
+	}
+	var mv T
+	if reflect.TypeOf(mv).Kind() == reflect.Float32 {
+		mv = 0x1p-126
+	} else {
+		mv = 0x1p-1022
+	}
+	if delta <= mv {
+		return delta <= tolerance*mv
+	}
+	return delta/Max(Abs(a), Abs(b)) <= tolerance
 }
