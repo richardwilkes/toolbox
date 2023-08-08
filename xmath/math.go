@@ -174,11 +174,10 @@ func Cosh[T constraints.Float](x T) T {
 //	Dim(-Inf, -Inf) = NaN
 //	Dim(x, NaN) = Dim(NaN, x) = NaN
 func Dim[T constraints.Float](x, y T) T {
-	v := x - y
-	if v <= 0 {
-		return 0
+	if v := x - y; v > 0 {
+		return v
 	}
-	return v
+	return 0
 }
 
 // Erf returns the error function of x.
@@ -469,16 +468,10 @@ func Logb[T constraints.Float](x T) T {
 //	Max(x, NaN) = Max(NaN, x) = NaN
 //	Max(+0, ±0) = Max(±0, +0) = +0
 //	Max(-0, -0) = -0
+//
+// Deprecated: Use the Go 1.21+ built-in max() instead.
 func Max[T Numeric](a, b T) T {
-	switch reflect.TypeOf(a).Kind() {
-	case reflect.Float32, reflect.Float64:
-		return T(math.Max(float64(a), float64(b)))
-	default:
-		if a > b {
-			return a
-		}
-		return b
-	}
+	return max(a, b)
 }
 
 // MaxValue returns the maximum value for the type.
@@ -525,16 +518,10 @@ func MaxValue[T Numeric]() T {
 //	Min(x, -Inf) = Min(-Inf, x) = -Inf
 //	Min(x, NaN) = Min(NaN, x) = NaN
 //	Min(-0, ±0) = Min(±0, -0) = -0
+//
+// Deprecated: Use the Go 1.21+ built-in min() instead.
 func Min[T Numeric](a, b T) T {
-	switch reflect.TypeOf(a).Kind() {
-	case reflect.Float32, reflect.Float64:
-		return T(math.Min(float64(a), float64(b)))
-	default:
-		if a < b {
-			return a
-		}
-		return b
-	}
+	return min(a, b)
 }
 
 // MinValue returns the minimum value for the type.
@@ -845,5 +832,5 @@ func EqualWithin[T constraints.Float](a, b, tolerance T) bool {
 	if delta <= mv {
 		return delta <= tolerance*mv
 	}
-	return delta/Max(Abs(a), Abs(b)) <= tolerance
+	return delta/max(Abs(a), Abs(b)) <= tolerance
 }

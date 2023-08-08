@@ -29,7 +29,7 @@ func CalcEllipseSegmentCount[T constraints.Float](r, e T) int {
 // ApproximateEllipseAuto creates a polygon that approximates an ellipse, automatically choose the number of segments to
 // break the ellipse contour into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
 func ApproximateEllipseAuto[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
-	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(xmath.Max(bounds.Width, bounds.Height)/2, 0.2))
+	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(max(bounds.Width, bounds.Height)/2, 0.2))
 }
 
 // ApproximateEllipse creates a polygon that approximates an ellipse. 'sections' indicates how many segments to break

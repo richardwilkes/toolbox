@@ -73,7 +73,7 @@ func (c Contour[T]) Contains(pt geom.Point[T]) bool {
 		if bottom.Y > top.Y {
 			bottom, top = top, bottom
 		}
-		if pt.Y >= bottom.Y && pt.Y < top.Y && pt.X < xmath.Max(cur.X, next.X) && next.Y != cur.Y &&
+		if pt.Y >= bottom.Y && pt.Y < top.Y && pt.X < max(cur.X, next.X) && next.Y != cur.Y &&
 			(cur.X == next.X || pt.X <= (pt.Y-cur.Y)*(next.X-cur.X)/(next.Y-cur.Y)+cur.X) {
 			count++
 		}

@@ -10,9 +10,10 @@
 package poly
 
 import (
+	"slices"
+
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
 )
 
 type chain[T constraints.Float] struct {

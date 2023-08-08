@@ -10,7 +10,7 @@
 package txt
 
 import (
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // NaturalLess compares two strings using natural ordering. This means that "a2" < "a12".

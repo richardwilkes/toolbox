@@ -10,10 +10,11 @@
 package poly
 
 import (
+	"slices"
+
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
 )
 
 const snapTolerance = 8e-14

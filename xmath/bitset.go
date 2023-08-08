@@ -153,14 +153,14 @@ func (b *BitSet) ClearRange(start, end int) {
 	if start > end {
 		start, end = end, start
 	}
-	max := len(b.data) - 1
+	maximum := len(b.data) - 1
 	i1 := start >> addressBitsPerWord
-	if i1 > max {
+	if i1 > maximum {
 		return
 	}
 	i2 := end >> addressBitsPerWord
-	if i2 > max {
-		i2 = max
+	if i2 > maximum {
+		i2 = maximum
 	}
 	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
@@ -254,8 +254,8 @@ func (b *BitSet) PreviousSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
 	var firstBit int
-	if max := len(b.data) - 1; i > max {
-		i = max
+	if maximum := len(b.data) - 1; i > maximum {
+		i = maximum
 		firstBit = 63
 	} else {
 		firstBit = bitIndexForMask(wordMask(start))
@@ -281,8 +281,8 @@ func (b *BitSet) NextSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
 	firstBit := bitIndexForMask(wordMask(start))
-	max := len(b.data)
-	for i < max {
+	maximum := len(b.data)
+	for i < maximum {
 		word := b.data[i]
 		if word != 0 {
 			for j := firstBit; j < dataBitsPerWord; j++ {
@@ -328,8 +328,8 @@ func (b *BitSet) NextClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
 	firstBit := bitIndexForMask(wordMask(start))
-	max := len(b.data)
-	for i < max {
+	maximum := len(b.data)
+	for i < maximum {
 		word := b.data[i]
 		if word != math.MaxUint64 {
 			for j := firstBit; j < dataBitsPerWord; j++ {
@@ -342,7 +342,7 @@ func (b *BitSet) NextClear(start int) int {
 		firstBit = 0
 		i++
 	}
-	return Max(max*dataBitsPerWord, start)
+	return max(maximum*dataBitsPerWord, start)
 }
 
 // Trim the BitSet down to the minimum required to store the set bits.

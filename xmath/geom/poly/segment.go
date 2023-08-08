@@ -68,8 +68,8 @@ func (s Segment[T]) FindIntersection(other Segment[T], tryBothDirections bool) (
 	}
 	s0 := (d0.X*e.X + d0.Y*e.Y) / sqrLen0
 	s1 := s0 + (d0.X*d1.X+d0.Y*d1.Y)/sqrLen0
-	smin := xmath.Min(s0, s1)
-	smax := xmath.Max(s0, s1)
+	smin := min(s0, s1)
+	smax := max(s0, s1)
 	w := make([]T, 0, 2)
 	switch {
 	case smin > 1 || smax < 0:

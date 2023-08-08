@@ -9,8 +9,6 @@
 
 package poly
 
-import "github.com/richardwilkes/toolbox/xmath"
-
 // ClipLine assumes p is actually a line and clips it.
 func (p Polygon[T]) ClipLine(other Polygon[T]) Polygon[T] {
 	if len(p) == 0 || len(other) == 0 {
@@ -36,7 +34,7 @@ func (p Polygon[T]) ClipLine(other Polygon[T]) Polygon[T] {
 	}
 	var c connector[T]
 	var s sweepline[T]
-	minMaxX := xmath.Min(sb.Right(), cb.Right())
+	minMaxX := min(sb.Right(), cb.Right())
 	for !q.empty() {
 		var prev, next *endpoint[T]
 		e := q.dequeue()

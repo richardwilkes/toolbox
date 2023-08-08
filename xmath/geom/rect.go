@@ -164,10 +164,10 @@ func (r *Rect[T]) Intersect(other Rect[T]) *Rect[T] {
 		r.Width = 0
 		r.Height = 0
 	} else {
-		x := xmath.Max(r.X, other.X)
-		y := xmath.Max(r.Y, other.Y)
-		w := xmath.Min(r.Right(), other.Right()) - x
-		h := xmath.Min(r.Bottom(), other.Bottom()) - y
+		x := max(r.X, other.X)
+		y := max(r.Y, other.Y)
+		w := min(r.Right(), other.Right()) - x
+		h := min(r.Bottom(), other.Bottom()) - y
 		if w > 0 && h > 0 {
 			r.X = x
 			r.Y = y
@@ -192,10 +192,10 @@ func (r *Rect[T]) Union(other Rect[T]) *Rect[T] {
 	case e1:
 		*r = other
 	case !e2:
-		x := xmath.Min(r.X, other.X)
-		y := xmath.Min(r.Y, other.Y)
-		r.Width = xmath.Max(r.Right(), other.Right()) - x
-		r.Height = xmath.Max(r.Bottom(), other.Bottom()) - y
+		x := min(r.X, other.X)
+		y := min(r.Y, other.Y)
+		r.Width = max(r.Right(), other.Right()) - x
+		r.Height = max(r.Bottom(), other.Bottom()) - y
 		r.X = x
 		r.Y = y
 	}

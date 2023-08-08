@@ -61,8 +61,8 @@ func LineIntersection[T constraints.Float](a1, a2, b1, b2 Point[T]) []Point[T] {
 				ub1 = (b1.Y - a1.Y) / ady
 				ub2 = (b2.Y - a1.Y) / ady
 			}
-			left := xmath.Max(0, xmath.Min(ub1, ub2))
-			right := xmath.Min(1, xmath.Max(ub1, ub2))
+			left := max(0, min(ub1, ub2))
+			right := min(1, max(ub1, ub2))
 			if left < right {
 				return []Point[T]{
 					{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},

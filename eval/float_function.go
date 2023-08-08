@@ -89,7 +89,7 @@ func floatIf[T constraints.Float](e *Evaluator, arguments string) (any, error) {
 }
 
 func floatMaximum[T constraints.Float](e *Evaluator, arguments string) (any, error) {
-	max := xmath.MinValue[T]()
+	maxValue := xmath.MinValue[T]()
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -97,13 +97,13 @@ func floatMaximum[T constraints.Float](e *Evaluator, arguments string) (any, err
 		if err != nil {
 			return nil, err
 		}
-		max = xmath.Max(value, max)
+		maxValue = max(value, maxValue)
 	}
-	return max, nil
+	return maxValue, nil
 }
 
 func floatMinimum[T constraints.Float](e *Evaluator, arguments string) (any, error) {
-	min := xmath.MaxValue[T]()
+	minValue := xmath.MaxValue[T]()
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -111,9 +111,9 @@ func floatMinimum[T constraints.Float](e *Evaluator, arguments string) (any, err
 		if err != nil {
 			return nil, err
 		}
-		min = xmath.Min(value, min)
+		minValue = min(value, minValue)
 	}
-	return min, nil
+	return minValue, nil
 }
 
 func floatNaturalLog[T constraints.Float](e *Evaluator, arguments string) (any, error) {

@@ -11,7 +11,6 @@ package icon
 
 import (
 	"image"
-	"math"
 
 	"golang.org/x/image/draw"
 )
@@ -122,7 +121,7 @@ func ScaleProportionally(currentWidth, currentHeight, desiredWidth, desiredHeigh
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)
 		scaleY := float64(desiredHeight) / float64(currentHeight)
-		scale := math.Min(scaleX, scaleY)
+		scale := min(scaleX, scaleY)
 		return int(float64(currentWidth) * scale), int(float64(currentHeight) * scale)
 	}
 	return currentWidth, currentHeight
@@ -134,8 +133,7 @@ func ScaleUpProportionally(currentWidth, currentHeight, desiredWidth, desiredHei
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)
 		scaleY := float64(desiredHeight) / float64(currentHeight)
-		scale := math.Min(scaleX, scaleY)
-		if scale > 1 {
+		if scale := min(scaleX, scaleY); scale > 1 {
 			return int(float64(currentWidth) * scale), int(float64(currentHeight) * scale)
 		}
 	}
@@ -148,8 +146,7 @@ func ScaleDownProportionally(currentWidth, currentHeight, desiredWidth, desiredH
 	if desiredWidth != currentWidth || desiredHeight != currentHeight {
 		scaleX := float64(desiredWidth) / float64(currentWidth)
 		scaleY := float64(desiredHeight) / float64(currentHeight)
-		scale := math.Min(scaleX, scaleY)
-		if scale < 1 {
+		if scale := min(scaleX, scaleY); scale < 1 {
 			return int(float64(currentWidth) * scale), int(float64(currentHeight) * scale)
 		}
 	}

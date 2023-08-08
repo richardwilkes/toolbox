@@ -9,8 +9,6 @@
 
 package poly
 
-import "github.com/richardwilkes/toolbox/xmath"
-
 // Intersect returns the intersection of both polygons. Does not handle self-intersecting polygons. Use Simplify()
 // first, if necessary.
 func (p Polygon[T]) Intersect(other Polygon[T]) Polygon[T] {
@@ -35,7 +33,7 @@ func (p Polygon[T]) Intersect(other Polygon[T]) Polygon[T] {
 	}
 	var c connector[T]
 	var s sweepline[T]
-	minMaxX := xmath.Min(sb.Right(), cb.Right())
+	minMaxX := min(sb.Right(), cb.Right())
 	for !q.empty() {
 		var prev, next *endpoint[T]
 		e := q.dequeue()
