@@ -10,9 +10,9 @@
 package slice
 
 // ZeroedDelete removes the elements s[i:j] from s, returning the modified slice. This function panics if s[i:j] is not
-// a valid slice of s. This function modifies the contents of the slice s -- it does not create a new slice. The
-// elements that are removed are zeroed so that any references can be garbage collected. If you do not need this, use
-// slices.Delete from the golang.org/x/exp package instead.
+// a valid slice of s. This function modifies the contents of the slice s; it does not create a new slice. The elements
+// that are removed are zeroed so that any references can be garbage collected. If you do not need this, use
+// slices.Delete instead.
 func ZeroedDelete[S ~[]E, E any](s S, i, j int) S {
 	_ = s[i:j] // bounds check
 	copy(s[i:], s[j:])
@@ -22,4 +22,29 @@ func ZeroedDelete[S ~[]E, E any](s S, i, j int) S {
 		s[k] = e
 	}
 	return s[:end]
+}
+
+// ZeroedDeleteFunc removes any elements from s for which del returns true, returning the modified slice. This function
+// modifies the contents of the slice s; it does not create a new slice. The elements that are removed are zeroed so
+// that any references can be garbage collected. If you do not need this, use slices.DeleteFunc instead.
+func ZeroedDeleteFunc[S ~[]E, E any](s S, del func(E) bool) S {
+	// Don't start copying elements until we find one to delete.
+	for i, v := range s {
+		if del(v) {
+			j := i
+			for i++; i < len(s); i++ {
+				v = s[i]
+				if !del(v) {
+					s[j] = v
+					j++
+				}
+			}
+			var e E
+			for k, n := j, len(s); k < n; k++ {
+				s[k] = e
+			}
+			return s[:j]
+		}
+	}
+	return s
 }
