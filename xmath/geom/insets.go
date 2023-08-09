@@ -15,6 +15,12 @@ import (
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
+// Insets32 is an alias for the float32 version of Insets.
+type Insets32 = Insets[float32]
+
+// Insets64 is an alias for the float64 version of Insets.
+type Insets64 = Insets[float64]
+
 // Insets defines margins on each side of a rectangle.
 type Insets[T xmath.Numeric] struct {
 	Top    T `json:"top"`

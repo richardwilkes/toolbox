@@ -14,6 +14,12 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Polygon32 is an alias for the float32 version of Polygon.
+type Polygon32 = Polygon[float32]
+
+// Polygon64 is an alias for the float64 version of Polygon.
+type Polygon64 = Polygon[float64]
+
 // Polygon holds one or more contour lines. The polygon may contain holes and may be self-intersecting.
 type Polygon[T constraints.Float] []Contour[T]
 

@@ -14,6 +14,12 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Matrix2D32 is an alias for the float32 version of Matrix2D.
+type Matrix2D32 = Matrix2D[float32]
+
+// Matrix2D64 is an alias for the float64 version of Matrix2D.
+type Matrix2D64 = Matrix2D[float64]
+
 // Matrix2D provides a 2D matrix.
 type Matrix2D[T constraints.Float] struct {
 	ScaleX T

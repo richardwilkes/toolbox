@@ -18,6 +18,12 @@ import (
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
+// Rect32 is an alias for the float32 version of Rect.
+type Rect32 = Rect[float32]
+
+// Rect64 is an alias for the float64 version of Rect.
+type Rect64 = Rect[float64]
+
 // Rect defines a rectangle.
 type Rect[T xmath.Numeric] struct {
 	Point[T] `json:",inline"`

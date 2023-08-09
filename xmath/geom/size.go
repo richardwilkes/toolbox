@@ -17,6 +17,12 @@ import (
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
+// Size32 is an alias for the float32 version of Size.
+type Size32 = Size[float32]
+
+// Size64 is an alias for the float64 version of Size.
+type Size64 = Size[float64]
+
 // Size defines a width and height.
 type Size[T xmath.Numeric] struct {
 	Width  T `json:"w"`

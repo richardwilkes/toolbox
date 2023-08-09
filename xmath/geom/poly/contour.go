@@ -15,6 +15,12 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Contour32 is an alias for the float32 version of Contour.
+type Contour32 = Contour[float32]
+
+// Contour64 is an alias for the float64 version of Contour.
+type Contour64 = Contour[float64]
+
 // Contour is a sequence of vertices connected by line segments, forming a closed shape.
 type Contour[T constraints.Float] []geom.Point[T]
 

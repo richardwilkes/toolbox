@@ -17,6 +17,12 @@ import (
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
+// Pt32 is an alias for the float32 version of Point.
+type Pt32 = Point[float32]
+
+// Pt64 is an alias for the float64 version of Point.
+type Pt64 = Point[float64]
+
 // Point defines a location.
 type Point[T xmath.Numeric] struct {
 	X T `json:"x"`
