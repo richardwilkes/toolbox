@@ -10,6 +10,8 @@
 package poly
 
 import (
+	"cmp"
+
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
 )
@@ -68,18 +70,11 @@ func ptIsBefore[T constraints.Float](p1, p2 geom.Point[T]) bool {
 }
 
 func endpointCmp[T constraints.Float](a, b *endpoint[T]) int {
-	// TODO: Use the cmp package once Go 1.21 ships
-	if a.pt.X != b.pt.X {
-		if a.pt.X > b.pt.X {
-			return -1
-		}
-		return 1
+	if r := cmp.Compare(b.pt.X, a.pt.X); r != 0 {
+		return r
 	}
-	if a.pt.Y != b.pt.Y {
-		if a.pt.Y > b.pt.Y {
-			return -1
-		}
-		return 1
+	if r := cmp.Compare(b.pt.Y, a.pt.Y); r != 0 {
+		return r
 	}
 	if a.left != b.left {
 		if a.left {

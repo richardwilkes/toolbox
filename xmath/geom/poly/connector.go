@@ -20,17 +20,17 @@ type connector[T constraints.Float] struct {
 }
 
 func (c *connector[T]) add(s Segment[T]) {
-	for j := range c.openPolys {
-		one := &c.openPolys[j]
+	for i := range c.openPolys {
+		one := &c.openPolys[i]
 		if one.removeCoincidentSegment(s) {
 			if one.empty() {
-				c.openPolys = append(c.openPolys[0:j], c.openPolys[j+1:]...)
+				c.openPolys = append(c.openPolys[0:i], c.openPolys[i+1:]...)
 			}
 			return
 		}
 	}
-	for j := range c.openPolys {
-		one := &c.openPolys[j]
+	for i := range c.openPolys {
+		one := &c.openPolys[i]
 		if !one.linkSegment(s) {
 			continue
 		}
@@ -39,14 +39,14 @@ func (c *connector[T]) add(s Segment[T]) {
 				one.closed = false
 				return
 			}
-			c.closedPolys = append(c.closedPolys, c.openPolys[j])
-			c.openPolys = append(c.openPolys[:j], c.openPolys[j+1:]...)
+			c.closedPolys = append(c.closedPolys, c.openPolys[i])
+			c.openPolys = append(c.openPolys[:i], c.openPolys[i+1:]...)
 			return
 		}
 		k := len(c.openPolys)
-		for i := j + 1; i < k; i++ {
-			if one.linkChain(&c.openPolys[i]) {
-				c.openPolys = append(c.openPolys[:i], c.openPolys[i+1:]...)
+		for j := i + 1; j < k; j++ {
+			if one.linkChain(&c.openPolys[j]) {
+				c.openPolys = append(c.openPolys[:j], c.openPolys[j+1:]...)
 				return
 			}
 		}

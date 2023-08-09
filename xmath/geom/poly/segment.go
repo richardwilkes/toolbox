@@ -38,21 +38,21 @@ func (s Segment[T]) FindIntersection(other Segment[T], tryBothDirections bool) (
 		X: other.End.X - p1.X,
 		Y: other.End.Y - p1.Y,
 	}
-	sqrEpsilon := T(1e-21)
+	const sqrEpsilon = 1e-21
 	e := geom.Point[T]{
 		X: p1.X - p0.X,
 		Y: p1.Y - p0.Y,
 	}
-	kross := d0.X*d1.Y - d0.Y*d1.X
-	sqrKross := kross * kross
+	cross := d0.X*d1.Y - d0.Y*d1.X
+	sqrCross := cross * cross
 	sqrLen0 := xmath.Sqrt(d0.X*d0.X + d0.Y*d0.Y)
 	sqrLen1 := xmath.Sqrt(d1.X*d1.X + d1.Y*d1.Y)
-	if sqrKross > sqrEpsilon*sqrLen0*sqrLen1 {
-		s0 := (e.X*d1.Y - e.Y*d1.X) / kross
+	if sqrCross > sqrEpsilon*sqrLen0*sqrLen1 {
+		s0 := (e.X*d1.Y - e.Y*d1.X) / cross
 		if s0 < 0 || s0 > 1 {
 			return 0, geom.Point[T]{}, geom.Point[T]{}
 		}
-		t := (e.X*d0.Y - e.Y*d0.X) / kross
+		t := (e.X*d0.Y - e.Y*d0.X) / cross
 		if t < 0 || t > 1 {
 			return 0, geom.Point[T]{}, geom.Point[T]{}
 		}
@@ -61,9 +61,9 @@ func (s Segment[T]) FindIntersection(other Segment[T], tryBothDirections bool) (
 		return 1, pi0, pi1
 	}
 	sqrLenE := xmath.Sqrt(e.X*e.X + e.Y*e.Y)
-	kross = e.X*d0.Y - e.Y*d0.X
-	sqrKross = kross * kross
-	if sqrKross > sqrEpsilon*sqrLen0*sqrLenE {
+	cross = e.X*d0.Y - e.Y*d0.X
+	sqrCross = cross * cross
+	if sqrCross > sqrEpsilon*sqrLen0*sqrLenE {
 		return 0, pi0, pi1
 	}
 	s0 := (d0.X*e.X + d0.Y*e.Y) / sqrLen0

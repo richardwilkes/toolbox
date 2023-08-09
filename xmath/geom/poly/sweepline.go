@@ -41,7 +41,7 @@ func segmentCompare[T constraints.Float](e1, e2 *endpoint[T]) bool {
 	switch {
 	case e1 == e2:
 		return false
-	case signedArea(e1.pt, e1.other.pt, e2.pt) != 0, signedArea(e1.pt, e1.other.pt, e2.other.pt) != 0:
+	case signedArea(e1.pt, e1.other.pt, e2.pt) != 0 || signedArea(e1.pt, e1.other.pt, e2.other.pt) != 0:
 		if e1.pt == e2.pt {
 			return e1.below(e2.other.pt)
 		}
