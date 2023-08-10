@@ -15,6 +15,12 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Segment32 is an alias for the float32 version of Segment.
+type Segment32 = Segment[float32]
+
+// Segment64 is an alias for the float64 version of Segment.
+type Segment64 = Segment[float64]
+
 // Segment holds the start and end point of a single segment within a contour of a polygon.
 type Segment[T constraints.Float] struct {
 	Start geom.Point[T]

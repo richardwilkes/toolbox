@@ -15,9 +15,12 @@ import (
 )
 
 type (
-	Polygon = poly.Polygon[float64]
-	Segment = poly.Segment[float64]
-	Point   = geom.Point[float64]
+	// Make it easy to test either float64 or float32... however, due to precision, the actual test data would need
+	// adjusting, so this is probably not that useful after all.
+	fpType  = float64
+	Polygon = poly.Polygon[fpType]
+	Segment = poly.Segment[fpType]
+	Point   = geom.Point[fpType]
 )
 
 type testCase struct {

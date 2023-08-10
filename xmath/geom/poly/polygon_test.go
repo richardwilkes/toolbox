@@ -251,7 +251,7 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 	const rotations = 360
 	for i, one := range tests {
 		for j := 0; j < rotations; j++ {
-			angle := 2 * xmath.Pi * float64(j) / rotations
+			angle := 2 * xmath.Pi * fpType(j) / rotations
 			subject := rotate(one.subject, angle)
 			clipping := rotate(one.clipping, angle)
 			// Using require to force termination, since otherwise this could go on for quite some time
@@ -274,7 +274,7 @@ func doTimedFunc(f func(chan Polygon)) bool {
 	}
 }
 
-func rotate(p Polygon, radians float64) Polygon {
+func rotate(p Polygon, radians fpType) Polygon {
 	result := p.Clone()
 	for i, contour := range p {
 		for j, point := range contour {

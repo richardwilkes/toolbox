@@ -99,7 +99,7 @@ func TestFindIntersection(t *testing.T) {
 			ip1:   Point{X: 43.2635182233307, Y: 170.15192246987792},
 		},
 		{
-			name:  "Overlapping segments 2",
+			name:  "Overlapping segments 6",
 			s1:    Segment{Start: Point{X: 41.57979856674331, Y: 170.60307379214092}, End: Point{X: 43.2635182233307, Y: 170.15192246987792}},
 			s2:    Segment{Start: Point{X: 43.2635182233307, Y: 170.15192246987792}, End: Point{X: 42.78116786015871, Y: 170.28116786015872}},
 			count: 2,
