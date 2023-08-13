@@ -23,30 +23,31 @@ const (
 
 // Node defines the methods an object that can be stored within the QuadTree must implement.
 type Node[T xmath.Numeric] interface {
+	comparable
 	// Bounds returns the node's bounding rectangle.
 	Bounds() geom.Rect[T]
 }
 
 // Matcher is used to match nodes.
-type Matcher[T xmath.Numeric] interface {
+type Matcher[T xmath.Numeric, N Node[T]] interface {
 	// Matches returns true if the node matches.
-	Matches(n Node[T]) bool
+	Matches(n N) bool
 }
 
 // QuadTree stores two-dimensional nodes for fast lookup.
-type QuadTree[T xmath.Numeric] struct {
+type QuadTree[T xmath.Numeric, N Node[T]] struct {
 	Threshold int
 	count     int
-	root      *node[T]
-	outside   []Node[T]
+	root      *node[T, N]
+	outside   []N
 }
 
 // Size returns the number of nodes contained within the QuadTree.
-func (q *QuadTree[T]) Size() int {
+func (q *QuadTree[T, N]) Size() int {
 	return q.count
 }
 
-func (q *QuadTree[T]) threshold() int {
+func (q *QuadTree[T, N]) threshold() int {
 	if q.Threshold < MinQuadTreeThreshold {
 		return DefaultQuadTreeThreshold
 	}
@@ -55,7 +56,7 @@ func (q *QuadTree[T]) threshold() int {
 
 // Insert a node. NOTE: Once a node is inserted, the value it returns from a call to Bounds() MUST REMAIN THE SAME until
 // the node is removed.
-func (q *QuadTree[T]) Insert(n Node[T]) {
+func (q *QuadTree[T, N]) Insert(n N) {
 	rect := n.Bounds()
 	if rect.IsEmpty() {
 		return
@@ -72,13 +73,14 @@ func (q *QuadTree[T]) Insert(n Node[T]) {
 }
 
 // Remove a node.
-func (q *QuadTree[T]) Remove(n Node[T]) {
+func (q *QuadTree[T, N]) Remove(n N) {
 	for i, one := range q.outside {
 		if one != n {
 			continue
 		}
 		q.outside[i] = q.outside[len(q.outside)-1]
-		q.outside[len(q.outside)-1] = nil
+		var zero N
+		q.outside[len(q.outside)-1] = zero
 		q.outside = q.outside[:len(q.outside)-1]
 		q.count--
 		return
@@ -91,8 +93,8 @@ func (q *QuadTree[T]) Remove(n Node[T]) {
 }
 
 // All returns all nodes.
-func (q *QuadTree[T]) All() []Node[T] {
-	all := make([]Node[T], 0, q.count)
+func (q *QuadTree[T, N]) All() []N {
+	all := make([]N, 0, q.count)
 	all = append(all, q.outside...)
 	if q.root != nil {
 		all = q.root.all(all)
@@ -101,16 +103,16 @@ func (q *QuadTree[T]) All() []Node[T] {
 }
 
 // Reorganize the QuadTree to optimally fit its contents.
-func (q *QuadTree[T]) Reorganize() {
+func (q *QuadTree[T, N]) Reorganize() {
 	all := q.All()
 	var rect geom.Rect[T]
 	for _, one := range all {
 		rect.Union(one.Bounds())
 	}
 	q.root = nil
-	q.outside = make([]Node[T], 0)
+	q.outside = nil
 	if len(all) > 0 {
-		q.root = &node[T]{
+		q.root = &node[T, N]{
 			rect:      rect,
 			threshold: q.threshold(),
 		}
@@ -121,14 +123,14 @@ func (q *QuadTree[T]) Reorganize() {
 }
 
 // Clear removes all nodes.
-func (q *QuadTree[T]) Clear() {
+func (q *QuadTree[T, N]) Clear() {
 	q.count = 0
 	q.root = nil
-	q.outside = make([]Node[T], 0)
+	q.outside = nil
 }
 
 // ContainsPoint returns true if at least one node contains the point.
-func (q *QuadTree[T]) ContainsPoint(pt geom.Point[T]) bool {
+func (q *QuadTree[T, N]) ContainsPoint(pt geom.Point[T]) bool {
 	if q.root != nil {
 		if q.root.containsPoint(pt) {
 			return true
@@ -143,8 +145,8 @@ func (q *QuadTree[T]) ContainsPoint(pt geom.Point[T]) bool {
 }
 
 // FindContainsPoint returns the nodes that contain the point.
-func (q *QuadTree[T]) FindContainsPoint(pt geom.Point[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindContainsPoint(pt geom.Point[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findContainsPoint(pt, result)
 	}
@@ -157,7 +159,7 @@ func (q *QuadTree[T]) FindContainsPoint(pt geom.Point[T]) []Node[T] {
 }
 
 // MatchedContainsPoint returns true if at least one node that the matcher returns true for contains the point.
-func (q *QuadTree[T]) MatchedContainsPoint(matcher Matcher[T], pt geom.Point[T]) bool {
+func (q *QuadTree[T, N]) MatchedContainsPoint(matcher Matcher[T, N], pt geom.Point[T]) bool {
 	if q.root != nil {
 		if q.root.matchedContainsPoint(matcher, pt) {
 			return true
@@ -172,8 +174,8 @@ func (q *QuadTree[T]) MatchedContainsPoint(matcher Matcher[T], pt geom.Point[T])
 }
 
 // FindMatchedContainsPoint returns the nodes that the matcher returns true for which contain the point.
-func (q *QuadTree[T]) FindMatchedContainsPoint(matcher Matcher[T], pt geom.Point[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindMatchedContainsPoint(matcher Matcher[T, N], pt geom.Point[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findMatchedContainsPoint(matcher, pt, result)
 	}
@@ -186,7 +188,7 @@ func (q *QuadTree[T]) FindMatchedContainsPoint(matcher Matcher[T], pt geom.Point
 }
 
 // Intersects returns true if at least one node intersects the rect.
-func (q *QuadTree[T]) Intersects(rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) Intersects(rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.intersects(rect) {
 			return true
@@ -201,8 +203,8 @@ func (q *QuadTree[T]) Intersects(rect geom.Rect[T]) bool {
 }
 
 // FindIntersects returns the nodes that intersect the rect.
-func (q *QuadTree[T]) FindIntersects(rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindIntersects(rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findIntersects(rect, result)
 	}
@@ -215,7 +217,7 @@ func (q *QuadTree[T]) FindIntersects(rect geom.Rect[T]) []Node[T] {
 }
 
 // MatchedIntersects returns true if at least one node that the matcher returns true for intersects the rect.
-func (q *QuadTree[T]) MatchedIntersects(matcher Matcher[T], rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) MatchedIntersects(matcher Matcher[T, N], rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.matchedIntersects(matcher, rect) {
 			return true
@@ -230,8 +232,8 @@ func (q *QuadTree[T]) MatchedIntersects(matcher Matcher[T], rect geom.Rect[T]) b
 }
 
 // FindMatchedIntersects returns the nodes that the matcher returns true for which intersect the rect.
-func (q *QuadTree[T]) FindMatchedIntersects(matcher Matcher[T], rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindMatchedIntersects(matcher Matcher[T, N], rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findMatchedIntersects(matcher, rect, result)
 	}
@@ -244,7 +246,7 @@ func (q *QuadTree[T]) FindMatchedIntersects(matcher Matcher[T], rect geom.Rect[T
 }
 
 // ContainsRect returns true if at least one node contains the rect.
-func (q *QuadTree[T]) ContainsRect(rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) ContainsRect(rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.containsRect(rect) {
 			return true
@@ -259,8 +261,8 @@ func (q *QuadTree[T]) ContainsRect(rect geom.Rect[T]) bool {
 }
 
 // FindContainsRect returns the nodes that contain the rect.
-func (q *QuadTree[T]) FindContainsRect(rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindContainsRect(rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findContainsRect(rect, result)
 	}
@@ -273,7 +275,7 @@ func (q *QuadTree[T]) FindContainsRect(rect geom.Rect[T]) []Node[T] {
 }
 
 // MatchedContainsRect returns true if at least one node that the matcher returns true for contains the rect.
-func (q *QuadTree[T]) MatchedContainsRect(matcher Matcher[T], rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) MatchedContainsRect(matcher Matcher[T, N], rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.matchedContainsRect(matcher, rect) {
 			return true
@@ -288,8 +290,8 @@ func (q *QuadTree[T]) MatchedContainsRect(matcher Matcher[T], rect geom.Rect[T])
 }
 
 // FindMatchedContainsRect returns the nodes that the matcher returns true for which contains the rect.
-func (q *QuadTree[T]) FindMatchedContainsRect(matcher Matcher[T], rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindMatchedContainsRect(matcher Matcher[T, N], rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findMatchedContainsRect(matcher, rect, result)
 	}
@@ -302,7 +304,7 @@ func (q *QuadTree[T]) FindMatchedContainsRect(matcher Matcher[T], rect geom.Rect
 }
 
 // ContainedByRect returns true if at least one node is contained by the rect.
-func (q *QuadTree[T]) ContainedByRect(rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) ContainedByRect(rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.containedByRect(rect) {
 			return true
@@ -317,8 +319,8 @@ func (q *QuadTree[T]) ContainedByRect(rect geom.Rect[T]) bool {
 }
 
 // FindContainedByRect returns the nodes that are contained by the rect.
-func (q *QuadTree[T]) FindContainedByRect(rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindContainedByRect(rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findContainedByRect(rect, result)
 	}
@@ -331,7 +333,7 @@ func (q *QuadTree[T]) FindContainedByRect(rect geom.Rect[T]) []Node[T] {
 }
 
 // MatchedContainedByRect returns true if at least one node that the matcher returns true for is contained by the rect.
-func (q *QuadTree[T]) MatchedContainedByRect(matcher Matcher[T], rect geom.Rect[T]) bool {
+func (q *QuadTree[T, N]) MatchedContainedByRect(matcher Matcher[T, N], rect geom.Rect[T]) bool {
 	if q.root != nil {
 		if q.root.matchedContainedByRect(matcher, rect) {
 			return true
@@ -346,8 +348,8 @@ func (q *QuadTree[T]) MatchedContainedByRect(matcher Matcher[T], rect geom.Rect[
 }
 
 // FindMatchedContainedByRect returns the nodes that the matcher returns true for which are contained by the rect.
-func (q *QuadTree[T]) FindMatchedContainedByRect(matcher Matcher[T], rect geom.Rect[T]) []Node[T] {
-	var result []Node[T]
+func (q *QuadTree[T, N]) FindMatchedContainedByRect(matcher Matcher[T, N], rect geom.Rect[T]) []N {
+	var result []N
 	if q.root != nil {
 		result = q.root.findMatchedContainedByRect(matcher, rect, result)
 	}

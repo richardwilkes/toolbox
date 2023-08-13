@@ -32,7 +32,7 @@ func (n node[T]) Bounds() geom.Rect[T] {
 }
 
 func TestContainsPoint(t *testing.T) {
-	q := &quadtree.QuadTree[float64]{}
+	q := &quadtree.QuadTree[float64, *node[float64]]{}
 	assert.False(t, q.ContainsPoint(geom.Point[float64]{}))
 	q.Insert(newNode[float64](5, 5, 5, 5))
 	assert.False(t, q.ContainsPoint(geom.NewPoint[float64](6, 4)))
@@ -50,7 +50,7 @@ func TestContainsPoint(t *testing.T) {
 }
 
 func TestContainsRect(t *testing.T) {
-	q := &quadtree.QuadTree[float64]{}
+	q := &quadtree.QuadTree[float64, *node[float64]]{}
 	assert.False(t, q.ContainsRect(geom.NewRect[float64](0, 0, 1, 1)))
 	q.Insert(newNode[float64](5, 5, 5, 5))
 	assert.False(t, q.ContainsRect(geom.NewRect[float64](4, 4, 10, 10)))
@@ -68,7 +68,7 @@ func TestContainsRect(t *testing.T) {
 }
 
 func TestGeneral(t *testing.T) {
-	q := &quadtree.QuadTree[float64]{}
+	q := &quadtree.QuadTree[float64, *node[float64]]{}
 	r := rand.New(rand.NewSource(22))
 	mine := newNode[float64](22, 22, 22, 22)
 	q.Insert(mine)
@@ -76,7 +76,7 @@ func TestGeneral(t *testing.T) {
 		q.Insert(newNode(float64(50000-r.Intn(100000)), float64(50000-r.Intn(100000)), float64(r.Intn(100000)), float64(r.Intn(100000))))
 	}
 	assert.Equal(t, 1+100*quadtree.DefaultQuadTreeThreshold, q.Size())
-	assert.Subset(t, q.All(), []quadtree.Node[float64]{mine})
+	assert.Subset(t, q.All(), []*node[float64]{mine})
 	count := q.Size()
 	for _, one := range q.All() {
 		if one != mine && r.Intn(10) == 1 {
@@ -88,6 +88,6 @@ func TestGeneral(t *testing.T) {
 	assert.Equal(t, count, q.Size())
 	q.Reorganize()
 	assert.Equal(t, count, q.Size())
-	assert.Subset(t, q.All(), []quadtree.Node[float64]{mine})
-	assert.Subset(t, q.FindContainedByRect(mine.Rect), []quadtree.Node[float64]{mine})
+	assert.Subset(t, q.All(), []*node[float64]{mine})
+	assert.Subset(t, q.FindContainedByRect(mine.Rect), []*node[float64]{mine})
 }
