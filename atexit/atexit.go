@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"slices"
 	"sync"
 	"syscall"
 
@@ -62,21 +63,15 @@ func Register(f func()) int {
 func Unregister(id int) {
 	lock.Lock()
 	defer lock.Unlock()
-	for i := range pairs {
-		if pairs[i].id == id {
-			if i < len(pairs)-1 {
-				copy(pairs[i:], pairs[i+1:])
-			}
-			pairs = pairs[:len(pairs)-1]
-		}
-	}
+	pairs = slices.DeleteFunc(pairs, func(p pair) bool { return p.id == id })
 }
 
 // Exit runs any registered exit functions in the inverse order they were registered and then exits with the specified
 // status. If a previous call to Exit() is already being handled, this method does nothing but does not return.
 // Recursive calls to Exit() will trigger a panic, which the exit handling will catch and report, but will then proceed
 // with exit as normal. Note that once Exit() is called, no subsequent changes to the registered list of functions will
-// have an effect (i.e. you cannot Unregister() a function inside an exit handler to prevent its execution).
+// have an effect (i.e. you cannot Unregister() a function inside an exit handler to prevent its execution, nor can you
+// Register() a new function).
 func Exit(status int) {
 	var pcs [512]uintptr
 	recursive := false
@@ -94,7 +89,7 @@ func Exit(status int) {
 	}
 	var f []func()
 	lock.Lock()
-	wasExiting := exiting //nolint:ifshort // Cannot be merged into the if statement
+	wasExiting := exiting
 	if !wasExiting {
 		exiting = true
 		f = make([]func(), len(pairs))
