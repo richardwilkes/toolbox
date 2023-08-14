@@ -175,7 +175,7 @@ func (f Int[T]) Ceil() Int[T] {
 func (f Int[T]) Round() Int[T] {
 	one := Int[T](Multiplier[T]())
 	value := f.Trunc()
-	rem := f - value //nolint:ifshort // don't want to embed this in the if
+	rem := f - value
 	if rem >= one/2 {
 		value += one
 	} else if rem < -one/2 {

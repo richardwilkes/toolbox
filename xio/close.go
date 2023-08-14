@@ -10,9 +10,7 @@
 // Package xio provides i/o utilities.
 package xio
 
-import (
-	"io"
-)
+import "io"
 
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
 // streams of data where closing should never cause an error.
@@ -23,5 +21,5 @@ func CloseIgnoringErrors(closer io.Closer) {
 // DiscardAndCloseIgnoringErrors reads any content remaining in the body and discards it, then closes the body.
 func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
 	_, _ = io.Copy(io.Discard, rc) //nolint:errcheck // intentionally ignoring any error
-	_ = rc.Close()                 //nolint:errcheck // intentionally ignoring any error
+	CloseIgnoringErrors(rc)
 }
