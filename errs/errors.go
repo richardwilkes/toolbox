@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -201,9 +201,9 @@ func (d *Error) Detail(trimRuntime bool) string {
 	case 0:
 		return ""
 	case 1:
-		return d.errors[0].detail(true, trimRuntime)
+		return d.errors[0].detail(true, trimRuntime, false)
 	default:
-		return d.Message() + d.errors[0].detail(false, trimRuntime)
+		return d.Message() + d.errors[0].detail(false, trimRuntime, false)
 	}
 }
 
@@ -212,7 +212,14 @@ func (d *Error) StackTrace(trimRuntime bool) string {
 	if len(d.errors) == 0 {
 		return ""
 	}
-	return d.errors[0].detail(false, trimRuntime)
+	return d.errors[0].detail(false, trimRuntime, false)
+}
+
+func (d *Error) slogStackTrace() string {
+	if len(d.errors) == 0 {
+		return ""
+	}
+	return d.errors[0].detail(false, true, true)
 }
 
 // RawStackTrace returns the raw call stack pointers.

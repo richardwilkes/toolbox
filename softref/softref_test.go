@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/toolbox/log/jot"
 	"github.com/richardwilkes/toolbox/softref"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +39,7 @@ func (r *res) Release() {
 }
 
 func TestSoftRef(t *testing.T) {
-	p := softref.NewPool(&jot.Logger{})
+	p := softref.NewPool()
 	ch := make(chan string, 128)
 	sr1, existed := p.NewSoftRef(newRes("1", ch))
 	assert.False(t, existed)

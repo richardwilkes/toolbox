@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,18 +10,15 @@
 package softref
 
 import (
+	"log/slog"
 	"runtime"
 	"sync"
-
-	"github.com/richardwilkes/toolbox/log/jot"
-	"github.com/richardwilkes/toolbox/log/logadapter"
 )
 
 // Pool is used to track soft references to resources.
 type Pool struct {
-	logger logadapter.WarnLogger
-	lock   sync.Mutex
-	refs   map[string]*softRef
+	lock sync.Mutex
+	refs map[string]*softRef
 }
 
 // Resource is a resource that will be used with a pool.
@@ -44,17 +41,11 @@ type softRef struct {
 }
 
 // DefaultPool is a global default soft reference pool.
-var DefaultPool = NewPool(&jot.Logger{})
+var DefaultPool = NewPool()
 
-// NewPool creates a new soft reference pool. 'logger' may be nil.
-func NewPool(logger logadapter.WarnLogger) *Pool {
-	if logger == nil {
-		logger = &logadapter.Discarder{}
-	}
-	return &Pool{
-		logger: logger,
-		refs:   make(map[string]*softRef),
-	}
+// NewPool creates a new soft reference pool.
+func NewPool() *Pool {
+	return &Pool{refs: make(map[string]*softRef)}
 }
 
 // NewSoftRef returns a SoftRef to the given resource, along with a flag indicating if a reference existed previously.
@@ -88,10 +79,10 @@ func (p *Pool) finalizeSoftRef(ref *SoftRef) {
 			delete(p.refs, ref.Key)
 			r.resource.Release()
 		} else if r.count < 0 {
-			p.logger.Warnf("SoftRef for %v finalized but count is now %d", ref.Key, r.count)
+			slog.Debug("SoftRef count is invalid", "key", ref.Key, "count", r.count)
 		}
 	} else {
-		p.logger.Warnf("SoftRef for %v finalized but hash is not present", ref.Key)
+		slog.Debug("SoftRef finalized for unknown key", "key", ref.Key)
 	}
 	p.lock.Unlock()
 }

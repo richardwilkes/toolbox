@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -36,7 +36,7 @@ type detail struct {
 
 // Error implements the error interface.
 func (d *detail) Error() string {
-	return d.detail(true, true)
+	return d.detail(true, true, false)
 }
 
 // Cause returns the cause of this error, if any.
@@ -54,7 +54,7 @@ func (d *detail) Cause() error {
 func (d *detail) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		_, _ = state.Write([]byte(d.detail(true, !state.Flag('+'))))
+		_, _ = state.Write([]byte(d.detail(true, !state.Flag('+'), false)))
 	case 's':
 		_, _ = state.Write([]byte(d.message))
 	case 'q':
@@ -67,7 +67,7 @@ func (d *detail) StackTrace() []uintptr {
 	return d.stack
 }
 
-func (d *detail) detail(includeMessage, trimRuntime bool) string {
+func (d *detail) detail(includeMessage, trimRuntime, compact bool) string {
 	var buffer strings.Builder
 	if includeMessage {
 		buffer.WriteString(d.message)
@@ -79,7 +79,13 @@ func (d *detail) detail(includeMessage, trimRuntime bool) string {
 			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") || strings.HasPrefix(frame.Function, "testing.") || strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.")) {
 				continue
 			}
-			buffer.WriteString("\n    [")
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			if !compact {
+				buffer.WriteString("    ")
+			}
+			buffer.WriteByte('[')
 			buffer.WriteString(frame.Function)
 			buffer.WriteString("] ")
 			file := frame.File

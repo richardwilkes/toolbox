@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,7 +12,6 @@ package atexit
 
 import (
 	"fmt"
-	"log" //nolint:depguard // For the default recovery handler
 	"os"
 	"os/signal"
 	"runtime"
@@ -26,7 +25,7 @@ import (
 var (
 	// RecoveryHandler will be used to capture any panics caused by functions that have been installed when run during
 	// exit. It may be set to nil to silently ignore them.
-	RecoveryHandler errs.RecoveryHandler = func(err error) { log.Println(err) }
+	RecoveryHandler errs.RecoveryHandler = func(err error) { errs.Log(err) }
 	lock            sync.Mutex
 	nextID          = 1
 	pairs           []pair

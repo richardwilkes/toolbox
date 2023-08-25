@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,12 +11,11 @@ package toolbox
 
 import (
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/log/jot"
 )
 
-// Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via jot.Error.
+// Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via errs.Log.
 func Call(f func()) {
-	CallWithHandler(f, func(err error) { jot.Error(err) })
+	CallWithHandler(f, func(err error) { errs.Log(err) })
 }
 
 // CallWithHandler calls the provided function, safely wrapped in a errs.Recovery() handler.

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,21 +11,21 @@
 package txt
 
 import (
+	_ "embed"
 	"fmt"
 	"regexp"
 	"strings"
 
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/log/jot"
 )
+
+//go:embed all_caps.txt
+var stdAllCaps string
 
 // StdAllCaps provides the standard list of words that golint expects to be capitalized, found in the variable
 // 'commonInitialisms' in https://github.com/golang/lint/blob/master/lint.go#L771-L808
-var StdAllCaps = MustNewAllCaps("acl", "api", "ascii", "cpu", "css", "dns",
-	"eof", "guid", "html", "http", "https", "id", "ip", "json", "lhs", "qps",
-	"ram", "rhs", "rpc", "sla", "smtp", "sql", "ssh", "tcp", "tls", "ttl",
-	"udp", "ui", "uid", "uuid", "uri", "url", "utf8", "vm", "xml", "xmpp",
-	"xsrf", "xss")
+var StdAllCaps = MustNewAllCaps(strings.Split(NormalizeLineEndings(stdAllCaps), "\n")...)
 
 // AllCaps holds information for transforming text with ToCamelCaseWithExceptions.
 type AllCaps struct {
@@ -53,7 +53,8 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 func MustNewAllCaps(in ...string) *AllCaps {
 	result, err := NewAllCaps(in...)
 	if err != nil {
-		jot.Fatal(1, err)
+		errs.Log(err)
+		atexit.Exit(1)
 	}
 	return result
 }
