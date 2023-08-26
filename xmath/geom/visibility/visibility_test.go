@@ -1,4 +1,4 @@
-// Copyright ©2019-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,11 +17,11 @@ package visibility_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/toolbox/xmath/geom/poly"
 	"github.com/richardwilkes/toolbox/xmath/geom/visibility"
-	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/constraints"
 )
 
@@ -55,7 +55,7 @@ func visibilityHelper[T constraints.Float](t *testing.T, expected []poly.Polygon
 			X: center.X + xmath.Cos(angleInRadians)*distance,
 			Y: center.Y + xmath.Sin(angleInRadians)*distance,
 		}
-		assert.Equal(t, expected[i], vis.SetViewPoint(viewPt), "TestVisibility (%#T) #%d", viewPt.X, i)
+		check.Equal(t, expected[i], vis.SetViewPoint(viewPt), "TestVisibility (%#T) #%d", viewPt.X, i)
 	}
 }
 

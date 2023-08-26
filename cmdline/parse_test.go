@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,8 @@ package cmdline_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestParseCommandLine(t *testing.T) {
@@ -30,7 +30,7 @@ func TestParseCommandLine(t *testing.T) {
 	}
 	for i, one := range tests {
 		parts, err := cmdline.Parse(one.input)
-		assert.NoError(t, err, i)
-		assert.Equal(t, one.expected, parts, i)
+		check.NoError(t, err, i)
+		check.Equal(t, one.expected, parts, i)
 	}
 }

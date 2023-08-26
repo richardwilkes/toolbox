@@ -12,7 +12,7 @@ package poly_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/richardwilkes/toolbox/check"
 )
 
 func TestClipLine(t *testing.T) {
@@ -45,6 +45,6 @@ func TestClipLine(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		assert.Equal(t, test.expected, test.subject.ClipLine(test.clipping), "test case %d (%s)", i, test.name)
+		check.Equal(t, test.expected, test.subject.ClipLine(test.clipping), "test case %d (%s)", i, test.name)
 	}
 }

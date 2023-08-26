@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,9 +13,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLoadSaveJSON(t *testing.T) {
@@ -28,11 +27,11 @@ func TestLoadSaveJSON(t *testing.T) {
 		Count: 22,
 	}
 	f, err := os.CreateTemp("", "json_test")
-	require.NoError(t, err)
-	require.NoError(t, f.Close())
-	require.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0o600))
+	check.NoError(t, err)
+	check.NoError(t, f.Close())
+	check.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0o600))
 	var value2 data
-	require.NoError(t, fs.LoadJSON(f.Name(), &value2))
-	require.NoError(t, os.Remove(f.Name()))
-	assert.Equal(t, value, &value2)
+	check.NoError(t, fs.LoadJSON(f.Name(), &value2))
+	check.NoError(t, os.Remove(f.Name()))
+	check.Equal(t, value, &value2)
 }

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,9 +15,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/log/rotation"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 
 func TestRotator(t *testing.T) {
 	tmpdir, err := os.MkdirTemp("", "rotator_test_")
-	require.NoError(t, err)
+	check.NoError(t, err)
 	defer cleanup(t, tmpdir)
 
 	logFiles := []string{filepath.Join(tmpdir, "test.log")}
@@ -36,31 +35,31 @@ func TestRotator(t *testing.T) {
 	}
 
 	r, err := rotation.New(rotation.Path(logFiles[0]), rotation.MaxSize(maxSize), rotation.MaxBackups(maxBackups))
-	require.NoError(t, err)
+	check.NoError(t, err)
 	_, err = os.Stat(logFiles[0])
-	require.Error(t, err)
-	require.True(t, os.IsNotExist(err))
+	check.Error(t, err)
+	check.True(t, os.IsNotExist(err))
 	for i := 0; i < maxSize*(2+maxBackups); i++ {
 		_, err = fmt.Fprintln(r, i)
-		require.NoError(t, err)
+		check.NoError(t, err)
 	}
 	_, err = fmt.Fprintln(r, "goodbye")
-	assert.NoError(t, err)
-	require.NoError(t, r.Close())
+	check.NoError(t, err)
+	check.NoError(t, r.Close())
 	for _, f := range logFiles {
 		fi, fErr := os.Stat(f)
-		require.NoError(t, fErr)
-		assert.True(t, fi.Size() <= maxSize)
+		check.NoError(t, fErr)
+		check.True(t, fi.Size() <= maxSize)
 	}
 
 	r, err = rotation.New(rotation.Path(logFiles[0]), rotation.MaxSize(maxSize), rotation.MaxBackups(maxBackups))
-	require.NoError(t, err)
+	check.NoError(t, err)
 	_, err = fmt.Fprintln(r, "hello")
-	assert.NoError(t, err)
-	require.NoError(t, r.Close())
+	check.NoError(t, err)
+	check.NoError(t, r.Close())
 }
 
 func cleanup(t *testing.T, path string) {
 	t.Helper()
-	require.NoError(t, os.RemoveAll(path))
+	check.NoError(t, os.RemoveAll(path))
 }

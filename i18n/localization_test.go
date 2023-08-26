@@ -12,7 +12,7 @@ package i18n
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/richardwilkes/toolbox/check"
 )
 
 func TestLocalization(t *testing.T) {
@@ -23,14 +23,14 @@ func TestLocalization(t *testing.T) {
 	deDE["a"] = "2"
 	langMap["de_dn"] = deDE
 	Language = "de_dn.UTF-8"
-	assert.Equal(t, "2", Text("a"))
+	check.Equal(t, "2", Text("a"))
 	Language = "de_dn"
-	assert.Equal(t, "2", Text("a"))
+	check.Equal(t, "2", Text("a"))
 	Language = "de"
-	assert.Equal(t, "1", Text("a"))
+	check.Equal(t, "1", Text("a"))
 	Language = "xx"
-	assert.Equal(t, "a", Text("a"))
+	check.Equal(t, "a", Text("a"))
 	delete(langMap, "de_dn")
 	Language = "de"
-	assert.Equal(t, "1", Text("a"))
+	check.Equal(t, "1", Text("a"))
 }

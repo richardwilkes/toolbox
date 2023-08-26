@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,8 @@ package slice_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/collection/slice"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestZeroedDelete(t *testing.T) {
@@ -61,9 +61,9 @@ func TestZeroedDelete(t *testing.T) {
 	} {
 		theCopy := append([]*data{}, test.s...)
 		result := slice.ZeroedDelete(theCopy, test.i, test.j)
-		assert.Equal(t, result, test.want, "ZeroedDelete(%v, %d, %d) = %v, want %v", test.s, test.i, test.j, result, test.want)
+		check.Equal(t, result, test.want, "ZeroedDelete(%v, %d, %d) = %v, want %v", test.s, test.i, test.j, result, test.want)
 		for i := len(result); i < len(theCopy); i++ {
-			assert.Nil(t, theCopy[i], "residual element %d should have been nil, was %v", i, theCopy[i])
+			check.Nil(t, theCopy[i], "residual element %d should have been nil, was %v", i, theCopy[i])
 		}
 	}
 }

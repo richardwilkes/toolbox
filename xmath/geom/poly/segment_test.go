@@ -12,7 +12,7 @@ package poly_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/richardwilkes/toolbox/check"
 )
 
 type segmentTestCase struct {
@@ -115,7 +115,7 @@ func TestFindIntersection(t *testing.T) {
 	}
 	for i, test := range tests {
 		num, ip1, _ := test.s1.FindIntersection(test.s2, true)
-		assert.Equal(t, test.count, num, "test case %d (%s)", i, test.name)
-		assert.Equal(t, test.ip1, ip1, "test case %d (%s)", i, test.name)
+		check.Equal(t, test.count, num, "test case %d (%s)", i, test.name)
+		check.Equal(t, test.ip1, ip1, "test case %d (%s)", i, test.name)
 	}
 }

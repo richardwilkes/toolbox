@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,9 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/taskqueue"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -38,8 +37,8 @@ func TestSerialQueue(t *testing.T) {
 		submitSerial(q, i)
 	}
 	q.Shutdown()
-	assert.Equal(t, 199, prev)
-	assert.Equal(t, 200, counter)
+	check.Equal(t, 199, prev)
+	check.Equal(t, 200, counter)
 }
 
 func submitSerial(q *taskqueue.Queue, i int) {
@@ -59,8 +58,8 @@ func TestParallelQueue(t *testing.T) {
 		submitParallel(q, i)
 	}
 	q.Shutdown()
-	assert.EqualValues(t, parallelWorkSubmissions, count)
-	assert.EqualValues(t, workTotal, total)
+	check.Equal(t, parallelWorkSubmissions, int(count))
+	check.Equal(t, workTotal, int(total))
 }
 
 func submitParallel(q *taskqueue.Queue, i int) {
@@ -71,19 +70,19 @@ func submitParallel(q *taskqueue.Queue, i int) {
 }
 
 func TestRecovery(t *testing.T) {
-	require.Panics(t, boom)
+	check.Panics(t, boom)
 	logged := false
-	assert.NotPanics(t, func() {
+	check.NotPanics(t, func() {
 		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { logged = true }))
 		q.Submit(boom)
 		q.Shutdown()
 	})
-	assert.True(t, logged)
+	check.True(t, logged)
 }
 
 func TestRecoveryWithBadLogger(t *testing.T) {
-	require.Panics(t, boom)
-	assert.NotPanics(t, func() {
+	check.Panics(t, boom)
+	check.NotPanics(t, func() {
 		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { boom() }))
 		q.Submit(boom)
 		q.Shutdown()

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,8 @@ package txt_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFirstN(t *testing.T) {
@@ -32,7 +32,7 @@ func TestFirstN(t *testing.T) {
 		{In: "aécd", N: -1, Out: ""},
 	}
 	for i, one := range table {
-		assert.Equal(t, one.Out, txt.FirstN(one.In, one.N), "#%d", i)
+		check.Equal(t, one.Out, txt.FirstN(one.In, one.N), "#%d", i)
 	}
 }
 
@@ -52,6 +52,6 @@ func TestLastN(t *testing.T) {
 		{In: "aécd", N: -1, Out: ""},
 	}
 	for i, one := range table {
-		assert.Equal(t, one.Out, txt.LastN(one.In, one.N), "#%d", i)
+		check.Equal(t, one.Out, txt.LastN(one.In, one.N), "#%d", i)
 	}
 }

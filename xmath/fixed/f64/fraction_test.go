@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,17 +12,17 @@ package f64_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFraction(t *testing.T) {
-	assert.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("1/3").Value())
-	assert.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("1 / 3").Value())
-	assert.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("-1/-3").Value())
-	assert.Equal(t, f64.From[fixed.D4, int](0), f64.NewFraction[fixed.D4]("5/0").Value())
-	assert.Equal(t, f64.From[fixed.D4, int](5), f64.NewFraction[fixed.D4]("5/1").Value())
-	assert.Equal(t, f64.From[fixed.D4, int](-5), f64.NewFraction[fixed.D4]("-5/1").Value())
-	assert.Equal(t, f64.From[fixed.D4, int](-5), f64.NewFraction[fixed.D4]("5/-1").Value())
+	check.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("1/3").Value())
+	check.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("1 / 3").Value())
+	check.Equal(t, f64.FromStringForced[fixed.D4]("0.3333"), f64.NewFraction[fixed.D4]("-1/-3").Value())
+	check.Equal(t, f64.From[fixed.D4, int](0), f64.NewFraction[fixed.D4]("5/0").Value())
+	check.Equal(t, f64.From[fixed.D4, int](5), f64.NewFraction[fixed.D4]("5/1").Value())
+	check.Equal(t, f64.From[fixed.D4, int](-5), f64.NewFraction[fixed.D4]("-5/1").Value())
+	check.Equal(t, f64.From[fixed.D4, int](-5), f64.NewFraction[fixed.D4]("5/-1").Value())
 }

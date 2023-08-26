@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,9 +12,8 @@ package xlsx_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/formats/xlsx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRef(t *testing.T) {
@@ -30,16 +29,16 @@ func TestRef(t *testing.T) {
 		{"ZZ100", 701, 99},
 	} {
 		ref := xlsx.ParseRef(d.Text)
-		assert.Equal(t, d.Col, ref.Col, "column for index %d: %s", i, d.Text)
-		assert.Equal(t, d.Row, ref.Row, "row for index %d: %s", i, d.Text)
-		assert.Equal(t, d.Text, ref.String(), "String() for index %d: %s", i, d.Text)
+		check.Equal(t, d.Col, ref.Col, "column for index %d: %s", i, d.Text)
+		check.Equal(t, d.Row, ref.Row, "row for index %d: %s", i, d.Text)
+		check.Equal(t, d.Text, ref.String(), "String() for index %d: %s", i, d.Text)
 	}
 
 	for r := 0; r < 100; r++ {
 		for c := 0; c < 10000; c++ {
 			in := xlsx.Ref{Row: r, Col: c}
 			out := xlsx.ParseRef(in.String())
-			require.Equal(t, in, out)
+			check.Equal(t, in, out)
 		}
 	}
 }

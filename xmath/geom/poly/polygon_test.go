@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,9 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type ptCheck struct {
@@ -89,8 +88,8 @@ func TestContains(t *testing.T) {
 	}
 	for i, test := range tests {
 		for j, tc := range test.checks {
-			assert.Equal(t, tc.in, test.p.Contains(tc.pt), "test case %d:%d", i, j)
-			assert.Equal(t, tc.inEvenOdd, test.p.ContainsEvenOdd(tc.pt), "test case for evenodd %d:%d", i, j)
+			check.Equal(t, tc.in, test.p.Contains(tc.pt), "test case %d:%d", i, j)
+			check.Equal(t, tc.inEvenOdd, test.p.ContainsEvenOdd(tc.pt), "test case for evenodd %d:%d", i, j)
 		}
 	}
 }
@@ -255,10 +254,10 @@ func TestNonReductiveSegmentDivisions(t *testing.T) {
 			subject := rotate(one.subject, angle)
 			clipping := rotate(one.clipping, angle)
 			// Using require to force termination, since otherwise this could go on for quite some time
-			require.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Union(clipping) }), "test case union %d:%d", i, j)
-			require.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Intersect(clipping) }), "test case intersect %d:%d", i, j)
-			require.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Subtract(clipping) }), "test case subtract %d:%d", i, j)
-			require.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Xor(clipping) }), "test case xor %d:%d", i, j)
+			check.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Union(clipping) }), "test case union %d:%d", i, j)
+			check.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Intersect(clipping) }), "test case intersect %d:%d", i, j)
+			check.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Subtract(clipping) }), "test case subtract %d:%d", i, j)
+			check.True(t, doTimedFunc(func(ch chan Polygon) { ch <- subject.Xor(clipping) }), "test case xor %d:%d", i, j)
 		}
 	}
 }

@@ -12,7 +12,7 @@ package poly_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/richardwilkes/toolbox/check"
 )
 
 func TestUnion(t *testing.T) {
@@ -254,6 +254,6 @@ func TestUnion(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		assert.Equal(t, test.expected, test.subject.Union(test.clipping), "test case %d (%s)", i, test.name)
+		check.Equal(t, test.expected, test.subject.Union(test.clipping), "test case %d (%s)", i, test.name)
 	}
 }

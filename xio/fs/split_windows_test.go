@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestWindowsSplit(t *testing.T) {
@@ -28,6 +27,6 @@ func TestWindowsSplit(t *testing.T) {
 		},
 	}
 	for i, one := range data {
-		assert.Equal(t, one.out, fs.Split(one.in), "%d", i)
+		check.Equal(t, one.out, fs.Split(one.in), "%d", i)
 	}
 }

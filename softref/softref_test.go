@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/softref"
-	"github.com/stretchr/testify/assert"
 )
 
 type res struct {
@@ -42,25 +42,25 @@ func TestSoftRef(t *testing.T) {
 	p := softref.NewPool()
 	ch := make(chan string, 128)
 	sr1, existed := p.NewSoftRef(newRes("1", ch))
-	assert.False(t, existed)
+	check.False(t, existed)
 	_, existed = p.NewSoftRef(newRes("2", ch))
-	assert.False(t, existed)
+	check.False(t, existed)
 	sr3, existed := p.NewSoftRef(newRes("3", ch))
-	assert.False(t, existed)
+	check.False(t, existed)
 	r4 := newRes("4", ch)
 	sr4a, existed := p.NewSoftRef(r4)
-	assert.False(t, existed)
+	check.False(t, existed)
 	sr4b, existed := p.NewSoftRef(r4)
-	assert.True(t, existed)
+	check.True(t, existed)
 	lookFor(t, "2", ch)
 	key := sr3.Resource.(*res).key
 	lookFor(t, key, ch)
 	key = sr1.Resource.(*res).key
 	lookFor(t, key, ch)
 	key = sr4a.Resource.(*res).key
-	assert.Equal(t, key, sr4b.Resource.(*res).key)
+	check.Equal(t, key, sr4b.Resource.(*res).key)
 	lookForExpectingTimeout(t, ch)
-	assert.Equal(t, "4", sr4b.Key) // Keeps refs to r4 alive for the above call
+	check.Equal(t, "4", sr4b.Key) // Keeps refs to r4 alive for the above call
 	lookFor(t, key, ch)
 }
 
@@ -69,9 +69,9 @@ func lookFor(t *testing.T, key string, ch <-chan string) {
 	runtime.GC()
 	select {
 	case <-time.After(time.Second):
-		assert.Failf(t, "timed out waiting for %s", key)
+		t.Errorf("timed out waiting for %s", key)
 	case k := <-ch:
-		assert.Equal(t, key, k)
+		check.Equal(t, key, k)
 	}
 }
 
@@ -81,6 +81,6 @@ func lookForExpectingTimeout(t *testing.T, ch <-chan string) {
 	select {
 	case <-time.After(time.Second):
 	case k := <-ch:
-		assert.Failf(t, "received key '%s' when none expected", k)
+		t.Errorf("received key '%s' when none expected", k)
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,8 @@ package txt_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCollapseSpaces(t *testing.T) {
@@ -27,6 +27,6 @@ func TestCollapseSpaces(t *testing.T) {
 		" ", "",
 	}
 	for i := 0; i < len(data); i += 2 {
-		assert.Equal(t, data[i+1], txt.CollapseSpaces(data[i]))
+		check.Equal(t, data[i+1], txt.CollapseSpaces(data[i]))
 	}
 }

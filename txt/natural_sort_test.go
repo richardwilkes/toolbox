@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,8 +17,8 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/stretchr/testify/assert"
 )
 
 var benchSet []string
@@ -70,7 +70,7 @@ func TestNaturalLess(t *testing.T) {
 		{"1.2.34", "1.11.11", false, true},
 	}
 	for _, v := range testset {
-		assert.Equal(t, v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
+		check.Equal(t, v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
 	}
 }
 
