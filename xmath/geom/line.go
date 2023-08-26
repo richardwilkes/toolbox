@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -63,15 +63,14 @@ func LineIntersection[T constraints.Float](a1, a2, b1, b2 Point[T]) []Point[T] {
 			}
 			left := max(0, min(ub1, ub2))
 			right := min(1, max(ub1, ub2))
-			if left < right {
-				return []Point[T]{
-					{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
-					{X: a2.X*right + a1.X*(1-right), Y: a2.Y*right + a1.Y*(1-right)},
-				}
-			} else if left == right {
+			if left == right {
 				return []Point[T]{
 					{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
 				}
+			}
+			return []Point[T]{
+				{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
+				{X: a2.X*right + a1.X*(1-right), Y: a2.Y*right + a1.Y*(1-right)},
 			}
 		}
 	}
