@@ -13,6 +13,7 @@ package txt
 import (
 	_ "embed"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strings"
 
@@ -53,7 +54,7 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 func MustNewAllCaps(in ...string) *AllCaps {
 	result, err := NewAllCaps(in...)
 	if err != nil {
-		errs.Log(err)
+		slog.Error(err.Error())
 		atexit.Exit(1)
 	}
 	return result
