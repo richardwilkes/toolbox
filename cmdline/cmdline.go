@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -93,9 +93,9 @@ func (cl *CmdLine) Parse(args []string) []string {
 	state := lookForOptionState
 	var remainingArgs []string
 	options := cl.availableOptions()
-	max := len(args)
+	maximum := len(args)
 	seen := collection.NewSet[string]()
-	for i := 0; i < max; i++ {
+	for i := 0; i < maximum; i++ {
 		arg := args[i]
 		switch state {
 		case lookForOptionState:
@@ -108,7 +108,7 @@ func (cl *CmdLine) Parse(args []string) []string {
 				insert, err := cl.loadArgsFromFile(path)
 				cl.FatalIfError(err)
 				args = append(args[:i], append(insert, args[i+1:]...)...)
-				max = len(args)
+				maximum = len(args)
 				i--
 				continue
 			}

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -102,7 +102,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 }
 
 func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
-	max := f64.Int[T](f64.Min)
+	maximum := f64.Int[T](f64.Min)
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -110,13 +110,13 @@ func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		max = max.Max(value)
+		maximum = maximum.Max(value)
 	}
-	return max, nil
+	return maximum, nil
 }
 
 func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
-	min := f64.Int[T](f64.Max)
+	minimum := f64.Int[T](f64.Max)
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -124,9 +124,9 @@ func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		min = min.Min(value)
+		minimum = minimum.Min(value)
 	}
-	return min, nil
+	return minimum, nil
 }
 
 func fixedNaturalLog[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
