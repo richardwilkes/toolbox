@@ -74,7 +74,8 @@ func WrapTyped(cause error) *Error {
 	}
 	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
 	// to avoid losing information and still return a *Error
-	if err, ok := cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+	//nolint:errorlint // See note above
+	if err, ok := cause.(*Error); ok {
 		return err
 	}
 	return &Error{
@@ -126,13 +127,15 @@ func NewWithCausef(cause error, format string, v ...any) *Error {
 
 // Append one or more errors to an existing error. err may be nil.
 func Append(err error, errs ...error) *Error {
-	switch e := err.(type) { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+	//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+	switch e := err.(type) {
 	case *Error:
 		if e == nil {
 			e = &Error{}
 		}
 		for _, one := range errs {
-			switch typedErr := one.(type) { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+			//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+			switch typedErr := one.(type) {
 			case *Error:
 				if typedErr != nil {
 					e.errors = append(e.errors, typedErr.errors...)
@@ -190,20 +193,21 @@ func (d *Error) Message() string {
 }
 
 // Error implements the error interface.
-func (d Error) Error() string {
+func (d *Error) Error() string {
 	return d.Detail(true)
 }
 
 // Detail returns the fully detailed error message, which includes the primary message, the call stack, and potentially
-// one or more chained causes.
+// one or more chained causes. Note that any included stack trace will be only for the first error in the case where
+// multiple errors were accumulated into one via calls to .Append().
 func (d *Error) Detail(trimRuntime bool) string {
 	switch len(d.errors) {
 	case 0:
 		return ""
 	case 1:
-		return d.errors[0].detail(true, trimRuntime, false)
+		return d.errors[0].Detail(trimRuntime)
 	default:
-		return d.Message() + d.errors[0].detail(false, trimRuntime, false)
+		return strings.Join([]string{d.Message(), d.errors[0].StackTrace(trimRuntime)}, "\n")
 	}
 }
 
@@ -212,14 +216,7 @@ func (d *Error) StackTrace(trimRuntime bool) string {
 	if len(d.errors) == 0 {
 		return ""
 	}
-	return d.errors[0].detail(false, trimRuntime, false)
-}
-
-func (d *Error) slogStackTrace() string {
-	if len(d.errors) == 0 {
-		return ""
-	}
-	return d.errors[0].detail(false, true, true)
+	return d.errors[0].StackTrace(trimRuntime)
 }
 
 // RawStackTrace returns the raw call stack pointers.
@@ -227,7 +224,7 @@ func (d *Error) RawStackTrace() []uintptr {
 	if len(d.errors) == 0 {
 		return nil
 	}
-	return d.errors[0].StackTrace()
+	return d.errors[0].stack
 }
 
 // ErrorOrNil returns an error interface if this Error represents one or more errors, or nil if it is empty.
@@ -252,7 +249,7 @@ func (d *Error) Unwrap() error {
 	if len(d.errors) == 0 {
 		return nil
 	}
-	return d.errors[0].Cause()
+	return d.errors[0].Unwrap()
 }
 
 // Format implements the fmt.Formatter interface.
@@ -269,6 +266,6 @@ func (d *Error) Format(state fmt.State, verb rune) {
 	case 's':
 		_, _ = state.Write([]byte(d.Message()))
 	case 'q':
-		fmt.Fprintf(state, "%q", d.Message())
+		_, _ = fmt.Fprintf(state, "%q", d.Message())
 	}
 }

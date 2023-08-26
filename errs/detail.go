@@ -18,29 +18,24 @@ import (
 )
 
 var (
-	_ Causer        = &detail{}
+	_ StackError    = &detail{}
 	_ fmt.Formatter = &detail{}
 )
 
-// Causer defines the interface for determining the error that caused an error.
-type Causer interface {
-	Cause() error
-}
-
 type detail struct {
 	message string
-	stack   []uintptr
 	cause   error
+	stack   []uintptr
 	wrapped bool
 }
 
 // Error implements the error interface.
 func (d *detail) Error() string {
-	return d.detail(true, true, false)
+	return d.detail(true, true)
 }
 
-// Cause returns the cause of this error, if any.
-func (d *detail) Cause() error {
+// Unwrap implements errors.Unwrap and returns the underlying cause, if any.
+func (d *detail) Unwrap() error {
 	return d.cause
 }
 
@@ -54,20 +49,30 @@ func (d *detail) Cause() error {
 func (d *detail) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		_, _ = state.Write([]byte(d.detail(true, !state.Flag('+'), false)))
+		_, _ = state.Write([]byte(d.detail(true, !state.Flag('+'))))
 	case 's':
 		_, _ = state.Write([]byte(d.message))
 	case 'q':
-		fmt.Fprintf(state, "%q", d.message)
+		_, _ = fmt.Fprintf(state, "%q", d.message)
 	}
 }
 
-// StackTrace returns the raw call stack pointers.
-func (d *detail) StackTrace() []uintptr {
-	return d.stack
+// Message implements the StackError interface.
+func (d *detail) Message() string {
+	return d.message
 }
 
-func (d *detail) detail(includeMessage, trimRuntime, compact bool) string {
+// StackTrace implements the StackError interface.
+func (d *detail) StackTrace(trimRuntime bool) string {
+	return d.detail(false, trimRuntime)
+}
+
+// Detail implements the StackError interface.
+func (d *detail) Detail(trimRuntime bool) string {
+	return d.detail(true, trimRuntime)
+}
+
+func (d *detail) detail(includeMessage, trimRuntime bool) string {
 	var buffer strings.Builder
 	if includeMessage {
 		buffer.WriteString(d.message)
@@ -76,16 +81,15 @@ func (d *detail) detail(includeMessage, trimRuntime, compact bool) string {
 	for {
 		frame, more := frames.Next()
 		if frame.Function != "" {
-			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") || strings.HasPrefix(frame.Function, "testing.") || strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.")) {
+			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") ||
+				strings.HasPrefix(frame.Function, "testing.") ||
+				strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.")) {
 				continue
 			}
 			if buffer.Len() != 0 {
 				buffer.WriteByte('\n')
 			}
-			if !compact {
-				buffer.WriteString("    ")
-			}
-			buffer.WriteByte('[')
+			buffer.WriteString("    [")
 			buffer.WriteString(frame.Function)
 			buffer.WriteString("] ")
 			file := frame.File
@@ -119,7 +123,8 @@ func (d *detail) detail(includeMessage, trimRuntime, compact bool) string {
 	}
 	if d.cause != nil && !d.wrapped {
 		buffer.WriteString("\n  Caused by: ")
-		if detailed, ok := d.cause.(*Error); ok { //nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+		//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+		if detailed, ok := d.cause.(*Error); ok {
 			buffer.WriteString(detailed.Detail(trimRuntime))
 		} else {
 			buffer.WriteString(d.cause.Error())

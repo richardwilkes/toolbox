@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,132 +16,130 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func ExampleError() {
 	var bad *int
 	func() int {
-		defer func() {
-			if r := recover(); r != nil {
-				if err, ok := r.(error); ok {
-					fmt.Println(errs.NewWithCause("Caught panic", err))
-				}
-			}
-		}()
+		defer errs.Recovery(func(err error) { fmt.Println(err) })
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
+	// Output: recovered from panic
+	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError.func1] errors_test.go:27
+	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError] errors_test.go:28
+	//     [main.main] _testmain.go:87
+	//   Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
 func TestAppendError(t *testing.T) {
 	original := errs.New("foo")
 	result := errs.Append(original, errs.New("bar"))
-	require.Equal(t, result.Count(), 2, "Wrong length")
+	check.Equal(t, 2, result.Count())
 }
 
 func TestAppendToEmptyError(t *testing.T) {
 	original := &errs.Error{}
 	result := errs.Append(original, errs.New("bar"))
-	require.Equal(t, result.Count(), 1, "Wrong length")
+	check.Equal(t, 1, result.Count())
 }
 
 func TestAppendFlattening(t *testing.T) {
 	original := errs.New("foo")
 	result := errs.Append(original, errs.Append(nil, errs.New("foo"), errs.New("bar")))
-	require.Equal(t, result.Count(), 3, "Wrong length")
+	check.Equal(t, 3, result.Count())
 }
 
 func TestAppendTypedNil(t *testing.T) {
 	var e *errs.Error
 	result := errs.Append(e, errs.New("bar"))
-	require.Equal(t, result.Count(), 1, "Wrong length")
+	check.Equal(t, 1, result.Count())
 }
 
 func TestAppendNilError(t *testing.T) {
 	var err error
 	result := errs.Append(err, errs.New("bar"))
-	require.Equal(t, result.Count(), 1, "Wrong length")
+	check.Equal(t, 1, result.Count())
 }
 
 func TestAppendNilErrorArg(t *testing.T) {
 	var err error
 	var nilErr *errs.Error
 	result := errs.Append(err, nilErr)
-	require.Equal(t, result.Count(), 0, "Wrong length")
+	check.Equal(t, 0, result.Count())
 }
 
 func TestAppendNilErrorInterfaceArg(t *testing.T) {
 	var err error
 	var nilErr error
 	result := errs.Append(err, nilErr)
-	require.Equal(t, result.Count(), 0, "Wrong length")
+	check.Equal(t, 0, result.Count())
 }
 
 func TestAppendNonErrorError(t *testing.T) {
 	original := errors.New("foo")
 	result := errs.Append(original, errs.New("bar"))
-	require.Equal(t, result.Count(), 2, "Wrong length")
+	check.Equal(t, 2, result.Count())
 }
 
 func TestAppendNonErrorErrorWithAppend(t *testing.T) {
 	original := errors.New("foo")
 	result := errs.Append(original, errs.Append(nil, errors.New("bar")))
-	require.Equal(t, result.Count(), 2, "Wrong length")
+	check.Equal(t, 2, result.Count())
 }
 
 func TestErrorOrNil(t *testing.T) {
 	var err errs.Error
-	require.Nil(t, err.ErrorOrNil(), "Should have been nil")
+	check.Nil(t, err.ErrorOrNil())
 }
 
 func TestErrorOrNilPointer(t *testing.T) {
 	var err *errs.Error
-	require.Nil(t, err.ErrorOrNil(), "Should have been nil")
+	check.Nil(t, err.ErrorOrNil())
 }
 
 func TestWrap(t *testing.T) {
 	notError := errors.New("foo")
 	result := errs.Wrap(notError)
-	require.NotNil(t, result)
-	require.Equal(t, 1, strings.Count(result.Error(), "\n"), "Should have 1 embedded return")
+	check.NotNil(t, result)
+	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
 }
 
 func TestDoubleWrap(t *testing.T) {
-	errError := errs.New("foo")
+	errError := error(errs.New("foo"))
 
 	// Verify *errs.Error doesn't get wrapped again
-	require.Equal(t, errError, errs.Wrap(errError))
+	check.Equal(t, errError, errs.Wrap(errError))
 
 	// Wrap the error using the standard library
 	wrappedErr := fmt.Errorf("bar: %w", errError)
-	require.Equal(t, errError, errors.Unwrap(wrappedErr))
+	check.Equal(t, errError, errors.Unwrap(wrappedErr))
 
-	// Verify that an error with an *errs.Error cause doesn't get wrapped again
-	require.Equal(t, wrappedErr, errs.Wrap(wrappedErr))
+	// Verify that an error with an embedded *errs.Error cause doesn't get wrapped again
+	check.Equal(t, wrappedErr, errs.Wrap(wrappedErr))
 }
 
 func TestDoubleWrapTyped(t *testing.T) {
 	errError := errs.New("foo")
 
 	// Verify *errs.Error doesn't get wrapped again
-	require.Equal(t, errError, errs.WrapTyped(errError))
+	check.Equal(t, errError, errs.WrapTyped(errError))
 
 	// Wrap the error using the standard library
 	wrappedErr := fmt.Errorf("bar: %w", errError)
-	require.Equal(t, errError, errors.Unwrap(wrappedErr))
+	check.Equal(t, error(errError), errors.Unwrap(wrappedErr))
 
 	// It seems the best thing to do here is to wrap again
 	rewrappedError := errs.WrapTyped(wrappedErr)
-	require.Equal(t, wrappedErr, errors.Unwrap(rewrappedError))
+	check.Equal(t, wrappedErr, errors.Unwrap(rewrappedError))
 }
 
 func TestIs(t *testing.T) {
 	err := errs.Wrap(os.ErrNotExist)
-	require.NotNil(t, err)
-	require.True(t, errors.Is(err, os.ErrNotExist))
-	require.False(t, errors.Is(err, os.ErrClosed))
+	check.NotNil(t, err)
+	check.True(t, errors.Is(err, os.ErrNotExist))
+	check.False(t, errors.Is(err, os.ErrClosed))
 }
 
 type customErr struct {
@@ -155,42 +153,42 @@ func (e *customErr) Error() string {
 func TestAs(t *testing.T) {
 	original := &customErr{value: "err"}
 	wrapped := errs.Wrap(original)
-	require.NotNil(t, wrapped)
+	check.NotNil(t, wrapped)
 	var target *customErr
-	require.True(t, errors.As(wrapped, &target))
-	require.Equal(t, original, target)
+	check.True(t, errors.As(wrapped, &target))
+	check.Equal(t, original, target)
 }
 
 func TestNew(t *testing.T) {
 	result := errs.New("foo")
-	require.Equal(t, 1, strings.Count(result.Error(), "\n"), "Should have 1 embedded return")
+	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
 }
 
 func TestNewWithCause(t *testing.T) {
 	cause := errs.New("bar")
 	result := errs.NewWithCause("foo", cause)
-	require.Equal(t, 3, strings.Count(result.Error(), "\n"), "Should have 3 embedded returns")
+	check.Equal(t, 3, strings.Count(result.Error(), "\n"))
 }
 
 func TestFormat(t *testing.T) {
 	err := errs.New("test")
-	assert.Equal(t, "test", fmt.Sprintf("%s", err)) //nolint:gocritic // Testing %s, so necessary
-	assert.Equal(t, `"test"`, fmt.Sprintf("%q", err))
-	result := fmt.Sprintf("%v", err) //nolint:gocritic // Testing %v, so necessary
-	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
-	assert.NotContains(t, result, "[runtime.goexit]")
+	check.Equal(t, "test", fmt.Sprintf("%s", err))
+	check.Equal(t, `"test"`, fmt.Sprintf("%q", err))
+	result := fmt.Sprintf("%v", err)
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", err)
-	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
-	assert.Contains(t, result, "[runtime.goexit]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[runtime.goexit]")
 
 	wrappedErrors := err.WrappedErrors()
-	require.GreaterOrEqual(t, 1, len(wrappedErrors))
-	assert.Equal(t, "test", fmt.Sprintf("%s", wrappedErrors[0])) //nolint:gocritic // Testing %s, so necessary
-	assert.Equal(t, `"test"`, fmt.Sprintf("%q", wrappedErrors[0]))
+	check.Equal(t, 1, len(wrappedErrors))
+	check.Equal(t, "test", fmt.Sprintf("%s", wrappedErrors[0])) //nolint:gocritic // Testing %s, so necessary
+	check.Equal(t, `"test"`, fmt.Sprintf("%q", wrappedErrors[0]))
 	result = fmt.Sprintf("%v", wrappedErrors[0]) //nolint:gocritic // Testing %v, so necessary
-	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
-	assert.NotContains(t, result, "[runtime.goexit]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", wrappedErrors[0])
-	assert.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
-	assert.Contains(t, result, "[runtime.goexit]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[runtime.goexit]")
 }
