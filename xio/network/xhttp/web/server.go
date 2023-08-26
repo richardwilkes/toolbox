@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -22,10 +22,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/log/logadapter"
+	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/network"
 	"github.com/richardwilkes/toolbox/xio/network/xhttp"
 )
@@ -116,7 +116,8 @@ func (s *Server) Run() error {
 			} else {
 				bytes = "byte"
 			}
-			s.Logger.Infof("%d | %s.%03dms | %s %s | %s %s", sw.Status(), humanize.Comma(millis), micros, humanize.Comma(int64(written)), bytes, req.Method, req.URL)
+			s.Logger.Infof("%d | %s.%03dms | %s %s | %s %s", sw.Status(), txt.Comma(millis), micros, txt.Comma(written),
+				bytes, req.Method, req.URL)
 		}()
 		handler.ServeHTTP(sw, req)
 	})

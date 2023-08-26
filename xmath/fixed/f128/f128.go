@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dustin/go-humanize"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -302,35 +301,7 @@ func (f Int[T]) CommaWithSign() string {
 
 // Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f Int[T]) Comma() string {
-	var iStr string
-	mult := multiplier[T]()
-	integer := f.data.Div(mult)
-	if integer.IsInt64() {
-		iStr = humanize.Comma(integer.AsInt64())
-	} else {
-		iStr = humanize.BigComma(integer.AsBigInt())
-	}
-	fraction := f.data.Sub(integer.Mul(mult))
-	if fraction.IsZero() {
-		return iStr
-	}
-	if fraction.Sign() < 0 {
-		fraction = fraction.Neg()
-	}
-	fStr := fraction.Add(mult).String()
-	for i := len(fStr) - 1; i > 0; i-- {
-		if fStr[i] != '0' {
-			fStr = fStr[1 : i+1]
-			break
-		}
-	}
-	var neg string
-	if integer.IsZero() && f.data.Sign() < 0 {
-		neg = "-"
-	} else {
-		neg = ""
-	}
-	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
+	return txt.CommaFromStringNum(f.String())
 }
 
 // StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.

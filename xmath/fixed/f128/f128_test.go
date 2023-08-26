@@ -1,6 +1,4 @@
-// Code created from "fixed_test.go.tmpl" - don't edit by hand
-//
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,11 +14,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xmath/fixed"
 	"github.com/richardwilkes/toolbox/xmath/fixed/f128"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,37 +30,37 @@ func TestConversion(t *testing.T) {
 }
 
 func testConversion[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, "0.1", f128.From[T, float64](0.1).String())
-	assert.Equal(t, "0.2", f128.From[T, float64](0.2).String())
-	assert.Equal(t, "0.3", f128.FromStringForced[T]("0.3").String())
-	assert.Equal(t, "-0.1", f128.From[T, float64](-0.1).String())
-	assert.Equal(t, "-0.2", f128.From[T, float64](-0.2).String())
-	assert.Equal(t, "-0.3", f128.FromStringForced[T]("-0.3").String())
+	check.Equal(t, "0.1", f128.From[T, float64](0.1).String())
+	check.Equal(t, "0.2", f128.From[T, float64](0.2).String())
+	check.Equal(t, "0.3", f128.FromStringForced[T]("0.3").String())
+	check.Equal(t, "-0.1", f128.From[T, float64](-0.1).String())
+	check.Equal(t, "-0.2", f128.From[T, float64](-0.2).String())
+	check.Equal(t, "-0.3", f128.FromStringForced[T]("-0.3").String())
 	threeFill := strings.Repeat("3", f128.MaxDecimalDigits[T]())
-	assert.Equal(t, "0."+threeFill, f128.FromStringForced[T]("0.33333333").String())
-	assert.Equal(t, "-0."+threeFill, f128.FromStringForced[T]("-0.33333333").String())
+	check.Equal(t, "0."+threeFill, f128.FromStringForced[T]("0.33333333").String())
+	check.Equal(t, "-0."+threeFill, f128.FromStringForced[T]("-0.33333333").String())
 	sixFill := strings.Repeat("6", f128.MaxDecimalDigits[T]())
-	assert.Equal(t, "0."+sixFill, f128.FromStringForced[T]("0.66666666").String())
-	assert.Equal(t, "-0."+sixFill, f128.FromStringForced[T]("-0.66666666").String())
-	assert.Equal(t, "1", f128.From[T, float64](1.0000004).String())
-	assert.Equal(t, "1", f128.From[T, float64](1.00000049).String())
-	assert.Equal(t, "1", f128.From[T, float64](1.0000005).String())
-	assert.Equal(t, "1", f128.From[T, float64](1.0000009).String())
-	assert.Equal(t, "-1", f128.From[T, float64](-1.0000004).String())
-	assert.Equal(t, "-1", f128.From[T, float64](-1.00000049).String())
-	assert.Equal(t, "-1", f128.From[T, float64](-1.0000005).String())
-	assert.Equal(t, "-1", f128.From[T, float64](-1.0000009).String())
+	check.Equal(t, "0."+sixFill, f128.FromStringForced[T]("0.66666666").String())
+	check.Equal(t, "-0."+sixFill, f128.FromStringForced[T]("-0.66666666").String())
+	check.Equal(t, "1", f128.From[T, float64](1.0000004).String())
+	check.Equal(t, "1", f128.From[T, float64](1.00000049).String())
+	check.Equal(t, "1", f128.From[T, float64](1.0000005).String())
+	check.Equal(t, "1", f128.From[T, float64](1.0000009).String())
+	check.Equal(t, "-1", f128.From[T, float64](-1.0000004).String())
+	check.Equal(t, "-1", f128.From[T, float64](-1.00000049).String())
+	check.Equal(t, "-1", f128.From[T, float64](-1.0000005).String())
+	check.Equal(t, "-1", f128.From[T, float64](-1.0000009).String())
 	zeroFill := strings.Repeat("0", f128.MaxDecimalDigits[T]()-1)
-	assert.Equal(t, "0."+zeroFill+"4", f128.FromStringForced[T]("0."+zeroFill+"405").String())
-	assert.Equal(t, "-0."+zeroFill+"4", f128.FromStringForced[T]("-0."+zeroFill+"405").String())
+	check.Equal(t, "0."+zeroFill+"4", f128.FromStringForced[T]("0."+zeroFill+"405").String())
+	check.Equal(t, "-0."+zeroFill+"4", f128.FromStringForced[T]("-0."+zeroFill+"405").String())
 
 	v, err := f128.FromString[T]("33.0")
-	assert.NoError(t, err)
-	assert.Equal(t, v, f128.From[T, int](33))
+	check.NoError(t, err)
+	check.Equal(t, v, f128.From[T, int](33))
 
 	v, err = f128.FromString[T]("33.00000000000000000000")
-	assert.NoError(t, err)
-	assert.Equal(t, v, f128.From[T, int](33))
+	check.NoError(t, err)
+	check.Equal(t, v, f128.From[T, int](33))
 }
 
 func TestAddSub(t *testing.T) {
@@ -83,13 +79,13 @@ func testAddSub[T fixed.Dx](t *testing.T) {
 	oneAndTwoThirds := f128.FromStringForced[T]("1.666666")
 	nineThousandSix := f128.From[T, int](9006)
 	two := f128.From[T, int](2)
-	assert.Equal(t, "0."+strings.Repeat("9", f128.MaxDecimalDigits[T]()), oneThird.Add(oneThird).Add(oneThird).String())
-	assert.Equal(t, "0."+strings.Repeat("6", f128.MaxDecimalDigits[T]()-1)+"7", one.Sub(oneThird).String())
-	assert.Equal(t, "-1."+strings.Repeat("6", f128.MaxDecimalDigits[T]()), negTwoThirds.Sub(one).String())
-	assert.Equal(t, "0", negTwoThirds.Sub(one).Add(oneAndTwoThirds).String())
-	assert.Equal(t, f128.From[T, int](10240), f128.From[T, int](1234).Add(nineThousandSix))
-	assert.Equal(t, "10240", f128.From[T, int](1234).Add(nineThousandSix).String())
-	assert.Equal(t, "-1.5", f128.From[T, float64](0.5).Sub(two).String())
+	check.Equal(t, "0."+strings.Repeat("9", f128.MaxDecimalDigits[T]()), oneThird.Add(oneThird).Add(oneThird).String())
+	check.Equal(t, "0."+strings.Repeat("6", f128.MaxDecimalDigits[T]()-1)+"7", one.Sub(oneThird).String())
+	check.Equal(t, "-1."+strings.Repeat("6", f128.MaxDecimalDigits[T]()), negTwoThirds.Sub(one).String())
+	check.Equal(t, "0", negTwoThirds.Sub(one).Add(oneAndTwoThirds).String())
+	check.Equal(t, f128.From[T, int](10240), f128.From[T, int](1234).Add(nineThousandSix))
+	check.Equal(t, "10240", f128.From[T, int](1234).Add(nineThousandSix).String())
+	check.Equal(t, "-1.5", f128.From[T, float64](0.5).Sub(two).String())
 	ninetyPointZeroSix := f128.FromStringForced[T]("90.06")
 	twelvePointThirtyFour := f128.FromStringForced[T]("12.34")
 	var answer string
@@ -98,8 +94,8 @@ func testAddSub[T fixed.Dx](t *testing.T) {
 	} else {
 		answer = "102.3"
 	}
-	assert.Equal(t, f128.FromStringForced[T](answer), twelvePointThirtyFour.Add(ninetyPointZeroSix))
-	assert.Equal(t, answer, twelvePointThirtyFour.Add(ninetyPointZeroSix).String())
+	check.Equal(t, f128.FromStringForced[T](answer), twelvePointThirtyFour.Add(ninetyPointZeroSix))
+	check.Equal(t, answer, twelvePointThirtyFour.Add(ninetyPointZeroSix).String())
 }
 
 func TestMulDiv(t *testing.T) {
@@ -115,11 +111,11 @@ func testMulDiv[T fixed.Dx](t *testing.T) {
 	pointThree := f128.FromStringForced[T]("0.3")
 	negativePointThree := f128.FromStringForced[T]("-0.3")
 	threeFill := strings.Repeat("3", f128.MaxDecimalDigits[T]())
-	assert.Equal(t, "0."+threeFill, f128.From[T, int](1).Div(f128.From[T, int](3)).String())
-	assert.Equal(t, "-0."+threeFill, f128.From[T, int](1).Div(f128.From[T, int](-3)).String())
-	assert.Equal(t, "0.1", pointThree.Div(f128.From[T, int](3)).String())
-	assert.Equal(t, "0.9", pointThree.Mul(f128.From[T, int](3)).String())
-	assert.Equal(t, "-0.9", negativePointThree.Mul(f128.From[T, int](3)).String())
+	check.Equal(t, "0."+threeFill, f128.From[T, int](1).Div(f128.From[T, int](3)).String())
+	check.Equal(t, "-0."+threeFill, f128.From[T, int](1).Div(f128.From[T, int](-3)).String())
+	check.Equal(t, "0.1", pointThree.Div(f128.From[T, int](3)).String())
+	check.Equal(t, "0.9", pointThree.Mul(f128.From[T, int](3)).String())
+	check.Equal(t, "-0.9", negativePointThree.Mul(f128.From[T, int](3)).String())
 }
 
 func TestMod(t *testing.T) {
@@ -132,9 +128,9 @@ func TestMod(t *testing.T) {
 }
 
 func testMod[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.From[T, int](1), f128.From[T, int](3).Mod(f128.From[T, int](2)))
-	assert.Equal(t, f128.FromStringForced[T]("0.3"), f128.FromStringForced[T]("9.3").Mod(f128.From[T, int](3)))
-	assert.Equal(t, f128.FromStringForced[T]("0.1"), f128.FromStringForced[T]("3.1").Mod(f128.FromStringForced[T]("0.2")))
+	check.Equal(t, f128.From[T, int](1), f128.From[T, int](3).Mod(f128.From[T, int](2)))
+	check.Equal(t, f128.FromStringForced[T]("0.3"), f128.FromStringForced[T]("9.3").Mod(f128.From[T, int](3)))
+	check.Equal(t, f128.FromStringForced[T]("0.1"), f128.FromStringForced[T]("3.1").Mod(f128.FromStringForced[T]("0.2")))
 }
 
 func TestTrunc(t *testing.T) {
@@ -147,12 +143,12 @@ func TestTrunc(t *testing.T) {
 }
 
 func testTrunc[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("0.3333").Trunc())
-	assert.Equal(t, f128.From[T, int](2), f128.FromStringForced[T]("2.6789").Trunc())
-	assert.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Trunc())
-	assert.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Trunc())
-	assert.Equal(t, f128.From[T, int](-2), f128.FromStringForced[T]("-2.6789").Trunc())
-	assert.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Trunc())
+	check.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("0.3333").Trunc())
+	check.Equal(t, f128.From[T, int](2), f128.FromStringForced[T]("2.6789").Trunc())
+	check.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Trunc())
+	check.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Trunc())
+	check.Equal(t, f128.From[T, int](-2), f128.FromStringForced[T]("-2.6789").Trunc())
+	check.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Trunc())
 }
 
 func TestCeil(t *testing.T) {
@@ -165,12 +161,12 @@ func TestCeil(t *testing.T) {
 }
 
 func testCeil[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.From[T, int](1), f128.FromStringForced[T]("0.3333").Ceil())
-	assert.Equal(t, f128.From[T, int](3), f128.FromStringForced[T]("2.6789").Ceil())
-	assert.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Ceil())
-	assert.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Ceil())
-	assert.Equal(t, f128.From[T, int](-2), f128.FromStringForced[T]("-2.6789").Ceil())
-	assert.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Ceil())
+	check.Equal(t, f128.From[T, int](1), f128.FromStringForced[T]("0.3333").Ceil())
+	check.Equal(t, f128.From[T, int](3), f128.FromStringForced[T]("2.6789").Ceil())
+	check.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Ceil())
+	check.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Ceil())
+	check.Equal(t, f128.From[T, int](-2), f128.FromStringForced[T]("-2.6789").Ceil())
+	check.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Ceil())
 }
 
 func TestRound(t *testing.T) {
@@ -183,12 +179,12 @@ func TestRound(t *testing.T) {
 }
 
 func testRound[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("0.3333").Round())
-	assert.Equal(t, f128.From[T, int](3), f128.FromStringForced[T]("2.6789").Round())
-	assert.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Round())
-	assert.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Round())
-	assert.Equal(t, f128.From[T, int](-3), f128.FromStringForced[T]("-2.6789").Round())
-	assert.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Round())
+	check.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("0.3333").Round())
+	check.Equal(t, f128.From[T, int](3), f128.FromStringForced[T]("2.6789").Round())
+	check.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Round())
+	check.Equal(t, f128.From[T, int](0), f128.FromStringForced[T]("-0.3333").Round())
+	check.Equal(t, f128.From[T, int](-3), f128.FromStringForced[T]("-2.6789").Round())
+	check.Equal(t, f128.From[T, int](-3), f128.From[T, int](-3).Round())
 }
 
 func TestAbs(t *testing.T) {
@@ -201,12 +197,12 @@ func TestAbs(t *testing.T) {
 }
 
 func testAbs[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("0.3333").Abs())
-	assert.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("2.6789").Abs())
-	assert.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Abs())
-	assert.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("-0.3333").Abs())
-	assert.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("-2.6789").Abs())
-	assert.Equal(t, f128.From[T, int](3), f128.From[T, int](-3).Abs())
+	check.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("0.3333").Abs())
+	check.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("2.6789").Abs())
+	check.Equal(t, f128.From[T, int](3), f128.From[T, int](3).Abs())
+	check.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("-0.3333").Abs())
+	check.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("-2.6789").Abs())
+	check.Equal(t, f128.From[T, int](3), f128.From[T, int](-3).Abs())
 }
 
 func TestNeg(t *testing.T) {
@@ -219,12 +215,12 @@ func TestNeg(t *testing.T) {
 }
 
 func testNeg[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, f128.FromStringForced[T]("-0.3333"), f128.FromStringForced[T]("0.3333").Neg())
-	assert.Equal(t, f128.FromStringForced[T]("-2.6789"), f128.FromStringForced[T]("2.6789").Neg())
-	assert.Equal(t, f128.From[T](-3), f128.From[T](3).Neg())
-	assert.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("-0.3333").Neg())
-	assert.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("-2.6789").Neg())
-	assert.Equal(t, f128.From[T](3), f128.From[T](-3).Neg())
+	check.Equal(t, f128.FromStringForced[T]("-0.3333"), f128.FromStringForced[T]("0.3333").Neg())
+	check.Equal(t, f128.FromStringForced[T]("-2.6789"), f128.FromStringForced[T]("2.6789").Neg())
+	check.Equal(t, f128.From[T](-3), f128.From[T](3).Neg())
+	check.Equal(t, f128.FromStringForced[T]("0.3333"), f128.FromStringForced[T]("-0.3333").Neg())
+	check.Equal(t, f128.FromStringForced[T]("2.6789"), f128.FromStringForced[T]("-2.6789").Neg())
+	check.Equal(t, f128.From[T](3), f128.From[T](-3).Neg())
 }
 
 func TestCmp(t *testing.T) {
@@ -237,9 +233,9 @@ func TestCmp(t *testing.T) {
 }
 
 func testCmp[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, 1, f128.FromStringForced[T]("0.3333").Cmp(f128.From[T](-3)))
-	assert.Equal(t, -1, f128.FromStringForced[T]("2.6789").Cmp(f128.From[T](3)))
-	assert.Equal(t, 0, f128.From[T](3).Cmp(f128.From[T](3)))
+	check.Equal(t, 1, f128.FromStringForced[T]("0.3333").Cmp(f128.From[T](-3)))
+	check.Equal(t, -1, f128.FromStringForced[T]("2.6789").Cmp(f128.From[T](3)))
+	check.Equal(t, 0, f128.From[T](3).Cmp(f128.From[T](3)))
 }
 
 func TestEqual(t *testing.T) {
@@ -252,9 +248,9 @@ func TestEqual(t *testing.T) {
 }
 
 func testEqual[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, false, f128.FromStringForced[T]("0.3333").Equal(f128.From[T](-3)))
-	assert.Equal(t, false, f128.FromStringForced[T]("2.6789").Equal(f128.From[T](3)))
-	assert.Equal(t, true, f128.From[T](3).Equal(f128.From[T](3)))
+	check.Equal(t, false, f128.FromStringForced[T]("0.3333").Equal(f128.From[T](-3)))
+	check.Equal(t, false, f128.FromStringForced[T]("2.6789").Equal(f128.From[T](3)))
+	check.Equal(t, true, f128.From[T](3).Equal(f128.From[T](3)))
 }
 
 func TestGreaterThan(t *testing.T) {
@@ -267,11 +263,11 @@ func TestGreaterThan(t *testing.T) {
 }
 
 func testGreaterThan[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, true, f128.FromStringForced[T]("0.3333").GreaterThan(f128.From[T](-3)))
-	assert.Equal(t, false, f128.FromStringForced[T]("2.6789").GreaterThan(f128.From[T](3)))
-	assert.Equal(t, false, f128.From[T](3).GreaterThan(f128.From[T](3)))
-	assert.Equal(t, true, f128.From[T](4).GreaterThan(f128.From[T](3)))
-	assert.Equal(t, true, f128.FromStringForced[T]("2.6789").GreaterThan(f128.From[T](-1)))
+	check.Equal(t, true, f128.FromStringForced[T]("0.3333").GreaterThan(f128.From[T](-3)))
+	check.Equal(t, false, f128.FromStringForced[T]("2.6789").GreaterThan(f128.From[T](3)))
+	check.Equal(t, false, f128.From[T](3).GreaterThan(f128.From[T](3)))
+	check.Equal(t, true, f128.From[T](4).GreaterThan(f128.From[T](3)))
+	check.Equal(t, true, f128.FromStringForced[T]("2.6789").GreaterThan(f128.From[T](-1)))
 }
 
 func TestGreaterThanOrEqual(t *testing.T) {
@@ -284,11 +280,11 @@ func TestGreaterThanOrEqual(t *testing.T) {
 }
 
 func testGreaterThanOrEqual[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, true, f128.FromStringForced[T]("0.3333").GreaterThanOrEqual(f128.From[T](-3)))
-	assert.Equal(t, false, f128.FromStringForced[T]("2.6789").GreaterThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, true, f128.From[T](3).GreaterThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, true, f128.From[T](4).GreaterThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, true, f128.FromStringForced[T]("2.6789").GreaterThanOrEqual(f128.From[T](-1)))
+	check.Equal(t, true, f128.FromStringForced[T]("0.3333").GreaterThanOrEqual(f128.From[T](-3)))
+	check.Equal(t, false, f128.FromStringForced[T]("2.6789").GreaterThanOrEqual(f128.From[T](3)))
+	check.Equal(t, true, f128.From[T](3).GreaterThanOrEqual(f128.From[T](3)))
+	check.Equal(t, true, f128.From[T](4).GreaterThanOrEqual(f128.From[T](3)))
+	check.Equal(t, true, f128.FromStringForced[T]("2.6789").GreaterThanOrEqual(f128.From[T](-1)))
 }
 
 func TestLessThan(t *testing.T) {
@@ -301,11 +297,11 @@ func TestLessThan(t *testing.T) {
 }
 
 func testLessThan[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, false, f128.FromStringForced[T]("0.3333").LessThan(f128.From[T](-3)))
-	assert.Equal(t, true, f128.FromStringForced[T]("2.6789").LessThan(f128.From[T](3)))
-	assert.Equal(t, false, f128.From[T](3).LessThan(f128.From[T](3)))
-	assert.Equal(t, false, f128.From[T](4).LessThan(f128.From[T](3)))
-	assert.Equal(t, false, f128.FromStringForced[T]("2.6789").LessThan(f128.From[T](-1)))
+	check.Equal(t, false, f128.FromStringForced[T]("0.3333").LessThan(f128.From[T](-3)))
+	check.Equal(t, true, f128.FromStringForced[T]("2.6789").LessThan(f128.From[T](3)))
+	check.Equal(t, false, f128.From[T](3).LessThan(f128.From[T](3)))
+	check.Equal(t, false, f128.From[T](4).LessThan(f128.From[T](3)))
+	check.Equal(t, false, f128.FromStringForced[T]("2.6789").LessThan(f128.From[T](-1)))
 }
 
 func TestLessThanOrEqual(t *testing.T) {
@@ -318,11 +314,18 @@ func TestLessThanOrEqual(t *testing.T) {
 }
 
 func testLessThanOrEqual[T fixed.Dx](t *testing.T) {
-	assert.Equal(t, false, f128.FromStringForced[T]("0.3333").LessThanOrEqual(f128.From[T](-3)))
-	assert.Equal(t, true, f128.FromStringForced[T]("2.6789").LessThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, true, f128.From[T](3).LessThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, false, f128.From[T](4).LessThanOrEqual(f128.From[T](3)))
-	assert.Equal(t, false, f128.FromStringForced[T]("2.6789").LessThanOrEqual(f128.From[T](-1)))
+	check.Equal(t, false, f128.FromStringForced[T]("0.3333").LessThanOrEqual(f128.From[T](-3)))
+	check.Equal(t, true, f128.FromStringForced[T]("2.6789").LessThanOrEqual(f128.From[T](3)))
+	check.Equal(t, true, f128.From[T](3).LessThanOrEqual(f128.From[T](3)))
+	check.Equal(t, false, f128.From[T](4).LessThanOrEqual(f128.From[T](3)))
+	check.Equal(t, false, f128.FromStringForced[T]("2.6789").LessThanOrEqual(f128.From[T](-1)))
+}
+
+func TestComma(t *testing.T) {
+	check.Equal(t, "0.12", f128.FromStringForced[fixed.D2]("0.12").Comma())
+	check.Equal(t, "1,234,567,890.12", f128.FromStringForced[fixed.D2]("1234567890.12").Comma())
+	check.Equal(t, "91,234,567,890.12", f128.FromStringForced[fixed.D2]("91234567890.12").Comma())
+	check.Equal(t, "891,234,567,890.12", f128.FromStringForced[fixed.D2]("891234567890.12").Comma())
 }
 
 func TestJSON(t *testing.T) {
@@ -349,11 +352,11 @@ func testJSONActual[T fixed.Dx](t *testing.T, v f128.Int[T]) {
 	t.Helper()
 	e1 := embedded[T]{Field: v}
 	data, err := json.Marshal(&e1)
-	assert.NoError(t, err)
+	check.NoError(t, err)
 	var e2 embedded[T]
 	err = json.Unmarshal(data, &e2)
-	assert.NoError(t, err)
-	require.Equal(t, e1, e2)
+	check.NoError(t, err)
+	check.Equal(t, e1, e2)
 }
 
 func TestYAML(t *testing.T) {
@@ -376,9 +379,9 @@ func testYAMLActual[T fixed.Dx](t *testing.T, v f128.Int[T]) {
 	t.Helper()
 	e1 := embedded[T]{Field: v}
 	data, err := yaml.Marshal(&e1)
-	assert.NoError(t, err)
+	check.NoError(t, err)
 	var e2 embedded[T]
 	err = yaml.Unmarshal(data, &e2)
-	assert.NoError(t, err)
-	require.Equal(t, e1, e2)
+	check.NoError(t, err)
+	check.Equal(t, e1, e2)
 }
