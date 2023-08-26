@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,15 +14,17 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/yookoala/realpath"
 )
 
 // UniquePaths returns a list of unique paths from the given paths, pruning out paths that are a subset of another.
 func UniquePaths(paths ...string) ([]string, error) {
 	set := make(map[string]bool, len(paths))
 	for _, path := range paths {
-		actual, err := realpath.Realpath(path)
+		actual, err := filepath.Abs(path)
 		if err != nil {
+			return nil, errs.NewWithCause(path, err)
+		}
+		if actual, err = filepath.EvalSymlinks(actual); err != nil {
 			return nil, errs.NewWithCause(path, err)
 		}
 		if _, exists := set[actual]; !exists {
