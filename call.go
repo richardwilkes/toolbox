@@ -10,12 +10,14 @@
 package toolbox
 
 import (
+	"log/slog"
+
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via errs.Log.
+// Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via slog.
 func Call(f func()) {
-	CallWithHandler(f, func(err error) { errs.Log(err) })
+	CallWithHandler(f, func(err error) { slog.Error(err.Error()) })
 }
 
 // CallWithHandler calls the provided function, safely wrapped in a errs.Recovery() handler.
