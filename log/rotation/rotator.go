@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,12 +12,15 @@ package rotation
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/richardwilkes/toolbox/errs"
 )
+
+var _ io.WriteCloser = &Rotator{}
 
 // Rotator holds the rotator data.
 type Rotator struct {
@@ -93,18 +96,26 @@ func (r *Rotator) Write(b []byte) (int, error) {
 	return n, err
 }
 
+// Sync commits the current contents of the file to stable storage.
+func (r *Rotator) Sync() error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.file == nil {
+		return nil
+	}
+	return errs.Wrap(r.file.Sync())
+}
+
 // Close implements io.Closer.
 func (r *Rotator) Close() error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.file != nil {
-		file := r.file
-		r.file = nil
-		if err := file.Close(); err != nil {
-			return errs.Wrap(err)
-		}
+	if r.file == nil {
+		return nil
 	}
-	return nil
+	file := r.file
+	r.file = nil
+	return errs.Wrap(file.Close())
 }
 
 func (r *Rotator) rotate() error {
