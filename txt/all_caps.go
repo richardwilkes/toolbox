@@ -13,12 +13,11 @@ package txt
 import (
 	_ "embed"
 	"fmt"
-	"log/slog"
 	"regexp"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/fatal"
 )
 
 //go:embed all_caps.txt
@@ -53,9 +52,6 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 // create the AllCaps object causes the program to exit.
 func MustNewAllCaps(in ...string) *AllCaps {
 	result, err := NewAllCaps(in...)
-	if err != nil {
-		slog.Error(err.Error())
-		atexit.Exit(1)
-	}
+	fatal.IfErr(err)
 	return result
 }

@@ -7,19 +7,18 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package toolbox
+package fatal
 
 import (
+	"github.com/richardwilkes/toolbox"
+	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via slog.
-func Call(f func()) {
-	CallWithHandler(f, func(err error) { errs.Log(err) })
-}
-
-// CallWithHandler calls the provided function, safely wrapped in a errs.Recovery() handler.
-func CallWithHandler(f func(), errHandler func(err error)) {
-	defer errs.Recovery(errHandler)
-	f()
+// IfErr checks the error and if it isn't nil, logs it and exits with code 1.
+func IfErr(err error) {
+	if !toolbox.IsNil(err) {
+		errs.Log(err)
+		atexit.Exit(1)
+	}
 }

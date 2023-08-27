@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -55,7 +56,7 @@ type Error struct {
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
 // as-is.
 func Wrap(cause error) error {
-	if cause == nil {
+	if isNil(cause) {
 		return nil
 	}
 	var errorPtr *Error
@@ -73,7 +74,7 @@ func Wrap(cause error) error {
 // WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
 // returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
 func WrapTyped(cause error) *Error {
-	if cause == nil {
+	if isNil(cause) {
 		return nil
 	}
 	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
@@ -346,4 +347,16 @@ func (e *Error) LogValue() slog.Value {
 		slog.String(slog.MessageKey, e.Message()),
 		slog.Any(StackLogKey, &stackValue{err: e}),
 	)
+}
+
+// Can't use toolbox.IsNil() due to circular dependencies, so put a copy of the code here, too.
+func isNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice, reflect.UnsafePointer:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
 }

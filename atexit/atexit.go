@@ -12,7 +12,6 @@ package atexit
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -26,7 +25,7 @@ import (
 var (
 	// RecoveryHandler will be used to capture any panics caused by functions that have been installed when run during
 	// exit. It may be set to nil to silently ignore them.
-	RecoveryHandler errs.RecoveryHandler = func(err error) { slog.Error(err.Error()) }
+	RecoveryHandler errs.RecoveryHandler = func(err error) { errs.Log(err) }
 	lock            sync.Mutex
 	nextID          = 1
 	pairs           []pair
