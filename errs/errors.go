@@ -14,14 +14,18 @@ package errs
 import (
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
 var (
-	_ ErrorWrapper  = &Error{}
-	_ StackError    = &Error{}
-	_ fmt.Formatter = &Error{}
+	_ ErrorWrapper   = &Error{}
+	_ StackError     = &Error{}
+	_ fmt.Formatter  = &Error{}
+	_ slog.LogValuer = &Error{}
 )
 
 // ErrorWrapper contains methods for interacting with the wrapped errors.
@@ -41,7 +45,11 @@ type StackError interface {
 
 // Error holds the detailed error message.
 type Error struct {
-	errors []*detail
+	message string
+	cause   error
+	stack   []uintptr
+	next    *Error
+	wrapped bool
 }
 
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
@@ -55,14 +63,10 @@ func Wrap(cause error) error {
 		return cause
 	}
 	return &Error{
-		errors: []*detail{
-			{
-				message: cause.Error(),
-				stack:   callStack(),
-				cause:   cause,
-				wrapped: true,
-			},
-		},
+		message: cause.Error(),
+		stack:   callStack(),
+		cause:   cause,
+		wrapped: true,
 	}
 }
 
@@ -79,26 +83,18 @@ func WrapTyped(cause error) *Error {
 		return err
 	}
 	return &Error{
-		errors: []*detail{
-			{
-				message: cause.Error(),
-				stack:   callStack(),
-				cause:   cause,
-				wrapped: true,
-			},
-		},
+		message: cause.Error(),
+		stack:   callStack(),
+		cause:   cause,
+		wrapped: true,
 	}
 }
 
 // New creates a new detailed error with the 'message'.
 func New(message string) *Error {
 	return &Error{
-		errors: []*detail{
-			{
-				message: message,
-				stack:   callStack(),
-			},
-		},
+		message: message,
+		stack:   callStack(),
 	}
 }
 
@@ -110,13 +106,9 @@ func Newf(format string, v ...any) *Error {
 // NewWithCause creates a new detailed error with the 'message' and underlying 'cause'.
 func NewWithCause(message string, cause error) *Error {
 	return &Error{
-		errors: []*detail{
-			{
-				message: message,
-				stack:   callStack(),
-				cause:   cause,
-			},
-		},
+		message: message,
+		stack:   callStack(),
+		cause:   cause,
 	}
 }
 
@@ -130,34 +122,59 @@ func Append(err error, errs ...error) *Error {
 	//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 	switch e := err.(type) {
 	case *Error:
-		if e == nil {
-			e = &Error{}
+		var root *Error
+		if !e.empty() {
+			root = e
+			for e.next != nil {
+				e = e.next
+			}
+		} else {
+			e = nil
 		}
 		for _, one := range errs {
+			var next *Error
 			//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 			switch typedErr := one.(type) {
 			case *Error:
-				if typedErr != nil {
-					e.errors = append(e.errors, typedErr.errors...)
+				if !typedErr.empty() {
+					n := *typedErr
+					localRoot := &n
+					next = localRoot
+					for next.next != nil {
+						copied := *next.next
+						next.next = &copied
+						next = next.next
+					}
+					next = localRoot
 				}
 			default:
 				if typedErr != nil {
-					e.errors = append(e.errors, &detail{
+					next = &Error{
 						message: typedErr.Error(),
 						stack:   callStack(),
-					})
+						cause:   typedErr,
+						wrapped: true,
+					}
 				}
 			}
+			if next != nil {
+				if e == nil {
+					root = next
+				} else {
+					e.next = next
+				}
+				e = next
+			}
 		}
-		return e
+		return root
 	default:
 		if e == nil {
-			return Append(&Error{}, errs...)
+			if len(errs) == 0 {
+				return nil
+			}
+			return Append(errs[0], errs[1:]...)
 		}
-		all := make([]error, 0, len(errs)+1)
-		all = append(all, e)
-		all = append(all, errs...)
-		return Append(&Error{}, all...)
+		return Append(Wrap(e), errs...)
 	}
 }
 
@@ -170,86 +187,139 @@ func callStack() []uintptr {
 }
 
 // Count returns the number of contained errors, not including causes.
-func (d *Error) Count() int {
-	return len(d.errors)
+func (e *Error) Count() int {
+	count := 0
+	err := e
+	for err != nil {
+		if !err.empty() {
+			count++
+		}
+		err = err.next
+	}
+	return count
 }
 
 // Message returns the message attached to this error.
-func (d *Error) Message() string {
-	switch len(d.errors) {
-	case 0:
-		return ""
-	case 1:
-		return d.errors[0].message
-	default:
-		var buffer strings.Builder
-		buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", len(d.errors)))
-		for _, one := range d.errors {
-			buffer.WriteString("\n- ")
-			buffer.WriteString(one.message)
-		}
-		return buffer.String()
+func (e *Error) Message() string {
+	if e.next == nil {
+		return e.message
 	}
+	var buffer strings.Builder
+	buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", e.Count()))
+	err := e
+	for err != nil {
+		buffer.WriteString("\n- ")
+		buffer.WriteString(err.message)
+		err = err.next
+	}
+	return buffer.String()
 }
 
 // Error implements the error interface.
-func (d *Error) Error() string {
-	return d.Detail(true)
+func (e *Error) Error() string {
+	return e.Detail(true)
 }
 
 // Detail returns the fully detailed error message, which includes the primary message, the call stack, and potentially
 // one or more chained causes. Note that any included stack trace will be only for the first error in the case where
 // multiple errors were accumulated into one via calls to .Append().
-func (d *Error) Detail(trimRuntime bool) string {
-	switch len(d.errors) {
-	case 0:
-		return ""
-	case 1:
-		return d.errors[0].Detail(trimRuntime)
-	default:
-		return strings.Join([]string{d.Message(), d.errors[0].StackTrace(trimRuntime)}, "\n")
-	}
+func (e *Error) Detail(trimRuntime bool) string {
+	return strings.Join([]string{e.Message(), e.StackTrace(trimRuntime)}, "\n")
 }
 
 // StackTrace returns just the stack trace portion of the message.
-func (d *Error) StackTrace(trimRuntime bool) string {
-	if len(d.errors) == 0 {
-		return ""
+func (e *Error) StackTrace(trimRuntime bool) string {
+	var buffer strings.Builder
+	frames := runtime.CallersFrames(e.stack)
+	for {
+		frame, more := frames.Next()
+		if frame.Function != "" {
+			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") ||
+				strings.HasPrefix(frame.Function, "testing.") ||
+				strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.") ||
+				(frame.Function == "main.main" && frame.File == "_testmain.go")) {
+				continue
+			}
+			if buffer.Len() != 0 {
+				buffer.WriteByte('\n')
+			}
+			buffer.WriteString("    [")
+			buffer.WriteString(frame.Function)
+			buffer.WriteString("] ")
+			file := frame.File
+			if i := strings.Index(file, "."); i != -1 {
+				for i > 0 && file[i] != os.PathSeparator {
+					i--
+				}
+				if i > 0 {
+					file = file[i+1:]
+				}
+				if i = strings.LastIndexByte(file, os.PathSeparator); i != -1 {
+					path := file[:i]
+					offset := i + 1
+					if i = strings.LastIndexByte(path, os.PathSeparator); i != -1 {
+						if path[i+1:] == "_obj" {
+							path = path[:i]
+						}
+					}
+					if strings.HasPrefix(frame.Function, path) {
+						file = file[offset:]
+					}
+				}
+			}
+			buffer.WriteString(file)
+			buffer.WriteByte(':')
+			buffer.WriteString(strconv.Itoa(frame.Line))
+		}
+		if !more {
+			break
+		}
 	}
-	return d.errors[0].StackTrace(trimRuntime)
+	if e.cause != nil && !e.wrapped {
+		buffer.WriteString("\n  Caused by: ")
+		//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
+		if detailed, ok := e.cause.(*Error); ok {
+			buffer.WriteString(detailed.Detail(trimRuntime))
+		} else {
+			buffer.WriteString(e.cause.Error())
+		}
+	}
+	return buffer.String()
 }
 
-// RawStackTrace returns the raw call stack pointers.
-func (d *Error) RawStackTrace() []uintptr {
-	if len(d.errors) == 0 {
-		return nil
-	}
-	return d.errors[0].stack
+// RawStackTrace returns the raw call stack pointers for the first error within this error.
+func (e *Error) RawStackTrace() []uintptr {
+	return e.stack
 }
 
 // ErrorOrNil returns an error interface if this Error represents one or more errors, or nil if it is empty.
-func (d *Error) ErrorOrNil() error {
-	if d == nil || len(d.errors) == 0 {
+func (e *Error) ErrorOrNil() error {
+	if e.empty() {
 		return nil
 	}
-	return d
+	return e
+}
+
+func (e *Error) empty() bool {
+	return e == nil || (e.message == "" && e.stack == nil && e.cause == nil && e.next == nil)
 }
 
 // WrappedErrors returns the contained errors.
-func (d *Error) WrappedErrors() []error {
-	result := make([]error, len(d.errors))
-	for i, one := range d.errors {
-		result[i] = one
+func (e *Error) WrappedErrors() []error {
+	result := make([]error, 0, e.Count())
+	err := e
+	for err != nil {
+		eCopy := *err
+		eCopy.next = nil
+		result = append(result, &eCopy)
+		err = err.next
 	}
 	return result
 }
 
 // Unwrap implements errors.Unwrap and returns the underlying cause, if any.
-func (d *Error) Unwrap() error {
-	if len(d.errors) == 0 {
-		return nil
-	}
-	return d.errors[0].Unwrap()
+func (e *Error) Unwrap() error {
+	return e.cause
 }
 
 // Format implements the fmt.Formatter interface.
@@ -259,13 +329,21 @@ func (d *Error) Unwrap() error {
 //   - "%q"  Just the message, but quoted
 //   - "%v"  The message plus a stack trace, trimmed of golang runtime calls
 //   - "%+v" The message plus a stack trace
-func (d *Error) Format(state fmt.State, verb rune) {
+func (e *Error) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		_, _ = state.Write([]byte(d.Detail(!state.Flag('+'))))
+		_, _ = state.Write([]byte(e.Detail(!state.Flag('+'))))
 	case 's':
-		_, _ = state.Write([]byte(d.Message()))
+		_, _ = state.Write([]byte(e.Message()))
 	case 'q':
-		_, _ = fmt.Fprintf(state, "%q", d.Message())
+		_, _ = fmt.Fprintf(state, "%q", e.Message())
 	}
+}
+
+// LogValue implements the slog.LogValuer interface.
+func (e *Error) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String(slog.MessageKey, e.Message()),
+		slog.Any(StackLogKey, &stackValue{err: e}),
+	)
 }

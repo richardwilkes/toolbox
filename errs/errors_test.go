@@ -29,7 +29,6 @@ func ExampleError() {
 	// Output: recovered from panic
 	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError.func1] errors_test.go:27
 	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError] errors_test.go:28
-	//     [main.main] _testmain.go:87
 	//   Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
@@ -191,4 +190,18 @@ func TestFormat(t *testing.T) {
 	result = fmt.Sprintf("%+v", wrappedErrors[0])
 	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
 	check.Contains(t, result, "[runtime.goexit]")
+}
+
+func TestWrappedErrors(t *testing.T) {
+	foo := errs.New("foo")
+	bar := errs.Append(foo, errs.New("bar"))
+	foo2 := errs.New("foo2")
+	bar2 := errs.Append(foo2, errs.New("bar2"))
+	result := errs.Append(bar, bar2)
+	list := result.WrappedErrors()
+	check.Equal(t, 4, len(list))
+	check.Equal(t, "foo", strings.SplitN(list[0].Error(), "\n", 2)[0])
+	check.Equal(t, "bar", strings.SplitN(list[1].Error(), "\n", 2)[0])
+	check.Equal(t, "foo2", strings.SplitN(list[2].Error(), "\n", 2)[0])
+	check.Equal(t, "bar2", strings.SplitN(list[3].Error(), "\n", 2)[0])
 }
