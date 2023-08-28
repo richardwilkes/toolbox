@@ -45,10 +45,6 @@ func doSomeStuff() {
     fmt.Println("going to do the equivalent of os.Exit(1)")
     atexit.Exit(1)
 }
-
-func goodbye() {
-    fmt.Println("Goodbye!")
-}
 ```
 Output:
 ```
