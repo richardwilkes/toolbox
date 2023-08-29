@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -18,11 +18,15 @@ package jot
 // You can also set the Filter function to direct the output to a particular jot logging method:
 //
 // log.New(&jot.LoggerWriter{Filter: jot.Info}), "", 0)
+//
+// Deprecated: Use slog instead. August 28, 2023
 type LoggerWriter struct {
 	Filter func(v ...any)
 }
 
 // Write implements the io.Writer interface required by log.Logger.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func (w *LoggerWriter) Write(p []byte) (n int, err error) {
 	if len(p) > 0 {
 		filter := w.Filter

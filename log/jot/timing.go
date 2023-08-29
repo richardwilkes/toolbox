@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -40,6 +40,8 @@ func (t *timing) EndWithMsgf(format string, v ...any) time.Duration {
 }
 
 // Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Time(v ...any) logadapter.Timing {
 	msg := fmt.Sprint(v...)
 	Infof("Starting %s", msg)
@@ -50,6 +52,8 @@ func Time(v ...any) logadapter.Timing {
 }
 
 // Timef starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Timef(format string, v ...any) logadapter.Timing {
 	msg := fmt.Sprintf(format, v...)
 	Infof("Starting %s", msg)

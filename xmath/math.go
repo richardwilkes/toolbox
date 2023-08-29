@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -469,7 +469,7 @@ func Logb[T constraints.Float](x T) T {
 //	Max(+0, ±0) = Max(±0, +0) = +0
 //	Max(-0, -0) = -0
 //
-// Deprecated: Use the Go 1.21+ built-in max() instead.
+// Deprecated: Use the Go 1.21+ built-in max() instead. August 8, 2023
 func Max[T Numeric](a, b T) T {
 	return max(a, b)
 }
@@ -519,7 +519,7 @@ func MaxValue[T Numeric]() T {
 //	Min(x, NaN) = Min(NaN, x) = NaN
 //	Min(-0, ±0) = Min(±0, -0) = -0
 //
-// Deprecated: Use the Go 1.21+ built-in min() instead.
+// Deprecated: Use the Go 1.21+ built-in min() instead. August 8, 2023
 func Min[T Numeric](a, b T) T {
 	return min(a, b)
 }

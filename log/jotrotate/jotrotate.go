@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -22,10 +22,14 @@ import (
 )
 
 // PathToLog holds the path to the log file that was configured on the command line when using ParseAndSetup().
+//
+// Deprecated: Use rotation.PathToLog instead. August 28, 2023
 var PathToLog string
 
 // ParseAndSetup adds command-line options for controlling logging, parses the command line, then instantiates a rotator
 // and attaches it to jot. Returns the remaining arguments that weren't used for option content.
+//
+// Deprecated: Use rotation.ParseAndSetupLogging instead. August 28, 2023
 func ParseAndSetup(cl *cmdline.CmdLine) []string {
 	logFile := rotation.DefaultPath()
 	var maxSize int64 = rotation.DefaultMaxSize

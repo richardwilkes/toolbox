@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,6 +15,8 @@ import "time"
 
 // DebugLogger defines an API to use for logging debugging messages, which actual logging implementations can implement
 // directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type DebugLogger interface {
 	// Debug logs a debugging message. Arguments are handled in the manner of fmt.Print.
 	Debug(v ...any)
@@ -24,6 +26,8 @@ type DebugLogger interface {
 
 // InfoLogger defines an API to use for logging informational messages, which actual logging implementations can
 // implement directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type InfoLogger interface {
 	// Info logs an informational message. Arguments are handled in the manner of fmt.Print.
 	Info(v ...any)
@@ -33,6 +37,8 @@ type InfoLogger interface {
 
 // WarnLogger defines an API to use for logging warning messages, which actual logging implementations can implement
 // directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type WarnLogger interface {
 	// Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
 	Warn(v ...any)
@@ -42,6 +48,8 @@ type WarnLogger interface {
 
 // ErrorLogger defines an API to use for logging error messages, which actual logging implementations can implement
 // directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type ErrorLogger interface {
 	// Error logs an error message. Arguments are handled in the manner of fmt.Print.
 	Error(v ...any)
@@ -51,6 +59,8 @@ type ErrorLogger interface {
 
 // FatalLogger defines an API to use for logging fatal error messages, which actual logging implementations can
 // implement directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type FatalLogger interface {
 	// Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
 	Fatal(status int, v ...any)
@@ -60,6 +70,8 @@ type FatalLogger interface {
 
 // Timing is used to record the duration between two events. One of End(), EndWithMsg(), or EndWithMsgf() should be
 // called when the event has finished.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type Timing interface {
 	// End finishes timing an event and logs an informational message.
 	End() time.Duration
@@ -73,6 +85,8 @@ type Timing interface {
 
 // TimingLogger defines an API to use for logging timed data, which actual logging implementations can implement
 // directly or provide an adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type TimingLogger interface {
 	// Time starts timing an event and logs an informational message. Arguments are handled in the manner of fmt.Print.
 	Time(v ...any) Timing
@@ -83,6 +97,8 @@ type TimingLogger interface {
 
 // Logger defines an API to use for logging, which actual logging implementations can implement directly or provide an
 // adapter to use.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type Logger interface {
 	DebugLogger
 	InfoLogger

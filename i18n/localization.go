@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,13 +12,15 @@ package i18n
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/toolbox/log/logadapter"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/toolbox/xio/fs"
 )
@@ -40,12 +42,10 @@ var (
 	// Languages is a slice of languages to fall back to should the one specified in the Language variable not be
 	// available. It is initialized to the value of the LANGUAGE environment variable.
 	Languages = strings.Split(os.Getenv("LANGUAGE"), ":")
-	// Log is set to discard by default.
-	Log      logadapter.ErrorLogger = &logadapter.Discarder{}
-	once     sync.Once
-	langMap  = make(map[string]map[string]string)
-	hierLock sync.Mutex
-	hierMap  = make(map[string][]string)
+	once      sync.Once
+	langMap   = make(map[string]map[string]string)
+	hierLock  sync.Mutex
+	hierMap   = make(map[string][]string)
 )
 
 // Text returns a localized version of the text if one exists, or the original text if not.
@@ -128,7 +128,10 @@ func load(name string) {
 	path := filepath.Join(Dir, name)
 	f, err := os.Open(path)
 	if err != nil {
-		Log.Error("unable to load " + path)
+		if errors.Is(err, os.ErrNotExist) {
+			return
+		}
+		errs.Log(errs.NewWithCause("i18n: unable to load", err), "path", path)
 		return
 	}
 	defer xio.CloseIgnoringErrors(f)
@@ -145,14 +148,14 @@ func load(name string) {
 				if _, exists := translations[key]; !exists {
 					translations[key] = value
 				} else {
-					Log.Errorf("ignoring duplicate key on line %d of %s", lastKeyLineStart, path)
+					slog.Warn("i18n: ignoring duplicate key", "line", lastKeyLineStart, "file", path)
 				}
 				hasKey = false
 				hasValue = false
 			}
 			var buffer string
 			if _, err = fmt.Sscanf(line, "k:%q", &buffer); err != nil {
-				Log.Errorf("ignoring invalid key on line %d of %s", lineNum, path)
+				slog.Warn("i18n: ignoring invalid key", "line", lineNum, "file", path)
 			} else {
 				if hasKey {
 					key += "\n" + buffer
@@ -166,7 +169,7 @@ func load(name string) {
 			if hasKey {
 				var buffer string
 				if _, err = fmt.Sscanf(line, "v:%q", &buffer); err != nil {
-					Log.Errorf("ignoring invalid value on line %d of %s", lineNum, path)
+					slog.Warn("i18n: ignoring invalid value", "line", lineNum, "file", path)
 				} else {
 					if hasValue {
 						value += "\n" + buffer
@@ -176,7 +179,7 @@ func load(name string) {
 					}
 				}
 			} else {
-				Log.Errorf("ignoring value with no previous key on line %d of %s", lineNum, path)
+				slog.Warn("i18n: ignoring value with no previous key", "line", lineNum, "file", path)
 			}
 		}
 		lineNum++
@@ -186,10 +189,10 @@ func load(name string) {
 			if _, exists := translations[key]; !exists {
 				translations[key] = value
 			} else {
-				Log.Errorf("ignoring duplicate key on line %d of %s", lastKeyLineStart, path)
+				slog.Warn("i18n: ignoring duplicate key", "line", lastKeyLineStart, "file", path)
 			}
 		} else {
-			Log.Errorf("ignoring key with missing value on line %d of %s", lastKeyLineStart, path)
+			slog.Warn("i18n: ignoring key with missing value", "line", lastKeyLineStart, "file", path)
 		}
 	}
 	key = strings.ToLower(name[:len(name)-len(Extension)])

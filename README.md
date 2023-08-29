@@ -131,40 +131,6 @@ Extract text from Excel spreadsheets.
 Internationalization support for applications. Provides the tool `go-i18n` for generating a template for a localization
 file from source code.
 
-### toolbox/log/jot
-Simple asynchronous logging.
-
-#### Sample usage:
-```go
-package main
-
-import "github.com/richardwilkes/toolbox/log/jot"
-
-func main() {
-    defer jot.Flush()
-    jot.Debug("Debug level")
-    jot.Debugf("Debug level with %s", "args")
-    jot.Info("Info level")
-    jot.Infof("Info level with %s", "args")
-    jot.Warn("Warning level")
-    jot.Warnf("Warning level with %s", "args")
-    jot.Error("Error level")
-    jot.Errorf("Error level with %s", "args")
-    jot.Fatal(1, "Fatal level")
-    jot.Fatalf(1, "Fatal level with %s", "args")    // Will never be reached due to previous line
-}
-```
-
-### toolbox/log/jotrotate
-Provides a pre-canned way to add jot logging with file rotation, along with command-line options for controlling it.
-
-### toolbox/log/logadapter
-This package defines an API to use for logging, which actual logging implementations can implement directly or provide
-an adapter to use.
-
-It also provides an implementation that just discards data given to it as well as an implementation that wraps another
-logger and prefixes all output.
-
 ### toolbox/log/rotation
 Provides file rotation when files hit a given size.
 

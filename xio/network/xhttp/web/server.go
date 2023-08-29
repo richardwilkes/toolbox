@@ -15,6 +15,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"path"
@@ -24,8 +25,6 @@ import (
 
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/log/logadapter"
-	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xio/network"
 	"github.com/richardwilkes/toolbox/xio/network/xhttp"
 )
@@ -41,7 +40,7 @@ type Server struct {
 	CertFile            string
 	KeyFile             string
 	ShutdownGracePeriod time.Duration
-	Logger              logadapter.Logger
+	Logger              *slog.Logger
 	WebServer           *http.Server
 	Ports               []int
 	ShutdownCallback    func()
@@ -90,7 +89,7 @@ func (s *Server) String() string {
 func (s *Server) Run() error {
 	atexit.Register(s.Shutdown)
 	if s.Logger == nil {
-		s.Logger = &logadapter.Discarder{}
+		s.Logger = slog.Default()
 	}
 	handler := s.WebServer.Handler
 	s.WebServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -102,22 +101,20 @@ func (s *Server) Run() error {
 			Head:     req.Method == http.MethodHead,
 		}
 		defer func() {
-			if err := recover(); err != nil {
-				s.Logger.Error(errs.Newf("recovered from panic in handler\n%+v", err))
+			if recovered := recover(); recovered != nil {
+				err, ok := recovered.(error)
+				if !ok {
+					err = errs.Newf("%+v", recovered)
+				}
+				errs.LogTo(s.Logger, errs.NewWithCause("recovered from panic in handler", err))
 				sw.WriteHeader(http.StatusInternalServerError)
 			}
 			since := time.Since(started)
 			millis := int64(since / time.Millisecond)
 			micros := int64(since/time.Microsecond) - millis*1000
 			written := sw.BytesWritten()
-			var bytes string
-			if written != 1 {
-				bytes = "bytes"
-			} else {
-				bytes = "byte"
-			}
-			s.Logger.Infof("%d | %s.%03dms | %s %s | %s %s", sw.Status(), txt.Comma(millis), micros, txt.Comma(written),
-				bytes, req.Method, req.URL)
+			s.Logger.Info("web", "status", sw.Status(), "elapsed", fmt.Sprintf("%d.%03dms", millis, micros),
+				"bytes", written, "method", req.Method, "url", req.URL)
 		}()
 		handler.ServeHTTP(sw, req)
 	})
@@ -140,15 +137,15 @@ func (s *Server) Run() error {
 		return errs.Wrap(err)
 	}
 	listener := network.TCPKeepAliveListener{TCPListener: ln.(*net.TCPListener)}
-	_, portStr, err := net.SplitHostPort(ln.Addr().String())
-	if err != nil {
+	var portStr string
+	if _, portStr, err = net.SplitHostPort(ln.Addr().String()); err != nil {
 		return errs.Wrap(err)
 	}
 	if s.port, err = strconv.Atoi(portStr); err != nil {
 		return errs.Wrap(err)
 	}
 	s.addresses = network.AddressesForHost(host)
-	s.Logger.Infof("Listening for %v", s)
+	s.Logger.Info("listening", "protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
 	go func() {
 		if s.StartedChan != nil {
 			close(s.StartedChan)
@@ -167,7 +164,12 @@ func (s *Server) Run() error {
 
 // Shutdown the server gracefully.
 func (s *Server) Shutdown() {
-	defer s.Logger.Timef("shutdown of %v", s).End()
+	startedAt := time.Now()
+	slog.Info("starting shutdown", "protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
+	defer func() {
+		slog.Info("finished shutdown", "protocol", s.Protocol(), "addresses", s.addresses, "port", s.port, "elapsed",
+			time.Since(startedAt))
+	}()
 	gracePeriod := s.ShutdownGracePeriod
 	if gracePeriod <= 0 {
 		gracePeriod = time.Minute
@@ -175,7 +177,7 @@ func (s *Server) Shutdown() {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(gracePeriod))
 	defer cancel()
 	if err := s.WebServer.Shutdown(ctx); err != nil {
-		s.Logger.Warn(errs.NewWithCausef(err, "Unable to shutdown %s gracefully", s.Protocol()))
+		errs.LogTo(s.Logger, errs.NewWithCause("unable to shutdown gracefully", err), "protocol", s.Protocol())
 	}
 	if s.ShutdownCallback != nil {
 		s.ShutdownCallback()

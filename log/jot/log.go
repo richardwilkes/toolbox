@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -33,6 +33,8 @@ const (
 var logChannel = make(chan *record, 100)
 
 // Level holds a log level.
+//
+// Deprecated: Use slog instead. August 28, 2023
 type Level int
 
 type record struct {
@@ -97,11 +99,15 @@ func write(out io.Writer, text string) {
 }
 
 // SetWriter sets the io.Writer to use when writing log messages. Default is os.Stderr.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func SetWriter(w io.Writer) {
 	logChannel <- &record{writer: w}
 }
 
 // SetMinimumLevel sets the minimum log level that will be output. Default is DEBUG.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func SetMinimumLevel(level Level) {
 	logChannel <- &record{
 		level:       level,
@@ -110,6 +116,8 @@ func SetMinimumLevel(level Level) {
 }
 
 // Debug logs a debugging message. Arguments are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Debug(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -119,6 +127,8 @@ func Debug(v ...any) {
 }
 
 // Debugf logs a debugging message. Arguments are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Debugf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -128,6 +138,8 @@ func Debugf(format string, v ...any) {
 }
 
 // Info logs an informational message. Arguments are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Info(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -137,6 +149,8 @@ func Info(v ...any) {
 }
 
 // Infof logs an informational message. Arguments are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Infof(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -146,6 +160,8 @@ func Infof(format string, v ...any) {
 }
 
 // Warn logs a warning message. Arguments are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Warn(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -155,6 +171,8 @@ func Warn(v ...any) {
 }
 
 // Warnf logs a warning message. Arguments are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Warnf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -164,6 +182,8 @@ func Warnf(format string, v ...any) {
 }
 
 // Error logs an error message. Arguments are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Error(v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -173,6 +193,8 @@ func Error(v ...any) {
 }
 
 // Errorf logs an error message. Arguments are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Errorf(format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -182,6 +204,8 @@ func Errorf(format string, v ...any) {
 }
 
 // Fatal logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Print.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Fatal(status int, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -192,6 +216,8 @@ func Fatal(status int, v ...any) {
 }
 
 // Fatalf logs a fatal error message. Arguments other than the status are handled in the manner of fmt.Printf.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Fatalf(status int, format string, v ...any) {
 	logChannel <- &record{
 		when:  time.Now(),
@@ -202,6 +228,8 @@ func Fatalf(status int, format string, v ...any) {
 }
 
 // FatalIfErr calls 'Fatal(1, err)' if 'err' is not nil.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func FatalIfErr(err error) {
 	if err != nil {
 		Fatal(1, err)
@@ -209,6 +237,8 @@ func FatalIfErr(err error) {
 }
 
 // Flush waits for all current log entries to be written before returning.
+//
+// Deprecated: Use slog instead. August 28, 2023
 func Flush() {
 	rec := &record{response: make(chan bool)}
 	logChannel <- rec
