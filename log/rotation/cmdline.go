@@ -23,7 +23,10 @@ import (
 var PathToLog string
 
 // ParseAndSetupLogging adds command-line options for controlling logging, parses the command line, then instantiates a
-// rotator and attaches it to slog. Returns the remaining arguments that weren't used for option content.
+// rotator and attaches it to slog. Returns the remaining arguments that weren't used for option content. If
+// consoleOnByDefault is true, then logs will also go to the console by default, but an option to turn them off will be
+// added to the command line flags. Conversely, if it is false, an option to turn them on will be added to the command
+// line flags.
 func ParseAndSetupLogging(cl *cmdline.CmdLine, consoleOnByDefault bool) []string {
 	logFile := DefaultPath()
 	var maxSize int64 = DefaultMaxSize
