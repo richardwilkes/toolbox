@@ -16,8 +16,8 @@ import (
 	"time"
 )
 
-// StackLogKey is the key used for logging the stack trace.
-const StackLogKey = "stack"
+// StackTraceKey is the key used for logging the stack trace.
+const StackTraceKey = "stack_trace"
 
 // Log an error with a stack trace.
 func Log(err error, args ...any) {
@@ -56,7 +56,7 @@ func log(ctx context.Context, level slog.Level, logger *slog.Logger, err *Error,
 		pc = err.stack[0]
 	}
 	r := slog.NewRecord(time.Now(), level, err.Message(), pc)
-	r.AddAttrs(slog.Any(StackLogKey, &stackValue{err: err}))
+	r.AddAttrs(slog.Any(StackTraceKey, &stackValue{err: err}))
 	r.Add(args...)
 	if ctx == nil {
 		ctx = context.Background()
@@ -101,7 +101,7 @@ func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, err *E
 		pc = err.stack[0]
 	}
 	r := slog.NewRecord(time.Now(), level, err.Message(), pc)
-	r.AddAttrs(slog.Any(StackLogKey, &stackValue{err: err}))
+	r.AddAttrs(slog.Any(StackTraceKey, &stackValue{err: err}))
 	r.AddAttrs(attrs...)
 	if ctx == nil {
 		ctx = context.Background()
@@ -111,6 +111,10 @@ func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, err *E
 
 type stackValue struct {
 	err StackError
+}
+
+func (v *stackValue) StackError() StackError {
+	return v.err
 }
 
 func (v *stackValue) LogValue() slog.Value {

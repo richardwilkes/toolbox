@@ -345,7 +345,7 @@ func (e *Error) Format(state fmt.State, verb rune) {
 func (e *Error) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String(slog.MessageKey, e.Message()),
-		slog.Any(StackLogKey, &stackValue{err: e}),
+		slog.Any(StackTraceKey, &stackValue{err: e}),
 	)
 }
 
