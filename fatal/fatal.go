@@ -15,10 +15,15 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
-// IfErr checks the error and if it isn't nil, logs it and exits with code 1.
+// IfErr checks the error and if it isn't nil, calls fatal.WithErr(err).
 func IfErr(err error) {
 	if !toolbox.IsNil(err) {
-		errs.Log(err)
-		atexit.Exit(1)
+		WithErr(err)
 	}
+}
+
+// WithErr logs the error and then exits with code 1.
+func WithErr(err error) {
+	errs.Log(err)
+	atexit.Exit(1)
 }
