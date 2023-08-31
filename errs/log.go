@@ -51,17 +51,28 @@ func log(ctx context.Context, level slog.Level, logger *slog.Logger, err *Error,
 	if !logger.Enabled(ctx, level) {
 		return
 	}
-	var pc uintptr
-	if len(err.stack) != 0 {
-		pc = err.stack[0]
-	}
-	r := slog.NewRecord(time.Now(), level, err.Message(), pc)
-	r.AddAttrs(slog.Any(StackTraceKey, &stackValue{err: err}))
+	r := createRecord(level, err)
 	r.Add(args...)
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	_ = logger.Handler().Handle(ctx, r) //nolint:errcheck // Since we are in the logger, nothing we can reasonably do to log this
+}
+
+func createRecord(level slog.Level, err *Error) slog.Record {
+	var pc uintptr
+	var msg string
+	if err != nil {
+		msg = err.Message()
+		if len(err.stack) != 0 {
+			pc = err.stack[0]
+		}
+	}
+	r := slog.NewRecord(time.Now(), level, msg, pc)
+	if err != nil {
+		r.AddAttrs(slog.Any(StackTraceKey, &stackValue{err: err}))
+	}
+	return r
 }
 
 // LogAttrs logs an error with a stack trace.
@@ -96,12 +107,7 @@ func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, err *E
 	if !logger.Enabled(ctx, level) {
 		return
 	}
-	var pc uintptr
-	if len(err.stack) != 0 {
-		pc = err.stack[0]
-	}
-	r := slog.NewRecord(time.Now(), level, err.Message(), pc)
-	r.AddAttrs(slog.Any(StackTraceKey, &stackValue{err: err}))
+	r := createRecord(level, err)
 	r.AddAttrs(attrs...)
 	if ctx == nil {
 		ctx = context.Background()
