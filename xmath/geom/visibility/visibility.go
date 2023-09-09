@@ -1,4 +1,4 @@
-// Copyright ©2019-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -390,7 +390,7 @@ func intersectLines[T constraints.Float](s1, e1, s2, e2 geom.Point[T]) (geom.Poi
 	ub := dby*dax - dbx*day
 	if ub != 0 {
 		ua := (dbx*(s1.Y-s2.Y) - dby*(s1.X-s2.X)) / ub
-		return geom.Point[T]{X: s1.X - ua*-dax, Y: s1.Y - ua*-day}, true
+		return geom.Point[T]{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
 	}
 	return geom.Point[T]{}, false
 }
