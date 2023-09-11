@@ -21,6 +21,11 @@ func New[K, V any](compareFunc func(a, b K) int) *Tree[K, V] {
 	return &Tree[K, V]{compare: compareFunc}
 }
 
+// Empty returns true if the tree is empty.
+func (t *Tree[K, V]) Empty() bool {
+	return t.count == 0
+}
+
 // Count returns the number of nodes in the tree.
 func (t *Tree[K, V]) Count() int {
 	return t.count
