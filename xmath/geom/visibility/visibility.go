@@ -128,8 +128,8 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 	for i := range segments {
 		a1 := angle(segments[i].Start, viewPt)
 		a2 := angle(segments[i].End, viewPt)
-		if (a1 > -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
-			(a2 > -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
+		if (a1 >= -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
+			(a2 >= -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
 			insert(i, heap, mapper, segments, viewPt, start)
 		}
 	}
@@ -355,7 +355,21 @@ func sortPoints[T constraints.Float](position geom.Point[T], segments []Segment[
 		points[pos].start = false
 		pos++
 	}
-	slices.SortFunc(points, func(a, b endPoint[T]) int { return cmp.Compare(a.angle, b.angle) })
+	slices.SortFunc(points, func(a, b endPoint[T]) int {
+		result := cmp.Compare(a.angle, b.angle)
+		if result == 0 {
+			result = cmp.Compare(distance(a.pt(segments), position), distance(b.pt(segments), position))
+			if result == 0 {
+				if a.start != b.start {
+					if a.start {
+						return 1
+					}
+					return -1
+				}
+			}
+		}
+		return result
+	})
 	return points
 }
 
