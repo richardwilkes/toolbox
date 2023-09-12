@@ -10,6 +10,9 @@
 package poly
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
 )
@@ -64,4 +67,36 @@ func (p Polygon[T]) ContainsEvenOdd(pt geom.Point[T]) bool {
 		}
 	}
 	return count%2 == 1
+}
+
+func (p Polygon[T]) String() string {
+	var buffer strings.Builder
+	buffer.WriteString("unison.Polygon{")
+	for i, c := range p {
+		if i != 0 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteByte('{')
+		for j, pt := range c {
+			if j != 0 {
+				buffer.WriteByte(',')
+			}
+			buffer.WriteByte('{')
+			buffer.WriteString(floatToString(pt.X))
+			buffer.WriteByte(',')
+			buffer.WriteString(floatToString(pt.Y))
+			buffer.WriteByte('}')
+		}
+		buffer.WriteByte('}')
+	}
+	buffer.WriteByte('}')
+	return buffer.String()
+}
+
+func floatToString[T constraints.Float](f T) string {
+	s := fmt.Sprintf("%f", f)
+	if !strings.Contains(s, ".") {
+		return s
+	}
+	return strings.TrimRight(strings.TrimRight(s, "0"), ".")
 }

@@ -10,6 +10,8 @@
 package poly
 
 import (
+	"strings"
+
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
@@ -92,4 +94,21 @@ func (c Contour[T]) segment(index int) Segment[T] {
 		return Segment[T]{c[len(c)-1], c[0]}
 	}
 	return Segment[T]{c[index], c[index+1]}
+}
+
+func (c Contour[T]) String() string {
+	var buffer strings.Builder
+	buffer.WriteString("unison.Contour{")
+	for j, pt := range c {
+		if j != 0 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteByte('{')
+		buffer.WriteString(floatToString(pt.X))
+		buffer.WriteByte(',')
+		buffer.WriteString(floatToString(pt.Y))
+		buffer.WriteByte('}')
+	}
+	buffer.WriteByte('}')
+	return buffer.String()
 }
