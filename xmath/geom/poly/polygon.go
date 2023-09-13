@@ -13,8 +13,44 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
+)
+
+const (
+	clipping = iota
+	subject
+)
+
+type clipOp int
+
+const (
+	subtractOp clipOp = iota
+	intersectOp
+	xorOp
+	unionOp
+)
+
+type vertexType int
+
+const (
+	_ vertexType = iota
+	externalMaximum
+	externalLeftIntermediate
+	_ // topEdge, not used
+	externalRightIntermediate
+	rightEdge
+	internalMaximumAndMinimum
+	internalMinimum
+	externalMinimum
+	externalMaximumAndMinimum
+	leftEdge
+	internalLeftIntermediate
+	_ // bottomEdge, not used
+	internalRightIntermediate
+	internalMaximum
+	_ // non-intersection, not used
 )
 
 // Polygon32 is an alias for the float32 version of Polygon.
@@ -69,9 +105,188 @@ func (p Polygon[T]) ContainsEvenOdd(pt geom.Point[T]) bool {
 	return count%2 == 1
 }
 
+// Rotate the polygon about a point.
+func (p Polygon[T]) Rotate(center geom.Point[T], angleInRadians T) Polygon[T] {
+	cos := xmath.Cos(angleInRadians)
+	sin := xmath.Sin(angleInRadians)
+	other := p.Clone()
+	for i, c := range other {
+		for j, pt := range c {
+			pt.Subtract(center)
+			pt.X = pt.X*cos - pt.Y*sin
+			pt.Y = pt.X*sin + pt.Y*cos
+			pt.Add(center)
+			other[i][j] = pt
+		}
+	}
+	return other
+}
+
+// Union returns the union of both polygons.
+func (p Polygon[T]) Union(other Polygon[T]) Polygon[T] {
+	return p.construct(unionOp, other)
+}
+
+// Intersect returns the intersection of both polygons.
+func (p Polygon[T]) Intersect(other Polygon[T]) Polygon[T] {
+	return p.construct(intersectOp, other)
+}
+
+// Subtract returns the result of removing the other polygon from this polygon.
+func (p Polygon[T]) Subtract(other Polygon[T]) Polygon[T] {
+	return p.construct(subtractOp, other)
+}
+
+// Xor returns the result of xor'ing this polygon with the other polygon.
+func (p Polygon[T]) Xor(other Polygon[T]) Polygon[T] {
+	return p.construct(xorOp, other)
+}
+
+func (p Polygon[T]) construct(op clipOp, other Polygon[T]) Polygon[T] {
+	var result Polygon[T]
+
+	// Short-circuit the work if we can trivially determine the result is an empty polygon.
+	if (len(p) == 0 && len(other) == 0) ||
+		(len(p) == 0 && (op == intersectOp || op == subtractOp)) ||
+		(len(other) == 0 && op == intersectOp) {
+		return result
+	}
+
+	// Build the local minima table and the scan beam table
+	sbTree := &scanBeamTree[T]{}
+	subjNonContributing, clipNonContributing := p.identifyNonContributingContours(op, other)
+	lmt := buildLocalMinimaTable(nil, sbTree, p, subjNonContributing, subject, op)
+	if lmt = buildLocalMinimaTable(lmt, sbTree, other, clipNonContributing, clipping, op); lmt == nil {
+		return result
+	}
+	sbt := sbTree.buildScanBeamTable()
+
+	// Process each scan beam
+	var aet *edgeNode[T]
+	var outPoly *polygonNode[T]
+	localMin := lmt
+	i := 0
+	for i < len(sbt) {
+
+		// Set yb and yt to the bottom and top of the scanbeam
+		var yt, dy T
+		var bPt geom.Point[T]
+		bPt.Y = sbt[i]
+		i++
+		if i < len(sbt) {
+			yt = sbt[i]
+			dy = yt - bPt.Y
+		}
+
+		// If LMT node corresponding to bPt.Y exists
+		if localMin != nil && localMin.y == bPt.Y {
+			// Add edges starting at this local minimum to the AET
+			for edge := localMin.firstBound; edge != nil; edge = edge.nextBound {
+				aet = edge.addEdgeToActiveEdgeTable(aet, nil)
+			}
+			localMin = localMin.next
+		}
+		if aet == nil {
+			continue
+		}
+
+		aet.bundleFields(bPt)
+		bPt, outPoly = aet.process(op, bPt, outPoly)
+		aet = aet.deleteTerminatingEdges(bPt, yt)
+
+		if i < len(sbt) {
+			// Process each node in the intersection table
+			for inter := aet.buildIntersections(dy); inter != nil; inter = inter.next {
+				outPoly = inter.process(op, bPt, outPoly)
+				aet = aet.swapIntersectingEdgeBundles(inter)
+			}
+			aet = aet.prepareForNextScanBeam(yt)
+		}
+	}
+
+	// Generate the resulting polygon
+	if outPoly != nil {
+		return outPoly.generate()
+	}
+	return Polygon[T]{}
+}
+
+func (p Polygon[T]) identifyNonContributingContours(op clipOp, clip Polygon[T]) (subjNonContributing, clipNonContributing []bool) {
+	subjNonContributing = make([]bool, len(p))
+	clipNonContributing = make([]bool, len(clip))
+	if (op == intersectOp || op == subtractOp) && len(p) > 0 && len(clip) > 0 {
+
+		// Check all subject contour bounding boxes against clip boxes
+		overlaps := make([]bool, len(p)*len(clip))
+		boxes := make([]geom.Rect[T], len(clip))
+		for i, c := range clip {
+			boxes[i] = c.Bounds()
+		}
+		for si := range p {
+			box := p[si].Bounds()
+			for ci := range clip {
+				overlaps[ci*len(p)+si] = box.Intersects(boxes[ci])
+			}
+		}
+
+		// For each clip contour, search for any subject contour overlaps
+		for ci := range clip {
+			clipNonContributing[ci] = true
+			for si := range p {
+				if overlaps[ci*len(p)+si] {
+					clipNonContributing[ci] = false
+					break
+				}
+			}
+		}
+
+		if op == intersectOp {
+			// For each subject contour, search for any clip contour overlaps
+			for si := range p {
+				subjNonContributing[si] = true
+				for ci := range clip {
+					if overlaps[ci*len(p)+si] {
+						subjNonContributing[si] = false
+						break
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+func calcVertexType(tr, tl, br, bl bool) vertexType {
+	var vt vertexType
+	if tr {
+		vt = 1
+	}
+	if tl {
+		vt |= 2
+	}
+	if br {
+		vt |= 4
+	}
+	if bl {
+		vt |= 8
+	}
+	return vt
+}
+
+func existsState[T constraints.Float](edge *edgeNode[T], which int) (int, bool) {
+	state := 0
+	if edge.bundleAbove[which] {
+		state = 1
+	}
+	if edge.bundleBelow[which] {
+		state |= 2
+	}
+	return state, edge.bundleAbove[which] || edge.bundleBelow[which]
+}
+
 func (p Polygon[T]) String() string {
 	var buffer strings.Builder
-	buffer.WriteString("unison.Polygon{")
+	fmt.Fprintf(&buffer, "%T{", p)
 	for i, c := range p {
 		if i != 0 {
 			buffer.WriteByte(',')

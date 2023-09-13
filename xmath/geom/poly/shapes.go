@@ -10,6 +10,8 @@
 package poly
 
 import (
+	"math"
+
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"golang.org/x/exp/constraints"
@@ -19,7 +21,7 @@ import (
 // radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
 func CalcEllipseSegmentCount[T constraints.Float](r, e T) int {
 	d := 1 - e/r
-	n := int(xmath.Ceil(2 * xmath.Pi / xmath.Acos(2*d*d-1)))
+	n := int(xmath.Ceil(2 * math.Pi / xmath.Acos(2*d*d-1)))
 	if n < 4 {
 		n = 4
 	}
@@ -37,7 +39,7 @@ func ApproximateEllipseAuto[T constraints.Float](bounds geom.Rect[T]) Polygon[T]
 func ApproximateEllipse[T constraints.Float](bounds geom.Rect[T], sections int) Polygon[T] {
 	halfWidth := bounds.Width / 2
 	halfHeight := bounds.Height / 2
-	inc := xmath.Pi * 2 / T(sections)
+	inc := math.Pi * 2 / T(sections)
 	center := bounds.Center()
 	contour := make(Contour[T], sections)
 	var angle T
@@ -49,4 +51,16 @@ func ApproximateEllipse[T constraints.Float](bounds geom.Rect[T], sections int) 
 		angle += inc
 	}
 	return Polygon[T]{contour}
+}
+
+// Rect creates a new polygon in the shape of a rectangle.
+func Rect[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
+	right := bounds.Right() - 1
+	bottom := bounds.Bottom() - 1
+	return Polygon[T]{Contour[T]{
+		bounds.Point,
+		geom.Point[T]{X: bounds.X, Y: bottom},
+		geom.Point[T]{X: right, Y: bottom},
+		geom.Point[T]{X: right, Y: bounds.Y},
+	}}
 }

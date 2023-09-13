@@ -10,6 +10,7 @@
 package poly
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -89,16 +90,9 @@ func (c Contour[T]) Contains(pt geom.Point[T]) bool {
 	return count%2 == 1
 }
 
-func (c Contour[T]) segment(index int) Segment[T] {
-	if index == len(c)-1 {
-		return Segment[T]{c[len(c)-1], c[0]}
-	}
-	return Segment[T]{c[index], c[index+1]}
-}
-
 func (c Contour[T]) String() string {
 	var buffer strings.Builder
-	buffer.WriteString("unison.Contour{")
+	fmt.Fprintf(&buffer, "%T{", c)
 	for j, pt := range c {
 		if j != 0 {
 			buffer.WriteByte(',')
