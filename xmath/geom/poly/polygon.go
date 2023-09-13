@@ -105,39 +105,48 @@ func (p Polygon[T]) ContainsEvenOdd(pt geom.Point[T]) bool {
 	return count%2 == 1
 }
 
-// Rotate the polygon about a point.
-func (p Polygon[T]) Rotate(center geom.Point[T], angleInRadians T) Polygon[T] {
-	cos := xmath.Cos(angleInRadians)
-	sin := xmath.Sin(angleInRadians)
+// Translate returns a new polygon holding a copy of this polygon moved to a new position.
+func (p Polygon[T]) Translate(offset geom.Point[T]) Polygon[T] {
 	other := p.Clone()
-	for i, c := range other {
-		for j, pt := range c {
-			pt.Subtract(center)
-			pt.X = pt.X*cos - pt.Y*sin
-			pt.Y = pt.X*sin + pt.Y*cos
-			pt.Add(center)
-			other[i][j] = pt
+	for _, c := range other {
+		for i := range c {
+			c[i].Add(offset)
 		}
 	}
 	return other
 }
 
-// Union returns the union of both polygons.
+// Rotate returns a new polygon holding a copy of this polygon rotated about a point.
+func (p Polygon[T]) Rotate(center geom.Point[T], angleInRadians T) Polygon[T] {
+	cos := xmath.Cos(angleInRadians)
+	sin := xmath.Sin(angleInRadians)
+	other := p.Clone()
+	for _, c := range other {
+		for i, pt := range c {
+			pt.Subtract(center)
+			c[i].X = pt.X*cos - pt.Y*sin + center.X
+			c[i].Y = pt.X*sin + pt.Y*cos + center.Y
+		}
+	}
+	return other
+}
+
+// Union returns a new polygon holding the union of both polygons.
 func (p Polygon[T]) Union(other Polygon[T]) Polygon[T] {
 	return p.construct(unionOp, other)
 }
 
-// Intersect returns the intersection of both polygons.
+// Intersect returns a new polygon holding the intersection of both polygons.
 func (p Polygon[T]) Intersect(other Polygon[T]) Polygon[T] {
 	return p.construct(intersectOp, other)
 }
 
-// Subtract returns the result of removing the other polygon from this polygon.
+// Subtract returns a new polygon holding the result of removing the other polygon from this polygon.
 func (p Polygon[T]) Subtract(other Polygon[T]) Polygon[T] {
 	return p.construct(subtractOp, other)
 }
 
-// Xor returns the result of xor'ing this polygon with the other polygon.
+// Xor returns a new polygon holding the result of xor'ing this polygon with the other polygon.
 func (p Polygon[T]) Xor(other Polygon[T]) Polygon[T] {
 	return p.construct(xorOp, other)
 }
