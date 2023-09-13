@@ -131,6 +131,22 @@ func (p Polygon[T]) Rotate(center geom.Point[T], angleInRadians T) Polygon[T] {
 	return other
 }
 
+// RotateAndTranslate returns a new polygon holding a copy of this polygon rotated about a point and then moved to a new
+// position. Effectively the same as calling .Rotate().Translate(), but with less cost.
+func (p Polygon[T]) RotateAndTranslate(center, offset geom.Point[T], angleInRadians T) Polygon[T] {
+	cos := xmath.Cos(angleInRadians)
+	sin := xmath.Sin(angleInRadians)
+	other := p.Clone()
+	for _, c := range other {
+		for i, pt := range c {
+			pt.Subtract(center)
+			c[i].X = pt.X*cos - pt.Y*sin + center.X + offset.X
+			c[i].Y = pt.X*sin + pt.Y*cos + center.Y + offset.Y
+		}
+	}
+	return other
+}
+
 // Union returns a new polygon holding the union of both polygons.
 func (p Polygon[T]) Union(other Polygon[T]) Polygon[T] {
 	return p.construct(unionOp, other)
