@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-const epsilon = 2.2204460492503131e-16
+const epsilon = 2.220446e-16
 
 type horizontalEdgeStates int
 
