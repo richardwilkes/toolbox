@@ -11,7 +11,6 @@ package visibility
 
 import (
 	"cmp"
-	"math"
 	"slices"
 
 	"github.com/richardwilkes/toolbox/collection/quadtree"
@@ -77,10 +76,9 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 			k := (j + 1) % len(viewport)
 			if hasIntersection(si.Start, si.End, viewport[j], viewport[k]) {
 				pt, intersects := intersectLines(si.Start, si.End, viewport[j], viewport[k])
-				if !intersects || mostlyEqual(pt, si.Start) || mostlyEqual(pt, si.End) {
-					continue
+				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
+					intersections = append(intersections, pt)
 				}
-				intersections = append(intersections, pt)
 			}
 		}
 		segments = v.collectSegments(si, intersections, segments, true)
@@ -110,8 +108,8 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 	for i := range segments {
 		a1 := angle(segments[i].Start, viewPt)
 		a2 := angle(segments[i].End, viewPt)
-		if (a1 >= -math.Pi && a1 <= 0 && a2 <= math.Pi && a2 >= 0 && a2-a1 > math.Pi) ||
-			(a2 >= -math.Pi && a2 <= 0 && a1 <= math.Pi && a1 >= 0 && a1-a2 > math.Pi) {
+		if (a1 >= -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
+			(a2 >= -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
 			insert(i, heap, mapper, segments, viewPt, start)
 		}
 	}
@@ -185,10 +183,9 @@ func (v *Visibility[T]) breakIntersections() {
 			}
 			if hasIntersection(si.Start, si.End, sj.Start, sj.End) {
 				pt, intersects := intersectLines(si.Start, si.End, sj.Start, sj.End)
-				if !intersects || mostlyEqual(pt, si.Start) || mostlyEqual(pt, si.End) {
-					continue
+				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
+					intersections = append(intersections, pt)
 				}
-				intersections = append(intersections, pt)
 			}
 		}
 		segments = v.collectSegments(si, intersections, segments, false)
@@ -325,8 +322,8 @@ func lessThan[T constraints.Float](index1, index2 int, segments []Segment[T], po
 	} else {
 		a2 = angle2(segments[index2].Start, pt2, position)
 	}
-	if a1 < math.Pi {
-		if a2 > math.Pi {
+	if a1 < 180 {
+		if a2 > 180 {
 			return true
 		}
 		return a2 < a1
@@ -365,23 +362,21 @@ func sortPoints[T constraints.Float](position geom.Point[T], segments []Segment[
 	return points
 }
 
-const twoPi = math.Pi * 2
-
 func angle2[T constraints.Float](a, b, c geom.Point[T]) T {
 	a1 := angle(a, b)
 	a2 := angle(b, c)
 	a3 := a1 - a2
 	if a3 < 0 {
-		a3 += twoPi
+		a3 += 360
 	}
-	if a3 > twoPi {
-		a3 -= twoPi
+	if a3 > 360 {
+		a3 -= 360
 	}
 	return a3
 }
 
 func angle[T constraints.Float](a, b geom.Point[T]) T {
-	return xmath.Atan2(b.Y-a.Y, b.X-a.X)
+	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / xmath.Pi
 }
 
 func distance[T constraints.Float](a, b geom.Point[T]) T {
