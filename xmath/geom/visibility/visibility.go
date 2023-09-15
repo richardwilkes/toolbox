@@ -11,6 +11,7 @@ package visibility
 
 import (
 	"cmp"
+	"math"
 	"slices"
 
 	"github.com/richardwilkes/toolbox/collection/quadtree"
@@ -20,7 +21,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-const epsilon = 0.001
+const epsilon = 0.01
 
 // Visibility holds state for computing a visibility polygon.
 type Visibility[T constraints.Float] struct {
@@ -57,7 +58,7 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 
 	// Generate a revised segment list by clipping the segments against the viewport and throwing out any that aren't
 	// within the viewport.
-	brokenSegments := make([]Segment[T], 0, len(v.segments)*2)
+	segments := make([]Segment[T], 0, len(v.segments)*2)
 	viewport := []geom.Point[T]{
 		{X: v.left, Y: v.top},
 		{X: v.right, Y: v.top},
@@ -76,32 +77,13 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 			k := (j + 1) % len(viewport)
 			if hasIntersection(si.Start, si.End, viewport[j], viewport[k]) {
 				pt, intersects := intersectLines(si.Start, si.End, viewport[j], viewport[k])
-				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
-					intersections = append(intersections, pt)
+				if !intersects || mostlyEqual(pt, si.Start) || mostlyEqual(pt, si.End) {
+					continue
 				}
+				intersections = append(intersections, pt)
 			}
 		}
-		start := si.Start
-		for len(intersections) > 0 {
-			endIndex := 0
-			endDis := distance(start, intersections[0])
-			for j := 1; j < len(intersections); j++ {
-				if dis := distance(start, intersections[j]); dis < endDis {
-					endDis = dis
-					endIndex = j
-				}
-			}
-			brokenSegments = append(brokenSegments, Segment[T]{Start: start, End: intersections[endIndex]})
-			start = intersections[endIndex]
-			intersections = slices.Delete(intersections, endIndex, endIndex+1)
-		}
-		brokenSegments = append(brokenSegments, Segment[T]{Start: start, End: si.End})
-	}
-	segments := make([]Segment[T], 0, len(brokenSegments)+4)
-	for _, si := range brokenSegments {
-		if v.inViewport(si.Start) && v.inViewport(si.End) {
-			segments = append(segments, si)
-		}
+		segments = v.collectSegments(si, intersections, segments, true)
 	}
 
 	// Add the viewport bounds to the segment list
@@ -128,8 +110,8 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 	for i := range segments {
 		a1 := angle(segments[i].Start, viewPt)
 		a2 := angle(segments[i].End, viewPt)
-		if (a1 >= -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
-			(a2 >= -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
+		if (a1 >= -math.Pi && a1 <= 0 && a2 <= math.Pi && a2 >= 0 && a2-a1 > math.Pi) ||
+			(a2 >= -math.Pi && a2 <= 0 && a1 <= math.Pi && a1 >= 0 && a1-a2 > math.Pi) {
 			insert(i, heap, mapper, segments, viewPt, start)
 		}
 	}
@@ -194,37 +176,47 @@ func (v *Visibility[T]) breakIntersections() {
 	for _, si := range v.segments {
 		qt.Insert(si)
 	}
-	output := make([]Segment[T], 0, len(v.segments)*2)
-	for i, si := range v.segments {
+	segments := make([]Segment[T], 0, len(v.segments)*2)
+	for _, si := range v.segments {
 		var intersections []geom.Point[T]
-		for j, sj := range qt.FindIntersects(si.Bounds()) {
-			if i == j {
+		for _, sj := range qt.FindIntersects(si.Bounds()) {
+			if si == sj {
 				continue
 			}
 			if hasIntersection(si.Start, si.End, sj.Start, sj.End) {
 				pt, intersects := intersectLines(si.Start, si.End, sj.Start, sj.End)
-				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
-					intersections = append(intersections, pt)
+				if !intersects || mostlyEqual(pt, si.Start) || mostlyEqual(pt, si.End) {
+					continue
 				}
+				intersections = append(intersections, pt)
 			}
 		}
-		start := si.Start
-		for len(intersections) > 0 {
-			endIndex := 0
-			endDis := distance(start, intersections[0])
-			for j := 1; j < len(intersections); j++ {
-				if dis := distance(start, intersections[j]); dis < endDis {
-					endDis = dis
-					endIndex = j
-				}
-			}
-			output = append(output, Segment[T]{Start: start, End: intersections[endIndex]})
-			start = intersections[endIndex]
-			intersections = slices.Delete(intersections, endIndex, endIndex+1)
-		}
-		output = append(output, Segment[T]{Start: start, End: si.End})
+		segments = v.collectSegments(si, intersections, segments, false)
 	}
-	v.segments = slices.Clip(output)
+	v.segments = slices.Clip(segments)
+}
+
+func (v *Visibility[T]) collectSegments(s Segment[T], intersections []geom.Point[T], segments []Segment[T], onlyInViewPort bool) []Segment[T] {
+	start := s.Start
+	for len(intersections) > 0 {
+		endIndex := 0
+		endDis := distance(start, intersections[0])
+		for i := 1; i < len(intersections); i++ {
+			if dis := distance(start, intersections[i]); dis < endDis {
+				endDis = dis
+				endIndex = i
+			}
+		}
+		if !onlyInViewPort || (v.inViewport(start) && v.inViewport(intersections[endIndex])) {
+			segments = append(segments, Segment[T]{Start: start, End: intersections[endIndex]})
+		}
+		start = intersections[endIndex]
+		intersections = slices.Delete(intersections, endIndex, endIndex+1)
+	}
+	if !onlyInViewPort || (v.inViewport(start) && v.inViewport(s.End)) {
+		segments = append(segments, Segment[T]{Start: start, End: s.End})
+	}
+	return segments
 }
 
 func mostlyEqual[T constraints.Float](a, b geom.Point[T]) bool {
@@ -333,8 +325,8 @@ func lessThan[T constraints.Float](index1, index2 int, segments []Segment[T], po
 	} else {
 		a2 = angle2(segments[index2].Start, pt2, position)
 	}
-	if a1 < 180 {
-		if a2 > 180 {
+	if a1 < math.Pi {
+		if a2 > math.Pi {
 			return true
 		}
 		return a2 < a1
@@ -356,38 +348,40 @@ func sortPoints[T constraints.Float](position geom.Point[T], segments []Segment[
 		pos++
 	}
 	slices.SortFunc(points, func(a, b endPoint[T]) int {
-		result := cmp.Compare(a.angle, b.angle)
-		if result == 0 {
-			result = cmp.Compare(distance(a.pt(segments), position), distance(b.pt(segments), position))
-			if result == 0 {
-				if a.start != b.start {
-					if a.start {
-						return 1
-					}
-					return -1
-				}
-			}
+		if result := cmp.Compare(a.angle, b.angle); result != 0 {
+			return result
 		}
-		return result
+		if result := cmp.Compare(distance(a.pt(segments), position), distance(b.pt(segments), position)); result != 0 {
+			return result
+		}
+		if a.start == b.start {
+			return 0
+		}
+		if a.start {
+			return 1
+		}
+		return -1
 	})
 	return points
 }
+
+const twoPi = math.Pi * 2
 
 func angle2[T constraints.Float](a, b, c geom.Point[T]) T {
 	a1 := angle(a, b)
 	a2 := angle(b, c)
 	a3 := a1 - a2
 	if a3 < 0 {
-		a3 += 360
+		a3 += twoPi
 	}
-	if a3 > 360 {
-		a3 -= 360
+	if a3 > twoPi {
+		a3 -= twoPi
 	}
 	return a3
 }
 
 func angle[T constraints.Float](a, b geom.Point[T]) T {
-	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / xmath.Pi
+	return xmath.Atan2(b.Y-a.Y, b.X-a.X)
 }
 
 func distance[T constraints.Float](a, b geom.Point[T]) T {
@@ -402,11 +396,11 @@ func intersectLines[T constraints.Float](s1, e1, s2, e2 geom.Point[T]) (geom.Poi
 	dax := e1.X - s1.X
 	day := e1.Y - s1.Y
 	ub := dby*dax - dbx*day
-	if ub != 0 {
-		ua := (dbx*(s1.Y-s2.Y) - dby*(s1.X-s2.X)) / ub
-		return geom.Point[T]{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
+	if ub == 0 {
+		return geom.Point[T]{}, false
 	}
-	return geom.Point[T]{}, false
+	ua := (dbx*(s1.Y-s2.Y) - dby*(s1.X-s2.X)) / ub
+	return geom.Point[T]{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
 }
 
 func hasIntersection[T constraints.Float](s1, e1, s2, e2 geom.Point[T]) bool {
