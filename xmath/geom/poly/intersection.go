@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -21,15 +21,15 @@ type intersection[T constraints.Float] struct {
 	next  *intersection[T]
 }
 
-func (inter *intersection[T]) process(op clipOp, pt geom.Point[T], outPoly *polygonNode[T]) *polygonNode[T] {
-	e0 := inter.edge0
-	e1 := inter.edge1
+func (i *intersection[T]) process(op clipOp, pt geom.Point[T], outPoly *polygonNode[T]) *polygonNode[T] {
+	e0 := i.edge0
+	e1 := i.edge1
 
 	// Only generate output for contributing intersections
 	if (e0.bundleAbove[clipping] || e0.bundleAbove[subject]) && (e1.bundleAbove[clipping] || e1.bundleAbove[subject]) {
 		n0 := e0.outAbove
 		n1 := e1.outAbove
-		iPt := inter.point
+		iPt := i.point
 		iPt.Y += pt.Y
 		inClip := (e0.bundleAbove[clipping] && !e0.clipSide) ||
 			(e1.bundleAbove[clipping] && e1.clipSide) ||

@@ -17,50 +17,37 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// CalcEllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
-// radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
-func CalcEllipseSegmentCount[T constraints.Float](r, e T) int {
-	d := 1 - e/r
-	n := int(xmath.Ceil(2 * math.Pi / xmath.Acos(2*d*d-1)))
-	if n < 4 {
-		n = 4
+// FromRect returns a Polygon in the shape of the specified rectangle.
+func FromRect[T constraints.Float](r geom.Rect[T]) Polygon[T] {
+	right := r.Right() - 1
+	bottom := r.Bottom() - 1
+	return Polygon[T]{Contour[T]{r.Point, geom.NewPoint(r.X, bottom), geom.NewPoint(right, bottom), geom.NewPoint(right, r.Y)}}
+}
+
+// FromEllipse returns a Polygon that approximates an ellipse filling the given Rect. 'sections' indicates how many
+// segments to break the ellipse contour into. Passing a value less than 4 for 'sections' will result in an automatic
+// choice based on a call to EllipseSegmentCount, using half of the longest dimension for the 'r' parameter and 0.2 for
+// the 'e' parameter.
+func FromEllipse[T constraints.Float](r geom.Rect[T], sections int) Polygon[T] {
+	if sections < 4 {
+		sections = EllipseSegmentCount(max(r.Width, r.Height)/2, 0.2)
 	}
-	return n
-}
-
-// ApproximateEllipseAuto creates a polygon that approximates an ellipse, automatically choose the number of segments to
-// break the ellipse contour into. This uses CalcEllipseSegmentCount() with an 'e' of 0.2.
-func ApproximateEllipseAuto[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
-	return ApproximateEllipse(bounds, CalcEllipseSegmentCount(max(bounds.Width, bounds.Height)/2, 0.2))
-}
-
-// ApproximateEllipse creates a polygon that approximates an ellipse. 'sections' indicates how many segments to break
-// the ellipse contour into.
-func ApproximateEllipse[T constraints.Float](bounds geom.Rect[T], sections int) Polygon[T] {
-	halfWidth := bounds.Width / 2
-	halfHeight := bounds.Height / 2
+	halfWidth := r.Width / 2
+	halfHeight := r.Height / 2
 	inc := math.Pi * 2 / T(sections)
-	center := bounds.Center()
+	center := r.Center()
 	contour := make(Contour[T], sections)
 	var angle T
 	for i := 0; i < sections; i++ {
-		contour[i] = geom.Point[T]{
-			X: center.X + xmath.Cos(angle)*halfWidth,
-			Y: center.Y + xmath.Sin(angle)*halfHeight,
-		}
+		contour[i] = geom.NewPoint(center.X+xmath.Cos(angle)*halfWidth, center.Y+xmath.Sin(angle)*halfHeight)
 		angle += inc
 	}
 	return Polygon[T]{contour}
 }
 
-// Rect creates a new polygon in the shape of a rectangle.
-func Rect[T constraints.Float](bounds geom.Rect[T]) Polygon[T] {
-	right := bounds.Right() - 1
-	bottom := bounds.Bottom() - 1
-	return Polygon[T]{Contour[T]{
-		bounds.Point,
-		geom.Point[T]{X: bounds.X, Y: bottom},
-		geom.Point[T]{X: right, Y: bottom},
-		geom.Point[T]{X: right, Y: bounds.Y},
-	}}
+// EllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
+// radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
+func EllipseSegmentCount[T constraints.Float](r, e T) int {
+	d := 1 - e/r
+	return max(int(xmath.Ceil(2*math.Pi/xmath.Acos(2*d*d-1))), 4)
 }

@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,17 +11,9 @@ package geom
 
 import (
 	"fmt"
-	"math"
-	"reflect"
 
 	"github.com/richardwilkes/toolbox/xmath"
 )
-
-// Size32 is an alias for the float32 version of Size.
-type Size32 = Size[float32]
-
-// Size64 is an alias for the float64 version of Size.
-type Size64 = Size[float64]
 
 // Size defines a width and height.
 type Size[T xmath.Numeric] struct {
@@ -37,87 +29,60 @@ func NewSize[T xmath.Numeric](width, height T) Size[T] {
 	}
 }
 
-// NewSizePtr creates a new *Size.
-func NewSizePtr[T xmath.Numeric](x, y T) *Size[T] {
-	s := NewSize[T](x, y)
-	return &s
+// Add returns a new Size which is the result of adding this Size with the provided Size.
+func (s Size[T]) Add(size Size[T]) Size[T] {
+	return Size[T]{Width: s.Width + size.Width, Height: s.Height + size.Height}
 }
 
-// Add modifies this Size by adding the supplied Size. Returns itself for easy chaining.
-func (s *Size[T]) Add(size Size[T]) *Size[T] {
-	s.Width += size.Width
-	s.Height += size.Height
-	return s
+// Sub returns a new Size which is the result of subtracting the provided Size from this Size.
+func (s Size[T]) Sub(size Size[T]) Size[T] {
+	return Size[T]{Width: s.Width - size.Width, Height: s.Height - size.Height}
 }
 
-// AddInsets modifies this Size by expanding it to accommodate the specified insets. Returns itself for easy chaining.
-func (s *Size[T]) AddInsets(insets Insets[T]) *Size[T] {
-	s.Width += insets.Width()
-	s.Height += insets.Height()
-	return s
+// Mul returns a new Size which is the result of multiplying this Size by the value.
+func (s Size[T]) Mul(value T) Size[T] {
+	return Size[T]{Width: s.Width * value, Height: s.Height * value}
 }
 
-// Subtract modifies this Size by subtracting the supplied Size. Returns itself for easy chaining.
-func (s *Size[T]) Subtract(size Size[T]) *Size[T] {
-	s.Width -= size.Width
-	s.Height -= size.Height
-	return s
+// Div returns a new Size which is the result of dividing this Size by the value.
+func (s Size[T]) Div(value T) Size[T] {
+	return Size[T]{Width: s.Width / value, Height: s.Height / value}
 }
 
-// SubtractInsets modifies this Size by reducing it to accommodate the specified insets. Returns itself for easy
-// chaining.
-func (s *Size[T]) SubtractInsets(insets Insets[T]) *Size[T] {
-	s.Width -= insets.Width()
-	s.Height -= insets.Height()
-	return s
+// Floor returns a new Size with its width and height floored.
+func (s Size[T]) Floor() Size[T] {
+	return Size[T]{Width: xmath.Floor(s.Width), Height: xmath.Floor(s.Height)}
 }
 
-// GrowToInteger modifies this Size such that its width and height are both the smallest integers greater than or equal
-// to their original values. Returns itself for easy chaining.
-func (s *Size[T]) GrowToInteger() *Size[T] {
-	switch reflect.TypeOf(s.Width).Kind() {
-	case reflect.Float32, reflect.Float64:
-		s.Width = T(math.Ceil(reflect.ValueOf(s.Width).Float()))
-		s.Height = T(math.Ceil(reflect.ValueOf(s.Height).Float()))
+// Ceil returns a new Size with its width and height ceiled.
+func (s Size[T]) Ceil() Size[T] {
+	return Size[T]{Width: xmath.Ceil(s.Width), Height: xmath.Ceil(s.Height)}
+}
+
+// Min returns the smallest Size between itself and 'other'.
+func (s Size[T]) Min(other Size[T]) Size[T] {
+	return Size[T]{Width: min(s.Width, other.Width), Height: min(s.Height, other.Height)}
+}
+
+// Max returns the largest Size between itself and 'other'.
+func (s Size[T]) Max(other Size[T]) Size[T] {
+	return Size[T]{Width: max(s.Width, other.Width), Height: max(s.Height, other.Height)}
+}
+
+// ConstrainForHint returns a size no larger than the hint value. Hint values less than one are ignored.
+func (s Size[T]) ConstrainForHint(hint Size[T]) Size[T] {
+	w := s.Width
+	if hint.Width >= 1 && w > hint.Width {
+		w = hint.Width
 	}
-	return s
+	h := s.Height
+	if hint.Height >= 1 && h > hint.Height {
+		h = hint.Height
+	}
+	return Size[T]{Width: w, Height: h}
 }
 
-// ConstrainForHint ensures this size is no larger than the hint. Hint values less than one are ignored. Returns itself
-// for easy chaining.
-func (s *Size[T]) ConstrainForHint(hint Size[T]) *Size[T] {
-	if hint.Width >= 1 && s.Width > hint.Width {
-		s.Width = hint.Width
-	}
-	if hint.Height >= 1 && s.Height > hint.Height {
-		s.Height = hint.Height
-	}
-	return s
-}
-
-// Min modifies this Size to contain the smallest values between itself and 'other'. Returns itself for easy chaining.
-func (s *Size[T]) Min(other Size[T]) *Size[T] {
-	if s.Width > other.Width {
-		s.Width = other.Width
-	}
-	if s.Height > other.Height {
-		s.Height = other.Height
-	}
-	return s
-}
-
-// Max modifies this Size to contain the largest values between itself and 'other'. Returns itself for easy chaining.
-func (s *Size[T]) Max(other Size[T]) *Size[T] {
-	if s.Width < other.Width {
-		s.Width = other.Width
-	}
-	if s.Height < other.Height {
-		s.Height = other.Height
-	}
-	return s
-}
-
-// String implements the fmt.Stringer interface.
-func (s *Size[T]) String() string {
-	return fmt.Sprintf("%v,%v", s.Width, s.Height)
+// String implements fmt.Stringer.
+func (s Size[T]) String() string {
+	return fmt.Sprintf("%#v,%#v", s.Width, s.Height)
 }

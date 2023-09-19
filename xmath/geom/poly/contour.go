@@ -10,7 +10,6 @@
 package poly
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -18,21 +17,20 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Contour32 is an alias for the float32 version of Contour.
-type Contour32 = Contour[float32]
-
-// Contour64 is an alias for the float64 version of Contour.
-type Contour64 = Contour[float64]
-
 // Contour is a sequence of vertices connected by line segments, forming a closed shape.
 type Contour[T constraints.Float] []geom.Point[T]
 
 // Clone returns a copy of this contour.
 func (c Contour[T]) Clone() Contour[T] {
-	return append([]geom.Point[T]{}, c...)
+	if len(c) == 0 {
+		return nil
+	}
+	clone := make(Contour[T], len(c))
+	copy(clone, c)
+	return clone
 }
 
-// Bounds returns the bounding rectangle of a contour.
+// Bounds returns the bounding rectangle of the contour.
 func (c Contour[T]) Bounds() geom.Rect[T] {
 	if len(c) == 0 {
 		return geom.Rect[T]{}
@@ -55,16 +53,7 @@ func (c Contour[T]) Bounds() geom.Rect[T] {
 			minY = p.Y
 		}
 	}
-	return geom.Rect[T]{
-		Point: geom.Point[T]{
-			X: minX,
-			Y: minY,
-		},
-		Size: geom.Size[T]{
-			Width:  1 + maxX - minX,
-			Height: 1 + maxY - minY,
-		},
-	}
+	return geom.NewRect(minX, minY, 1+maxX-minX, 1+maxY-minY)
 }
 
 // Contains returns true if the point is contained by the contour.
@@ -73,11 +62,7 @@ func (c Contour[T]) Contains(pt geom.Point[T]) bool {
 	for i := range c {
 		cur := c[i]
 		bottom := cur
-		n := i + 1
-		if n == len(c) {
-			n = 0
-		}
-		next := c[n]
+		next := c[(i+1)%len(c)]
 		top := next
 		if bottom.Y > top.Y {
 			bottom, top = top, bottom
@@ -92,15 +77,13 @@ func (c Contour[T]) Contains(pt geom.Point[T]) bool {
 
 func (c Contour[T]) String() string {
 	var buffer strings.Builder
-	fmt.Fprintf(&buffer, "%T{", c)
+	buffer.WriteByte('{')
 	for j, pt := range c {
 		if j != 0 {
 			buffer.WriteByte(',')
 		}
 		buffer.WriteByte('{')
-		buffer.WriteString(floatToString(pt.X))
-		buffer.WriteByte(',')
-		buffer.WriteString(floatToString(pt.Y))
+		buffer.WriteString(pt.String())
 		buffer.WriteByte('}')
 	}
 	buffer.WriteByte('}')

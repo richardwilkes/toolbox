@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,12 +15,6 @@ import (
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
-// Insets32 is an alias for the float32 version of Insets.
-type Insets32 = Insets[float32]
-
-// Insets64 is an alias for the float64 version of Insets.
-type Insets64 = Insets[float64]
-
 // Insets defines margins on each side of a rectangle.
 type Insets[T xmath.Numeric] struct {
 	Top    T `json:"top"`
@@ -29,50 +23,67 @@ type Insets[T xmath.Numeric] struct {
 	Right  T `json:"right"`
 }
 
-// NewUniformInsets creates a new Insets whose edges all have the same value.
-func NewUniformInsets[T xmath.Numeric](amount T) Insets[T] {
-	return Insets[T]{Top: amount, Left: amount, Bottom: amount, Right: amount}
+// NewInsets returns an Insets with the given values for its edges.
+func NewInsets[T xmath.Numeric](top, left, bottom, right T) Insets[T] {
+	return Insets[T]{Top: top, Left: left, Bottom: bottom, Right: right}
 }
 
-// NewHorizontalInsets creates a new Insets whose left and right edges have the specified value.
+// NewUniformInsets returns an Insets whose edges all have the same value.
+func NewUniformInsets[T xmath.Numeric](amount T) Insets[T] {
+	return NewInsets(amount, amount, amount, amount)
+}
+
+// NewSymmetricInsets returns an Insets whose edges match their opposite edge.
+func NewSymmetricInsets[T xmath.Numeric](h, v T) Insets[T] {
+	return NewInsets(v, h, v, h)
+}
+
+// NewHorizontalInsets returns an Insets whose left and right edges have the specified value.
 func NewHorizontalInsets[T xmath.Numeric](amount T) Insets[T] {
 	return Insets[T]{Left: amount, Right: amount}
 }
 
-// NewVerticalInsets creates a new Insets whose top and bottom edges have the specified value.
+// NewVerticalInsets returns an Insets whose top and bottom edges have the specified value.
 func NewVerticalInsets[T xmath.Numeric](amount T) Insets[T] {
 	return Insets[T]{Top: amount, Bottom: amount}
 }
 
-// Add modifies this Insets by adding the supplied Insets. Returns itself for easy chaining.
-func (i *Insets[T]) Add(insets Insets[T]) *Insets[T] {
-	i.Top += insets.Top
-	i.Left += insets.Left
-	i.Bottom += insets.Bottom
-	i.Right += insets.Right
-	return i
+// Add returns a new Insets which is the result of adding this Insets with the provided Insets.
+func (i Insets[T]) Add(in Insets[T]) Insets[T] {
+	return NewInsets(i.Top+in.Top, i.Left+in.Left, i.Bottom+in.Bottom, i.Right+in.Right)
 }
 
-// Subtract modifies this Insets by subtracting the supplied Insets. Returns itself for easy chaining.
-func (i *Insets[T]) Subtract(insets Insets[T]) *Insets[T] {
-	i.Top -= insets.Top
-	i.Left -= insets.Left
-	i.Bottom -= insets.Bottom
-	i.Right -= insets.Right
-	return i
+// Sub returns a new Insets which is the result of subtracting the provided Insets from this Insets.
+func (i Insets[T]) Sub(in Insets[T]) Insets[T] {
+	return NewInsets(i.Top-in.Top, i.Left-in.Left, i.Bottom-in.Bottom, i.Right-in.Right)
 }
 
-// String implements the fmt.Stringer interface.
-func (i *Insets[T]) String() string {
-	return fmt.Sprintf("%v,%v,%v,%v", i.Top, i.Left, i.Bottom, i.Right)
+// Mul returns a new Insets which is the result of multiplying the values of this Insets by the value.
+func (i Insets[T]) Mul(value T) Insets[T] {
+	return NewInsets(i.Top*value, i.Left*value, i.Bottom*value, i.Right*value)
+}
+
+// Div returns a new Insets which is the result of dividing the values of this Insets by the value.
+func (i Insets[T]) Div(value T) Insets[T] {
+	return NewInsets(i.Top/value, i.Left/value, i.Bottom/value, i.Right/value)
+}
+
+// Size returns the Size of the Insets.
+func (i Insets[T]) Size() Size[T] {
+	return NewSize(i.Width(), i.Height())
 }
 
 // Width returns the sum of the left and right insets.
-func (i *Insets[T]) Width() T {
+func (i Insets[T]) Width() T {
 	return i.Left + i.Right
 }
 
 // Height returns the sum of the top and bottom insets.
-func (i *Insets[T]) Height() T {
+func (i Insets[T]) Height() T {
 	return i.Top + i.Bottom
+}
+
+// String implements fmt.Stringer.
+func (i Insets[T]) String() string {
+	return fmt.Sprintf("%#v,%#v,%#v,%#v", i.Top, i.Left, i.Bottom, i.Right)
 }

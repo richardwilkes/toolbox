@@ -1,4 +1,4 @@
-// Copyright ©2019-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,12 +14,6 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Segment32 is an alias for the float32 version of Segment.
-type Segment32 = Segment[float32]
-
-// Segment64 is an alias for the float64 version of Segment.
-type Segment64 = Segment[float64]
-
 // Segment holds the start and end points of a line.
 type Segment[T constraints.Float] struct {
 	Start geom.Point[T]
@@ -31,14 +25,6 @@ type Segment[T constraints.Float] struct {
 func (s Segment[T]) Bounds() geom.Rect[T] {
 	minX := min(s.Start.X, s.End.X)
 	minY := min(s.Start.Y, s.End.Y)
-	return geom.Rect[T]{
-		Point: geom.Point[T]{
-			X: minX - epsilon,
-			Y: minY - epsilon,
-		},
-		Size: geom.Size[T]{
-			Width:  max(s.Start.X, s.End.X) - minX + epsilon*2,
-			Height: max(s.Start.Y, s.End.Y) - minY + epsilon*2,
-		},
-	}
+	return geom.NewRect[T](minX-epsilon, minY-epsilon, max(s.Start.X, s.End.X)-minX+epsilon*2,
+		max(s.Start.Y, s.End.Y)-minY+epsilon*2)
 }

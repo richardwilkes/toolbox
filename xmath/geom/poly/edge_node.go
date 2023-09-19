@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-const epsilon = 2.220446e-16
+const epsilon = 0.00001 // 2.220446e-16
 
 type horizontalEdgeStates int
 
@@ -206,8 +206,8 @@ func (e *edgeNode[T]) process(op clipOp, pt geom.Point[T], inPoly *polygonNode[T
 	var cf *polygonNode[T]
 	px := xmath.MinValue[T]()
 	for edge := e; edge != nil; edge = edge.next {
-		clipExistsState, clipExists := existsState(edge, clipping)
-		subjExistsState, subjExists := existsState(edge, subject)
+		clipExistsState, clipExists := edge.existsState(clipping)
+		subjExistsState, subjExists := edge.existsState(subject)
 		if clipExists || subjExists {
 			// Set bundle side
 			edge.clipSide = parityClipRight
@@ -499,6 +499,17 @@ func (e *edgeNode[T]) swapIntersectingEdgeBundles(inter *intersection[T]) *edgeN
 	}
 
 	return result
+}
+
+func (e *edgeNode[T]) existsState(which int) (int, bool) {
+	state := 0
+	if e.bundleAbove[which] {
+		state = 1
+	}
+	if e.bundleBelow[which] {
+		state |= 2
+	}
+	return state, e.bundleAbove[which] || e.bundleBelow[which]
 }
 
 func mostlyEqual[T constraints.Float](a, b T) bool {

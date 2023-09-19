@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -22,27 +22,27 @@ type scanBeamNode[T constraints.Float] struct {
 	more *scanBeamNode[T]
 }
 
-func (sbt *scanBeamTree[T]) add(y T) {
-	sbt.addToScanBeamTreeAt(&sbt.root, y)
+func (s *scanBeamTree[T]) add(y T) {
+	s.addToScanBeamTreeAt(&s.root, y)
 }
 
-func (sbt *scanBeamTree[T]) addToScanBeamTreeAt(node **scanBeamNode[T], y T) {
+func (s *scanBeamTree[T]) addToScanBeamTreeAt(node **scanBeamNode[T], y T) {
 	switch {
 	case *node == nil:
 		*node = &scanBeamNode[T]{y: y}
-		sbt.entries++
+		s.entries++
 	case (*node).y > y:
-		sbt.addToScanBeamTreeAt(&(*node).less, y)
+		s.addToScanBeamTreeAt(&(*node).less, y)
 	case (*node).y < y:
-		sbt.addToScanBeamTreeAt(&(*node).more, y)
+		s.addToScanBeamTreeAt(&(*node).more, y)
 	default:
 	}
 }
 
-func (sbt *scanBeamTree[T]) buildScanBeamTable() []T {
-	table := make([]T, sbt.entries)
-	if sbt.root != nil {
-		sbt.root.buildScanBeamTableEntries(0, table)
+func (s *scanBeamTree[T]) buildScanBeamTable() []T {
+	table := make([]T, s.entries)
+	if s.root != nil {
+		s.root.buildScanBeamTableEntries(0, table)
 	}
 	return table
 }

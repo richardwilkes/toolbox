@@ -59,10 +59,10 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 	// within the viewport.
 	segments := make([]Segment[T], 0, len(v.segments)*2)
 	viewport := []geom.Point[T]{
-		{X: v.left, Y: v.top},
-		{X: v.right, Y: v.top},
-		{X: v.right, Y: v.bottom},
-		{X: v.left, Y: v.bottom},
+		geom.NewPoint(v.left, v.top),
+		geom.NewPoint(v.right, v.top),
+		geom.NewPoint(v.right, v.bottom),
+		geom.NewPoint(v.left, v.bottom),
 	}
 	for _, si := range v.segments {
 		if (si.Start.X < v.left && si.End.X < v.left) ||
@@ -217,7 +217,7 @@ func (v *Visibility[T]) collectSegments(s Segment[T], intersections []geom.Point
 }
 
 func mostlyEqual[T constraints.Float](a, b geom.Point[T]) bool {
-	return xmath.Abs(a.X-b.X) < epsilon && xmath.Abs(a.Y-b.Y) < epsilon
+	return a.EqualWithin(b, epsilon)
 }
 
 func remove[T constraints.Float](index int, heap, mapper *array, segments []Segment[T], position, destination geom.Point[T]) {

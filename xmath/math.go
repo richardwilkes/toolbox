@@ -132,8 +132,13 @@ func Cbrt[T constraints.Float](x T) T {
 }
 
 // Ceil returns the smallest integer value greater than or equal to x.
-func Ceil[T constraints.Float](x T) T {
-	return T(math.Ceil(float64(x)))
+func Ceil[T Numeric](x T) T {
+	switch reflect.TypeOf(x).Kind() {
+	case reflect.Float32, reflect.Float64:
+		return T(math.Ceil(float64(x)))
+	default:
+		return x
+	}
 }
 
 // Copysign returns a value with the magnitude of x and the sign of y.
@@ -261,8 +266,13 @@ func Expm1[T constraints.Float](x T) T {
 }
 
 // Floor returns the greatest integer value less than or equal to x.
-func Floor[T constraints.Float](x T) T {
-	return T(math.Floor(float64(x)))
+func Floor[T Numeric](x T) T {
+	switch reflect.TypeOf(x).Kind() {
+	case reflect.Float32, reflect.Float64:
+		return T(math.Floor(float64(x)))
+	default:
+		return x
+	}
 }
 
 // FMA returns x * y + z, computed with only one rounding.
@@ -330,9 +340,9 @@ func Inf[T constraints.Float](sign int) T {
 	if reflect.TypeOf(t).Kind() == reflect.Float32 {
 		var v uint32
 		if sign >= 0 {
-			v = 0x7FF00000
+			v = 0x7F800000
 		} else {
-			v = 0xFFF00000
+			v = 0xFF800000
 		}
 		return T(math.Float32frombits(v))
 	}
@@ -815,22 +825,6 @@ func Yn[T constraints.Float](n int, x T) T {
 }
 
 // EqualWithin returns true if a and b are within the given tolerance of each other.
-func EqualWithin[T constraints.Float](a, b, tolerance T) bool {
-	if a == b {
-		return true
-	}
-	delta := Abs(a - b)
-	if delta <= tolerance {
-		return true
-	}
-	var mv T
-	if reflect.TypeOf(mv).Kind() == reflect.Float32 {
-		mv = 0x1p-126
-	} else {
-		mv = 0x1p-1022
-	}
-	if delta <= mv {
-		return delta <= tolerance*mv
-	}
-	return delta/max(Abs(a), Abs(b)) <= tolerance
+func EqualWithin[T Numeric](a, b, tolerance T) bool {
+	return Abs(a-b) <= tolerance
 }

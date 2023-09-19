@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -58,11 +58,11 @@ func (q *QuadTree[T, N]) threshold() int {
 // the node is removed.
 func (q *QuadTree[T, N]) Insert(n N) {
 	rect := n.Bounds()
-	if rect.IsEmpty() {
+	if rect.Empty() {
 		return
 	}
 	q.count++
-	if q.root != nil && q.root.rect.ContainsRect(rect) {
+	if q.root != nil && q.root.rect.Contains(rect) {
 		q.root.insert(n)
 	} else {
 		q.outside = append(q.outside, n)
@@ -107,7 +107,7 @@ func (q *QuadTree[T, N]) Reorganize() {
 	all := q.All()
 	var rect geom.Rect[T]
 	for _, one := range all {
-		rect.Union(one.Bounds())
+		rect = rect.Union(one.Bounds())
 	}
 	q.root = nil
 	q.outside = nil
@@ -137,7 +137,7 @@ func (q *QuadTree[T, N]) ContainsPoint(pt geom.Point[T]) bool {
 		}
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsPoint(pt) {
+		if pt.In(one.Bounds()) {
 			return true
 		}
 	}
@@ -151,7 +151,7 @@ func (q *QuadTree[T, N]) FindContainsPoint(pt geom.Point[T]) []N {
 		result = q.root.findContainsPoint(pt, result)
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsPoint(pt) {
+		if pt.In(one.Bounds()) {
 			result = append(result, one)
 		}
 	}
@@ -166,7 +166,7 @@ func (q *QuadTree[T, N]) MatchedContainsPoint(matcher Matcher[T, N], pt geom.Poi
 		}
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsPoint(pt) && matcher.Matches(one) {
+		if pt.In(one.Bounds()) && matcher.Matches(one) {
 			return true
 		}
 	}
@@ -180,7 +180,7 @@ func (q *QuadTree[T, N]) FindMatchedContainsPoint(matcher Matcher[T, N], pt geom
 		result = q.root.findMatchedContainsPoint(matcher, pt, result)
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsPoint(pt) && matcher.Matches(one) {
+		if pt.In(one.Bounds()) && matcher.Matches(one) {
 			result = append(result, one)
 		}
 	}
@@ -253,7 +253,7 @@ func (q *QuadTree[T, N]) ContainsRect(rect geom.Rect[T]) bool {
 		}
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsRect(rect) {
+		if one.Bounds().Contains(rect) {
 			return true
 		}
 	}
@@ -267,7 +267,7 @@ func (q *QuadTree[T, N]) FindContainsRect(rect geom.Rect[T]) []N {
 		result = q.root.findContainsRect(rect, result)
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsRect(rect) {
+		if one.Bounds().Contains(rect) {
 			result = append(result, one)
 		}
 	}
@@ -282,7 +282,7 @@ func (q *QuadTree[T, N]) MatchedContainsRect(matcher Matcher[T, N], rect geom.Re
 		}
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsRect(rect) && matcher.Matches(one) {
+		if one.Bounds().Contains(rect) && matcher.Matches(one) {
 			return true
 		}
 	}
@@ -296,7 +296,7 @@ func (q *QuadTree[T, N]) FindMatchedContainsRect(matcher Matcher[T, N], rect geo
 		result = q.root.findMatchedContainsRect(matcher, rect, result)
 	}
 	for _, one := range q.outside {
-		if one.Bounds().ContainsRect(rect) && matcher.Matches(one) {
+		if one.Bounds().Contains(rect) && matcher.Matches(one) {
 			result = append(result, one)
 		}
 	}
@@ -311,7 +311,7 @@ func (q *QuadTree[T, N]) ContainedByRect(rect geom.Rect[T]) bool {
 		}
 	}
 	for _, one := range q.outside {
-		if rect.ContainsRect(one.Bounds()) {
+		if rect.Contains(one.Bounds()) {
 			return true
 		}
 	}
@@ -325,7 +325,7 @@ func (q *QuadTree[T, N]) FindContainedByRect(rect geom.Rect[T]) []N {
 		result = q.root.findContainedByRect(rect, result)
 	}
 	for _, one := range q.outside {
-		if rect.ContainsRect(one.Bounds()) {
+		if rect.Contains(one.Bounds()) {
 			result = append(result, one)
 		}
 	}
@@ -340,7 +340,7 @@ func (q *QuadTree[T, N]) MatchedContainedByRect(matcher Matcher[T, N], rect geom
 		}
 	}
 	for _, one := range q.outside {
-		if rect.ContainsRect(one.Bounds()) && matcher.Matches(one) {
+		if rect.Contains(one.Bounds()) && matcher.Matches(one) {
 			return true
 		}
 	}
@@ -354,7 +354,7 @@ func (q *QuadTree[T, N]) FindMatchedContainedByRect(matcher Matcher[T, N], rect 
 		result = q.root.findMatchedContainedByRect(matcher, rect, result)
 	}
 	for _, one := range q.outside {
-		if rect.ContainsRect(one.Bounds()) && matcher.Matches(one) {
+		if rect.Contains(one.Bounds()) && matcher.Matches(one) {
 			result = append(result, one)
 		}
 	}

@@ -10,13 +10,14 @@
 package geom
 
 import (
+	"math"
+
 	"github.com/richardwilkes/toolbox/xmath"
-	"golang.org/x/exp/constraints"
 )
 
 // LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.
 // One point indicates intersection at a single point. Two points indicates an overlapping line segment.
-func LineIntersection[T constraints.Float](a1, a2, b1, b2 Point[T]) []Point[T] {
+func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 	aIsPt := a1.X == a2.X && a1.Y == a2.Y
 	bIsPt := b1.X == b2.X && b1.Y == b2.Y
 	switch {
@@ -80,14 +81,14 @@ func LineIntersection[T constraints.Float](a1, a2, b1, b2 Point[T]) []Point[T] {
 // PointSegmentDistance returns the distance from a point to a line segment. The distance measured is the distance
 // between the specified point and the closest point between the specified end points. If the specified point intersects
 // the line segment in between the end points, this function returns 0.
-func PointSegmentDistance[T constraints.Float](s1, s2, p Point[T]) T {
-	return xmath.Sqrt(PointSegmentDistanceSquared(s1, s2, p))
+func PointSegmentDistance[T xmath.Numeric](s1, s2, p Point[T]) T {
+	return T(math.Sqrt(float64(PointSegmentDistanceSquared(s1, s2, p))))
 }
 
 // PointSegmentDistanceSquared returns the square of the distance from a point to a line segment. The distance measured
 // is the distance between the specified point and the closest point between the specified end points. If the specified
 // point intersects the line segment in between the end points, this function returns 0.
-func PointSegmentDistanceSquared[T constraints.Float](s1, s2, p Point[T]) T {
+func PointSegmentDistanceSquared[T xmath.Numeric](s1, s2, p Point[T]) T {
 	vx := s2.X - s1.X
 	vy := s2.Y - s1.Y
 	px := p.X - s1.X
