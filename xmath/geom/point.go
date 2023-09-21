@@ -88,3 +88,13 @@ func (p Point[T]) EqualWithin(pt Point[T], tolerance T) bool {
 func (p *Point[T]) String() string {
 	return fmt.Sprintf("%#v,%#v", p.X, p.Y)
 }
+
+// Pt32to64 converts the float32 Point into a float64 version.
+func Pt32to64(pt Point[float32]) Point[float64] {
+	return Point[float64]{X: float64(pt.X), Y: float64(pt.Y)}
+}
+
+// Pt64to32 lossily converts the float64 Point into a float32 version.
+func Pt64to32(pt Point[float64]) Point[float32] {
+	return Point[float32]{X: float32(pt.X), Y: float32(pt.Y)}
+}
