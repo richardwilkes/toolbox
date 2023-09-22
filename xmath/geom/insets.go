@@ -48,6 +48,11 @@ func NewVerticalInsets[T xmath.Numeric](amount T) Insets[T] {
 	return Insets[T]{Top: amount, Bottom: amount}
 }
 
+// ConvertInsets converts a Insets of type F into one of type T.
+func ConvertInsets[T, F xmath.Numeric](i Insets[F]) Insets[T] {
+	return NewInsets(T(i.Top), T(i.Left), T(i.Bottom), T(i.Right))
+}
+
 // Add returns a new Insets which is the result of adding this Insets with the provided Insets.
 func (i Insets[T]) Add(in Insets[T]) Insets[T] {
 	return NewInsets(i.Top+in.Top, i.Left+in.Left, i.Bottom+in.Bottom, i.Right+in.Right)

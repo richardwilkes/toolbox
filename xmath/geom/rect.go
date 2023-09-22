@@ -25,6 +25,11 @@ func NewRect[T xmath.Numeric](x, y, width, height T) Rect[T] {
 	return Rect[T]{Point: NewPoint[T](x, y), Size: NewSize[T](width, height)}
 }
 
+// ConvertRect converts a Rect of type F into one of type T.
+func ConvertRect[T, F xmath.Numeric](r Rect[F]) Rect[T] {
+	return NewRect(T(r.X), T(r.Y), T(r.Width), T(r.Height))
+}
+
 // Empty returns true if either the width or height is zero or less.
 func (r Rect[T]) Empty() bool {
 	return r.Width <= 0 || r.Height <= 0

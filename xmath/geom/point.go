@@ -26,6 +26,11 @@ func NewPoint[T xmath.Numeric](x, y T) Point[T] {
 	return Point[T]{X: x, Y: y}
 }
 
+// ConvertPoint converts a Point of type F into one of type T.
+func ConvertPoint[T, F xmath.Numeric](pt Point[F]) Point[T] {
+	return NewPoint(T(pt.X), T(pt.Y))
+}
+
 // Add returns a new Point which is the result of adding this Point with the provided Point.
 func (p Point[T]) Add(pt Point[T]) Point[T] {
 	return Point[T]{X: p.X + pt.X, Y: p.Y + pt.Y}
@@ -85,16 +90,6 @@ func (p Point[T]) EqualWithin(pt Point[T], tolerance T) bool {
 }
 
 // String implements the fmt.Stringer interface.
-func (p *Point[T]) String() string {
+func (p Point[T]) String() string {
 	return fmt.Sprintf("%#v,%#v", p.X, p.Y)
-}
-
-// Pt32to64 converts the float32 Point into a float64 version.
-func Pt32to64(pt Point[float32]) Point[float64] {
-	return Point[float64]{X: float64(pt.X), Y: float64(pt.Y)}
-}
-
-// Pt64to32 lossily converts the float64 Point into a float32 version.
-func Pt64to32(pt Point[float64]) Point[float32] {
-	return Point[float32]{X: float32(pt.X), Y: float32(pt.Y)}
 }

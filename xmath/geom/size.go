@@ -29,6 +29,11 @@ func NewSize[T xmath.Numeric](width, height T) Size[T] {
 	}
 }
 
+// ConvertSize converts a Size of type F into one of type T.
+func ConvertSize[T, F xmath.Numeric](s Size[F]) Size[T] {
+	return NewSize(T(s.Width), T(s.Height))
+}
+
 // Add returns a new Size which is the result of adding this Size with the provided Size.
 func (s Size[T]) Add(size Size[T]) Size[T] {
 	return Size[T]{Width: s.Width + size.Width, Height: s.Height + size.Height}
