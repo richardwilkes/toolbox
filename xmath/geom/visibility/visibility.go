@@ -97,6 +97,10 @@ func (v *Visibility[T]) SetViewPoint(viewPt geom.Point[T]) poly.Polygon[T] {
 		Segment[T]{Start: bottomLeft, End: topLeft},
 	)
 
+	return v.computePolygon(viewPt, segments)
+}
+
+func (v *Visibility[T]) computePolygon(viewPt geom.Point[T], segments []Segment[T]) poly.Polygon[T] {
 	// Sweep through the points to generate the visibility contour
 	sorted := sortPoints(viewPt, segments)
 	mapper := &array{data: make([]int, len(segments))}
