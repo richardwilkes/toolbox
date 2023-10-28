@@ -337,13 +337,31 @@ func (e *edgeNode[T]) process(op clipOp, pt geom.Point[T], inPoly *polygonNode[T
 					}
 				case leftEdge:
 					if edge.bot.Y == bPt.Y {
-						edge.outBelow.addLeft(bPt)
+						if edge.outBelow == nil {
+							edge.outBelow = &polygonNode[T]{
+								left: &vertexNode[T]{
+									pt: pt,
+								},
+							}
+							edge.outBelow.proxy = edge.outBelow
+						} else {
+							edge.outBelow.addLeft(bPt)
+						}
 					}
 					edge.outAbove = edge.outBelow
 					px = bPt.X
 				case rightEdge:
 					if edge.bot.Y == bPt.Y {
-						edge.outBelow.addRight(bPt)
+						if edge.outBelow == nil {
+							edge.outBelow = &polygonNode[T]{
+								right: &vertexNode[T]{
+									pt: pt,
+								},
+							}
+							edge.outBelow.proxy = edge.outBelow
+						} else {
+							edge.outBelow.addRight(bPt)
+						}
 					}
 					edge.outAbove = edge.outBelow
 					px = bPt.X
