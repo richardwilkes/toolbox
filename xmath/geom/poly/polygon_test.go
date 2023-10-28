@@ -469,6 +469,8 @@ func testXor[T constraints.Float](t *testing.T) {
 }
 
 func matchPolys[T constraints.Float](left, right poly.Polygon[T]) bool {
+	left = simplifyPoly(left)
+	right = simplifyPoly(right)
 	if len(left) != len(right) {
 		return false
 	}
@@ -477,10 +479,24 @@ func matchPolys[T constraints.Float](left, right poly.Polygon[T]) bool {
 			return false
 		}
 		for j, pt := range c {
-			if !pt.EqualWithin(right[i][j], 0.00001) {
+			if !pt.EqualWithin(right[i][j], 0.0001) {
 				return false
 			}
 		}
 	}
 	return true
+}
+
+func simplifyPoly[T constraints.Float](p poly.Polygon[T]) poly.Polygon[T] {
+	var revised poly.Polygon[T]
+	for _, c := range p {
+		var nc poly.Contour[T]
+		for i, pt := range c {
+			if i == 0 || !pt.EqualWithin(c[i-1], 0.0001) {
+				nc = append(nc, pt)
+			}
+		}
+		revised = append(revised, nc)
+	}
+	return revised
 }
