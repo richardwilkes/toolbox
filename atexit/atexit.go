@@ -100,9 +100,8 @@ func Exit(status int) {
 	if wasExiting {
 		if recursive {
 			panic("recursive call of atexit.Exit()") // force the recovery mechanism to deal with it
-		} else {
-			select {} // halt progress so that we don't return
 		}
+		select {} // halt progress so that we don't return
 	} else {
 		for i := len(f) - 1; i >= 0; i-- {
 			run(f[i])

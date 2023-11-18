@@ -9,11 +9,16 @@
 
 package txt
 
+import "unicode"
+
 // VowelChecker defines a function that returns true if the specified rune is to be considered a vowel.
 type VowelChecker func(rune) bool
 
 // IsVowel is a concrete implementation of VowelChecker.
 func IsVowel(ch rune) bool {
+	if unicode.IsUpper(ch) {
+		ch = unicode.ToLower(ch)
+	}
 	switch ch {
 	case 'a', 'à', 'á', 'â', 'ä', 'æ', 'ã', 'å', 'ā',
 		'e', 'è', 'é', 'ê', 'ë', 'ē', 'ė', 'ę',
@@ -28,6 +33,9 @@ func IsVowel(ch rune) bool {
 
 // IsVowely is a concrete implementation of VowelChecker that includes 'y'.
 func IsVowely(ch rune) bool {
+	if unicode.IsUpper(ch) {
+		ch = unicode.ToLower(ch)
+	}
 	switch ch {
 	case 'y', 'ÿ':
 		return true

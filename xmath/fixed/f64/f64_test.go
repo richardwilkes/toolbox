@@ -29,6 +29,7 @@ func TestConversion(t *testing.T) {
 	testConversion[fixed.D6](t)
 }
 
+//nolint:goconst // Not helpful
 func testConversion[T fixed.Dx](t *testing.T) {
 	check.Equal(t, "0.1", f64.From[T, float64](0.1).String())
 	check.Equal(t, "0.2", f64.From[T, float64](0.2).String())
