@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -61,6 +61,7 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if str == "" {
 		return 0, errs.New("empty string is not valid")
 	}
+	str = strings.ReplaceAll(str, ",", "")
 	if strings.ContainsAny(str, "Ee") {
 		// Given a floating-point value with an exponent, which technically
 		// isn't valid input, but we'll try to convert it anyway.
