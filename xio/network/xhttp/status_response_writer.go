@@ -61,3 +61,9 @@ func (w *StatusResponseWriter) Flush() {
 		f.Flush()
 	}
 }
+
+// ErrorStatus sends an HTTP response header with 'statusCode' and follows it with the standard text for that code as
+// the body.
+func ErrorStatus(w http.ResponseWriter, statusCode int) {
+	http.Error(w, http.StatusText(statusCode), statusCode)
+}

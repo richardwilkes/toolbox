@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,41 +11,36 @@
 package xhttp
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 )
 
-// PasswordLookup provides a way to map a user in a realm to a password
-type PasswordLookup func(user, realm string) string
-
 // BasicAuth provides basic HTTP authentication.
 type BasicAuth struct {
-	realm  string
-	lookup PasswordLookup
+	Realm string
+	// Lookup provides a way to map a user in a realm to a password. The returned password should have already been
+	// passed through the Hasher function.
+	Lookup func(user, realm string) ([]byte, bool)
+	Hasher func(input string) []byte
 }
 
-// NewBasicAuth creates a new BasicAuth.
-func NewBasicAuth(realm string, lookup PasswordLookup) *BasicAuth {
-	return &BasicAuth{realm: realm, lookup: lookup}
-}
-
-// Wrap an http.Handler.
-func (auth *BasicAuth) Wrap(handler http.Handler) http.Handler {
-	return &wrapper{auth: auth, handler: handler}
-}
-
-type wrapper struct {
-	auth    *BasicAuth
-	handler http.Handler
-}
-
-func (hw *wrapper) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if user, pw, ok := req.BasicAuth(); ok {
-		if pw == hw.auth.lookup(user, hw.auth.realm) {
-			hw.handler.ServeHTTP(w, req)
-			return
+// Wrap an http.Handler, requiring Basic Authentication.
+func (ba *BasicAuth) Wrap(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if user, pw, ok := r.BasicAuth(); ok {
+			stored, found := ba.Lookup(user, ba.Realm)
+			passwordMatch := subtle.ConstantTimeCompare(ba.Hasher(pw), stored) == 1
+			if found && passwordMatch {
+				if md := MetadataFromRequest(r); md != nil {
+					md.User = user
+					md.Logger = md.Logger.With("user", user)
+				}
+				handler.ServeHTTP(w, r)
+				return
+			}
 		}
-	}
-	w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm=%q`, hw.auth.realm))
-	WriteHTTPStatus(w, http.StatusUnauthorized)
+		w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm=%q, charset="UTF-8"`, ba.Realm))
+		ErrorStatus(w, http.StatusUnauthorized)
+	})
 }
