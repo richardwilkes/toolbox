@@ -52,6 +52,7 @@ type Server struct {
 	ShutdownCallback    func(*slog.Logger)
 	addresses           []string
 	port                int
+	shutdownID          int
 	clientHandler       http.Handler
 }
 
@@ -93,7 +94,7 @@ func (s *Server) String() string {
 
 // Run the server. Does not return until the server is shutdown.
 func (s *Server) Run() error {
-	atexit.Register(s.Shutdown)
+	s.shutdownID = atexit.Register(s.Shutdown)
 	if s.Logger == nil {
 		s.Logger = slog.Default()
 	}
@@ -163,6 +164,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Shutdown the server gracefully.
 func (s *Server) Shutdown() {
+	atexit.Unregister(s.shutdownID)
 	startedAt := time.Now()
 	logger := s.Logger.With("protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
 	logger.Info("starting shutdown")
