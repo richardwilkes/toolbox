@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -156,11 +156,12 @@ func loadSheet(f *zip.File, strs []string) (*Sheet, error) {
 			if v, err = strconv.Atoi(cell.Value); err != nil {
 				return nil, errs.Wrap(err)
 			}
-			if v < 0 || v >= len(strs) {
-				return nil, errs.New("String index out of bounds")
+			if v >= 0 && v < len(strs) {
+				cell.Value = strs[v]
+			} else {
+				cell.Value = "#REF!"
 			}
 			cell.Type = String
-			cell.Value = strs[v]
 		case "b": // Boolean
 			cell.Type = Boolean
 		default: // Number

@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/jackpal/gateway v1.0.13
 	github.com/pkg/term v1.1.0
-	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 	golang.org/x/image v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
