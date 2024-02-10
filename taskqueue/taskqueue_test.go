@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -73,7 +73,7 @@ func TestRecovery(t *testing.T) {
 	check.Panics(t, boom)
 	logged := false
 	check.NotPanics(t, func() {
-		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { logged = true }))
+		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { logged = true }))
 		q.Submit(boom)
 		q.Shutdown()
 	})
@@ -83,7 +83,7 @@ func TestRecovery(t *testing.T) {
 func TestRecoveryWithBadLogger(t *testing.T) {
 	check.Panics(t, boom)
 	check.NotPanics(t, func() {
-		q := taskqueue.New(taskqueue.RecoveryHandler(func(err error) { boom() }))
+		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { boom() }))
 		q.Submit(boom)
 		q.Shutdown()
 	})

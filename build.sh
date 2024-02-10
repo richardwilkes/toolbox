@@ -32,7 +32,7 @@ go build -v ./...
 
 # Run the linters
 if [ "$LINT"x == "1x" ]; then
-  GOLANGCI_LINT_VERSION=1.55.2
+  GOLANGCI_LINT_VERSION=1.56.1
   TOOLS_DIR=$PWD/tools
   if [ ! -e "$TOOLS_DIR/golangci-lint" ] || [ "$("$TOOLS_DIR/golangci-lint" version 2>&1 | awk '{ print $4 }' || true)x" != "${GOLANGCI_LINT_VERSION}x" ]; then
     echo -e "\033[33mInstalling version $GOLANGCI_LINT_VERSION of golangci-lint into $TOOLS_DIR...\033[0m"

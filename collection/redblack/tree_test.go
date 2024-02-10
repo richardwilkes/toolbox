@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -37,7 +37,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, 3, rbt.Count())
 
 	var values []int
-	rbt.Traverse(func(key, value int) bool {
+	rbt.Traverse(func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -48,7 +48,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, 4, rbt.Count())
 
 	values = nil
-	rbt.Traverse(func(key, value int) bool {
+	rbt.Traverse(func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -56,7 +56,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, []int{5, 10, 10, 15}, values)
 
 	values = nil
-	rbt.ReverseTraverse(func(key, value int) bool {
+	rbt.ReverseTraverse(func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -73,7 +73,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, 2, rbt.Count())
 
 	values = nil
-	rbt.Traverse(func(key, value int) bool {
+	rbt.Traverse(func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -93,14 +93,14 @@ func TestRedBlackTree(t *testing.T) {
 	check.False(t, ok)
 
 	values = nil
-	rbt.TraverseStartingAt(30, func(key, value int) bool {
+	rbt.TraverseStartingAt(30, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
 	check.Equal(t, 0, len(values))
 
 	values = nil
-	rbt.TraverseStartingAt(20, func(key, value int) bool {
+	rbt.TraverseStartingAt(20, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -108,7 +108,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, []int{20}, values)
 
 	values = nil
-	rbt.TraverseStartingAt(18, func(key, value int) bool {
+	rbt.TraverseStartingAt(18, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -116,14 +116,14 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, []int{18, 19, 20}, values)
 
 	values = nil
-	rbt.ReverseTraverseStartingAt(-20, func(key, value int) bool {
+	rbt.ReverseTraverseStartingAt(-20, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
 	check.Equal(t, 0, len(values))
 
 	values = nil
-	rbt.ReverseTraverseStartingAt(-10, func(key, value int) bool {
+	rbt.ReverseTraverseStartingAt(-10, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
@@ -131,7 +131,7 @@ func TestRedBlackTree(t *testing.T) {
 	check.Equal(t, []int{-10}, values)
 
 	values = nil
-	rbt.ReverseTraverseStartingAt(-8, func(key, value int) bool {
+	rbt.ReverseTraverseStartingAt(-8, func(_, value int) bool {
 		values = append(values, value)
 		return true
 	})
