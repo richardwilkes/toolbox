@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -175,7 +175,7 @@ func Append(err error, errs ...error) *Error {
 			}
 			return Append(errs[0], errs[1:]...)
 		}
-		return Append(Wrap(e), errs...)
+		return Append(WrapTyped(e), errs...)
 	}
 }
 
