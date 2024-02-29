@@ -53,6 +53,13 @@ type Error struct {
 	wrapped bool
 }
 
+// CloneWithPrefixMessage clones this error and adds a prefix to its message.
+func (e *Error) CloneWithPrefixMessage(prefix string) error {
+	revised := *e
+	revised.message = prefix + revised.message
+	return &revised
+}
+
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
 // as-is.
 func Wrap(cause error) error {
