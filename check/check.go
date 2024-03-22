@@ -28,6 +28,14 @@ func Equal(t *testing.T, expected, actual any, msgAndArgs ...any) {
 	}
 }
 
+// NotEqual compares two values for inequality.
+func NotEqual(t *testing.T, expected, actual any, msgAndArgs ...any) {
+	t.Helper()
+	if equal(expected, actual) {
+		errMsg(t, fmt.Sprintf("Expected %v to not be %v", expected, actual), msgAndArgs...)
+	}
+}
+
 func equal(expected, actual any) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
