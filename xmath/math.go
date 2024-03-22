@@ -470,20 +470,6 @@ func Logb[T constraints.Float](x T) T {
 	return T(math.Logb(float64(x)))
 }
 
-// Max returns the larger of x or y.
-//
-// Special cases are:
-//
-//	Max(x, +Inf) = Max(+Inf, x) = +Inf
-//	Max(x, NaN) = Max(NaN, x) = NaN
-//	Max(+0, ±0) = Max(±0, +0) = +0
-//	Max(-0, -0) = -0
-//
-// Deprecated: Use the Go 1.21+ built-in max() instead. August 8, 2023
-func Max[T Numeric](a, b T) T {
-	return max(a, b)
-}
-
 // MaxValue returns the maximum value for the type.
 func MaxValue[T Numeric]() T {
 	var t T
@@ -519,19 +505,6 @@ func MaxValue[T Numeric]() T {
 		panic("unhandled type")
 	}
 	return t
-}
-
-// Min returns the smaller of x or y.
-//
-// Special cases are:
-//
-//	Min(x, -Inf) = Min(-Inf, x) = -Inf
-//	Min(x, NaN) = Min(NaN, x) = NaN
-//	Min(-0, ±0) = Min(±0, -0) = -0
-//
-// Deprecated: Use the Go 1.21+ built-in min() instead. August 8, 2023
-func Min[T Numeric](a, b T) T {
-	return min(a, b)
 }
 
 // MinValue returns the minimum value for the type.

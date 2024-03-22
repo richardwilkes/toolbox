@@ -1,6 +1,6 @@
 module github.com/richardwilkes/toolbox
 
-go 1.22.0
+go 1.22.1
 
 require (
 	github.com/jackpal/gateway v1.0.14
