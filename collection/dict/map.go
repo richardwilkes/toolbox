@@ -9,8 +9,9 @@
 
 package dict
 
-// Functions in this pcakge are only here because the Go team decided not to bring them over in the Go 1.21 maps package
-// when they migrated the existing code from golang.org/x/exp/maps. Why, I'm not sure, since these can be useful.
+// Functions in this package are only here because the Go team decided not to bring them over in the Go 1.21 maps
+// package when they migrated the existing code from golang.org/x/exp/maps. Why, I'm not sure, since these can be
+// useful.
 //
 // I chose not to use the package name "maps" to avoid collisions with the standard library. Unlike with the "slices"
 // package, though, I couldn't use "map", since that's a keyword.
