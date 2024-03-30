@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
@@ -41,15 +42,33 @@ var (
 	Language = Locale()
 	// Languages is a slice of languages to fall back to should the one specified in the Language variable not be
 	// available. It is initialized to the value of the LANGUAGE environment variable.
-	Languages = strings.Split(os.Getenv("LANGUAGE"), ":")
-	once      sync.Once
-	langMap   = make(map[string]map[string]string)
-	hierLock  sync.Mutex
-	hierMap   = make(map[string][]string)
+	Languages    = strings.Split(os.Getenv("LANGUAGE"), ":")
+	altLocalizer atomic.Pointer[localizer]
+	once         sync.Once
+	langMap      = make(map[string]map[string]string)
+	hierLock     sync.Mutex
+	hierMap      = make(map[string][]string)
 )
+
+type localizer struct {
+	Text func(string) string
+}
+
+// SetLocalizer sets the function to use for localizing text. If this is not set or explicitly set to nil, the default
+// localization mechanism will be used.
+func SetLocalizer(f func(string) string) {
+	var trampoline *localizer
+	if f != nil {
+		trampoline = &localizer{Text: f}
+	}
+	altLocalizer.Store(trampoline)
+}
 
 // Text returns a localized version of the text if one exists, or the original text if not.
 func Text(text string) string {
+	if f := altLocalizer.Load(); f != nil {
+		return f.Text(text)
+	}
 	once.Do(func() {
 		if Dir == "" {
 			path, err := os.Executable()

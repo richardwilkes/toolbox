@@ -34,3 +34,11 @@ func TestLocalization(t *testing.T) {
 	Language = "de"
 	check.Equal(t, "1", Text("a"))
 }
+
+func TestAltLocalization(t *testing.T) {
+	check.Equal(t, "Hello!", Text("Hello!"))
+	SetLocalizer(func(_ string) string { return "Bonjour!" })
+	check.Equal(t, "Bonjour!", Text("Hello!"))
+	SetLocalizer(nil)
+	check.Equal(t, "Hello!", Text("Hello!"))
+}
