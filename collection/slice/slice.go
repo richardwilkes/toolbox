@@ -9,42 +9,25 @@
 
 package slice
 
+import "slices"
+
 // ZeroedDelete removes the elements s[i:j] from s, returning the modified slice. This function panics if s[i:j] is not
 // a valid slice of s. This function modifies the contents of the slice s; it does not create a new slice. The elements
 // that are removed are zeroed so that any references can be garbage collected. If you do not need this, use
 // slices.Delete instead.
+//
+// Deprecated: As of Go 1.22, slices.Delete now zeroes out removed elements, so use it instead. This function was
+// deprecated on March 29, 2024 and will be removed on or after January 1, 2025.
 func ZeroedDelete[S ~[]E, E any](s S, i, j int) S {
-	_ = s[i:j] // bounds check
-	copy(s[i:], s[j:])
-	var e E
-	end := len(s) - j + i
-	for k, n := end, len(s); k < n; k++ {
-		s[k] = e
-	}
-	return s[:end]
+	return slices.Delete(s, i, j)
 }
 
 // ZeroedDeleteFunc removes any elements from s for which del returns true, returning the modified slice. This function
 // modifies the contents of the slice s; it does not create a new slice. The elements that are removed are zeroed so
 // that any references can be garbage collected. If you do not need this, use slices.DeleteFunc instead.
+//
+// Deprecated: As of Go 1.22, slices.DeleteFunc now zeroes out removed elements, so use it instead. This function was
+// deprecated on March 29, 2024 and will be removed on or after January 1, 2025.
 func ZeroedDeleteFunc[S ~[]E, E any](s S, del func(E) bool) S {
-	// Don't start copying elements until we find one to delete.
-	for i, v := range s {
-		if del(v) {
-			j := i
-			for i++; i < len(s); i++ {
-				v = s[i]
-				if !del(v) {
-					s[j] = v
-					j++
-				}
-			}
-			var e E
-			for k, n := j, len(s); k < n; k++ {
-				s[k] = e
-			}
-			return s[:j]
-		}
-	}
-	return s
+	return slices.DeleteFunc(s, del)
 }
