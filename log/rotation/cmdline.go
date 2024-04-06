@@ -16,6 +16,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -32,14 +33,14 @@ func ParseAndSetupLogging(cl *cmdline.CmdLine, consoleOnByDefault bool) []string
 	var maxSize int64 = DefaultMaxSize
 	maxBackups := DefaultMaxBackups
 	consoleOption := false
-	cl.NewGeneralOption(&logFile).SetSingle('l').SetName("log-file").SetUsage("The file to write logs to")
-	cl.NewGeneralOption(&maxSize).SetName("log-file-size").SetUsage("The maximum number of bytes to write to a log file before rotating it")
-	cl.NewGeneralOption(&maxBackups).SetName("log-file-backups").SetUsage("The maximum number of old logs files to retain")
+	cl.NewGeneralOption(&logFile).SetSingle('l').SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
+	cl.NewGeneralOption(&maxSize).SetName("log-file-size").SetUsage(i18n.Text("The maximum number of bytes to write to a log file before rotating it"))
+	cl.NewGeneralOption(&maxBackups).SetName("log-file-backups").SetUsage(i18n.Text("The maximum number of old logs files to retain"))
 	opt := cl.NewGeneralOption(&consoleOption)
 	if consoleOnByDefault {
-		opt.SetName("suppress-console-log").SetUsage("Suppress the log output to the console")
+		opt.SetSingle('q').SetName("quiet").SetUsage(i18n.Text("Suppress the log output to the console"))
 	} else {
-		opt.SetName("log-to-console").SetUsage("Copy the log output to the console")
+		opt.SetSingle('C').SetName("log-to-console").SetUsage(i18n.Text("Copy the log output to the console"))
 	}
 	remainingArgs := cl.Parse(os.Args[1:])
 	if rotator, err := New(Path(logFile), MaxSize(maxSize), MaxBackups(maxBackups)); err == nil {
