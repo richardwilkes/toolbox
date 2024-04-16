@@ -205,3 +205,14 @@ func TestWrappedErrors(t *testing.T) {
 	check.Equal(t, "foo2", strings.SplitN(list[2].Error(), "\n", 2)[0])
 	check.Equal(t, "bar2", strings.SplitN(list[3].Error(), "\n", 2)[0])
 }
+
+func TestAlteredFilter(t *testing.T) {
+	err := errs.New("test")
+	result := fmt.Sprintf("%v", err)
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter]")
+	saved := errs.RuntimePrefixesToFilter
+	errs.RuntimePrefixesToFilter = []string{"github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter"}
+	result = fmt.Sprintf("%v", err)
+	check.NotContains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter]")
+	errs.RuntimePrefixesToFilter = saved
+}

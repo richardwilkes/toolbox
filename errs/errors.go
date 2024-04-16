@@ -27,6 +27,16 @@ var (
 	_ StackError     = &Error{}
 	_ fmt.Formatter  = &Error{}
 	_ slog.LogValuer = &Error{}
+
+	// RuntimePrefixesToFilter is a list of prefixes to filter out of the stack trace.
+	//
+	// This variable is not used in a thread-safe manner, so any alterations should be done before any goroutines are
+	// started.
+	RuntimePrefixesToFilter = []string{
+		"runtime.",
+		"testing.",
+		"github.com/richardwilkes/toolbox/errs.",
+	}
 )
 
 // ErrorWrapper contains methods for interacting with the wrapped errors.
@@ -242,11 +252,20 @@ func (e *Error) StackTrace(trimRuntime bool) string {
 	for {
 		frame, more := frames.Next()
 		if frame.Function != "" {
-			if trimRuntime && (strings.HasPrefix(frame.Function, "runtime.") ||
-				strings.HasPrefix(frame.Function, "testing.") ||
-				strings.HasPrefix(frame.Function, "github.com/richardwilkes/toolbox/errs.") ||
-				(frame.Function == "main.main" && frame.File == "_testmain.go")) {
-				continue
+			if trimRuntime {
+				if frame.Function == "main.main" && frame.File == "_testmain.go" {
+					continue
+				}
+				skip := false
+				for _, prefix := range RuntimePrefixesToFilter {
+					if strings.HasPrefix(frame.Function, prefix) {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					continue
+				}
 			}
 			if buffer.Len() != 0 {
 				buffer.WriteByte('\n')
