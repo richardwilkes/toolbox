@@ -17,6 +17,15 @@ type TID string
 // meaning, but can be used to differentiate between different types of ids.
 const KindAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
+// MustNewTID creates a new TID with a random value and the specified kind. If an error occurs, this function panics.
+func MustNewTID(kind byte) TID {
+	tid, err := NewTID(kind)
+	if err != nil {
+		panic(err)
+	}
+	return tid
+}
+
 // NewTID creates a new TID with a random value and the specified kind.
 func NewTID(kind byte) (TID, error) {
 	if strings.IndexByte(KindAlphabet, kind) == -1 {
