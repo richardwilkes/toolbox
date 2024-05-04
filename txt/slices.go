@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,7 +9,11 @@
 
 package txt
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/richardwilkes/toolbox/collection/dict"
+)
 
 // StringSliceToMap returns a map created from the strings of a slice.
 func StringSliceToMap(slice []string) map[string]bool {
@@ -21,12 +25,11 @@ func StringSliceToMap(slice []string) map[string]bool {
 }
 
 // MapToStringSlice returns a slice created from the keys of a map.
+//
+// Deprecated: Use dict.Keys instead. This function was deprecated on May 3, 2024 and will be removed on or after
+// January 1, 2025.
 func MapToStringSlice(m map[string]bool) []string {
-	s := make([]string, 0, len(m))
-	for str := range m {
-		s = append(s, str)
-	}
-	return s
+	return dict.Keys(m)
 }
 
 // CloneStringSlice returns a copy of the slice of strings.

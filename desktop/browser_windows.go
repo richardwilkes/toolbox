@@ -1,4 +1,4 @@
-// Copyright ©2016-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,26 +10,11 @@
 // Package desktop provides desktop integration utilities.
 package desktop
 
-import (
-	"os/exec"
-	"strings"
+import "strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-)
-
-// Open asks the system to open the provided path or URL.
-func Open(pathOrURL string) error {
-	var cmdName string
-	var args []string
+func cmdAndArgs(pathOrURL string) (cmdName string, args []string) {
 	if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
-		cmdName = "cmd"
-		args = append(args, "/c", "start")
-	} else {
-		cmdName = "explorer"
+		return "cmd", []string{"/c", "start", pathOrURL}
 	}
-	args = append(args, pathOrURL)
-	if err := exec.Command(cmdName, args...).Start(); err != nil {
-		return errs.NewWithCause("Unable to open "+pathOrURL, err)
-	}
-	return nil
+	return "explorer", []string{pathOrURL}
 }

@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -38,39 +38,43 @@ type pair struct {
 }
 
 // Register a function to be run at exit. Returns an ID that can be used to remove the function later, if desired.
+// Registering a function after Exit() has been called (i.e. in a function that was registered) will have no effect.
 func Register(f func()) int {
 	lock.Lock()
 	defer lock.Unlock()
 	if nextID == 1 {
 		sigChan := make(chan os.Signal, 2)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		go func() {
-			s := <-sigChan
-			if s == syscall.SIGINT {
-				fmt.Print("\b\b") // Removes the unsightly ^C in the terminal
-			}
-			Exit(1)
-		}()
+		go waitForSigInt(sigChan)
 	}
 	pairs = append(pairs, pair{id: nextID, f: f})
 	nextID++
 	return nextID - 1
 }
 
+func waitForSigInt(sigChan <-chan os.Signal) {
+	s := <-sigChan
+	if s == syscall.SIGINT {
+		fmt.Print("\b\b") // Removes the unsightly ^C in the terminal
+	}
+	Exit(1)
+}
+
 // Unregister a function that was previously registered to be run at exit. If the ID is no longer present, nothing
-// happens.
+// happens. Unregistering a function after Exit() has been called (i.e. in a function that was registered) will have no
+// effect.
 func Unregister(id int) {
 	lock.Lock()
 	defer lock.Unlock()
 	pairs = slices.DeleteFunc(pairs, func(p pair) bool { return p.id == id })
 }
 
-// Exit runs any registered exit functions in the inverse order they were registered and then exits with the specified
-// status. If a previous call to Exit() is already being handled, this method does nothing but does not return.
-// Recursive calls to Exit() will trigger a panic, which the exit handling will catch and report, but will then proceed
-// with exit as normal. Note that once Exit() is called, no subsequent changes to the registered list of functions will
-// have an effect (i.e. you cannot Unregister() a function inside an exit handler to prevent its execution, nor can you
-// Register() a new function).
+// Exit runs any registered exit functions in the inverse order they were registered and then exits the progream with
+// the specified status. If a previous call to Exit() is already being handled, this method does nothing but does not
+// return. Recursive calls to Exit() will trigger a panic, which the exit handling will catch and report, but will then
+// proceed with exit as normal. Note that once Exit() is called, no subsequent changes to the registered list of
+// functions will have an effect (i.e. you cannot Unregister() a function inside an exit handler to prevent its
+// execution, nor can you Register() a new function).
 func Exit(status int) {
 	var pcs [512]uintptr
 	recursive := false
