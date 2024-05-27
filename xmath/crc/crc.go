@@ -1,4 +1,4 @@
-// Copyright ©2016-2023 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2016-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,6 +14,15 @@ import (
 )
 
 var crcTable = crc64.MakeTable(crc64.ECMA)
+
+// Bool returns the CRC-64 value for the given data starting with the given crc value.
+func Bool(crc uint64, b bool) uint64 {
+	var data [1]byte
+	if b {
+		data[0] = 1
+	}
+	return crc64.Update(crc, crcTable, data[:])
+}
 
 // Bytes returns the CRC-64 value for the given data starting with the given crc value.
 func Bytes(crc uint64, data []byte) uint64 {

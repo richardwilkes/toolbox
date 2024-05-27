@@ -13,7 +13,6 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: true
-    ignore: ""
     exclude-functions:
       - fmt.Fprint
       - fmt.Fprintf
@@ -42,8 +41,6 @@ linters-settings:
     locale: US
   staticcheck:
     checks: ["all", "-SA3000"]
-  unused:
-    check-exported: false
 linters:
   disable-all: true
   enable:
