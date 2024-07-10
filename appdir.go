@@ -12,6 +12,7 @@ package toolbox
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/errs"
@@ -31,9 +32,11 @@ func AppDir() (string, error) {
 		return "", errs.Wrap(err)
 	}
 	path = filepath.Dir(path)
-	// Account for macOS bundles
-	if i := strings.LastIndex(path, ".app/"); i != -1 {
-		path = filepath.Dir(path[:i])
+	if runtime.GOOS == MacOS {
+		// Account for macOS bundles
+		if i := strings.LastIndex(path, ".app/"); i != -1 {
+			path = filepath.Dir(path[:i])
+		}
 	}
 	return path, nil
 }
