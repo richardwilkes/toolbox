@@ -36,9 +36,9 @@ const (
 )
 
 type mapping struct {
-	external   int
-	renew      time.Time
 	notifyChan chan any
+	renew      time.Time
+	external   int
 }
 
 var (

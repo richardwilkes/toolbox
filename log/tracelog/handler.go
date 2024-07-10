@@ -29,9 +29,9 @@ var _ slog.Handler = &Handler{}
 // one of the implementations provided by slog itself.
 type Handler struct {
 	level slog.Leveler
-	list  []entry
 	lock  *sync.Mutex
 	out   io.Writer
+	list  []entry
 }
 
 type entry struct {
@@ -124,8 +124,8 @@ func (h *Handler) Handle(_ context.Context, r slog.Record) error {
 
 type state struct {
 	buffer   *bytes.Buffer
-	group    string
 	stackErr errs.StackError
+	group    string
 	needBar  bool
 }
 

@@ -29,9 +29,9 @@ type Option func(*Queue)
 type Queue struct {
 	in              chan Task
 	done            chan bool
+	recoveryHandler errs.RecoveryHandler
 	depth           int
 	workers         int
-	recoveryHandler errs.RecoveryHandler
 }
 
 // RecoveryHandler sets the recovery handler to use for tasks that panic. Defaults to none, which silently ignores the

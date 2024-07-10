@@ -16,8 +16,8 @@ import (
 
 type node[T xmath.Numeric, N Node[T]] struct {
 	rect      geom.Rect[T]
-	contents  []N
 	children  [4]*node[T, N]
+	contents  []N
 	threshold int
 }
 

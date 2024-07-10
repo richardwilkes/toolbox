@@ -19,8 +19,8 @@ import (
 )
 
 type res struct {
-	key      string
 	released chan<- string
+	key      string
 }
 
 func newRes(key string, released chan<- string) *res {

@@ -32,14 +32,14 @@ type controller struct {
 	root    *limiter
 	ticker  *time.Ticker
 	done    chan bool
-	lock    sync.RWMutex
 	waiting []*request
+	lock    sync.RWMutex
 }
 
 type request struct {
 	limiter *limiter
-	amount  int
 	done    chan error
+	amount  int
 }
 
 // New creates a new top-level rate limiter. 'capacity' is the number of units (bytes, for example) allowed to be used

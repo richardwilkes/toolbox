@@ -20,8 +20,8 @@ func TestWrap(t *testing.T) {
 	table := []struct {
 		Prefix string
 		Text   string
-		Max    int
 		Out    string
+		Max    int
 	}{
 		{Prefix: "// ", Text: "short", Max: 78, Out: "// short"},
 		{Prefix: "// ", Text: "some text that is longer", Max: 12, Out: "// some text\n// that is\n// longer"},

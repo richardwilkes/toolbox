@@ -19,8 +19,8 @@ import (
 func TestFirstN(t *testing.T) {
 	table := []struct {
 		In  string
-		N   int
 		Out string
+		N   int
 	}{
 		{In: "abcd", N: 3, Out: "abc"},
 		{In: "abcd", N: 5, Out: "abcd"},
@@ -39,8 +39,8 @@ func TestFirstN(t *testing.T) {
 func TestLastN(t *testing.T) {
 	table := []struct {
 		In  string
-		N   int
 		Out string
+		N   int
 	}{
 		{In: "abcd", N: 3, Out: "bcd"},
 		{In: "abcd", N: 5, Out: "abcd"},

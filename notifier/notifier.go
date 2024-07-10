@@ -35,23 +35,29 @@ type BatchTarget interface {
 // Notifier tracks targets of notifications and provides methods for notifying them.
 type Notifier struct {
 	recoveryHandler errs.RecoveryHandler
-	lock            sync.RWMutex
-	batchTargets    map[BatchTarget]bool
-	productionMap   map[string]map[Target]int
-	nameMap         map[Target]map[string]bool
-	currentBatch    []BatchTarget
-	batchLevel      int
-	enabled         bool
+	lockedData
+	lock sync.RWMutex
+}
+
+type lockedData struct {
+	batchTargets  map[BatchTarget]bool
+	productionMap map[string]map[Target]int
+	nameMap       map[Target]map[string]bool
+	currentBatch  []BatchTarget
+	batchLevel    int
+	enabled       bool
 }
 
 // New creates a new notifier.
 func New(recoveryHandler errs.RecoveryHandler) *Notifier {
 	return &Notifier{
 		recoveryHandler: recoveryHandler,
-		batchTargets:    make(map[BatchTarget]bool),
-		productionMap:   make(map[string]map[Target]int),
-		nameMap:         make(map[Target]map[string]bool),
-		enabled:         true,
+		lockedData: lockedData{
+			batchTargets:  make(map[BatchTarget]bool),
+			productionMap: make(map[string]map[Target]int),
+			nameMap:       make(map[Target]map[string]bool),
+			enabled:       true,
+		},
 	}
 }
 

@@ -62,9 +62,9 @@ var uTable = []*uInfo{
 }
 
 type uInfo struct {
-	Uint64                  uint64
 	ValueAsStr              string
 	ExpectedConversionAsStr string
+	Uint64                  uint64
 	IsUint64                bool
 	IsUint128               bool
 }

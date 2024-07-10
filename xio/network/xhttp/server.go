@@ -45,15 +45,15 @@ type Metadata struct {
 type Server struct {
 	WebServer           *http.Server
 	Logger              *slog.Logger
+	clientHandler       http.Handler
+	StartedChan         chan any // If not nil, will be closed once the server is ready to accept connections
+	ShutdownCallback    func(*slog.Logger)
 	CertFile            string
 	KeyFile             string
-	StartedChan         chan any // If not nil, will be closed once the server is ready to accept connections
-	ShutdownGracePeriod time.Duration
-	ShutdownCallback    func(*slog.Logger)
 	addresses           []string
+	ShutdownGracePeriod time.Duration
 	port                int
 	shutdownID          int
-	clientHandler       http.Handler
 }
 
 // Protocol returns the protocol this server is handling.

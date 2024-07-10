@@ -22,10 +22,10 @@ type UnaryOpFunc func(arg any) (any, error)
 
 // Operator provides an operator implementation for the Evaluator.
 type Operator struct {
-	Symbol        string
-	Precedence    int
 	Evaluate      OpFunc
 	EvaluateUnary UnaryOpFunc
+	Symbol        string
+	Precedence    int
 }
 
 func (o *Operator) match(expression string, start, max int) bool {

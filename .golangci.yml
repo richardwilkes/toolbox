@@ -67,5 +67,4 @@ issues:
   max-same-issues: 10
   exclude-use-default: false
   exclude:
-    - "fieldalignment: struct with \\d+ pointer bytes could be"
     - "package-comments: should have a package comment"

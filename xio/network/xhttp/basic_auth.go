@@ -18,11 +18,11 @@ import (
 
 // BasicAuth provides basic HTTP authentication.
 type BasicAuth struct {
-	Realm string
 	// Lookup provides a way to map a user in a realm to a password. The returned password should have already been
 	// passed through the Hasher function.
 	Lookup func(user, realm string) ([]byte, bool)
 	Hasher func(input string) []byte
+	Realm  string
 }
 
 // Wrap an http.Handler, requiring Basic Authentication.

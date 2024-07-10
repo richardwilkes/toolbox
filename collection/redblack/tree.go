@@ -11,9 +11,9 @@ package redblack
 
 // Tree implements a Red-black Tree, as described here: https://en.wikipedia.org/wiki/Red–black_tree
 type Tree[K, V any] struct {
+	root    *node[K, V]
 	compare func(a, b K) int
 	count   int
-	root    *node[K, V]
 }
 
 // New creates a new red-black tree.

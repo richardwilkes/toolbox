@@ -24,13 +24,13 @@ var _ io.WriteCloser = &Rotator{}
 
 // Rotator holds the rotator data.
 type Rotator struct {
+	file       *os.File
 	path       string
 	maxSize    int64
 	maxBackups int
 	mask       os.FileMode
-	lock       sync.Mutex
-	file       *os.File
 	size       int64
+	lock       sync.Mutex
 }
 
 // New creates a new Rotator with the specified options.

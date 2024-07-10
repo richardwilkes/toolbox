@@ -25,38 +25,38 @@ func TestZeroedDelete(t *testing.T) {
 	d3 := &data{a: 3}
 	for _, test := range []struct {
 		s    []*data
-		i, j int
 		want []*data
+		i, j int
 	}{
 		{
 			[]*data{d1, d2, d3},
-			0,
-			0,
 			[]*data{d1, d2, d3},
+			0,
+			0,
 		},
 		{
 			[]*data{d1, d2, d3},
+			[]*data{d2, d3},
 			0,
 			1,
-			[]*data{d2, d3},
 		},
 		{
 			[]*data{d1, d2, d3},
-			3,
-			3,
 			[]*data{d1, d2, d3},
+			3,
+			3,
 		},
 		{
 			[]*data{d1, d2, d3},
+			[]*data{d3},
 			0,
 			2,
-			[]*data{d3},
 		},
 		{
 			[]*data{d1, d2, d3},
+			[]*data{},
 			0,
 			3,
-			[]*data{},
 		},
 	} {
 		theCopy := append([]*data{}, test.s...)

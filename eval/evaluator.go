@@ -21,8 +21,8 @@ type VariableResolver interface {
 }
 
 type expressionOperand struct {
-	value   string
 	unaryOp *Operator
+	value   string
 }
 
 type expressionOperator struct {
@@ -42,9 +42,9 @@ type expressionTree struct {
 type Function func(evaluator *Evaluator, arguments string) (any, error)
 
 type parsedFunction struct {
+	unaryOp  *Operator
 	function Function
 	args     string
-	unaryOp  *Operator
 }
 
 // Evaluator is used to evaluate an expression. If you do not have any variables that will be resolved, you can leave

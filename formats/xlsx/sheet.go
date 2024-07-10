@@ -27,10 +27,10 @@ import (
 
 // Sheet holds the data contained in a single worksheet.
 type Sheet struct {
+	Cells map[Ref]Cell
 	Name  string
 	Min   Ref
 	Max   Ref
-	Cells map[Ref]Cell
 }
 
 // Load sheets from an .xlsx file.
@@ -131,9 +131,9 @@ func loadSheet(f *zip.File, strs []string) (*Sheet, error) {
 	decoder := xml.NewDecoder(fr)
 	var data struct {
 		Cells []struct {
+			Value *string `xml:"v"`
 			Label string  `xml:"r,attr"`
 			Type  string  `xml:"t,attr"`
-			Value *string `xml:"v"`
 		} `xml:"sheetData>row>c"`
 	}
 	if err = decoder.Decode(&data); err != nil {

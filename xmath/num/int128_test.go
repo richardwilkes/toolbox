@@ -100,9 +100,9 @@ var table = []*info{
 }
 
 type info struct {
-	Int64                   int64
 	ValueAsStr              string
 	ExpectedConversionAsStr string
+	Int64                   int64
 	IsInt64                 bool
 	IsInt128                bool
 }

@@ -26,8 +26,8 @@ type CellType int
 
 // Cell holds the contents of a cell.
 type Cell struct {
-	Type  CellType
 	Value string
+	Type  CellType
 }
 
 func (c *Cell) String() string {

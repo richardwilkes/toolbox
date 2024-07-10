@@ -17,8 +17,8 @@ import (
 
 // Pool is used to track soft references to resources.
 type Pool struct {
-	lock sync.Mutex
 	refs map[string]*softRef
+	lock sync.Mutex
 }
 
 // Resource is a resource that will be used with a pool.
@@ -31,8 +31,8 @@ type Resource interface {
 
 // SoftRef is a soft reference to a given resource.
 type SoftRef struct {
-	Key      string
 	Resource Resource
+	Key      string
 }
 
 type softRef struct {

@@ -18,8 +18,8 @@ import (
 
 func TestToRoman(t *testing.T) {
 	type data struct {
-		v int
 		e string
+		v int
 	}
 	for _, one := range []data{
 		{v: 1, e: "I"},

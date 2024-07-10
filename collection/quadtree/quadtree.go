@@ -36,10 +36,10 @@ type Matcher[T xmath.Numeric, N Node[T]] interface {
 
 // QuadTree stores two-dimensional nodes for fast lookup.
 type QuadTree[T xmath.Numeric, N Node[T]] struct {
-	Threshold int
-	count     int
 	root      *node[T, N]
 	outside   []N
+	Threshold int
+	count     int
 }
 
 // Size returns the number of nodes contained within the QuadTree.

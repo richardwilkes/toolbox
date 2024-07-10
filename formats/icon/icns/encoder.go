@@ -34,8 +34,8 @@ type entryHeader struct {
 }
 
 type iconInfo struct {
-	iconType [4]byte
 	buffer   []byte
+	iconType [4]byte
 }
 
 // Encode one or more images into an .icns. At least one image must be provided. macOS recommends providing 1024x1024,

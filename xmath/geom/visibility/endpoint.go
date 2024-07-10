@@ -15,8 +15,8 @@ import (
 )
 
 type endPoint[T constraints.Float] struct {
-	segmentIndex int
 	angle        T
+	segmentIndex int
 	start        bool
 }
 

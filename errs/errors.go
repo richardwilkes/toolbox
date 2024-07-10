@@ -56,10 +56,10 @@ type StackError interface {
 
 // Error holds the detailed error message.
 type Error struct {
-	message string
 	cause   error
-	stack   []uintptr
 	next    *Error
+	message string
+	stack   []uintptr
 	wrapped bool
 }
 

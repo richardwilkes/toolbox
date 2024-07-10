@@ -27,11 +27,11 @@ type Value interface {
 
 // Option represents an option available on the command line.
 type Option struct {
+	value  Value
 	name   string
 	usage  string
 	arg    string
 	def    string
-	value  Value
 	single rune
 }
 

@@ -32,11 +32,11 @@ type CmdLine struct {
 	Description string
 	// UsageTrailer, if set, will be appended to the end of the usage output.
 	UsageTrailer    string
-	options         Options
 	cmds            map[string]Cmd
 	parent          *CmdLine
 	cmd             Cmd
 	out             *term.ANSI
+	options         Options
 	showHelp        bool
 	showVersion     bool
 	showLongVersion bool

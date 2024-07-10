@@ -20,17 +20,17 @@ import (
 
 func TestFormatDuration(t *testing.T) {
 	for i, one := range []struct {
+		Expected      string
 		Duration      time.Duration
 		IncludeMillis bool
-		Expected      string
 	}{
-		{time.Millisecond, true, "0:00:00.001"},
-		{1000 * time.Millisecond, true, "0:00:01.000"},
-		{1001 * time.Millisecond, false, "0:00:01"},
-		{1999 * time.Millisecond, false, "0:00:01"},
-		{61 * time.Second, false, "0:01:01"},
-		{61 * time.Minute, false, "1:01:00"},
-		{61 * time.Hour, false, "61:00:00"},
+		{"0:00:00.001", time.Millisecond, true},
+		{"0:00:01.000", 1000 * time.Millisecond, true},
+		{"0:00:01", 1001 * time.Millisecond, false},
+		{"0:00:01", 1999 * time.Millisecond, false},
+		{"0:01:01", 61 * time.Second, false},
+		{"1:01:00", 61 * time.Minute, false},
+		{"61:00:00", 61 * time.Hour, false},
 	} {
 		check.Equal(t, one.Expected, txt.FormatDuration(one.Duration, one.IncludeMillis), "Index %d", i)
 	}
