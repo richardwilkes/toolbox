@@ -15,23 +15,51 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
 var _ slog.Handler = &Handler{}
+
+// Config is used to configure a Handler.
+type Config struct {
+	// Level is the minimum log level that will be emitted. Defaults to slog.LevelInfo if not set.
+	Level slog.Leveler
+	// Sink is the io.Writer that will receive the formatted log output. Defaults to os.Stderr if not set.
+	Sink io.Writer
+	// BufferDepth greater than 0 will enable asynchronous delivery of log messages to the sink. When enabled, if there
+	// is no room remaining in the buffer, the message will be discarded rather than waiting for room to become
+	// available. Defaults to 0 for synchronous delivery.
+	BufferDepth int
+}
+
+// Normalize ensures that the Config is valid.
+func (c *Config) Normalize() {
+	if toolbox.IsNil(c.Level) {
+		c.Level = slog.LevelInfo
+	}
+	if c.Sink == nil {
+		c.Sink = os.Stderr
+	}
+	if c.BufferDepth < 0 {
+		c.BufferDepth = 0
+	}
+}
 
 // Handler provides a formatted text output that may include a stack trace on separate lines. The stack trace is
 // formatted such that most IDEs will auto-generate links for it within their consoles. Note that this slog.Handler is
 // not optimized for performance, as I expect those that need to run this is environments where that matters will use
 // one of the implementations provided by slog itself.
 type Handler struct {
-	level slog.Leveler
-	lock  *sync.Mutex
-	out   io.Writer
-	list  []entry
+	level    slog.Leveler
+	delivery chan []byte
+	lock     *sync.Mutex
+	sink     io.Writer
+	list     []entry
 }
 
 type entry struct {
@@ -39,20 +67,19 @@ type entry struct {
 	attrs []slog.Attr
 }
 
-type embeddedStackError interface {
-	StackError() errs.StackError
-}
-
-// New creates a new Handler. Only log levels >= the provided level will be emitted.
-func New(w io.Writer, level slog.Leveler) *Handler {
-	if level == nil {
-		level = slog.LevelInfo
-	}
-	return &Handler{
-		level: level,
+// New creates a new Handler.
+func New(cfg *Config) *Handler {
+	cfg.Normalize()
+	h := Handler{
+		level: cfg.Level,
 		lock:  &sync.Mutex{},
-		out:   w,
+		sink:  cfg.Sink,
 	}
+	if cfg.BufferDepth > 0 {
+		h.delivery = make(chan []byte, cfg.BufferDepth)
+		go h.backgroundDelivery()
+	}
+	return &h
 }
 
 // Enabled implements slog.Handler.
@@ -115,11 +142,23 @@ func (h *Handler) Handle(_ context.Context, r slog.Record) error {
 		buffer.WriteString(s.stackErr.StackTrace(true))
 		buffer.WriteByte('\n')
 	}
-
+	if h.delivery != nil {
+		select {
+		case h.delivery <- buffer.Bytes():
+		default:
+		}
+		return nil
+	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
-	_, err := h.out.Write(buffer.Bytes())
+	_, err := h.sink.Write(buffer.Bytes())
 	return err
+}
+
+func (h *Handler) backgroundDelivery() {
+	for data := range h.delivery {
+		_, _ = h.sink.Write(data) //nolint:errcheck // We don't care about errors here
+	}
 }
 
 type state struct {
@@ -141,7 +180,7 @@ func (s *state) append(ga entry) {
 
 func (s *state) appendAttr(attr slog.Attr) {
 	if s.group == "" && attr.Key == errs.StackTraceKey {
-		if embedded, ok := attr.Value.Any().(embeddedStackError); ok {
+		if embedded, ok := attr.Value.Any().(interface{ StackError() errs.StackError }); ok {
 			s.stackErr = embedded.StackError()
 			return
 		}

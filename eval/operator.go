@@ -28,8 +28,8 @@ type Operator struct {
 	Precedence    int
 }
 
-func (o *Operator) match(expression string, start, max int) bool {
-	if max-start < len(o.Symbol) {
+func (o *Operator) match(expression string, start, maximum int) bool {
+	if maximum-start < len(o.Symbol) {
 		return false
 	}
 	matches := o.Symbol == expression[start:start+len(o.Symbol)]
