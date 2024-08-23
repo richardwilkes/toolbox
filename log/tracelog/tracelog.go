@@ -67,8 +67,11 @@ type entry struct {
 	attrs []slog.Attr
 }
 
-// New creates a new Handler.
+// New creates a new Handler. May pass nil for cfg to use the defaults.
 func New(cfg *Config) *Handler {
+	if cfg == nil {
+		cfg = &Config{}
+	}
 	cfg.Normalize()
 	h := Handler{
 		level: cfg.Level,
