@@ -9,9 +9,14 @@ import (
 
 var _ slog.Handler = &Handler{}
 
-// Handler is a slog.Handler that sends log records to multiple other handlers.
+// Handler is a slog.Handler that fans out log records to multiple other handlers.
 type Handler struct {
 	handlers []slog.Handler
+}
+
+// New creates a new Handler that fans out log records to the provided handlers.
+func New(handlers ...slog.Handler) *Handler {
+	return &Handler{handlers: handlers}
 }
 
 // Enabled implements slog.Handler.
