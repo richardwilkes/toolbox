@@ -29,7 +29,7 @@ func CollapseSpaces(in string) string {
 		}
 	}
 	str := buffer.String()
-	if lastWasSpace && len(str) > 0 {
+	if lastWasSpace && str != "" {
 		str = str[:len(str)-1]
 	}
 	return str

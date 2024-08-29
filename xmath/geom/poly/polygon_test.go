@@ -18,6 +18,8 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+const floatsAreConsistentAcrossPlatforms = false
+
 type containsCase[T constraints.Float] struct {
 	geom.Point[T]
 	contains bool
@@ -74,7 +76,9 @@ type testCase[T constraints.Float] struct {
 
 func TestUnion(t *testing.T) {
 	testUnion[float32](t)
-	// testUnion[float64](t)
+	if floatsAreConsistentAcrossPlatforms {
+		testUnion[float64](t)
+	}
 }
 
 func testUnion[T constraints.Float](t *testing.T) {
@@ -251,7 +255,9 @@ func testUnion[T constraints.Float](t *testing.T) {
 
 func TestIntersect(t *testing.T) {
 	testIntersect[float32](t)
-	// testIntersect[float64](t)
+	if floatsAreConsistentAcrossPlatforms {
+		testIntersect[float64](t)
+	}
 }
 
 func testIntersect[T constraints.Float](t *testing.T) {
@@ -352,7 +358,9 @@ func testIntersect[T constraints.Float](t *testing.T) {
 
 func TestSubtract(t *testing.T) {
 	testSubtract[float32](t)
-	// testSubtract[float64](t)
+	if floatsAreConsistentAcrossPlatforms {
+		testSubtract[float64](t)
+	}
 }
 
 func testSubtract[T constraints.Float](t *testing.T) {

@@ -362,7 +362,7 @@ func IsInf[T constraints.Float](f T, sign int) bool {
 
 // IsNaN reports whether f is a "not-a-number" value.
 func IsNaN[T constraints.Float](f T) bool {
-	// Only NaNs satisfy f != f.
+	//nolint:gocritic // Only NaNs satisfy f != f, which is what we are looking for
 	return f != f
 }
 

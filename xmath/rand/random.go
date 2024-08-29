@@ -12,10 +12,16 @@ package rand
 
 import (
 	"crypto/rand"
-	mrnd "math/rand"
+	mrnd "math/rand/v2"
 )
 
 var cryptoRandInstance = &cryptoRand{}
+
+// Randomizer defines a source of random integer values.
+type Randomizer interface {
+	// Intn returns a non-negative random number from 0 to n-1. If n <= 0, the implementation should return 0.
+	Intn(n int) int
+}
 
 // NewCryptoRand returns a Randomizer based on the crypto/rand package. This method returns a shared singleton instance
 // and does not allocate.
@@ -39,7 +45,7 @@ func (r *cryptoRand) Intn(n int) int {
 		}
 	}
 	if _, err := rand.Read(buffer[:size]); err != nil {
-		return mrnd.Intn(n)
+		return mrnd.IntN(n) //nolint:gosec // Yes, it is ok to use a weak prng here
 	}
 	var v int
 	for i := size - 1; i >= 0; i-- {

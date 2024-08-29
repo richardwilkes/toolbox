@@ -11,7 +11,7 @@
 package network
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"sort"
 	"strings"
@@ -57,7 +57,8 @@ func PrimaryIPAddress() string {
 				return fallback
 			}
 		}
-		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
+		//nolint:gosec // Yes, it is ok to use a weak prng here
+		time.Sleep(time.Duration(100+rand.IntN(50)) * time.Millisecond)
 	}
 	return IPv4LoopbackAddress
 }
@@ -89,7 +90,8 @@ func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 				}
 			}
 		}
-		time.Sleep(time.Duration(100+rand.Intn(50)) * time.Millisecond)
+		//nolint:gosec // Yes, it is ok to use a weak prng here
+		time.Sleep(time.Duration(100+rand.IntN(50)) * time.Millisecond)
 	}
 	return LocalHost, IPv4LoopbackAddress, "00:00:00:00:00:00"
 }

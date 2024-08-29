@@ -10,7 +10,7 @@
 package quadtree_test
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"slices"
 	"testing"
 
@@ -70,18 +70,18 @@ func TestContainsRect(t *testing.T) {
 
 func TestGeneral(t *testing.T) {
 	q := &quadtree.QuadTree[float64, *node[float64]]{}
-	r := rand.New(rand.NewSource(22))
+	r := rand.New(rand.NewPCG(22, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
 	mine := newNode[float64](22, 22, 22, 22)
 	q.Insert(mine)
 	for i := 0; i < 100*quadtree.DefaultQuadTreeThreshold; i++ {
-		q.Insert(newNode(float64(50000-r.Intn(100000)), float64(50000-r.Intn(100000)), float64(r.Intn(100000)), float64(r.Intn(100000))))
+		q.Insert(newNode(float64(50000-r.IntN(100000)), float64(50000-r.IntN(100000)), float64(r.IntN(100000)), float64(r.IntN(100000))))
 	}
 	check.Equal(t, 1+100*quadtree.DefaultQuadTreeThreshold, q.Size())
 	all := q.All()
 	check.True(t, slices.Contains(all, mine))
 	count := q.Size()
 	for _, one := range all {
-		if one != mine && r.Intn(10) == 1 {
+		if one != mine && r.IntN(10) == 1 {
 			q.Remove(one)
 			count--
 			check.Equal(t, count, q.Size())

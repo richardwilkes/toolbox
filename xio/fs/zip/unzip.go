@@ -50,7 +50,7 @@ func ExtractWithMask(zr *zip.Reader, dst string, mask os.FileMode) error {
 	}
 	rootWithTrailingSep := fmt.Sprintf("%s%c", root, filepath.Separator)
 	for _, f := range zr.File {
-		path := filepath.Join(root, f.Name)
+		path := filepath.Join(root, f.Name) //nolint:gosec // We check for path traversal below
 		if !strings.HasPrefix(path, rootWithTrailingSep) {
 			return errs.Newf("Path outside of root is not permitted: %s", f.Name)
 		}
@@ -111,7 +111,7 @@ func extractFile(f *zip.File, dst string, mask os.FileMode) (err error) {
 			err = errs.Wrap(closeErr)
 		}
 	}()
-	if _, err = io.Copy(file, r); err != nil {
+	if _, err = io.Copy(file, r); err != nil { //nolint:gosec // We'll take the risk
 		err = errs.Wrap(err)
 	}
 	return

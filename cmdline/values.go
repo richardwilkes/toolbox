@@ -180,7 +180,7 @@ func (v *GeneralValue) String() string {
 		}
 		return buffer.String()
 	case reflect.String:
-		return fmt.Sprintf(`"%s"`, e)
+		return fmt.Sprintf(`"%s"`, e) //nolint:gocritic // We don't want escape sequences, so can't use %q
 	default:
 		return fmt.Sprintf("%v", e)
 	}

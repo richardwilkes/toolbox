@@ -13,6 +13,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,17 +37,18 @@ func CreateTemp(dir, pattern string, perm os.FileMode) (*os.File, error) {
 	} else {
 		prefix = pattern
 	}
-	if len(dir) > 0 && os.IsPathSeparator(dir[len(dir)-1]) {
+	if dir != "" && os.IsPathSeparator(dir[len(dir)-1]) {
 		prefix = dir + prefix
 	} else {
-		prefix = dir + string(os.PathSeparator) + prefix
+		prefix = filepath.Join(dir, prefix)
 	}
 	try := 0
 	for {
 		f, err := os.OpenFile(prefix+strconv.Itoa(rand.NewCryptoRand().Intn(math.MaxInt))+suffix,
 			os.O_RDWR|os.O_CREATE|os.O_EXCL, perm)
 		if os.IsExist(err) {
-			if try++; try < 1000 {
+			try++
+			if try < 1000 {
 				continue
 			}
 			return nil, &os.PathError{Op: "createtemp", Path: prefix + "*" + suffix, Err: os.ErrExist}

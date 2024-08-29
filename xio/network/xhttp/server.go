@@ -46,7 +46,7 @@ type Server struct {
 	WebServer           *http.Server
 	Logger              *slog.Logger
 	clientHandler       http.Handler
-	StartedChan         chan any // If not nil, will be closed once the server is ready to accept connections
+	StartedChan         chan struct{} // If not nil, will be closed once the server is ready to accept connections
 	ShutdownCallback    func(*slog.Logger)
 	CertFile            string
 	KeyFile             string

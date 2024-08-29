@@ -51,7 +51,7 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 // Handle implements slog.Handler.
-func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
+func (h *Handler) Handle(ctx context.Context, r slog.Record) error { //nolint:gocritic // Must use defined API
 	var result error
 	for _, one := range h.handlers {
 		if one.Enabled(ctx, r.Level) {

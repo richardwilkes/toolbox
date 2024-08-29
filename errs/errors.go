@@ -242,7 +242,18 @@ func (e *Error) Error() string {
 // one or more chained causes. Note that any included stack trace will be only for the first error in the case where
 // multiple errors were accumulated into one via calls to .Append().
 func (e *Error) Detail(trimRuntime bool) string {
-	return strings.Join([]string{e.Message(), e.StackTrace(trimRuntime)}, "\n")
+	msg := e.Message()
+	stack := e.StackTrace(trimRuntime)
+	switch {
+	case msg == "" && stack == "":
+		return "<no detail>"
+	case msg == "":
+		return stack
+	case stack == "":
+		return msg
+	default:
+		return msg + "\n" + stack
+	}
 }
 
 // StackTrace returns just the stack trace portion of the message.

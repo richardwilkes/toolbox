@@ -68,8 +68,7 @@ func New(recoveryHandler errs.RecoveryHandler) *Notifier {
 func (n *Notifier) Register(target Target, priority int, names ...string) {
 	var normalizedNames []string
 	for _, name := range names {
-		name = normalizeName(name)
-		if len(name) > 0 {
+		if name = normalizeName(name); name != "" {
 			normalizedNames = append(normalizedNames, name)
 		}
 	}
@@ -208,8 +207,7 @@ func (n *Notifier) Notify(name string, producer any) {
 // until all interested targets handle the notification.
 func (n *Notifier) NotifyWithData(name string, data, producer any) {
 	if n.Enabled() {
-		name = normalizeName(name)
-		if len(name) > 0 {
+		if name = normalizeName(name); name != "" {
 			targets := make(map[Target]int)
 			names := strings.Split(name, ".")
 			n.lock.RLock()

@@ -286,8 +286,8 @@ func TestInt128Cmp(t *testing.T) {
 	check.Equal(t, 1, num.MaxInt128.Cmp(num.Int128From64(-1)))
 	check.Equal(t, -1, num.MinInt128.Cmp(num.MaxInt128))
 	check.Equal(t, 1, num.MaxInt128.Cmp(num.MinInt128))
-	check.Equal(t, 0, num.MaxInt128.Cmp(num.MaxInt128))
-	check.Equal(t, 0, num.MinInt128.Cmp(num.MinInt128))
+	check.Equal(t, 0, num.MaxInt128.Cmp(num.MaxInt128)) //nolint:gocritic // Yes, we meant to compare the same value
+	check.Equal(t, 0, num.MinInt128.Cmp(num.MinInt128)) //nolint:gocritic // Yes, we meant to compare the same value
 }
 
 func TestInt128GreaterThan(t *testing.T) {

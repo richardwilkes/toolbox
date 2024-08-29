@@ -10,7 +10,12 @@
 // Package xio provides i/o utilities.
 package xio
 
-import "io"
+import (
+	"io"
+	"log/slog"
+
+	"github.com/richardwilkes/toolbox/errs"
+)
 
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
 // streams of data where closing should never cause an error.
@@ -22,4 +27,16 @@ func CloseIgnoringErrors(closer io.Closer) {
 func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
 	_, _ = io.Copy(io.Discard, rc) //nolint:errcheck // intentionally ignoring any error
 	CloseIgnoringErrors(rc)
+}
+
+// CloseLoggingAnyError closes the closer and logs any error that occurs at an error level to the default logger.
+func CloseLoggingAnyError(closer io.Closer) {
+	CloseLoggingAnyErrorTo(slog.Default(), closer)
+}
+
+// CloseLoggingAnyErrorTo closes the closer and logs any error that occurs to the provided logger.
+func CloseLoggingAnyErrorTo(logger *slog.Logger, closer io.Closer) {
+	if err := closer.Close(); err != nil {
+		errs.LogTo(logger, err)
+	}
 }

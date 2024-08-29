@@ -12,7 +12,7 @@ package txt_test
 import (
 	"flag"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"strconv"
 	"testing"
 
@@ -99,22 +99,22 @@ func BenchmarkNaturalLessCaseInsensitive(b *testing.B) {
 }
 
 func initBenchSet() {
-	rnd := rand.New(rand.NewSource(22))
+	rnd := rand.New(rand.NewPCG(22, 1967)) //nolint:gosec // Use of weak prng is fine here
 	benchSet = make([]string, 20000)
 	for i := range benchSet {
-		strlen := rnd.Intn(6) + 3
-		numlen := rnd.Intn(3) + 1
-		numpos := rnd.Intn(strlen + 1)
+		strlen := rnd.IntN(6) + 3
+		numlen := rnd.IntN(3) + 1
+		numpos := rnd.IntN(strlen + 1)
 		var num string
 		for j := 0; j < numlen; j++ {
-			num += strconv.Itoa(rnd.Intn(10))
+			num += strconv.Itoa(rnd.IntN(10))
 		}
 		var str string
 		for j := 0; j < strlen+1; j++ {
 			if j == numpos {
 				str += num
 			} else {
-				str += string(rune('a' + rnd.Intn(16)))
+				str += string(rune('a' + rnd.IntN(16)))
 			}
 		}
 		benchSet[i] = str

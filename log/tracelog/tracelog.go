@@ -115,7 +115,7 @@ func (h *Handler) withGroupOrAttrs(ga entry) *Handler {
 }
 
 // Handle implements slog.Handler.
-func (h *Handler) Handle(_ context.Context, r slog.Record) error {
+func (h *Handler) Handle(_ context.Context, r slog.Record) error { //nolint:gocritic // Must use defined API
 	var buffer bytes.Buffer
 	switch r.Level {
 	case slog.LevelDebug:
