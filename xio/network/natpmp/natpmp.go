@@ -42,72 +42,11 @@ type mapping struct {
 }
 
 var (
+	once     sync.Once
 	gw       net.IP
 	lock     sync.RWMutex
 	mappings = make(map[int]mapping)
 )
-
-func init() {
-	var err error
-	if gw, err = gateway.DiscoverGateway(); err == nil {
-		go func() {
-			atexit.Register(func() {
-				lock.RLock()
-				ports := make([]int, len(mappings))
-				for port := range mappings {
-					ports = append(ports, port)
-				}
-				lock.RUnlock()
-				for _, port := range ports {
-					if port&tcpFlag != 0 {
-						err = UnmapTCP(port &^ tcpFlag)
-					} else {
-						err = UnmapUDP(port)
-					}
-				}
-			})
-			for {
-				time.Sleep(time.Minute)
-				renew := make(map[int]mapping, len(mappings))
-				now := time.Now()
-				lock.RLock()
-				for k, v := range mappings {
-					if !now.Before(v.renew) {
-						renew[k] = v
-					}
-				}
-				lock.RUnlock()
-				for port, v := range renew {
-					var external int
-					if port&tcpFlag != 0 {
-						external, err = MapTCP(port&^tcpFlag, v.notifyChan)
-					} else {
-						external, err = MapUDP(port, v.notifyChan)
-					}
-					if v.notifyChan != nil {
-						if err != nil {
-							var portType string
-							if port&tcpFlag != 0 {
-								portType = "TCP"
-							} else {
-								portType = "UDP"
-							}
-							select {
-							case v.notifyChan <- errs.NewWithCausef(err, "Mapping renewal for %s port %d failed", portType, port):
-							default:
-							}
-						} else if v.external != external {
-							select {
-							case v.notifyChan <- external:
-							default:
-							}
-						}
-					}
-				}
-			}
-		}()
-	}
-}
 
 // ExternalAddress returns the external address the internet sees you as having.
 func ExternalAddress() (net.IP, error) {
@@ -185,7 +124,7 @@ func checkPort(port int) error {
 	if port > 0 && port < 65536 {
 		return nil
 	}
-	return errs.Newf("Port (%d) must be in the range 1-65535", port)
+	return errs.Newf("port (%d) must be in the range 1-65535", port)
 }
 
 func makeMapBuffer(op byte, port uint16) []byte {
@@ -220,6 +159,7 @@ func removeMapping(internal int) {
 }
 
 func call(msg []byte, resultSize int) ([]byte, error) {
+	once.Do(setupGateway)
 	if gw == nil {
 		return nil, errs.New("No gateway found")
 	}
@@ -254,32 +194,103 @@ func call(msg []byte, resultSize int) ([]byte, error) {
 			continue
 		}
 		if n != resultSize {
-			return nil, errs.Newf("Unexpected result size (received %d, expected %d)", n, resultSize)
+			return nil, errs.Newf("unexpected result size (received %d, expected %d)", n, resultSize)
 		}
 		if result[0] != 0 {
-			return nil, errs.Newf("Unknown protocol version (%d)", result[0])
+			return nil, errs.Newf("unknown protocol version (%d)", result[0])
 		}
 		expectedOp := msg[1] | 0x80
 		if result[1] != expectedOp {
-			return nil, errs.Newf("Unexpected opcode (received %d, expected %d)", result[1], expectedOp)
+			return nil, errs.Newf("unexpected opcode (received %d, expected %d)", result[1], expectedOp)
 		}
 		code := binary.BigEndian.Uint16(result[2:4])
 		switch code {
 		case 0:
 			return result, nil
 		case 1:
-			return nil, errs.New("Unsupported version")
+			return nil, errs.New("unsupported version")
 		case 2:
-			return nil, errs.New("Not authorized")
+			return nil, errs.New("not authorized")
 		case 3:
-			return nil, errs.New("Network failure")
+			return nil, errs.New("network failure")
 		case 4:
-			return nil, errs.New("Out of resources")
+			return nil, errs.New("out of resources")
 		case 5:
-			return nil, errs.New("Unsupported opcode")
+			return nil, errs.New("unsupported opcode")
 		default:
-			return nil, errs.Newf("Unknown result code %d", code)
+			return nil, errs.Newf("unknown result code %d", code)
 		}
 	}
-	return nil, errs.Newf("Timed out trying to contact gateway")
+	return nil, errs.Newf("timed out trying to contact gateway")
+}
+
+func setupGateway() {
+	var err error
+	if gw, err = gateway.DiscoverGateway(); err == nil {
+		atexit.Register(cleanup)
+		go renewals()
+	}
+}
+
+func renewals() {
+	for {
+		time.Sleep(time.Minute)
+		now := time.Now()
+		lock.RLock()
+		renew := make(map[int]mapping, len(mappings))
+		for k, v := range mappings {
+			if !now.Before(v.renew) {
+				renew[k] = v
+			}
+		}
+		lock.RUnlock()
+		for port, v := range renew {
+			var external int
+			var err error
+			if port&tcpFlag != 0 {
+				external, err = MapTCP(port&^tcpFlag, v.notifyChan)
+			} else {
+				external, err = MapUDP(port, v.notifyChan)
+			}
+			if v.notifyChan != nil {
+				if err != nil {
+					var portType string
+					if port&tcpFlag != 0 {
+						portType = "TCP"
+					} else {
+						portType = "UDP"
+					}
+					select {
+					case v.notifyChan <- errs.NewWithCausef(err, "mapping renewal for %s port %d failed", portType, port):
+					default:
+					}
+				} else if v.external != external {
+					select {
+					case v.notifyChan <- external:
+					default:
+					}
+				}
+			}
+		}
+	}
+}
+
+func cleanup() {
+	lock.RLock()
+	ports := make([]int, len(mappings))
+	for port := range mappings {
+		ports = append(ports, port)
+	}
+	lock.RUnlock()
+	for _, port := range ports {
+		var err error
+		if port&tcpFlag != 0 {
+			err = UnmapTCP(port &^ tcpFlag)
+		} else {
+			err = UnmapUDP(port)
+		}
+		if err != nil {
+			errs.Log(err)
+		}
+	}
 }
