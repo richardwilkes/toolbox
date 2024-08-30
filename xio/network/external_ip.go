@@ -20,16 +20,17 @@ import (
 )
 
 var sites = []string{
+	// These seem to prefer ipv4 responses, if possible
 	"http://whatismyip.akamai.com/",
 	"https://myip.dnsomatic.com/",
-	"http://icanhazip.com/",
-	"http://diagnostic.opendns.com/myip",
-	"https://myexternalip.com/raw",
-	"http://ifconfig.io/ip",
 	"http://api.ipify.org/",
 	"http://checkip.amazonaws.com/",
+
+	// These seem to prefer ipv6 responses, if possible
+	"http://icanhazip.com/",
+	"https://myexternalip.com/raw",
+	"http://ifconfig.io/ip",
 	"http://ident.me/",
-	"https://canihazip.com/s",
 }
 
 // ExternalIP returns your IP address as seen by external sites. It does this by iterating through a list of websites
