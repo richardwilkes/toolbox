@@ -100,19 +100,18 @@ func (s *Server) Run() error {
 	}
 	s.clientHandler = s.WebServer.Handler
 	s.WebServer.Handler = s
-	var ln net.Listener
+	var listener net.Listener
 	_, _, err := net.SplitHostPort(s.WebServer.Addr)
 	if err == nil {
-		ln, err = net.Listen("tcp", s.WebServer.Addr)
+		listener, err = net.Listen("tcp", s.WebServer.Addr)
 	} else {
-		ln, err = net.Listen("tcp", net.JoinHostPort(s.WebServer.Addr, "0"))
+		listener, err = net.Listen("tcp", net.JoinHostPort(s.WebServer.Addr, "0"))
 	}
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	listener := network.TCPKeepAliveListener{TCPListener: ln.(*net.TCPListener)}
 	var host, portStr string
-	if host, portStr, err = net.SplitHostPort(ln.Addr().String()); err != nil {
+	if host, portStr, err = net.SplitHostPort(listener.Addr().String()); err != nil {
 		return errs.Wrap(err)
 	}
 	if s.port, err = strconv.Atoi(portStr); err != nil {
