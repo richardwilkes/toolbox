@@ -16,6 +16,11 @@ import (
 	"github.com/richardwilkes/toolbox/errs"
 )
 
+// Contexter is an interface that provides a context.
+type Contexter interface {
+	Context() context.Context
+}
+
 // ContextSleep sleeps for the specified time, or until the context is done. You can check the return error to see if
 // the context deadline was exceeded by using errors.Is(err, context.DeadlineExceeded).
 func ContextSleep(ctx context.Context, waitTime time.Duration) error {
@@ -28,4 +33,21 @@ func ContextSleep(ctx context.Context, waitTime time.Duration) error {
 	case <-timer.C:
 		return nil
 	}
+}
+
+// ContexterWasCanceled checks the context held by the contexter to see if it was canceled.
+func ContexterWasCanceled(ctxer Contexter) bool {
+	return ContextWasCanceled(ctxer.Context())
+}
+
+// ContextWasCanceled checks the context to see if it was canceled.
+func ContextWasCanceled(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		if ctx.Err() != nil {
+			return true
+		}
+	default:
+	}
+	return false
 }
