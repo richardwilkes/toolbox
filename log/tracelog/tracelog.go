@@ -29,6 +29,9 @@ var _ slog.Handler = &Handler{}
 type Config struct {
 	// Level is the minimum log level that will be emitted. Defaults to slog.LevelInfo if not set.
 	Level slog.Leveler
+	// LevelNames is an optional map of slog.Level to string that will be used to format the log level. If not set, the
+	// default slog level names will be used.
+	LevelNames map[slog.Level]string
 	// Sink is the io.Writer that will receive the formatted log output. Defaults to os.Stderr if not set.
 	Sink io.Writer
 	// BufferDepth greater than 0 will enable asynchronous delivery of log messages to the sink. When enabled, if there
@@ -55,11 +58,12 @@ func (c *Config) Normalize() {
 // not optimized for performance, as I expect those that need to run this is environments where that matters will use
 // one of the implementations provided by slog itself.
 type Handler struct {
-	level    slog.Leveler
-	delivery chan []byte
-	lock     *sync.Mutex
-	sink     io.Writer
-	list     []entry
+	level      slog.Leveler
+	levelNames map[slog.Level]string
+	delivery   chan []byte
+	lock       *sync.Mutex
+	sink       io.Writer
+	list       []entry
 }
 
 type entry struct {
@@ -74,9 +78,10 @@ func New(cfg *Config) *Handler {
 	}
 	cfg.Normalize()
 	h := Handler{
-		level: cfg.Level,
-		lock:  &sync.Mutex{},
-		sink:  cfg.Sink,
+		level:      cfg.Level,
+		levelNames: cfg.LevelNames,
+		lock:       &sync.Mutex{},
+		sink:       cfg.Sink,
 	}
 	if cfg.BufferDepth > 0 {
 		h.delivery = make(chan []byte, cfg.BufferDepth)
@@ -117,17 +122,21 @@ func (h *Handler) withGroupOrAttrs(ga entry) *Handler {
 // Handle implements slog.Handler.
 func (h *Handler) Handle(_ context.Context, r slog.Record) error { //nolint:gocritic // Must use defined API
 	var buffer bytes.Buffer
-	switch r.Level {
-	case slog.LevelDebug:
-		buffer.WriteString("DBG")
-	case slog.LevelInfo:
-		buffer.WriteString("INF")
-	case slog.LevelWarn:
-		buffer.WriteString("WRN")
-	case slog.LevelError:
-		buffer.WriteString("ERR")
-	default:
-		fmt.Fprintf(&buffer, "%3d", r.Level)
+	if name, ok := h.levelNames[r.Level]; ok {
+		buffer.WriteString(name)
+	} else {
+		switch r.Level {
+		case slog.LevelDebug:
+			buffer.WriteString("DBG")
+		case slog.LevelInfo:
+			buffer.WriteString("INF")
+		case slog.LevelWarn:
+			buffer.WriteString("WRN")
+		case slog.LevelError:
+			buffer.WriteString("ERR")
+		default:
+			fmt.Fprintf(&buffer, "%3d", r.Level)
+		}
 	}
 	buffer.WriteString(r.Time.Round(0).Format(" | 2006-01-02 | 15:04:05.000 | "))
 	buffer.WriteString(r.Message)
