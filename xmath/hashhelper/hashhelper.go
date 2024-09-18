@@ -56,7 +56,7 @@ func Num16[T ~int16 | ~uint16](h hash.Hash, data T) {
 }
 
 // Num8 writes the given 8-bit number to the hash.
-func Num8[T ~uint8](h hash.Hash, data T) {
+func Num8[T ~int8 | ~uint8](h hash.Hash, data T) {
 	_, _ = h.Write([]byte{byte(data)})
 }
 
