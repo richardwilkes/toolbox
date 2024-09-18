@@ -11,6 +11,7 @@ package hashhelper
 
 import (
 	"hash"
+	"math"
 )
 
 // String writes the given string to the hash.
@@ -66,4 +67,14 @@ func Bool[T ~bool](h hash.Hash, data T) {
 		b = 1
 	}
 	_, _ = h.Write([]byte{b})
+}
+
+// Float64 writes the given 64-bit float to the hash.
+func Float64[T ~float64](h hash.Hash, data T) {
+	Num64(h, math.Float64bits(float64(data)))
+}
+
+// Float32 writes the given 64-bit float to the hash.
+func Float32[T ~float32](h hash.Hash, data T) {
+	Num32(h, math.Float32bits(float32(data)))
 }
