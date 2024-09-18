@@ -70,8 +70,9 @@ func (cl *CmdLine) NewOption(value Value) *Option {
 }
 
 // NewGeneralOption creates a new Option and attaches it to this CmdLine. Valid value types are: *bool, *int, *int8,
-// *int16, *int32, *int64, *uint, *uint8, *uint16, *uint32, *uint64, *string, *time.Duration, *[]bool, *[]uint8,
-// *[]uint16, *[]uint32, *[]uint64, *[]int8, *[]int16, *[]int32, *[]int64, *[]string, *[]time.Duration
+// *int16, *int32, *int64, *uint, *uint8, *uint16, *uint32, *uint64, *float32, *float64, *string, *time.Duration,
+// *[]bool, *[]uint8, *[]uint16, *[]uint32, *[]uint64, *[]int8, *[]int16, *[]int32, *[]int64, *[]string,
+// *[]time.Duration
 func (cl *CmdLine) NewGeneralOption(value any) *Option {
 	option := new(Option)
 	option.value = &GeneralValue{Value: value}
