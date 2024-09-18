@@ -22,8 +22,8 @@ import (
 var _ Value = &GeneralValue{}
 
 // GeneralValue holds a general option value. Valid value types are: *bool, *int, *int8, *int16, *int32, *int64, *uint,
-// *uint8, *uint16, *uint32, *uint64, *string, *time.Duration, *[]bool, *[]uint8, *[]uint16, *[]uint32, *[]uint64,
-// *[]int8, *[]int16, *[]int32, *[]int64, *[]string, *[]time.Duration
+// *uint8, *uint16, *uint32, *uint64, *float32, *float64, *string, *time.Duration, *[]bool, *[]uint8, *[]uint16,
+// *[]uint32, *[]uint64, *[]int8, *[]int16, *[]int32, *[]int64, *[]string, *[]time.Duration
 type GeneralValue struct {
 	Value any
 }
@@ -33,6 +33,7 @@ func (v *GeneralValue) Set(str string) error {
 	var err error
 	var signedValue int64
 	var unsignedValue uint64
+	var floatValue float64
 	switch value := v.Value.(type) {
 	case *bool:
 		if *value, err = strconv.ParseBool(str); err != nil {
@@ -84,6 +85,15 @@ func (v *GeneralValue) Set(str string) error {
 		*value = uint32(unsignedValue)
 	case *uint64:
 		if *value, err = strconv.ParseUint(str, 0, 64); err != nil {
+			return errs.Wrap(err)
+		}
+	case *float32:
+		if floatValue, err = strconv.ParseFloat(str, 32); err != nil {
+			return errs.Wrap(err)
+		}
+		*value = float32(floatValue)
+	case *float64:
+		if *value, err = strconv.ParseFloat(str, 64); err != nil {
 			return errs.Wrap(err)
 		}
 	case *string:
@@ -157,7 +167,7 @@ func (v *GeneralValue) Set(str string) error {
 		}
 		*value = append(*value, d)
 	default:
-		return errs.Newf("<unhandled type: %v>", reflect.TypeOf(v.Value).Kind())
+		return errs.Newf("<unhandled type: %v>", reflect.TypeOf(v.Value))
 	}
 	return nil
 }
