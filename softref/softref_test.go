@@ -53,15 +53,20 @@ func TestSoftRef(t *testing.T) {
 	sr4b, existed := p.NewSoftRef(r4)
 	check.True(t, existed)
 	lookFor(t, "2", ch)
-	key := sr3.Resource.(*res).key
-	lookFor(t, key, ch)
-	key = sr1.Resource.(*res).key
-	lookFor(t, key, ch)
-	key = sr4a.Resource.(*res).key
-	check.Equal(t, key, sr4b.Resource.(*res).key)
+	get, existed := sr3.Resource.(*res)
+	check.True(t, existed)
+	lookFor(t, get.key, ch)
+	get, existed = sr1.Resource.(*res)
+	check.True(t, existed)
+	lookFor(t, get.key, ch)
+	get, existed = sr4a.Resource.(*res)
+	check.True(t, existed)
+	get2, existed2 := sr4b.Resource.(*res)
+	check.True(t, existed2)
+	check.Equal(t, get.key, get2.key)
 	lookForExpectingTimeout(t, ch)
 	check.Equal(t, "4", sr4b.Key) // Keeps refs to r4 alive for the above call
-	lookFor(t, key, ch)
+	lookFor(t, get.key, ch)
 }
 
 func lookFor(t *testing.T, key string, ch <-chan string) {

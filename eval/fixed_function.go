@@ -42,7 +42,7 @@ func fixedAbsolute[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return any(&value).(interface{ Abs() f64.Int[T] }).Abs(), nil
+	return value.Abs(), nil
 }
 
 func fixedBase2Exponential[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
@@ -58,7 +58,7 @@ func fixedCeiling[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return any(&value).(interface{ Ceil() f64.Int[T] }).Ceil(), nil
+	return value.Ceil(), nil
 }
 
 func fixedCubeRoot[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
@@ -74,7 +74,7 @@ func fixedFloor[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return any(&value).(interface{ Trunc() f64.Int[T] }).Trunc(), nil
+	return value.Trunc(), nil
 }
 
 func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
@@ -88,7 +88,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if value, err = FixedFrom[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
 			if s != "" && !strings.EqualFold(s, "false") {
-				value = any(&value).(interface{ Inc() f64.Int[T] }).Inc()
+				value = value.Inc()
 			}
 		} else {
 			return nil, err
@@ -138,8 +138,7 @@ func fixedNaturalLogSum1[T fixed.Dx](e *Evaluator, arguments string) (any, error
 	if err != nil {
 		return nil, err
 	}
-	value = any(&value).(interface{ Inc() f64.Int[T] }).Inc()
-	return f64.From[T](math.Log(any(&value).(interface{ AsFloat64() float64 }).AsFloat64())), nil
+	return f64.From[T](math.Log(f64.As[T, float64](value.Inc()))), nil
 }
 
 func fixedRound[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
@@ -147,7 +146,7 @@ func fixedRound[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return any(&value).(interface{ Round() f64.Int[T] }).Round(), nil
+	return value.Round(), nil
 }
 
 func fixedSquareRoot[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
