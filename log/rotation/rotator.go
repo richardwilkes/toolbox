@@ -58,35 +58,27 @@ func (r *Rotator) PathToLog() string {
 func (r *Rotator) Write(b []byte) (int, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+retry:
 	if r.file == nil {
-		fi, err := os.Stat(r.path)
-		switch {
-		case os.IsNotExist(err):
-			if err = os.MkdirAll(filepath.Dir(r.path), 0o755&r.mask); err != nil {
-				return 0, errs.Wrap(err)
-			}
-			file, fErr := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644&r.mask)
-			if fErr != nil {
-				return 0, errs.Wrap(fErr)
-			}
-			r.file = file
-			r.size = 0
-		case err != nil:
+		if err := os.MkdirAll(filepath.Dir(r.path), 0o755&r.mask); err != nil {
 			return 0, errs.Wrap(err)
-		default:
-			var file *os.File
-			if file, err = os.OpenFile(r.path, os.O_WRONLY|os.O_APPEND, 0o644&r.mask); err != nil {
-				return 0, errs.Wrap(err)
-			}
-			r.file = file
+		}
+		r.size = 0
+		if fi, err := os.Stat(r.path); err == nil {
 			r.size = fi.Size()
 		}
+		file, err := os.OpenFile(r.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644&r.mask)
+		if err != nil {
+			return 0, errs.Wrap(err)
+		}
+		r.file = file
 	}
 	writeSize := int64(len(b))
 	if r.size+writeSize > r.maxSize {
 		if err := r.rotate(); err != nil {
 			return 0, err
 		}
+		goto retry
 	}
 	n, err := r.file.Write(b)
 	if err != nil {
@@ -146,11 +138,7 @@ func (r *Rotator) rotate() error {
 			}
 		}
 	}
-	file, err := os.OpenFile(r.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644&r.mask)
-	if err != nil {
-		return errs.Wrap(err)
-	}
-	r.file = file
+	r.file = nil
 	r.size = 0
 	return nil
 }
