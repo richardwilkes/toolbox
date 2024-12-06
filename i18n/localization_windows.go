@@ -20,9 +20,9 @@ func Locale() string {
 	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	proc := kernel32.NewProc("GetUserDefaultLocaleName")
 	buffer := make([]uint16, 128)
-	if ret, _, _ := proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 {
+	if ret, _, _ := proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 { //nolint:errcheck // ret is the error code
 		proc = kernel32.NewProc("GetSystemDefaultLocaleName")
-		if ret, _, _ = proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 {
+		if ret, _, _ = proc.Call(uintptr(unsafe.Pointer(&buffer[0])), uintptr(len(buffer))); ret == 0 { //nolint:errcheck // ret is the error code
 			return "en_US.UTF-8"
 		}
 	}

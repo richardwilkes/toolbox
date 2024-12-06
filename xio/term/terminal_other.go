@@ -16,6 +16,6 @@ import (
 )
 
 // IsTerminal returns true if the writer's file descriptor is a terminal.
-func IsTerminal(f io.Writer) bool {
+func IsTerminal(_ io.Writer) bool {
 	return false
 }
