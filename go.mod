@@ -1,12 +1,12 @@
 module github.com/richardwilkes/toolbox
 
-go 1.22.5
+go 1.23.6
 
 require (
-	github.com/jackpal/gateway v1.0.15
+	github.com/jackpal/gateway v1.0.16
 	github.com/pkg/term v1.1.0
-	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
-	golang.org/x/image v0.23.0
+	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
+	golang.org/x/image v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -15,6 +15,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 )
