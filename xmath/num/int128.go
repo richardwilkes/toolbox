@@ -402,10 +402,10 @@ func (i Int128) Cmp64(n int64) int {
 
 // GreaterThan returns true if i > n.
 func (i Int128) GreaterThan(n Int128) bool {
-	switch {
-	case i.hi&signBit == n.hi&signBit:
+	switch i.hi & signBit {
+	case n.hi & signBit:
 		return i.hi > n.hi || (i.hi == n.hi && i.lo > n.lo)
-	case i.hi&signBit == 0:
+	case 0:
 		return true
 	default:
 		return false
@@ -419,10 +419,10 @@ func (i Int128) GreaterThan64(n int64) bool {
 	if n < 0 {
 		nhi = math.MaxUint64
 	}
-	switch {
-	case i.hi&signBit == nhi&signBit:
+	switch i.hi & signBit {
+	case nhi & signBit:
 		return i.hi > nhi || (i.hi == nhi && i.lo > nlo)
-	case i.hi&signBit == 0:
+	case 0:
 		return true
 	default:
 		return false

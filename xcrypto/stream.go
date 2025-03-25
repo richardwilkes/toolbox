@@ -57,7 +57,7 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 // DecryptStreamWithPrivateKey copies 'in' to 'out', decrypting the bytes along the way. Note that the output stream
 // will be smaller than the input stream by aes.BlockSize + publicKey.Size() bytes.
 func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.PrivateKey) error {
-	encryptedEncryptionKey := make([]byte, privateKey.PublicKey.Size())
+	encryptedEncryptionKey := make([]byte, privateKey.Size())
 	if _, err := in.Read(encryptedEncryptionKey); err != nil {
 		return errs.Wrap(err)
 	}

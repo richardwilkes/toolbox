@@ -376,8 +376,8 @@ func (e *edgeNode[T]) process(op clipOp, pt geom.Point[T], inPoly *polygonNode[T
 func (e *edgeNode[T]) deleteTerminatingEdges(pt geom.Point[T], yt T) *edgeNode[T] {
 	updated := e
 	for edge := e; edge != nil; edge = edge.next {
-		switch {
-		case edge.top.Y == pt.Y:
+		switch edge.top.Y {
+		case pt.Y:
 			prevEdge := edge.prev
 			nextEdge := edge.next
 			if prevEdge != nil {
@@ -395,7 +395,7 @@ func (e *edgeNode[T]) deleteTerminatingEdges(pt geom.Point[T], yt T) *edgeNode[T
 					prevEdge.belowState = bundleHead
 				}
 			}
-		case edge.top.Y == yt:
+		case yt:
 			edge.xt = edge.top.X
 		default:
 			edge.xt = edge.bot.X + edge.dx*(yt-edge.bot.Y)
