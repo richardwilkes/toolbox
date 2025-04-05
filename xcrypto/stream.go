@@ -46,7 +46,7 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 		return errs.Wrap(err)
 	}
 	if _, err = io.Copy(&cipher.StreamWriter{
-		S: cipher.NewCFBEncrypter(block, iv),
+		S: cipher.NewCTR(block, iv),
 		W: out,
 	}, in); err != nil {
 		return errs.Wrap(err)
@@ -74,7 +74,7 @@ func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.Pr
 		return errs.Wrap(err)
 	}
 	if _, err = io.Copy(out, &cipher.StreamReader{
-		S: cipher.NewCFBDecrypter(block, iv),
+		S: cipher.NewCTR(block, iv),
 		R: in,
 	}); err != nil {
 		return errs.Wrap(err)
