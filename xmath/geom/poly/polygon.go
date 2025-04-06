@@ -59,6 +59,19 @@ func (p Polygon[T]) String() string {
 	return buffer.String()
 }
 
+// Empty returns true if this polygon is empty.
+func (p Polygon[T]) Empty() bool {
+	if len(p) == 0 {
+		return true
+	}
+	for _, c := range p {
+		if len(c) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 // Bounds returns the bounding rectangle of this polygon.
 func (p Polygon[T]) Bounds() geom.Rect[T] {
 	if len(p) == 0 {
