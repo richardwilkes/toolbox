@@ -52,6 +52,7 @@ var (
 		"min(0, 1)", "0", "0.0000000000000000",
 		"(1 + (2 * max(3, min(-4, 5) + 2) - ((14 - (13 - (12 - (11 - (10 - (9 - (8 - (7 + 6))))))))))) - 10", "-1", "-1.0000000000000000",
 	}
+
 	strExpr = []string{
 		"foo + bar", "foobar",
 		"foo +               \n    bar", "foobar",
@@ -74,7 +75,19 @@ func TestFixedEvaluator(t *testing.T) {
 		check.Equal(t, strExpr[i+1], result, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
 	}
 
-	result, err := e.Evaluate("2 > 1")
+	result, err := e.Evaluate("2 >= 1")
+	check.NoError(t, err)
+	check.Equal(t, true, result)
+
+	result, err = e.Evaluate("2 >= 2")
+	check.NoError(t, err)
+	check.Equal(t, true, result)
+
+	result, err = e.Evaluate("2 >= 3")
+	check.NoError(t, err)
+	check.Equal(t, false, result)
+
+	result, err = e.Evaluate("2 > 1")
 	check.NoError(t, err)
 	check.Equal(t, true, result)
 
