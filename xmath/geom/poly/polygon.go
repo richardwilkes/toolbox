@@ -138,13 +138,11 @@ func (p Polygon[T]) Xor(other Polygon[T]) Polygon[T] {
 }
 
 func (p Polygon[T]) construct(op clipOp, other Polygon[T]) Polygon[T] {
-	var result Polygon[T]
-
 	// Short-circuit the work if we can trivially determine the result is an empty polygon.
 	if (len(p) == 0 && len(other) == 0) ||
 		(len(p) == 0 && (op == intersectOp || op == subtractOp)) ||
 		(len(other) == 0 && op == intersectOp) {
-		return result
+		return Polygon[T]{}
 	}
 
 	// Build the local minima table and the scan beam table
@@ -152,7 +150,7 @@ func (p Polygon[T]) construct(op clipOp, other Polygon[T]) Polygon[T] {
 	subjNonContributing, clipNonContributing := p.identifyNonContributingContours(op, other)
 	lmt := buildLocalMinimaTable(nil, sbTree, p, subjNonContributing, subject, op)
 	if lmt = buildLocalMinimaTable(lmt, sbTree, other, clipNonContributing, clipping, op); lmt == nil {
-		return result
+		return Polygon[T]{}
 	}
 	sbt := sbTree.buildScanBeamTable()
 
