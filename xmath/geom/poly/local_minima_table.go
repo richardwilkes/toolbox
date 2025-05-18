@@ -49,7 +49,7 @@ func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree 
 			}
 
 			// Do the contour forward pass
-			for minimum := 0; minimum < count; minimum++ {
+			for minimum := range count {
 				if edges[previousIndex(minimum, count)].vertex.Y < edges[minimum].vertex.Y ||
 					edges[nextIndex(minimum, count)].vertex.Y <= edges[minimum].vertex.Y {
 					continue
@@ -69,7 +69,7 @@ func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree 
 				e.bundleBelow[clipping] = false
 				e.bundleBelow[subject] = false
 				vi := minimum
-				for i := 0; i < edgeCount; i++ {
+				for i := range edgeCount {
 					e = &edges[edgeIndex+i]
 					v := &edges[vi]
 					e.xb = v.vertex.X
@@ -102,7 +102,7 @@ func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree 
 			}
 
 			// Do the contour reverse pass
-			for minimum := 0; minimum < count; minimum++ {
+			for minimum := range count {
 				if edges[previousIndex(minimum, count)].vertex.Y <= edges[minimum].vertex.Y ||
 					edges[nextIndex(minimum, count)].vertex.Y < edges[minimum].vertex.Y {
 					continue
@@ -121,7 +121,7 @@ func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree 
 				e.bundleBelow[clipping] = false
 				e.bundleBelow[subject] = false
 				vi := minimum
-				for i := 0; i < edgeCount; i++ {
+				for i := range edgeCount {
 					e = &edges[edgeIndex+i]
 					v := &edges[vi]
 					e.xb = v.vertex.X

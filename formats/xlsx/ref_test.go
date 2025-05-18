@@ -34,8 +34,8 @@ func TestRef(t *testing.T) {
 		check.Equal(t, d.Text, ref.String(), "String() for index %d: %s", i, d.Text)
 	}
 
-	for r := 0; r < 100; r++ {
-		for c := 0; c < 10000; c++ {
+	for r := range 100 {
+		for c := range 10000 {
 			in := xlsx.Ref{Row: r, Col: c}
 			out := xlsx.ParseRef(in.String())
 			check.Equal(t, in, out)

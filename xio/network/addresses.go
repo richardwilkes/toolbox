@@ -31,7 +31,7 @@ const (
 // PrimaryIPAddress returns the primary IP address.
 func PrimaryIPAddress() string {
 	// Try up to 3 times in case of transient errors
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		if addresses, err := net.InterfaceAddrs(); err == nil {
 			var fallback string
 			for _, address := range addresses {
@@ -66,7 +66,7 @@ func PrimaryIPAddress() string {
 // PrimaryAddress returns the primary hostname and its associated IP address and MAC address.
 func PrimaryAddress() (hostname, ipAddress, macAddress string) {
 	// Try up to 3 times in case of transient errors
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		lowest := 1000000
 		for address, iFace := range ActiveAddresses() {
 			if iFace.Index < lowest {

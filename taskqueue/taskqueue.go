@@ -93,7 +93,7 @@ func (q *Queue) process() {
 	// Setup workers
 	ready := make(chan bool, q.workers)
 	tasks := make(chan Task, q.workers)
-	for i := 0; i < q.workers; i++ {
+	for range q.workers {
 		go q.work(tasks, ready)
 	}
 

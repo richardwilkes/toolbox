@@ -38,7 +38,7 @@ func FromEllipse[T constraints.Float](r geom.Rect[T], sections int) Polygon[T] {
 	center := r.Center()
 	contour := make(Contour[T], sections)
 	var angle T
-	for i := 0; i < sections; i++ {
+	for i := range sections {
 		contour[i] = geom.NewPoint(center.X+xmath.Cos(angle)*halfWidth, center.Y+xmath.Sin(angle)*halfHeight)
 		angle += inc
 	}

@@ -125,8 +125,8 @@ func (v *stackValue) StackError() StackError {
 
 func (v *stackValue) LogValue() slog.Value {
 	stack := strings.Split(v.err.StackTrace(true), "\n")
-	for i := 0; i < len(stack); i++ {
-		stack[i] = strings.TrimSpace(stack[i])
+	for i, s := range stack {
+		stack[i] = strings.TrimSpace(s)
 	}
 	return slog.AnyValue(stack)
 }

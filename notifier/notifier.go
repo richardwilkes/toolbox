@@ -10,6 +10,7 @@
 package notifier
 
 import (
+	"maps"
 	"sort"
 	"strings"
 	"sync"
@@ -116,36 +117,26 @@ func (n *Notifier) RegisterFromNotifier(other *Notifier) {
 	// To avoid a potential deadlock, we make a copy of the other notifier's data first.
 	other.lock.Lock()
 	batchTargets := make(map[BatchTarget]bool, len(other.batchTargets))
-	for k, v := range other.batchTargets {
-		batchTargets[k] = v
-	}
+	maps.Copy(batchTargets, other.batchTargets)
 	productionMap := make(map[string]map[Target]int, len(other.productionMap))
 	for k, v := range other.productionMap {
 		m := make(map[Target]int, len(v))
-		for k1, v1 := range v {
-			m[k1] = v1
-		}
+		maps.Copy(m, v)
 		productionMap[k] = m
 	}
 	nameMap := make(map[Target]map[string]bool, len(other.nameMap))
 	for k, v := range other.nameMap {
 		m := make(map[string]bool, len(v))
-		for k1, v1 := range v {
-			m[k1] = v1
-		}
+		maps.Copy(m, v)
 		nameMap[k] = m
 	}
 	other.lock.Unlock()
 
 	n.lock.Lock()
-	for k, v := range batchTargets {
-		n.batchTargets[k] = v
-	}
+	maps.Copy(n.batchTargets, batchTargets)
 	for k, v := range productionMap {
 		if pm, ok := n.productionMap[k]; ok {
-			for k1, v1 := range pm {
-				pm[k1] = v1
-			}
+			maps.Copy(pm, pm)
 			n.productionMap[k] = pm
 		} else {
 			n.productionMap[k] = v
@@ -153,9 +144,7 @@ func (n *Notifier) RegisterFromNotifier(other *Notifier) {
 	}
 	for k, v := range nameMap {
 		if nm, ok := n.nameMap[k]; ok {
-			for k1, v1 := range nm {
-				nm[k1] = v1
-			}
+			maps.Copy(nm, nm)
 			n.nameMap[k] = nm
 		} else {
 			n.nameMap[k] = v
@@ -217,9 +206,7 @@ func (n *Notifier) NotifyWithData(name string, data, producer any) {
 					buffer.WriteString(one)
 					one = buffer.String()
 					if set, ok := n.productionMap[one]; ok {
-						for k, v := range set {
-							targets[k] = v
-						}
+						maps.Copy(targets, set)
 					}
 					buffer.WriteByte('.')
 				}

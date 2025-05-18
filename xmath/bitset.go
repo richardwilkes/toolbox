@@ -395,7 +395,7 @@ func (b *BitSet) Load(data []uint64) {
 	for i := len(b.data) - 1; i >= 0; i-- {
 		word := data[i]
 		if word != 0 {
-			for j := 0; j < dataBitsPerWord; j++ {
+			for j := range dataBitsPerWord {
 				mask := wordMask(j)
 				if word&mask == mask {
 					b.set++
@@ -416,7 +416,7 @@ func wordMask(index int) uint64 {
 }
 
 func bitIndexForMask(mask uint64) int {
-	for i := 0; i < dataBitsPerWord; i++ {
+	for i := range dataBitsPerWord {
 		if mask == wordMask(i) {
 			return i
 		}

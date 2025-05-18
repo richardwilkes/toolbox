@@ -82,7 +82,7 @@ func (j *Data) path(path ...string) *Data {
 		path = nil
 	}
 	obj := j.obj
-	for i := 0; i < len(path); i++ {
+	for i := range path {
 		if m, ok := obj.(map[string]any); ok {
 			obj = m[path[i]]
 		} else {
@@ -306,7 +306,7 @@ func (j *Data) set(path string, value any) bool {
 			j.obj = make(map[string]any)
 		}
 		obj := j.obj
-		for i := 0; i < len(paths); i++ {
+		for i := range paths {
 			if m, ok := obj.(map[string]any); ok {
 				if i == len(paths)-1 {
 					m[paths[i]] = value
@@ -385,7 +385,7 @@ func (j *Data) Delete(path string) bool {
 		return true
 	}
 	obj := j.obj
-	for i := 0; i < len(paths); i++ {
+	for i := range paths {
 		if m, ok := obj.(map[string]any); ok {
 			if i == len(paths)-1 {
 				if _, ok = m[paths[i]]; ok {

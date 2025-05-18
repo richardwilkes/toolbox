@@ -182,7 +182,7 @@ func (v *GeneralValue) String() string {
 	case reflect.Slice:
 		var buffer strings.Builder
 		count := e.Len()
-		for i := 0; i < count; i++ {
+		for i := range count {
 			if buffer.Len() != 0 {
 				buffer.WriteString(", ")
 			}

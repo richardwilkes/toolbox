@@ -38,11 +38,11 @@ func TestContainsPoint(t *testing.T) {
 	q.Insert(newNode[float64](5, 5, 5, 5))
 	check.False(t, q.ContainsPoint(geom.NewPoint[float64](6, 4)))
 	check.True(t, q.ContainsPoint(geom.NewPoint[float64](5, 5)))
-	check.True(t, q.ContainsPoint(geom.NewPoint[float64](9.9, 9.9)))
+	check.True(t, q.ContainsPoint(geom.NewPoint(9.9, 9.9)))
 	check.False(t, q.ContainsPoint(geom.NewPoint[float64](10, 10)))
 	q.Insert(newNode[float64](4, 4, 3, 3))
 	check.True(t, q.ContainsPoint(geom.NewPoint[float64](6, 4)))
-	for i := 0; i < 2*quadtree.DefaultQuadTreeThreshold; i++ {
+	for i := range 2 * quadtree.DefaultQuadTreeThreshold {
 		q.Insert(newNode(float64(i), -5, 10, 10))
 	}
 	check.True(t, q.ContainsPoint(geom.Point[float64]{}))
@@ -56,11 +56,11 @@ func TestContainsRect(t *testing.T) {
 	q.Insert(newNode[float64](5, 5, 5, 5))
 	check.False(t, q.ContainsRect(geom.NewRect[float64](4, 4, 10, 10)))
 	check.True(t, q.ContainsRect(geom.NewRect[float64](5, 5, 2, 2)))
-	check.True(t, q.ContainsRect(geom.NewRect[float64](9.9, 9.9, .05, .05)))
+	check.True(t, q.ContainsRect(geom.NewRect(9.9, 9.9, .05, .05)))
 	check.False(t, q.ContainsRect(geom.NewRect[float64](10, 10, 5, 5)))
 	q.Insert(newNode[float64](4, 4, 3, 3))
 	check.True(t, q.ContainsRect(geom.NewRect[float64](6, 4, 1, 2)))
-	for i := 0; i < 2*quadtree.DefaultQuadTreeThreshold; i++ {
+	for i := range 2 * quadtree.DefaultQuadTreeThreshold {
 		q.Insert(newNode(float64(i), -5, 10, 10))
 	}
 	check.True(t, q.ContainsRect(geom.NewRect[float64](0, 0, 1, 1)))
@@ -73,7 +73,7 @@ func TestGeneral(t *testing.T) {
 	r := rand.New(rand.NewPCG(22, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
 	mine := newNode[float64](22, 22, 22, 22)
 	q.Insert(mine)
-	for i := 0; i < 100*quadtree.DefaultQuadTreeThreshold; i++ {
+	for range 100 * quadtree.DefaultQuadTreeThreshold {
 		q.Insert(newNode(float64(50000-r.IntN(100000)), float64(50000-r.IntN(100000)), float64(r.IntN(100000)), float64(r.IntN(100000))))
 	}
 	check.Equal(t, 1+100*quadtree.DefaultQuadTreeThreshold, q.Size())

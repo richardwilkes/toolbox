@@ -75,7 +75,7 @@ func TestNaturalLess(t *testing.T) {
 }
 
 func BenchmarkStdStringLess(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range benchSet {
 			_ = benchSet[j] < benchSet[(j+1)%len(benchSet)]
 		}
@@ -83,7 +83,7 @@ func BenchmarkStdStringLess(b *testing.B) {
 }
 
 func BenchmarkNaturalLess(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range benchSet {
 			_ = txt.NaturalLess(benchSet[j], benchSet[(j+1)%len(benchSet)], false)
 		}
@@ -91,7 +91,7 @@ func BenchmarkNaturalLess(b *testing.B) {
 }
 
 func BenchmarkNaturalLessCaseInsensitive(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range benchSet {
 			_ = txt.NaturalLess(benchSet[j], benchSet[(j+1)%len(benchSet)], true)
 		}
@@ -106,11 +106,11 @@ func initBenchSet() {
 		numlen := rnd.IntN(3) + 1
 		numpos := rnd.IntN(strlen + 1)
 		var num string
-		for j := 0; j < numlen; j++ {
+		for range numlen {
 			num += strconv.Itoa(rnd.IntN(10))
 		}
 		var str string
-		for j := 0; j < strlen+1; j++ {
+		for j := range strlen + 1 {
 			if j == numpos {
 				str += num
 			} else {

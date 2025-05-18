@@ -30,8 +30,8 @@ func TestRotator(t *testing.T) {
 	defer cleanup(t, tmpdir)
 
 	logFiles := []string{filepath.Join(tmpdir, "test.log")}
-	for i := 1; i <= maxBackups; i++ {
-		logFiles = append(logFiles, fmt.Sprintf("%s-%d", logFiles[0], i))
+	for i := range maxBackups {
+		logFiles = append(logFiles, fmt.Sprintf("%s-%d", logFiles[0], i+1))
 	}
 
 	r, err := rotation.New(rotation.Path(logFiles[0]), rotation.MaxSize(maxSize), rotation.MaxBackups(maxBackups))
@@ -39,7 +39,7 @@ func TestRotator(t *testing.T) {
 	_, err = os.Stat(logFiles[0])
 	check.Error(t, err)
 	check.True(t, os.IsNotExist(err))
-	for i := 0; i < maxSize*(2+maxBackups); i++ {
+	for i := range maxSize * (2 + maxBackups) {
 		_, err = fmt.Fprintln(r, i)
 		check.NoError(t, err)
 	}

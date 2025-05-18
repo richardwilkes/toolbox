@@ -26,7 +26,7 @@ func CreateTemp(dir, pattern string, perm os.FileMode) (*os.File, error) {
 	if dir == "" {
 		dir = os.TempDir()
 	}
-	for i := 0; i < len(pattern); i++ {
+	for i := range len(pattern) {
 		if os.IsPathSeparator(pattern[i]) {
 			return nil, &os.PathError{Op: "createtemp", Path: pattern, Err: errors.New("pattern contains path separator")}
 		}

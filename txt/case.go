@@ -19,8 +19,7 @@ func ToCamelCase(in string) string {
 	runes := []rune(in)
 	out := make([]rune, 0, len(runes))
 	up := true
-	for i := 0; i < len(runes); i++ {
-		r := runes[i]
+	for _, r := range runes {
 		if r == '_' {
 			up = true
 		} else {
@@ -59,7 +58,7 @@ func ToCamelCaseWithExceptions(in string, exceptions *AllCaps) string {
 func ToSnakeCase(in string) string {
 	runes := []rune(in)
 	out := make([]rune, 0, 1+len(runes))
-	for i := 0; i < len(runes); i++ {
+	for i := range runes {
 		if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < len(runes) && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
 			out = append(out, '_')
 		}

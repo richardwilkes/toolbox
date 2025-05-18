@@ -30,7 +30,7 @@ func Split(path string) []string {
 		}
 	}
 	result := make([]string, len(parts))
-	for i := 0; i < len(parts); i++ {
+	for i := range parts {
 		result[len(parts)-(i+1)] = parts[i]
 	}
 	if volName != "" && result[0] == sep {

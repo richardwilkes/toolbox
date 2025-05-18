@@ -15,7 +15,7 @@ import "slices"
 // slice was divided into columns and each column was sorted independently. If the slice is not evenly divisible by
 // the number of columns, the extra elements will be distributed across the columns from left to right.
 func ColumnSort[S ~[]E, E any](s S, columns int, cmp func(a, b E) int) {
-	slices.SortFunc[S, E](s, cmp)
+	slices.SortFunc(s, cmp)
 	if columns > 1 && len(s) > columns {
 		replacement := make([]E, len(s))
 		step := len(s) / columns
@@ -24,7 +24,7 @@ func ColumnSort[S ~[]E, E any](s S, columns int, cmp func(a, b E) int) {
 		j := 0
 		k := 1
 		for i < len(s) {
-			for c := 0; c < columns; c++ {
+			for c := range columns {
 				replacement[i] = s[j]
 				i++
 				if i >= len(s) {

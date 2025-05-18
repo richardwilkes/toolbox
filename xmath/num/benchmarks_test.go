@@ -32,7 +32,7 @@ func BenchmarkInt128Add(b *testing.B) {
 	left := num.Int128FromStringNoCheck(leftStr)
 	right := num.Int128FromStringNoCheck(rightStr)
 	var dest num.Int128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Add(right)
 	}
 	benchInt128 = dest
@@ -42,7 +42,7 @@ func BenchmarkUint128Add(b *testing.B) {
 	left := num.Uint128FromStringNoCheck(leftStr)
 	right := num.Uint128FromStringNoCheck(rightStr)
 	var dest num.Uint128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Add(right)
 	}
 	benchUint128 = dest
@@ -52,7 +52,7 @@ func BenchmarkBigIntAdd(b *testing.B) {
 	left, _ := new(big.Int).SetString(leftStr, 0)
 	right, _ := new(big.Int).SetString(rightStr, 0)
 	dest := new(big.Int)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest.Add(left, right)
 	}
 	benchBigInt = dest
@@ -62,7 +62,7 @@ func BenchmarkInt128Sub(b *testing.B) {
 	left := num.Int128FromStringNoCheck(leftStr)
 	right := num.Int128FromStringNoCheck(rightStr)
 	var dest num.Int128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Sub(right)
 	}
 	benchInt128 = dest
@@ -72,7 +72,7 @@ func BenchmarkUint128Sub(b *testing.B) {
 	left := num.Uint128FromStringNoCheck(leftStr)
 	right := num.Uint128FromStringNoCheck(rightStr)
 	var dest num.Uint128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Sub(right)
 	}
 	benchUint128 = dest
@@ -82,7 +82,7 @@ func BenchmarkBigIntSub(b *testing.B) {
 	left, _ := new(big.Int).SetString(leftStr, 0)
 	right, _ := new(big.Int).SetString(rightStr, 0)
 	dest := new(big.Int)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest.Sub(left, right)
 	}
 	benchBigInt = dest
@@ -92,7 +92,7 @@ func BenchmarkInt128Mul(b *testing.B) {
 	left := num.Int128FromStringNoCheck(leftStr)
 	right := num.Int128FromStringNoCheck(shortRightStr)
 	var dest num.Int128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Mul(right)
 	}
 	benchInt128 = dest
@@ -102,7 +102,7 @@ func BenchmarkUint128Mul(b *testing.B) {
 	left := num.Uint128FromStringNoCheck(leftStr)
 	right := num.Uint128FromStringNoCheck(shortRightStr)
 	var dest num.Uint128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Mul(right)
 	}
 	benchUint128 = dest
@@ -112,7 +112,7 @@ func BenchmarkBigIntMul(b *testing.B) {
 	left, _ := new(big.Int).SetString(leftStr, 0)
 	right, _ := new(big.Int).SetString(shortRightStr, 0)
 	dest := new(big.Int)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest.Mul(left, right)
 	}
 	benchBigInt = dest
@@ -122,7 +122,7 @@ func BenchmarkInt128Div(b *testing.B) {
 	left := num.Int128FromStringNoCheck(leftStr)
 	right := num.Int128FromStringNoCheck(shortRightStr)
 	var dest num.Int128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Div(right)
 	}
 	benchInt128 = dest
@@ -132,7 +132,7 @@ func BenchmarkUint128Div(b *testing.B) {
 	left := num.Uint128FromStringNoCheck(leftStr)
 	right := num.Uint128FromStringNoCheck(shortRightStr)
 	var dest num.Uint128
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest = left.Div(right)
 	}
 	benchUint128 = dest
@@ -142,7 +142,7 @@ func BenchmarkBigIntDiv(b *testing.B) {
 	left, _ := new(big.Int).SetString(leftStr, 0)
 	right, _ := new(big.Int).SetString(shortRightStr, 0)
 	dest := new(big.Int)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dest.Div(left, right)
 	}
 	benchBigInt = dest
