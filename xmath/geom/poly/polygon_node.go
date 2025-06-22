@@ -36,6 +36,9 @@ func (p *polygonNode[T]) addLeft(pt geom.Point[T]) {
 
 func (p *polygonNode[T]) addRight(pt geom.Point[T]) {
 	v := &vertexNode[T]{pt: pt}
+	if p.proxy == nil {
+		p.proxy = p
+	}
 	if p.proxy.right != nil {
 		p.proxy.right.next = v
 	}
@@ -43,7 +46,7 @@ func (p *polygonNode[T]) addRight(pt geom.Point[T]) {
 }
 
 func (p *polygonNode[T]) mergeLeft(other, list *polygonNode[T]) {
-	if p.proxy != other.proxy {
+	if other != nil && p.proxy != other.proxy {
 		p.proxy.right.next = other.proxy.left
 		other.proxy.left = p.proxy.left
 		for target := p.proxy; list != nil; list = list.next {
@@ -56,7 +59,7 @@ func (p *polygonNode[T]) mergeLeft(other, list *polygonNode[T]) {
 }
 
 func (p *polygonNode[T]) mergeRight(other, list *polygonNode[T]) {
-	if p.proxy != other.proxy {
+	if other != nil && p.proxy != other.proxy {
 		other.proxy.right.next = p.proxy.left
 		other.proxy.right = p.proxy.right
 		for target := p.proxy; list != nil; list = list.next {
