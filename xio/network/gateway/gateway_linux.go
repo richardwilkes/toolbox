@@ -12,8 +12,8 @@ import (
 )
 
 type routeInfo struct {
-	metric int
 	gw     net.IP
+	metric int
 }
 
 // Default returns the IP of the default gateway for the current machine, or nil if no gateway is found.
@@ -48,7 +48,9 @@ func getRoutes(family int) ([]routeInfo, error) {
 	if err != nil {
 		return nil, errs.Wrap(err)
 	}
-	defer syscall.Close(fd)
+	defer func() {
+		_ = syscall.Close(fd) //nolint:errcheck // Ignore close error
+	}()
 	var req bytes.Buffer
 	hdr := syscall.NlMsghdr{
 		Len:   uint32(syscall.NLMSG_HDRLEN + syscall.SizeofRtMsg),
@@ -57,8 +59,8 @@ func getRoutes(family int) ([]routeInfo, error) {
 		Seq:   1,
 		Pid:   uint32(os.Getpid()),
 	}
-	binary.Write(&req, binary.LittleEndian, hdr)
-	binary.Write(&req, binary.LittleEndian, syscall.RtMsg{Family: uint8(family)})
+	_ = binary.Write(&req, binary.LittleEndian, hdr)                                  //nolint:errcheck // Can't fail
+	_ = binary.Write(&req, binary.LittleEndian, syscall.RtMsg{Family: uint8(family)}) //nolint:errcheck // Can't fail
 	sa := &syscall.SockaddrNetlink{Family: syscall.AF_NETLINK}
 	if err = syscall.Sendto(fd, req.Bytes(), 0, sa); err != nil {
 		return nil, errs.Wrap(err)
@@ -85,7 +87,7 @@ func getRoutes(family int) ([]routeInfo, error) {
 			continue
 		}
 		attrs := m.Data[syscall.SizeofRtMsg:]
-		var dstLen uint8 = rt.Dst_len
+		var dstLen = rt.Dst_len
 		var gw net.IP
 		metric := 0
 		for len(attrs) >= 4 {
