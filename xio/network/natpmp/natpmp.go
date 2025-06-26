@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackpal/gateway"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/xio/network/gateway"
 )
 
 const (
@@ -225,8 +225,7 @@ func call(msg []byte, resultSize int) ([]byte, error) {
 }
 
 func setupGateway() {
-	var err error
-	if gw, err = gateway.DiscoverGateway(); err == nil {
+	if gw = gateway.Default(); gw != nil {
 		atexit.Register(cleanup)
 		go renewals()
 	}
