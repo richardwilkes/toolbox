@@ -21,8 +21,7 @@ func Default() net.IP {
 		return nil
 	}
 	for _, msg := range msgs {
-		switch m := msg.(type) {
-		case *route.RouteMessage:
+		if m, ok := msg.(*route.RouteMessage); ok {
 			var ip net.IP
 			switch sa := m.Addrs[syscall.RTAX_GATEWAY].(type) {
 			case *route.Inet4Addr:

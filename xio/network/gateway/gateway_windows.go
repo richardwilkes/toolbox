@@ -10,22 +10,22 @@ import (
 
 // Default returns the IP of the default gateway for the current machine, or nil if no gateway is found.
 func Default() net.IP {
-	type SOCKADDR_INET struct {
+	type SockAddrINet struct {
 		_      [2]byte
 		Family int32
 		IP     [16]byte
 		_      [4]byte
 	}
-	type IP_ADDRESS_PREFIX struct {
-		Prefix       SOCKADDR_INET
+	type IPAddressPrefix struct {
+		Prefix       SockAddrINet
 		PrefixLength uint8
 		_            [3]byte
 	}
-	type MIB_IPFORWARD_ROW2 struct {
+	type MibIPForwardRow2 struct {
 		InterfaceLuid        uint64
 		InterfaceIndex       uint32
-		DestinationPrefix    IP_ADDRESS_PREFIX
-		NextHop              SOCKADDR_INET
+		DestinationPrefix    IPAddressPrefix
+		NextHop              SockAddrINet
 		SitePrefixLength     uint8
 		_                    [3]byte
 		ValidLifetime        uint32
@@ -39,30 +39,26 @@ func Default() net.IP {
 		Age                  uint32
 		Origin               uint32
 	}
-	type MIB_IPFORWARD_TABLE2 struct {
+	type MibIPForwardTable2 struct {
 		NumEntries uint32
-		// Followed by NumEntries MIB_IPFORWARD_ROW2
+		// Followed by NumEntries MibIPForwardRow2
 	}
 	iphlpapi := syscall.NewLazyDLL("iphlpapi.dll")
 	getIpForwardTable2 := iphlpapi.NewProc("GetIpForwardTable2")
-	var table *MIB_IPFORWARD_TABLE2
-	r1, _, _ := getIpForwardTable2.Call(syscall.AF_UNSPEC, uintptr(unsafe.Pointer(&table)))
+	var table *MibIPForwardTable2
+	r1, _, _ := getIpForwardTable2.Call(syscall.AF_UNSPEC, uintptr(unsafe.Pointer(&table))) //nolint:errcheck // This is a Windows API call, not a syscall
 	if r1 != 0 || table == nil {
 		errs.Log(errs.New("unable to get default routes"))
 		return nil
 	}
 	defer func() {
-		iphlpapi.NewProc("FreeMibTable").Call(uintptr(unsafe.Pointer(table)))
+		iphlpapi.NewProc("FreeMibTable").Call(uintptr(unsafe.Pointer(table))) //nolint:errcheck // This is a Windows API call, not a syscall
 	}()
-	type routeInfo struct {
-		metric int
-		gw     net.IP
-	}
 	var ip net.IP
 	var best uint32
 	var none [16]byte
 	n := table.NumEntries
-	rows := (*[1 << 12]MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(table)) + unsafe.Sizeof(*table)))[:n:n]
+	rows := (*[1 << 12]MibIPForwardRow2)(unsafe.Pointer(uintptr(unsafe.Pointer(table)) + unsafe.Sizeof(*table)))[:n:n]
 	for _, row := range rows {
 		if row.SitePrefixLength != 0 || row.Metric == 0xFFFFFFFF || row.NextHop.IP == none {
 			continue
