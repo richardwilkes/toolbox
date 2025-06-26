@@ -60,10 +60,14 @@ func Default() net.IP {
 	}
 	var ip net.IP
 	var best uint32
+	var none [16]byte
 	n := table.NumEntries
 	rows := (*[1 << 12]MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(table)) + unsafe.Sizeof(*table)))[:n:n]
 	for _, row := range rows {
-		if row.SitePrefixLength == 0 && row.Metric > best {
+		if row.SitePrefixLength != 0 || row.Metric == 0xFFFFFFFF || row.NextHop.IP == none {
+			continue
+		}
+		if row.Metric > best {
 			switch row.NextHop.Family {
 			case syscall.AF_INET:
 				best = row.Metric
