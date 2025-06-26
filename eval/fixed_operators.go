@@ -299,7 +299,7 @@ func FixedFrom[T fixed.Dx](arg any) (f64.Int[T], error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {
-			return f64.From[T, int](1), nil
+			return f64.From[T](1), nil
 		}
 		return 0, nil
 	case f64.Int[T]:

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,14 +9,12 @@
 
 package poly
 
-import "golang.org/x/exp/constraints"
-
-type scanBeamTree[T constraints.Float] struct {
+type scanBeamTree[T ~float32 | ~float64] struct {
 	root    *scanBeamNode[T]
 	entries int
 }
 
-type scanBeamNode[T constraints.Float] struct {
+type scanBeamNode[T ~float32 | ~float64] struct {
 	y    T
 	less *scanBeamNode[T]
 	more *scanBeamNode[T]

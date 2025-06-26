@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,12 +15,11 @@ import (
 	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/xmath/geom"
 	"github.com/richardwilkes/toolbox/xmath/geom/poly"
-	"golang.org/x/exp/constraints"
 )
 
 const floatsAreConsistentAcrossPlatforms = false
 
-type containsCase[T constraints.Float] struct {
+type containsCase[T ~float32 | ~float64] struct {
 	geom.Point[T]
 	contains bool
 }
@@ -30,7 +29,7 @@ func TestContains(t *testing.T) {
 	testContains[float64](t)
 }
 
-func testContains[T constraints.Float](t *testing.T) {
+func testContains[T ~float32 | ~float64](t *testing.T) {
 	p := poly.Polygon[T]{
 		{{200, 20}, {300, 20}, {300, 120}, {200, 120}},
 		{{250, 50}, {280, 50}, {280, 80}, {250, 80}},
@@ -67,7 +66,7 @@ func testContains[T constraints.Float](t *testing.T) {
 	}
 }
 
-type testCase[T constraints.Float] struct {
+type testCase[T ~float32 | ~float64] struct {
 	name     string
 	subject  poly.Polygon[T]
 	clipping poly.Polygon[T]
@@ -81,7 +80,7 @@ func TestUnion(t *testing.T) {
 	}
 }
 
-func testUnion[T constraints.Float](t *testing.T) {
+func testUnion[T ~float32 | ~float64](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:    "union #1",
@@ -260,7 +259,7 @@ func TestIntersect(t *testing.T) {
 	}
 }
 
-func testIntersect[T constraints.Float](t *testing.T) {
+func testIntersect[T ~float32 | ~float64](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "intersect #1",
@@ -363,7 +362,7 @@ func TestSubtract(t *testing.T) {
 	}
 }
 
-func testSubtract[T constraints.Float](t *testing.T) {
+func testSubtract[T ~float32 | ~float64](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "subtract #1",
@@ -446,7 +445,7 @@ func TestXor(t *testing.T) {
 	testXor[float64](t)
 }
 
-func testXor[T constraints.Float](t *testing.T) {
+func testXor[T ~float32 | ~float64](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "xor #1",
@@ -476,7 +475,7 @@ func testXor[T constraints.Float](t *testing.T) {
 	}
 }
 
-func matchPolys[T constraints.Float](left, right poly.Polygon[T]) bool {
+func matchPolys[T ~float32 | ~float64](left, right poly.Polygon[T]) bool {
 	left = simplifyPoly(left)
 	right = simplifyPoly(right)
 	if len(left) != len(right) {
@@ -495,7 +494,7 @@ func matchPolys[T constraints.Float](left, right poly.Polygon[T]) bool {
 	return true
 }
 
-func simplifyPoly[T constraints.Float](p poly.Polygon[T]) poly.Polygon[T] {
+func simplifyPoly[T ~float32 | ~float64](p poly.Polygon[T]) poly.Polygon[T] {
 	var revised poly.Polygon[T]
 	for _, c := range p {
 		var nc poly.Contour[T]

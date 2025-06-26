@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -203,9 +203,10 @@ func (cl *CmdLine) setOrFail(op *Option, arg, value string) {
 // FatalMsg emits an error message and causes the program to exit.
 func (cl *CmdLine) FatalMsg(msg string) {
 	cl.out.Bell()
-	cl.out.Foreground(term.Red, term.Normal)
-	fmt.Fprint(cl, msg)
 	cl.out.Reset()
+	cl.out.Red()
+	fmt.Fprint(cl, msg)
+	cl.out.FgReset()
 	fmt.Fprintln(cl)
 	atexit.Exit(1)
 }

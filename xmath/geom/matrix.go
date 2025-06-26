@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,11 +13,10 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox/xmath"
-	"golang.org/x/exp/constraints"
 )
 
 // Matrix provides a 2D matrix.
-type Matrix[T constraints.Float] struct {
+type Matrix[T ~float32 | ~float64] struct {
 	ScaleX T `json:"scale_x"`
 	SkewX  T `json:"skew_x"`
 	TransX T `json:"trans_x"`
@@ -27,29 +26,29 @@ type Matrix[T constraints.Float] struct {
 }
 
 // NewIdentityMatrix creates a new identity transformation Matrix.
-func NewIdentityMatrix[T constraints.Float]() Matrix[T] {
+func NewIdentityMatrix[T ~float32 | ~float64]() Matrix[T] {
 	return Matrix[T]{ScaleX: 1, ScaleY: 1}
 }
 
 // NewTranslationMatrix creates a new Matrix that translates by 'tx' and 'ty'.
-func NewTranslationMatrix[T constraints.Float](tx, ty T) Matrix[T] {
+func NewTranslationMatrix[T ~float32 | ~float64](tx, ty T) Matrix[T] {
 	return Matrix[T]{ScaleX: 1, ScaleY: 1, TransX: tx, TransY: ty}
 }
 
 // NewScaleMatrix creates a new Matrix that scales by 'sx' and 'sy'.
-func NewScaleMatrix[T constraints.Float](sx, sy T) Matrix[T] {
+func NewScaleMatrix[T ~float32 | ~float64](sx, sy T) Matrix[T] {
 	return Matrix[T]{ScaleX: sx, ScaleY: sy}
 }
 
 // NewRotationMatrix creates a new Matrix that rotates by 'radians'. Positive values are clockwise.
-func NewRotationMatrix[T constraints.Float](radians T) Matrix[T] {
+func NewRotationMatrix[T ~float32 | ~float64](radians T) Matrix[T] {
 	s := xmath.Sin(radians)
 	c := xmath.Cos(radians)
 	return Matrix[T]{ScaleX: c, SkewX: -s, SkewY: s, ScaleY: c}
 }
 
 // NewRotationByDegreesMatrix creates a new Matrix that rotates by 'degrees'. Positive values are clockwise.
-func NewRotationByDegreesMatrix[T constraints.Float](degrees T) Matrix[T] {
+func NewRotationByDegreesMatrix[T ~float32 | ~float64](degrees T) Matrix[T] {
 	return NewRotationMatrix(degrees * xmath.DegreesToRadians)
 }
 

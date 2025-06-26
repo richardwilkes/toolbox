@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,16 +11,15 @@ package poly
 
 import (
 	"github.com/richardwilkes/toolbox/xmath/geom"
-	"golang.org/x/exp/constraints"
 )
 
-type localMinimaNode[T constraints.Float] struct {
+type localMinimaNode[T ~float32 | ~float64] struct {
 	y          T
 	firstBound *edgeNode[T]
 	next       *localMinimaNode[T]
 }
 
-func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree *scanBeamTree[T], p Polygon[T], nc []bool, which int, op clipOp) *localMinimaNode[T] {
+func buildLocalMinimaTable[T ~float32 | ~float64](lmt *localMinimaNode[T], sbTree *scanBeamTree[T], p Polygon[T], nc []bool, which int, op clipOp) *localMinimaNode[T] {
 	if len(p) == 0 {
 		return lmt
 	}
@@ -182,7 +181,7 @@ func (n *localMinimaNode[T]) boundList(y T) (lmn *localMinimaNode[T], en **edgeN
 	}
 }
 
-func optimal[T constraints.Float](v []geom.Point[T], i, n int) bool {
+func optimal[T ~float32 | ~float64](v []geom.Point[T], i, n int) bool {
 	return v[previousIndex(i, n)].Y != v[i].Y || v[nextIndex(i, n)].Y != v[i].Y
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,14 +17,13 @@ import (
 	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/toolbox/collection/quadtree"
 	"github.com/richardwilkes/toolbox/xmath/geom"
-	"golang.org/x/exp/constraints"
 )
 
-type node[T constraints.Float] struct {
+type node[T ~float32 | ~float64] struct {
 	geom.Rect[T]
 }
 
-func newNode[T constraints.Float](x, y, width, height T) *node[T] {
+func newNode[T ~float32 | ~float64](x, y, width, height T) *node[T] {
 	return &node[T]{Rect: geom.NewRect(x, y, width, height)}
 }
 

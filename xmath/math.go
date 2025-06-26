@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,13 +12,11 @@ package xmath
 import (
 	"math"
 	"reflect"
-
-	"golang.org/x/exp/constraints"
 )
 
 // Numeric is a constraint that permits any integer or float type.
 type Numeric interface {
-	constraints.Float | constraints.Integer
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64
 }
 
 // Abs returns the absolute value of x.
@@ -42,7 +40,7 @@ func Abs[T Numeric](x T) T {
 }
 
 // Acos returns the arccosine of x.
-func Acos[T constraints.Float](x T) T {
+func Acos[T ~float32 | ~float64](x T) T {
 	return T(math.Acos(float64(x)))
 }
 
@@ -53,7 +51,7 @@ func Acos[T constraints.Float](x T) T {
 //	Acosh(+Inf) = +Inf
 //	Acosh(x) = NaN if x < 1
 //	Acosh(NaN) = NaN
-func Acosh[T constraints.Float](x T) T {
+func Acosh[T ~float32 | ~float64](x T) T {
 	return T(math.Acosh(float64(x)))
 }
 
@@ -63,7 +61,7 @@ func Acosh[T constraints.Float](x T) T {
 //
 //	Asin(±0) = ±0
 //	Asin(x) = NaN if x < -1 or x > 1
-func Asin[T constraints.Float](x T) T {
+func Asin[T ~float32 | ~float64](x T) T {
 	return T(math.Asin(float64(x)))
 }
 
@@ -74,7 +72,7 @@ func Asin[T constraints.Float](x T) T {
 //	Asinh(±0) = ±0
 //	Asinh(±Inf) = ±Inf
 //	Asinh(NaN) = NaN
-func Asinh[T constraints.Float](x T) T {
+func Asinh[T ~float32 | ~float64](x T) T {
 	return T(math.Asinh(float64(x)))
 }
 
@@ -99,7 +97,7 @@ func Asinh[T constraints.Float](x T) T {
 //	Atan2(y<0, -Inf) = -Pi
 //	Atan2(+Inf, x) = +Pi/2
 //	Atan2(-Inf, x) = -Pi/2
-func Atan2[T constraints.Float](y, x T) T {
+func Atan2[T ~float32 | ~float64](y, x T) T {
 	return T(math.Atan2(float64(y), float64(x)))
 }
 
@@ -109,7 +107,7 @@ func Atan2[T constraints.Float](y, x T) T {
 //
 //	Atan(±0) = ±0
 //	Atan(±Inf) = ±Pi/2
-func Atan[T constraints.Float](x T) T {
+func Atan[T ~float32 | ~float64](x T) T {
 	return T(math.Atan(float64(x)))
 }
 
@@ -122,12 +120,12 @@ func Atan[T constraints.Float](x T) T {
 //	Atanh(-1) = -Inf
 //	Atanh(x) = NaN if x < -1 or x > 1
 //	Atanh(NaN) = NaN
-func Atanh[T constraints.Float](x T) T {
+func Atanh[T ~float32 | ~float64](x T) T {
 	return T(math.Atanh(float64(x)))
 }
 
 // Cbrt returns the cube root of x.
-func Cbrt[T constraints.Float](x T) T {
+func Cbrt[T ~float32 | ~float64](x T) T {
 	return T(math.Cbrt(float64(x)))
 }
 
@@ -142,7 +140,7 @@ func Ceil[T Numeric](x T) T {
 }
 
 // Copysign returns a value with the magnitude of x and the sign of y.
-func Copysign[T constraints.Float](x, y T) T {
+func Copysign[T ~float32 | ~float64](x, y T) T {
 	if reflect.TypeOf(x).Kind() == reflect.Float32 {
 		const sign = 1 << 31
 		return T(math.Float32frombits(math.Float32bits(float32(x))&^sign | math.Float32bits(float32(y))&sign))
@@ -156,7 +154,7 @@ func Copysign[T constraints.Float](x, y T) T {
 //
 //	Cos(±Inf) = NaN
 //	Cos(NaN) = NaN
-func Cos[T constraints.Float](x T) T {
+func Cos[T ~float32 | ~float64](x T) T {
 	return T(math.Cos(float64(x)))
 }
 
@@ -167,7 +165,7 @@ func Cos[T constraints.Float](x T) T {
 //	Cosh(±0) = 1
 //	Cosh(±Inf) = +Inf
 //	Cosh(NaN) = NaN
-func Cosh[T constraints.Float](x T) T {
+func Cosh[T ~float32 | ~float64](x T) T {
 	return T(math.Cosh(float64(x)))
 }
 
@@ -178,7 +176,7 @@ func Cosh[T constraints.Float](x T) T {
 //	Dim(+Inf, +Inf) = NaN
 //	Dim(-Inf, -Inf) = NaN
 //	Dim(x, NaN) = Dim(NaN, x) = NaN
-func Dim[T constraints.Float](x, y T) T {
+func Dim[T ~float32 | ~float64](x, y T) T {
 	if v := x - y; v > 0 {
 		return v
 	}
@@ -192,7 +190,7 @@ func Dim[T constraints.Float](x, y T) T {
 //	Erf(+Inf) = 1
 //	Erf(-Inf) = -1
 //	Erf(NaN) = NaN
-func Erf[T constraints.Float](x T) T {
+func Erf[T ~float32 | ~float64](x T) T {
 	return T(math.Erf(float64(x)))
 }
 
@@ -203,7 +201,7 @@ func Erf[T constraints.Float](x T) T {
 //	Erfc(+Inf) = 0
 //	Erfc(-Inf) = 2
 //	Erfc(NaN) = NaN
-func Erfc[T constraints.Float](x T) T {
+func Erfc[T ~float32 | ~float64](x T) T {
 	return T(math.Erfc(float64(x)))
 }
 
@@ -215,7 +213,7 @@ func Erfc[T constraints.Float](x T) T {
 //	Erfinv(-1) = -Inf
 //	Erfinv(x) = NaN if x < -1 or x > 1
 //	Erfinv(NaN) = NaN
-func Erfinv[T constraints.Float](x T) T {
+func Erfinv[T ~float32 | ~float64](x T) T {
 	return T(math.Erfinv(float64(x)))
 }
 
@@ -227,7 +225,7 @@ func Erfinv[T constraints.Float](x T) T {
 //	Erfcinv(2) = -Inf
 //	Erfcinv(x) = NaN if x < 0 or x > 2
 //	Erfcinv(NaN) = NaN
-func Erfcinv[T constraints.Float](x T) T {
+func Erfcinv[T ~float32 | ~float64](x T) T {
 	return Erfinv(1 - x)
 }
 
@@ -240,14 +238,14 @@ func Erfcinv[T constraints.Float](x T) T {
 //
 // Very large values overflow to 0 or +Inf.
 // Very small values underflow to 1.
-func Exp[T constraints.Float](x T) T {
+func Exp[T ~float32 | ~float64](x T) T {
 	return T(math.Exp(float64(x)))
 }
 
 // Exp2 returns 2**x, the base-2 exponential of x.
 //
 // Special cases are the same as Exp.
-func Exp2[T constraints.Float](x T) T {
+func Exp2[T ~float32 | ~float64](x T) T {
 	return T(math.Exp2(float64(x)))
 }
 
@@ -261,7 +259,7 @@ func Exp2[T constraints.Float](x T) T {
 //	Expm1(NaN) = NaN
 //
 // Very large values overflow to -1 or +Inf.
-func Expm1[T constraints.Float](x T) T {
+func Expm1[T ~float32 | ~float64](x T) T {
 	return T(math.Expm1(float64(x)))
 }
 
@@ -277,7 +275,7 @@ func Floor[T Numeric](x T) T {
 
 // FMA returns x * y + z, computed with only one rounding.
 // (That is, FMA returns the fused multiply-add of x, y, and z.)
-func FMA[T constraints.Float](x, y, z T) T {
+func FMA[T ~float32 | ~float64](x, y, z T) T {
 	return T(math.FMA(float64(x), float64(y), float64(z)))
 }
 
@@ -291,7 +289,7 @@ func FMA[T constraints.Float](x, y, z T) T {
 //	Frexp(±0) = ±0, 0
 //	Frexp(±Inf) = ±Inf, 0
 //	Frexp(NaN) = NaN, 0
-func Frexp[T constraints.Float](f T) (frac T, exp int) {
+func Frexp[T ~float32 | ~float64](f T) (frac T, exp int) {
 	fr, e := math.Frexp(float64(f))
 	return T(fr), e
 }
@@ -306,7 +304,7 @@ func Frexp[T constraints.Float](f T) (frac T, exp int) {
 //	Gamma(x) = NaN for integer x < 0
 //	Gamma(-Inf) = NaN
 //	Gamma(NaN) = NaN
-func Gamma[T constraints.Float](x T) T {
+func Gamma[T ~float32 | ~float64](x T) T {
 	return T(math.Gamma(float64(x)))
 }
 
@@ -319,7 +317,7 @@ func Gamma[T constraints.Float](x T) T {
 //	Hypot(p, ±Inf) = +Inf
 //	Hypot(NaN, q) = NaN
 //	Hypot(p, NaN) = NaN
-func Hypot[T constraints.Float](p, q T) T {
+func Hypot[T ~float32 | ~float64](p, q T) T {
 	return T(math.Hypot(float64(p), float64(q)))
 }
 
@@ -330,12 +328,12 @@ func Hypot[T constraints.Float](p, q T) T {
 //	Ilogb(±Inf) = MaxInt32
 //	Ilogb(0) = MinInt32
 //	Ilogb(NaN) = MaxInt32
-func Ilogb[T constraints.Float](x T) int {
+func Ilogb[T ~float32 | ~float64](x T) int {
 	return math.Ilogb(float64(x))
 }
 
 // Inf returns positive infinity if sign >= 0, negative infinity if sign < 0.
-func Inf[T constraints.Float](sign int) T {
+func Inf[T ~float32 | ~float64](sign int) T {
 	var t T
 	if reflect.TypeOf(t).Kind() == reflect.Float32 {
 		var v uint32
@@ -353,7 +351,7 @@ func Inf[T constraints.Float](sign int) T {
 // If sign > 0, IsInf reports whether f is positive infinity.
 // If sign < 0, IsInf reports whether f is negative infinity.
 // If sign == 0, IsInf reports whether f is either infinity.
-func IsInf[T constraints.Float](f T, sign int) bool {
+func IsInf[T ~float32 | ~float64](f T, sign int) bool {
 	if reflect.TypeOf(f).Kind() == reflect.Float32 {
 		return sign >= 0 && f > math.MaxFloat32 || sign <= 0 && f < -math.MaxFloat32
 	}
@@ -361,7 +359,7 @@ func IsInf[T constraints.Float](f T, sign int) bool {
 }
 
 // IsNaN reports whether f is a "not-a-number" value.
-func IsNaN[T constraints.Float](f T) bool {
+func IsNaN[T ~float32 | ~float64](f T) bool {
 	//nolint:gocritic // Only NaNs satisfy f != f, which is what we are looking for
 	return f != f
 }
@@ -373,7 +371,7 @@ func IsNaN[T constraints.Float](f T) bool {
 //	J0(±Inf) = 0
 //	J0(0) = 1
 //	J0(NaN) = NaN
-func J0[T constraints.Float](x T) T {
+func J0[T ~float32 | ~float64](x T) T {
 	return T(math.J0(float64(x)))
 }
 
@@ -383,7 +381,7 @@ func J0[T constraints.Float](x T) T {
 //
 //	J1(±Inf) = 0
 //	J1(NaN) = NaN
-func J1[T constraints.Float](x T) T {
+func J1[T ~float32 | ~float64](x T) T {
 	return T(math.J1(float64(x)))
 }
 
@@ -393,7 +391,7 @@ func J1[T constraints.Float](x T) T {
 //
 //	Jn(n, ±Inf) = 0
 //	Jn(n, NaN) = NaN
-func Jn[T constraints.Float](n int, x T) T {
+func Jn[T ~float32 | ~float64](n int, x T) T {
 	return T(math.Jn(n, float64(x)))
 }
 
@@ -405,7 +403,7 @@ func Jn[T constraints.Float](n int, x T) T {
 //	Ldexp(±0, exp) = ±0
 //	Ldexp(±Inf, exp) = ±Inf
 //	Ldexp(NaN, exp) = NaN
-func Ldexp[T constraints.Float](frac T, exp int) T {
+func Ldexp[T ~float32 | ~float64](frac T, exp int) T {
 	return T(math.Ldexp(float64(frac), exp))
 }
 
@@ -418,7 +416,7 @@ func Ldexp[T constraints.Float](frac T, exp int) T {
 //	Lgamma(-integer) = +Inf
 //	Lgamma(-Inf) = -Inf
 //	Lgamma(NaN) = NaN
-func Lgamma[T constraints.Float](x T) (lgamma T, sign int) {
+func Lgamma[T ~float32 | ~float64](x T) (lgamma T, sign int) {
 	f64, s := math.Lgamma(float64(x))
 	return T(f64), s
 }
@@ -431,12 +429,12 @@ func Lgamma[T constraints.Float](x T) (lgamma T, sign int) {
 //	Log(0) = -Inf
 //	Log(x < 0) = NaN
 //	Log(NaN) = NaN
-func Log[T constraints.Float](x T) T {
+func Log[T ~float32 | ~float64](x T) T {
 	return T(math.Log(float64(x)))
 }
 
 // Log10 returns the decimal logarithm of x. The special cases are the same as for Log.
-func Log10[T constraints.Float](x T) T {
+func Log10[T ~float32 | ~float64](x T) T {
 	return T(math.Log10(float64(x)))
 }
 
@@ -450,12 +448,12 @@ func Log10[T constraints.Float](x T) T {
 //	Log1p(-1) = -Inf
 //	Log1p(x < -1) = NaN
 //	Log1p(NaN) = NaN
-func Log1p[T constraints.Float](x T) T {
+func Log1p[T ~float32 | ~float64](x T) T {
 	return T(math.Log1p(float64(x)))
 }
 
 // Log2 returns the binary logarithm of x. The special cases are the same as for Log.
-func Log2[T constraints.Float](x T) T {
+func Log2[T ~float32 | ~float64](x T) T {
 	return T(math.Log2(float64(x)))
 }
 
@@ -466,7 +464,7 @@ func Log2[T constraints.Float](x T) T {
 //	Logb(±Inf) = +Inf
 //	Logb(0) = -Inf
 //	Logb(NaN) = NaN
-func Logb[T constraints.Float](x T) T {
+func Logb[T ~float32 | ~float64](x T) T {
 	return T(math.Logb(float64(x)))
 }
 
@@ -561,7 +559,7 @@ func SmallestPositiveNonZeroValue[T Numeric]() T {
 //	Mod(x, 0) = NaN
 //	Mod(x, ±Inf) = x
 //	Mod(x, NaN) = NaN
-func Mod[T constraints.Float](x, y T) T {
+func Mod[T ~float32 | ~float64](x, y T) T {
 	return T(math.Mod(float64(x), float64(y)))
 }
 
@@ -572,13 +570,13 @@ func Mod[T constraints.Float](x, y T) T {
 //
 //	Modf(±Inf) = ±Inf, NaN
 //	Modf(NaN) = NaN, NaN
-func Modf[T constraints.Float](f T) (i, frac T) {
+func Modf[T ~float32 | ~float64](f T) (i, frac T) {
 	i64, f64 := math.Modf(float64(f))
 	return T(i64), T(f64)
 }
 
 // NaN returns the "not-a-number" value.
-func NaN[T constraints.Float]() T {
+func NaN[T ~float32 | ~float64]() T {
 	var t T
 	if reflect.TypeOf(t).Kind() == reflect.Float32 {
 		return T(math.Float32frombits(0x7FF80001))
@@ -593,7 +591,7 @@ func NaN[T constraints.Float]() T {
 //	Nextafter(x, x)   = x
 //	Nextafter(NaN, y) = NaN
 //	Nextafter(x, NaN) = NaN
-func Nextafter[T constraints.Float](x, y T) (r T) {
+func Nextafter[T ~float32 | ~float64](x, y T) (r T) {
 	if reflect.TypeOf(x).Kind() == reflect.Float32 {
 		return T(math.Nextafter32(float32(x), float32(y)))
 	}
@@ -624,7 +622,7 @@ func Nextafter[T constraints.Float](x, y T) (r T) {
 //	Pow(+Inf, y) = +0 for y < 0
 //	Pow(-Inf, y) = Pow(-0, -y)
 //	Pow(x, y) = NaN for finite x < 0 and finite non-integer y
-func Pow[T constraints.Float](x, y T) T {
+func Pow[T ~float32 | ~float64](x, y T) T {
 	return T(math.Pow(float64(x), float64(y)))
 }
 
@@ -634,7 +632,7 @@ func Pow[T constraints.Float](x, y T) T {
 //
 //	Pow10(n) =    0 for n < -323
 //	Pow10(n) = +Inf for n > 308
-func Pow10[T constraints.Float](n int) T {
+func Pow10[T ~float32 | ~float64](n int) T {
 	return T(math.Pow10(n))
 }
 
@@ -647,7 +645,7 @@ func Pow10[T constraints.Float](n int) T {
 //	Remainder(x, 0) = NaN
 //	Remainder(x, ±Inf) = x
 //	Remainder(x, NaN) = NaN
-func Remainder[T constraints.Float](x, y T) T {
+func Remainder[T ~float32 | ~float64](x, y T) T {
 	return T(math.Remainder(float64(x), float64(y)))
 }
 
@@ -658,7 +656,7 @@ func Remainder[T constraints.Float](x, y T) T {
 //	Round(±0) = ±0
 //	Round(±Inf) = ±Inf
 //	Round(NaN) = NaN
-func Round[T constraints.Float](x T) T {
+func Round[T ~float32 | ~float64](x T) T {
 	return T(math.Round(float64(x)))
 }
 
@@ -669,12 +667,12 @@ func Round[T constraints.Float](x T) T {
 //	RoundToEven(±0) = ±0
 //	RoundToEven(±Inf) = ±Inf
 //	RoundToEven(NaN) = NaN
-func RoundToEven[T constraints.Float](x T) T {
+func RoundToEven[T ~float32 | ~float64](x T) T {
 	return T(math.RoundToEven(float64(x)))
 }
 
 // Signbit reports whether x is negative or negative zero.
-func Signbit[T constraints.Float](x T) bool {
+func Signbit[T ~float32 | ~float64](x T) bool {
 	if reflect.TypeOf(x).Kind() == reflect.Float32 {
 		return math.Float32bits(float32(x))&(1<<31) != 0
 	}
@@ -688,7 +686,7 @@ func Signbit[T constraints.Float](x T) bool {
 //	Sin(±0) = ±0
 //	Sin(±Inf) = NaN
 //	Sin(NaN) = NaN
-func Sin[T constraints.Float](x T) T {
+func Sin[T ~float32 | ~float64](x T) T {
 	return T(math.Sin(float64(x)))
 }
 
@@ -699,7 +697,7 @@ func Sin[T constraints.Float](x T) T {
 //	Sincos(±0) = ±0, 1
 //	Sincos(±Inf) = NaN, NaN
 //	Sincos(NaN) = NaN, NaN
-func Sincos[T constraints.Float](x T) (sin, cos T) {
+func Sincos[T ~float32 | ~float64](x T) (sin, cos T) {
 	s, c := math.Sincos(float64(x))
 	return T(s), T(c)
 }
@@ -711,7 +709,7 @@ func Sincos[T constraints.Float](x T) (sin, cos T) {
 //	Sinh(±0) = ±0
 //	Sinh(±Inf) = ±Inf
 //	Sinh(NaN) = NaN
-func Sinh[T constraints.Float](x T) T {
+func Sinh[T ~float32 | ~float64](x T) T {
 	return T(math.Sinh(float64(x)))
 }
 
@@ -723,7 +721,7 @@ func Sinh[T constraints.Float](x T) T {
 //	Sqrt(±0) = ±0
 //	Sqrt(x < 0) = NaN
 //	Sqrt(NaN) = NaN
-func Sqrt[T constraints.Float](x T) T {
+func Sqrt[T ~float32 | ~float64](x T) T {
 	return T(math.Sqrt(float64(x)))
 }
 
@@ -734,7 +732,7 @@ func Sqrt[T constraints.Float](x T) T {
 //	Tan(±0) = ±0
 //	Tan(±Inf) = NaN
 //	Tan(NaN) = NaN
-func Tan[T constraints.Float](x T) T {
+func Tan[T ~float32 | ~float64](x T) T {
 	return T(math.Tan(float64(x)))
 }
 
@@ -745,7 +743,7 @@ func Tan[T constraints.Float](x T) T {
 //	Tanh(±0) = ±0
 //	Tanh(±Inf) = ±1
 //	Tanh(NaN) = NaN
-func Tanh[T constraints.Float](x T) T {
+func Tanh[T ~float32 | ~float64](x T) T {
 	return T(math.Tanh(float64(x)))
 }
 
@@ -756,7 +754,7 @@ func Tanh[T constraints.Float](x T) T {
 //	Trunc(±0) = ±0
 //	Trunc(±Inf) = ±Inf
 //	Trunc(NaN) = NaN
-func Trunc[T constraints.Float](x T) T {
+func Trunc[T ~float32 | ~float64](x T) T {
 	return T(math.Trunc(float64(x)))
 }
 
@@ -768,7 +766,7 @@ func Trunc[T constraints.Float](x T) T {
 //	Y0(0) = -Inf
 //	Y0(x < 0) = NaN
 //	Y0(NaN) = NaN
-func Y0[T constraints.Float](x T) T {
+func Y0[T ~float32 | ~float64](x T) T {
 	return T(math.Y0(float64(x)))
 }
 
@@ -780,7 +778,7 @@ func Y0[T constraints.Float](x T) T {
 //	Y1(0) = -Inf
 //	Y1(x < 0) = NaN
 //	Y1(NaN) = NaN
-func Y1[T constraints.Float](x T) T {
+func Y1[T ~float32 | ~float64](x T) T {
 	return T(math.Y1(float64(x)))
 }
 
@@ -793,7 +791,7 @@ func Y1[T constraints.Float](x T) T {
 //	Yn(n < 0, 0) = +Inf if n is odd, -Inf if n is even
 //	Yn(n, x < 0) = NaN
 //	Yn(n, NaN) = NaN
-func Yn[T constraints.Float](n int, x T) T {
+func Yn[T ~float32 | ~float64](n int, x T) T {
 	return T(math.Yn(n, float64(x)))
 }
 

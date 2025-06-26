@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,11 +11,10 @@ package visibility
 
 import (
 	"github.com/richardwilkes/toolbox/xmath/geom"
-	"golang.org/x/exp/constraints"
 )
 
 // Segment holds the start and end points of a line.
-type Segment[T constraints.Float] struct {
+type Segment[T ~float32 | ~float64] struct {
 	Start geom.Point[T]
 	End   geom.Point[T]
 }
@@ -25,6 +24,6 @@ type Segment[T constraints.Float] struct {
 func (s Segment[T]) Bounds() geom.Rect[T] {
 	minX := min(s.Start.X, s.End.X)
 	minY := min(s.Start.Y, s.End.Y)
-	return geom.NewRect[T](minX-epsilon, minY-epsilon, max(s.Start.X, s.End.X)-minX+epsilon*2,
+	return geom.NewRect(minX-epsilon, minY-epsilon, max(s.Start.X, s.End.X)-minX+epsilon*2,
 		max(s.Start.Y, s.End.Y)-minY+epsilon*2)
 }

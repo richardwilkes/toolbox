@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/xmath/geom"
-	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -31,7 +30,7 @@ const (
 )
 
 // Polygon holds one or more contour lines. The polygon may contain holes and may be self-intersecting.
-type Polygon[T constraints.Float] []Contour[T]
+type Polygon[T ~float32 | ~float64] []Contour[T]
 
 // Clone returns a duplicate of this polygon.
 func (p Polygon[T]) Clone() Polygon[T] {

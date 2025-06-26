@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -22,7 +22,7 @@ type Rect[T xmath.Numeric] struct {
 
 // NewRect creates a new Rect.
 func NewRect[T xmath.Numeric](x, y, width, height T) Rect[T] {
-	return Rect[T]{Point: NewPoint[T](x, y), Size: NewSize[T](width, height)}
+	return Rect[T]{Point: NewPoint(x, y), Size: NewSize(width, height)}
 }
 
 // ConvertRect converts a Rect of type F into one of type T.
@@ -101,16 +101,16 @@ func (r Rect[T]) IntersectsLine(start, end Point[T]) bool {
 	if start.In(r) || end.In(r) {
 		return true
 	}
-	if len(LineIntersection[T](start, end, r.Point, r.TopRight())) != 0 {
+	if len(LineIntersection(start, end, r.Point, r.TopRight())) != 0 {
 		return true
 	}
-	if len(LineIntersection[T](start, end, r.Point, r.BottomLeft())) != 0 {
+	if len(LineIntersection(start, end, r.Point, r.BottomLeft())) != 0 {
 		return true
 	}
-	if len(LineIntersection[T](start, end, r.TopRight(), r.BottomRight())) != 0 {
+	if len(LineIntersection(start, end, r.TopRight(), r.BottomRight())) != 0 {
 		return true
 	}
-	if len(LineIntersection[T](start, end, r.BottomLeft(), r.BottomRight())) != 0 {
+	if len(LineIntersection(start, end, r.BottomLeft(), r.BottomRight())) != 0 {
 		return true
 	}
 	return false

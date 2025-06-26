@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,15 +11,14 @@ package poly
 
 import (
 	"github.com/richardwilkes/toolbox/xmath/geom"
-	"golang.org/x/exp/constraints"
 )
 
-type vertexNode[T constraints.Float] struct {
+type vertexNode[T ~float32 | ~float64] struct {
 	pt   geom.Point[T]
 	next *vertexNode[T]
 }
 
-type polygonNode[T constraints.Float] struct {
+type polygonNode[T ~float32 | ~float64] struct {
 	left   *vertexNode[T]
 	right  *vertexNode[T]
 	next   *polygonNode[T]

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xio/term"
 )
 
 var (
@@ -149,26 +148,26 @@ func Copyright() string {
 
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
-	term.WrapText(cl, "", AppName)
+	cl.out.WrapText("", AppName)
 	buildInfo := fmt.Sprintf(i18n.Text("Version %s"), ShortVersion())
 	if BuildNumber != "" {
 		buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
 	}
-	term.WrapText(cl, "  ", buildInfo)
+	cl.out.WrapText("  ", buildInfo)
 	if GitVersion != "" {
 		str := vcs + ": " + GitVersion
 		if VCSModified {
 			str += "-modified"
 		}
-		term.WrapText(cl, "  ", str)
+		cl.out.WrapText("  ", str)
 	}
-	term.WrapText(cl, "  ", Copyright())
+	cl.out.WrapText("  ", Copyright())
 	if License != "" {
-		term.WrapText(cl, "  ", fmt.Sprintf(i18n.Text("License: %s"), License))
+		cl.out.WrapText("  ", fmt.Sprintf(i18n.Text("License: %s"), License))
 	}
 	fmt.Fprintln(cl)
 	if cl.Description != "" {
-		term.WrapText(cl, "", cl.Description)
+		cl.out.WrapText("", cl.Description)
 		fmt.Fprintln(cl)
 	}
 	usage := fmt.Sprintf(i18n.Text("%s [options]"), AppCmdName)
@@ -191,7 +190,7 @@ func (cl *CmdLine) DisplayUsage() {
 	if cl.UsageSuffix != "" {
 		usage += " " + cl.UsageSuffix
 	}
-	term.WrapText(cl, i18n.Text("Usage: "), usage)
+	cl.out.WrapText(i18n.Text("Usage: "), usage)
 	for i := len(stack) - 1; i >= 0; i-- {
 		one := stack[i]
 		fmt.Fprintln(one)
@@ -209,7 +208,7 @@ func (cl *CmdLine) DisplayUsage() {
 	cl.displayCommands(2)
 	if cl.UsageTrailer != "" {
 		fmt.Fprintln(cl)
-		term.WrapText(cl, "", cl.UsageTrailer)
+		cl.out.WrapText("", cl.UsageTrailer)
 	}
 }
 
@@ -275,14 +274,14 @@ func (cl *CmdLine) displayOptions() {
 			usage += i18n.Text(" Default: ")
 			usage += option.def
 		}
-		term.WrapText(cl, prefix, usage)
+		cl.out.WrapText(prefix, usage)
 	}
 }
 
 func (cl *CmdLine) displayCommands(indent int) {
 	if len(cl.cmds) > 0 {
 		fmt.Fprintln(cl)
-		term.WrapText(cl, "", i18n.Text("Available commands:"))
+		cl.out.WrapText("", i18n.Text("Available commands:"))
 		fmt.Fprintln(cl)
 		var all []string
 		largest := 0
@@ -296,9 +295,9 @@ func (cl *CmdLine) displayCommands(indent int) {
 		sort.Strings(all)
 		format := fmt.Sprintf("%s%%-%ds  ", strings.Repeat(" ", indent), largest)
 		for _, cmd := range all {
-			term.WrapText(cl, fmt.Sprintf(format, cmd), cl.cmds[cmd].Usage())
+			cl.out.WrapText(fmt.Sprintf(format, cmd), cl.cmds[cmd].Usage())
 		}
 		fmt.Fprintln(cl)
-		term.WrapText(cl, "", fmt.Sprintf(i18n.Text("Use '%s help <command>' to see command options"), AppCmdName))
+		cl.out.WrapText("", fmt.Sprintf(i18n.Text("Use '%s help <command>' to see command options"), AppCmdName))
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2016-2025 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,11 +13,10 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/xmath"
-	"golang.org/x/exp/constraints"
 )
 
-// FloatFunctions returns standard functions that work with constraints.Float.
-func FloatFunctions[T constraints.Float]() map[string]Function {
+// FloatFunctions returns standard functions that work with floats.
+func FloatFunctions[T ~float32 | ~float64]() map[string]Function {
 	return map[string]Function{
 		"abs":   floatAbs[T],
 		"cbrt":  floatCubeRoot[T],
@@ -36,35 +35,35 @@ func FloatFunctions[T constraints.Float]() map[string]Function {
 	}
 }
 
-func floatAbs[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatAbs[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Abs[T])
 }
 
-func floatBase2Exponential[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatBase2Exponential[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Exp2[T])
 }
 
-func floatBaseEExponential[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatBaseEExponential[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Exp[T])
 }
 
-func floatCeiling[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatCeiling[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Ceil[T])
 }
 
-func floatCubeRoot[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatCubeRoot[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Cbrt[T])
 }
 
-func floatDecimalLog[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatDecimalLog[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Log10[T])
 }
 
-func floatFloor[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatFloor[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Floor[T])
 }
 
-func floatIf[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatIf[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	var arg string
 	arg, arguments = NextArg(arguments)
 	evaluated, err := e.EvaluateNew(arg)
@@ -88,7 +87,7 @@ func floatIf[T constraints.Float](e *Evaluator, arguments string) (any, error) {
 	return e.EvaluateNew(arg)
 }
 
-func floatMaximum[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatMaximum[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	maxValue := xmath.MinValue[T]()
 	for arguments != "" {
 		var arg string
@@ -102,7 +101,7 @@ func floatMaximum[T constraints.Float](e *Evaluator, arguments string) (any, err
 	return maxValue, nil
 }
 
-func floatMinimum[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatMinimum[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	minValue := xmath.MaxValue[T]()
 	for arguments != "" {
 		var arg string
@@ -116,11 +115,11 @@ func floatMinimum[T constraints.Float](e *Evaluator, arguments string) (any, err
 	return minValue, nil
 }
 
-func floatNaturalLog[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatNaturalLog[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Log[T])
 }
 
-func floatNaturalLogSum1[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatNaturalLogSum1[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	value, err := evalToFloat[T](e, arguments)
 	if err != nil {
 		return nil, err
@@ -128,15 +127,15 @@ func floatNaturalLogSum1[T constraints.Float](e *Evaluator, arguments string) (a
 	return xmath.Log(value + 1), nil
 }
 
-func floatRound[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatRound[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Round[T])
 }
 
-func floatSquareRoot[T constraints.Float](e *Evaluator, arguments string) (any, error) {
+func floatSquareRoot[T ~float32 | ~float64](e *Evaluator, arguments string) (any, error) {
 	return floatSingleNumberFunc(e, arguments, xmath.Sqrt[T])
 }
 
-func evalToFloat[T constraints.Float](e *Evaluator, arg string) (T, error) {
+func evalToFloat[T ~float32 | ~float64](e *Evaluator, arg string) (T, error) {
 	evaluated, err := e.EvaluateNew(arg)
 	if err != nil {
 		return 0, err
@@ -144,7 +143,7 @@ func evalToFloat[T constraints.Float](e *Evaluator, arg string) (T, error) {
 	return floatFrom[T](evaluated)
 }
 
-func floatSingleNumberFunc[T constraints.Float](e *Evaluator, arguments string, f func(T) T) (any, error) {
+func floatSingleNumberFunc[T ~float32 | ~float64](e *Evaluator, arguments string, f func(T) T) (any, error) {
 	value, err := evalToFloat[T](e, arguments)
 	if err != nil {
 		return nil, err
