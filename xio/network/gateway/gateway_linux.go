@@ -87,7 +87,7 @@ func getRoutes(family int) ([]routeInfo, error) {
 			continue
 		}
 		attrs := m.Data[syscall.SizeofRtMsg:]
-		var dstLen = rt.Dst_len
+		dstLen := rt.Dst_len
 		var gw net.IP
 		metric := 0
 		for len(attrs) >= 4 {
