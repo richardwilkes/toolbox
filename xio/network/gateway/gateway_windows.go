@@ -11,16 +11,11 @@ import (
 // Default returns the IP of the default gateway for the current machine, or nil if no gateway is found.
 func Default() net.IP {
 	type SOCKADDR_INET struct {
-		IP [16]byte
-		_  [12]byte
+		_      [2]byte
+		Family int32
+		IP     [16]byte
+		_      [4]byte
 	}
-	// type SOCKADDR_INET struct {
-	// 	Sin6_family int16
-	// 	Sin6_port   uint16
-	// 	IPv4        [4]byte
-	// 	IPv6        [16]byte
-	// 	Scope_id    uint32
-	// }
 	type IP_ADDRESS_PREFIX struct {
 		Prefix       SOCKADDR_INET
 		PrefixLength uint8
@@ -64,12 +59,16 @@ func Default() net.IP {
 		gw     net.IP
 	}
 	var ip net.IP
-	best := uint32(0xFFFFFFFF)
+	var best uint32
 	n := table.NumEntries
 	rows := (*[1 << 12]MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(table)) + unsafe.Sizeof(*table)))[:n:n]
 	for _, row := range rows {
-		if row.SitePrefixLength == 0 {
-			if row.Metric < best {
+		if row.SitePrefixLength == 0 && row.Metric > best {
+			switch row.NextHop.Family {
+			case syscall.AF_INET:
+				best = row.Metric
+				ip = net.IPv4(row.NextHop.IP[0], row.NextHop.IP[1], row.NextHop.IP[2], row.NextHop.IP[3])
+			case syscall.AF_INET6:
 				best = row.Metric
 				ip = make(net.IP, net.IPv6len)
 				copy(ip, row.NextHop.IP[:16])
