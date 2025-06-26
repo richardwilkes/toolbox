@@ -44,9 +44,9 @@ func Default() net.IP {
 		// Followed by NumEntries MibIPForwardRow2
 	}
 	iphlpapi := syscall.NewLazyDLL("iphlpapi.dll")
-	getIpForwardTable2 := iphlpapi.NewProc("GetIpForwardTable2")
+	getIPForwardTable2 := iphlpapi.NewProc("GetIpForwardTable2")
 	var table *MibIPForwardTable2
-	r1, _, _ := getIpForwardTable2.Call(syscall.AF_UNSPEC, uintptr(unsafe.Pointer(&table))) //nolint:errcheck,gosec // This is a Windows API call, not a syscall
+	r1, _, _ := getIPForwardTable2.Call(syscall.AF_UNSPEC, uintptr(unsafe.Pointer(&table))) //nolint:errcheck,gosec // This is a Windows API call, not a syscall
 	if r1 != 0 || table == nil {
 		errs.Log(errs.New("unable to get default routes"))
 		return nil
