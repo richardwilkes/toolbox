@@ -12,7 +12,7 @@ package geom
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // Point defines a location.

@@ -12,7 +12,7 @@ package xmath
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
+	"github.com/richardwilkes/toolbox/v2/check"
 )
 
 func TestBitSet(t *testing.T) {

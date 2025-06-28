@@ -10,9 +10,9 @@
 package fatal
 
 import (
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // IfErr checks the error and if it isn't nil, calls fatal.WithErr(err).

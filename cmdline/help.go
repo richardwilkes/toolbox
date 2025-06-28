@@ -12,8 +12,8 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/i18n"
 )
 
 type helpCmd struct{}

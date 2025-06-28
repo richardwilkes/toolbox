@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Target defines the method a target of notifications must implement.

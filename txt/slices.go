@@ -12,7 +12,7 @@ package txt
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/collection/dict"
+	"github.com/richardwilkes/toolbox/v2/collection/dict"
 )
 
 // StringSliceToMap returns a map created from the strings of a slice.

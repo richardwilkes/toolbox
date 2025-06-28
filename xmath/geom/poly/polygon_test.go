@@ -12,9 +12,9 @@ package poly_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/xmath/geom"
-	"github.com/richardwilkes/toolbox/xmath/geom/poly"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
 )
 
 const floatsAreConsistentAcrossPlatforms = false

@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/richardwilkes/toolbox/atexit"
+	"github.com/richardwilkes/toolbox/v2/atexit"
 )
 
 const (

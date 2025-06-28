@@ -13,7 +13,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Contexter is an interface that provides a context.

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 var _ Value = &GeneralValue{}

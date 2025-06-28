@@ -21,9 +21,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio"
+	"github.com/richardwilkes/toolbox/v2/xio/fs"
 )
 
 const (

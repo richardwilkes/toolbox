@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio/network/gateway"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio/network/gateway"
 )
 
 const (

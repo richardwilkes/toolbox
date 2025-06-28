@@ -12,7 +12,7 @@ package geom
 import (
 	"math"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.

@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // Sheet holds the data contained in a single worksheet.

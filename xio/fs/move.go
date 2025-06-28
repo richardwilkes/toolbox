@@ -13,8 +13,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // MoveFile moves a file in the file system or across volumes, using rename if possible, but falling back to copying the

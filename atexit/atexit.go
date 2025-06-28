@@ -19,7 +19,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 var (
@@ -82,7 +82,7 @@ func Exit(status int) {
 	frames := runtime.CallersFrames(pcs[:n])
 	for {
 		frame, more := frames.Next()
-		if frame.Function == "github.com/richardwilkes/toolbox/atexit.Exit" {
+		if frame.Function == "github.com/richardwilkes/toolbox/v2/atexit.Exit" {
 			recursive = true
 			break
 		}

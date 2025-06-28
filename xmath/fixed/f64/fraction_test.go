@@ -12,9 +12,9 @@ package f64_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f64"
 )
 
 func TestFraction(t *testing.T) {

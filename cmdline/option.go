@@ -12,9 +12,9 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/i18n"
 )
 
 // Value represents a value that can be set for an Option.

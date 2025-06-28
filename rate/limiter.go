@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 type limiter struct {

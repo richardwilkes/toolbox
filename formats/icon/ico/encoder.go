@@ -18,7 +18,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // See https://en.wikipedia.org/wiki/ICO_(file_format) for information on the .ico file format.

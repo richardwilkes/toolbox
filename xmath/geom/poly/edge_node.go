@@ -10,8 +10,8 @@
 package poly
 
 import (
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 const epsilon = 0.00001 // 2.220446e-16

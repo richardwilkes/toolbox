@@ -17,7 +17,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // RetrieveData loads the bytes from the given file path or URL of type file, http, or https.

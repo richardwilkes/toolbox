@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Equal compares two values for equality.

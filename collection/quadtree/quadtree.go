@@ -10,8 +10,8 @@
 package quadtree
 
 import (
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 const (

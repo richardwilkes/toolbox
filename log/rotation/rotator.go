@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 var _ io.WriteCloser = &Rotator{}

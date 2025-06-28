@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio/network"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio/network"
 )
 
 // Constants for protocols the server can provide.

@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 const (

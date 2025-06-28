@@ -1,4 +1,4 @@
-module github.com/richardwilkes/toolbox
+module github.com/richardwilkes/toolbox/v2
 
 go 1.24.4
 

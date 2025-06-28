@@ -10,7 +10,7 @@
 package toolbox
 
 import (
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Call the provided function, safely wrapped in a errs.Recovery() handler that logs any errors via slog.

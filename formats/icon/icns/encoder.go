@@ -18,7 +18,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // See https://en.wikipedia.org/wiki/Apple_Icon_Image_format for information on the .icns file format.

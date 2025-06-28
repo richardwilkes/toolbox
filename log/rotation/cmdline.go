@@ -14,10 +14,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // PathToLog holds the path to the log file that was configured on the command line when using ParseAndSetup().

@@ -12,8 +12,8 @@ package slice_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/collection/slice"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/collection/slice"
 )
 
 func TestZeroedDelete(t *testing.T) {

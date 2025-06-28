@@ -16,8 +16,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/fatal"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/fatal"
 )
 
 //go:embed all_caps.txt

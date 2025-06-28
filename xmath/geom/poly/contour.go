@@ -12,8 +12,8 @@ package poly
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 // Contour is a sequence of vertices connected by line segments, forming a closed shape.

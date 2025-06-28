@@ -14,7 +14,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only

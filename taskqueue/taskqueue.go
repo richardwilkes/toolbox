@@ -13,7 +13,7 @@ package taskqueue
 import (
 	"runtime"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Logger provides a way to log panics caused by workers in a queue.

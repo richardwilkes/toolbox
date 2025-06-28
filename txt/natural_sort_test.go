@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 var benchSet []string

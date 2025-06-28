@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
+	"github.com/richardwilkes/toolbox/v2/check"
 	"gopkg.in/yaml.v3"
 
-	"github.com/richardwilkes/toolbox/xmath/num"
+	"github.com/richardwilkes/toolbox/v2/xmath/num"
 )
 
 const (

@@ -12,8 +12,8 @@ package txt_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 func TestDigitToValue(t *testing.T) {

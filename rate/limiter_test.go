@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/rate"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/rate"
 )
 
 func TestCap(t *testing.T) {

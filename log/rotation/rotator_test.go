@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/log/rotation"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/log/rotation"
 )
 
 const (

@@ -13,9 +13,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio/fs/paths"
+	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio/fs/paths"
 )
 
 // Constants for defaults.

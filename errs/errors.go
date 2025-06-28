@@ -34,7 +34,7 @@ var (
 	RuntimePrefixesToFilter = []string{
 		"runtime.",
 		"testing.",
-		"github.com/richardwilkes/toolbox/errs.",
+		"github.com/richardwilkes/toolbox/v2/errs.",
 	}
 )
 

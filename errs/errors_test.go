@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 func ExampleError() {
@@ -27,8 +27,8 @@ func ExampleError() {
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
 	// Output: recovered from panic
-	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError.func1] errors_test.go:27
-	//     [github.com/richardwilkes/toolbox/errs_test.ExampleError] errors_test.go:28
+	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errors_test.go:27
+	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errors_test.go:28
 	//   Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
@@ -174,10 +174,10 @@ func TestFormat(t *testing.T) {
 	check.Equal(t, "test", fmt.Sprintf("%s", err))
 	check.Equal(t, `"test"`, fmt.Sprintf("%q", err))
 	result := fmt.Sprintf("%v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
 	check.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
 	check.Contains(t, result, "[runtime.goexit]")
 
 	wrappedErrors := err.WrappedErrors()
@@ -185,10 +185,10 @@ func TestFormat(t *testing.T) {
 	check.Equal(t, "test", fmt.Sprintf("%s", wrappedErrors[0])) //nolint:gocritic // Testing %s, so necessary
 	check.Equal(t, `"test"`, fmt.Sprintf("%q", wrappedErrors[0]))
 	result = fmt.Sprintf("%v", wrappedErrors[0]) //nolint:gocritic // Testing %v, so necessary
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
 	check.NotContains(t, result, "[runtime.goexit]")
 	result = fmt.Sprintf("%+v", wrappedErrors[0])
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestFormat]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
 	check.Contains(t, result, "[runtime.goexit]")
 }
 
@@ -209,10 +209,10 @@ func TestWrappedErrors(t *testing.T) {
 func TestAlteredFilter(t *testing.T) {
 	err := errs.New("test")
 	result := fmt.Sprintf("%v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter]")
+	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter]")
 	saved := errs.RuntimePrefixesToFilter
-	errs.RuntimePrefixesToFilter = []string{"github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter"}
+	errs.RuntimePrefixesToFilter = []string{"github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter"}
 	result = fmt.Sprintf("%v", err)
-	check.NotContains(t, result, "[github.com/richardwilkes/toolbox/errs_test.TestAlteredFilter]")
+	check.NotContains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter]")
 	errs.RuntimePrefixesToFilter = saved
 }

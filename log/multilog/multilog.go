@@ -13,7 +13,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 var _ slog.Handler = &Handler{}

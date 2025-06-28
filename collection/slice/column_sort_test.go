@@ -13,8 +13,8 @@ import (
 	"cmp"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/collection/slice"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/collection/slice"
 )
 
 func TestColumnSort(t *testing.T) {

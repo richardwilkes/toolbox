@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // Walk performs the same function as filepath.Walk() does, but works on http.FileSystem objects.

@@ -12,7 +12,7 @@ package paths
 import (
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/v2/cmdline"
 )
 
 // AppDataDir returns the application data directory.

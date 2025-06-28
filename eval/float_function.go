@@ -12,7 +12,7 @@ package eval
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // FloatFunctions returns standard functions that work with floats.

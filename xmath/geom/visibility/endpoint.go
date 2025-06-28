@@ -10,7 +10,7 @@
 package visibility
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 type endPoint[T ~float32 | ~float64] struct {

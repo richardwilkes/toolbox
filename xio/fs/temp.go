@@ -12,7 +12,7 @@ package fs
 import (
 	"os"
 
-	"github.com/richardwilkes/toolbox/xio/fs/internal"
+	"github.com/richardwilkes/toolbox/v2/xio/fs/internal"
 )
 
 // CreateTemp is essentially the same as os.CreateTemp, except it allows you to specify the file mode of the newly

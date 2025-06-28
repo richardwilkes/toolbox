@@ -12,8 +12,8 @@ package xio_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 func TestLineWriter(t *testing.T) {

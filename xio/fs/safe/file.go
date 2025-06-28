@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/xio/fs/internal"
+	"github.com/richardwilkes/toolbox/v2/xio/fs/internal"
 )
 
 // File provides safe, atomic saving of files. Instead of truncating and overwriting the destination file, it creates a
