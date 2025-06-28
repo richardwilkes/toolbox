@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2"
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
 // Equal compares two values for equality.
@@ -57,7 +57,7 @@ func equal(expected, actual any) bool {
 // Nil expects value to be nil.
 func Nil(t *testing.T, value any, msgAndArgs ...any) {
 	t.Helper()
-	if !toolbox.IsNil(value) {
+	if !xreflect.IsNil(value) {
 		errMsg(t, fmt.Sprintf("Expected nil, instead got %v", value), msgAndArgs...)
 	}
 }
@@ -65,7 +65,7 @@ func Nil(t *testing.T, value any, msgAndArgs ...any) {
 // NotNil expects value to not be nil.
 func NotNil(t *testing.T, value any, msgAndArgs ...any) {
 	t.Helper()
-	if toolbox.IsNil(value) {
+	if xreflect.IsNil(value) {
 		errMsg(t, "Expected a non-nil value", msgAndArgs...)
 	}
 }

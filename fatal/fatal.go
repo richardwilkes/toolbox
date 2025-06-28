@@ -10,14 +10,14 @@
 package fatal
 
 import (
-	"github.com/richardwilkes/toolbox/v2"
 	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
 // IfErr checks the error and if it isn't nil, calls fatal.WithErr(err).
 func IfErr(err error) {
-	if !toolbox.IsNil(err) {
+	if !xreflect.IsNil(err) {
 		WithErr(err)
 	}
 }

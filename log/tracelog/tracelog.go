@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/toolbox/v2"
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
 var _ slog.Handler = &Handler{}
@@ -42,7 +42,7 @@ type Config struct {
 
 // Normalize ensures that the Config is valid.
 func (c *Config) Normalize() {
-	if toolbox.IsNil(c.Level) {
+	if xreflect.IsNil(c.Level) {
 		c.Level = slog.LevelInfo
 	}
 	if c.Sink == nil {
