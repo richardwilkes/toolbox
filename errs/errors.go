@@ -15,10 +15,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"reflect"
 	"runtime"
-	"strconv"
 	"strings"
+
+	"github.com/richardwilkes/toolbox/v2/xreflect"
+	"github.com/richardwilkes/toolbox/v2/xruntime"
 )
 
 var (
@@ -26,16 +27,6 @@ var (
 	_ StackError     = &Error{}
 	_ fmt.Formatter  = &Error{}
 	_ slog.LogValuer = &Error{}
-
-	// RuntimePrefixesToFilter is a list of prefixes to filter out of the stack trace.
-	//
-	// This variable is not used in a thread-safe manner, so any alterations should be done before any goroutines are
-	// started.
-	RuntimePrefixesToFilter = []string{
-		"runtime.",
-		"testing.",
-		"github.com/richardwilkes/toolbox/v2/errs.",
-	}
 )
 
 // ErrorWrapper contains methods for interacting with the wrapped errors.
@@ -49,8 +40,8 @@ type ErrorWrapper interface {
 type StackError interface {
 	error
 	Message() string
-	Detail(trimRuntime bool) string
-	StackTrace(trimRuntime bool) string
+	Detail() string
+	StackTrace() string
 }
 
 // Error holds the detailed error message.
@@ -72,7 +63,7 @@ func (e *Error) CloneWithPrefixMessage(prefix string) error {
 // Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
 // as-is.
 func Wrap(cause error) error {
-	if isNil(cause) {
+	if xreflect.IsNil(cause) {
 		return nil
 	}
 	var errorPtr *Error
@@ -90,7 +81,7 @@ func Wrap(cause error) error {
 // WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
 // returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
 func WrapTyped(cause error) *Error {
-	if isNil(cause) {
+	if xreflect.IsNil(cause) {
 		return nil
 	}
 	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
@@ -196,7 +187,7 @@ func Append(err error, errs ...error) *Error {
 }
 
 func callStack() []uintptr {
-	var pcs [512]uintptr
+	var pcs [128]uintptr
 	n := runtime.Callers(3, pcs[:])
 	cs := make([]uintptr, n)
 	copy(cs, pcs[:n])
@@ -234,15 +225,15 @@ func (e *Error) Message() string {
 
 // Error implements the error interface.
 func (e *Error) Error() string {
-	return e.Detail(true)
+	return e.Detail()
 }
 
 // Detail returns the fully detailed error message, which includes the primary message, the call stack, and potentially
 // one or more chained causes. Note that any included stack trace will be only for the first error in the case where
 // multiple errors were accumulated into one via calls to .Append().
-func (e *Error) Detail(trimRuntime bool) string {
+func (e *Error) Detail() string {
 	msg := e.Message()
-	stack := e.StackTrace(trimRuntime)
+	stack := e.StackTrace()
 	switch {
 	case msg == "" && stack == "":
 		return "<no detail>"
@@ -256,67 +247,14 @@ func (e *Error) Detail(trimRuntime bool) string {
 }
 
 // StackTrace returns just the stack trace portion of the message.
-func (e *Error) StackTrace(trimRuntime bool) string {
+func (e *Error) StackTrace() string {
 	var buffer strings.Builder
-	frames := runtime.CallersFrames(e.stack)
-	for {
-		frame, more := frames.Next()
-		if frame.Function != "" {
-			if trimRuntime {
-				if frame.Function == "main.main" && frame.File == "_testmain.go" {
-					continue
-				}
-				skip := false
-				for _, prefix := range RuntimePrefixesToFilter {
-					if strings.HasPrefix(frame.Function, prefix) {
-						skip = true
-						break
-					}
-				}
-				if skip {
-					continue
-				}
-			}
-			if buffer.Len() != 0 {
-				buffer.WriteByte('\n')
-			}
-			buffer.WriteString("    [")
-			buffer.WriteString(frame.Function)
-			buffer.WriteString("] ")
-			file := frame.File
-			if i := strings.Index(file, "."); i != -1 {
-				for i > 0 && file[i] != '/' {
-					i--
-				}
-				if i > 0 {
-					file = file[i+1:]
-				}
-				if i = strings.LastIndexByte(file, '/'); i != -1 {
-					path := file[:i]
-					offset := i + 1
-					if i = strings.LastIndexByte(path, '/'); i != -1 {
-						if path[i+1:] == "_obj" {
-							path = path[:i]
-						}
-					}
-					if strings.HasPrefix(frame.Function, path) {
-						file = file[offset:]
-					}
-				}
-			}
-			buffer.WriteString(file)
-			buffer.WriteByte(':')
-			buffer.WriteString(strconv.Itoa(frame.Line))
-		}
-		if !more {
-			break
-		}
-	}
+	buffer.WriteString("  " + strings.Join(xruntime.PCsToStackTrace(e.stack), "\n  "))
 	if e.cause != nil && !e.wrapped {
-		buffer.WriteString("\n  Caused by: ")
+		buffer.WriteString("\n Caused by: ")
 		//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		if detailed, ok := e.cause.(*Error); ok {
-			buffer.WriteString(detailed.Detail(trimRuntime))
+			buffer.WriteString(detailed.Detail())
 		} else {
 			buffer.WriteString(e.cause.Error())
 		}
@@ -364,12 +302,11 @@ func (e *Error) Unwrap() error {
 // Supported formats:
 //   - "%s"  Just the message
 //   - "%q"  Just the message, but quoted
-//   - "%v"  The message plus a stack trace, trimmed of golang runtime calls
-//   - "%+v" The message plus a stack trace
+//   - "%v"  The message plus a stack trace
 func (e *Error) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		_, _ = state.Write([]byte(e.Detail(!state.Flag('+'))))
+		_, _ = state.Write([]byte(e.Detail()))
 	case 's':
 		_, _ = state.Write([]byte(e.Message()))
 	case 'q':
@@ -383,16 +320,4 @@ func (e *Error) LogValue() slog.Value {
 		slog.String(slog.MessageKey, e.Message()),
 		slog.Any(StackTraceKey, &stackValue{err: e}),
 	)
-}
-
-// Can't use toolbox.IsNil() due to circular dependencies, so put a copy of the code here, too.
-func isNil(i any) bool {
-	if i == nil {
-		return true
-	}
-	switch reflect.TypeOf(i).Kind() {
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice, reflect.UnsafePointer:
-		return reflect.ValueOf(i).IsNil()
-	}
-	return false
 }

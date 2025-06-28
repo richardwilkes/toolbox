@@ -27,9 +27,18 @@ func ExampleError() {
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
 	// Output: recovered from panic
-	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errors_test.go:27
-	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errors_test.go:28
-	//   Caused by: runtime error: invalid memory address or nil pointer dereference
+	//   [github.com/richardwilkes/toolbox/v2/errs.Recovery] errs/recovery.go:31
+	//   [runtime.gopanic] runtime/panic.go:792
+	//   [runtime.panicmem] runtime/panic.go:262
+	//   [runtime.sigpanic] runtime/signal_unix.go:925
+	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errs/errors_test.go:27
+	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errs/errors_test.go:28
+	//   [testing.runExample] testing/run_example.go:63
+	//   [testing.runExamples] testing/example.go:41
+	//   [testing.(*M).Run] testing/testing.go:2144
+	//   [main.main] _testmain.go:87
+	//   [runtime.main] runtime/proc.go:283
+	//  Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
 func TestAppendError(t *testing.T) {
@@ -102,7 +111,7 @@ func TestWrap(t *testing.T) {
 	notError := errors.New("foo")
 	result := errs.Wrap(notError)
 	check.NotNil(t, result)
-	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 2, strings.Count(result.Error(), "\n"))
 }
 
 func TestDoubleWrap(t *testing.T) {
@@ -160,13 +169,13 @@ func TestAs(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	result := errs.New("foo")
-	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 2, strings.Count(result.Error(), "\n"))
 }
 
 func TestNewWithCause(t *testing.T) {
 	cause := errs.New("bar")
 	result := errs.NewWithCause("foo", cause)
-	check.Equal(t, 3, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 5, strings.Count(result.Error(), "\n"))
 }
 
 func TestFormat(t *testing.T) {
@@ -174,22 +183,14 @@ func TestFormat(t *testing.T) {
 	check.Equal(t, "test", fmt.Sprintf("%s", err))
 	check.Equal(t, `"test"`, fmt.Sprintf("%q", err))
 	result := fmt.Sprintf("%v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
-	check.NotContains(t, result, "[runtime.goexit]")
-	result = fmt.Sprintf("%+v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
-	check.Contains(t, result, "[runtime.goexit]")
+	check.Contains(t, result, "/errs_test.TestFormat] ")
 
 	wrappedErrors := err.WrappedErrors()
 	check.Equal(t, 1, len(wrappedErrors))
 	check.Equal(t, "test", fmt.Sprintf("%s", wrappedErrors[0])) //nolint:gocritic // Testing %s, so necessary
 	check.Equal(t, `"test"`, fmt.Sprintf("%q", wrappedErrors[0]))
 	result = fmt.Sprintf("%v", wrappedErrors[0]) //nolint:gocritic // Testing %v, so necessary
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
-	check.NotContains(t, result, "[runtime.goexit]")
-	result = fmt.Sprintf("%+v", wrappedErrors[0])
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestFormat]")
-	check.Contains(t, result, "[runtime.goexit]")
+	check.Contains(t, result, "/errs_test.TestFormat] ")
 }
 
 func TestWrappedErrors(t *testing.T) {
@@ -204,15 +205,4 @@ func TestWrappedErrors(t *testing.T) {
 	check.Equal(t, "bar", strings.SplitN(list[1].Error(), "\n", 2)[0])
 	check.Equal(t, "foo2", strings.SplitN(list[2].Error(), "\n", 2)[0])
 	check.Equal(t, "bar2", strings.SplitN(list[3].Error(), "\n", 2)[0])
-}
-
-func TestAlteredFilter(t *testing.T) {
-	err := errs.New("test")
-	result := fmt.Sprintf("%v", err)
-	check.Contains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter]")
-	saved := errs.RuntimePrefixesToFilter
-	errs.RuntimePrefixesToFilter = []string{"github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter"}
-	result = fmt.Sprintf("%v", err)
-	check.NotContains(t, result, "[github.com/richardwilkes/toolbox/v2/errs_test.TestAlteredFilter]")
-	errs.RuntimePrefixesToFilter = saved
 }

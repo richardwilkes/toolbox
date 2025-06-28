@@ -151,7 +151,7 @@ func (h *Handler) Handle(_ context.Context, r slog.Record) error { //nolint:gocr
 	})
 	buffer.WriteByte('\n')
 	if s.stackErr != nil {
-		buffer.WriteString(s.stackErr.StackTrace(true))
+		buffer.WriteString(s.stackErr.StackTrace())
 		buffer.WriteByte('\n')
 	}
 	if h.delivery != nil {
