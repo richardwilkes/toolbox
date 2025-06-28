@@ -15,29 +15,33 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// PanicRecovery provides an easy way to run code that may panic. An optional handler may be passed in and will be
-// called with the panic turned into an error. Note that even though the handler is passed in as a variadic parameter,
-// only the first one will be used. This was done to allow passing in no handler at all, which will result in the panic
-// being logged as an error.
+// PanicRecovery provides an easy way to run code that may panic. If the handler is nil, the panic will be logged as an
+// error.
 //
 // Typical usage:
 //
 //	func RunSomeCode() {
-//	    defer xos.PanicRecovery()
+//	    defer xos.PanicRecovery(nil /* or provide a handler function */)
 //	    // ... run the code here ...
 //	}
-func PanicRecovery(handler ...func(error)) {
+func PanicRecovery(handler func(error)) {
 	if recovered := recover(); recovered != nil {
 		err, ok := recovered.(error)
 		if !ok {
 			err = fmt.Errorf("%+v", recovered)
 		}
 		err = errs.NewWithCause("recovered from panic", err)
-		if len(handler) == 0 || handler[0] == nil {
+		if handler == nil {
 			errs.Log(err)
 		} else {
-			defer PanicRecovery() // Guard against a bad handler implementation
-			handler[0](err)
+			defer PanicRecovery(nil) // Guard against a bad handler implementation
+			handler(err)
 		}
 	}
+}
+
+// SafeCall calls the provided function, safely wrapped by xos.PanicRecovery().
+func SafeCall(f func(), handler func(error)) {
+	defer PanicRecovery(handler)
+	f()
 }

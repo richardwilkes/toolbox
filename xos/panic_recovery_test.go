@@ -65,20 +65,6 @@ func TestPanicRecovery_PanicWithInt(t *testing.T) {
 	check.Contains(t, msg, "42")
 }
 
-func TestPanicRecovery_NoHandler(t *testing.T) {
-	oldLogger := slog.Default()
-	defer func() { slog.SetDefault(oldLogger) }()
-	var buf bytes.Buffer
-	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})))
-	func() {
-		defer xos.PanicRecovery()
-		panic("test panic")
-	}()
-	msg := buf.String()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "test panic")
-}
-
 func TestPanicRecovery_NilHandler(t *testing.T) {
 	oldLogger := slog.Default()
 	defer func() { slog.SetDefault(oldLogger) }()
@@ -91,21 +77,6 @@ func TestPanicRecovery_NilHandler(t *testing.T) {
 	msg := buf.String()
 	check.Contains(t, msg, "recovered from panic")
 	check.Contains(t, msg, "test panic")
-}
-
-func TestPanicRecovery_MultipleHandlers(t *testing.T) {
-	var firstHandlerCalled bool
-	var secondHandlerCalled bool
-
-	func() {
-		defer xos.PanicRecovery(
-			func(_ error) { firstHandlerCalled = true },
-			func(_ error) { secondHandlerCalled = true },
-		)
-		panic("test panic")
-	}()
-	check.True(t, firstHandlerCalled)
-	check.False(t, secondHandlerCalled)
 }
 
 func TestPanicRecovery_HandlerPanics(t *testing.T) {

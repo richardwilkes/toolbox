@@ -114,12 +114,7 @@ func Exit(status int) {
 	}
 	// Run the exit functions in reverse order from how they were registered, then exit
 	for i := len(f) - 1; i >= 0; i-- {
-		runBeforeExit(f[i])
+		SafeCall(f[i], ExitRecoveryHandler)
 	}
 	os.Exit(status)
-}
-
-func runBeforeExit(f func()) {
-	defer PanicRecovery(ExitRecoveryHandler)
-	f()
 }
