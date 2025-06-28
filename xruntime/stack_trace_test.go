@@ -36,8 +36,7 @@ func TestStackTraceSkip(t *testing.T) {
 }
 
 func TestStackTracePath(t *testing.T) {
-	check.Equal(t, "xruntime/stack_trace.go",
-		xruntime.StackTracePath("/Users/user/go/src/github.com/richardwilkes/toolbox/xruntime/stack_trace.go"),
+	check.Equal(t, "bar/baz.go", xruntime.StackTracePath("/Users/user/code/project/foo/bar/baz.go"),
 		"full path with more than one directory")
 	check.Equal(t, "xruntime/stack_trace.go", xruntime.StackTracePath("toolbox/xruntime/stack_trace.go"),
 		"relative path with more than one directory")

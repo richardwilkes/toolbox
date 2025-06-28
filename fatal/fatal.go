@@ -10,8 +10,8 @@
 package fatal
 
 import (
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
@@ -25,5 +25,5 @@ func IfErr(err error) {
 // WithErr logs the error and then exits with code 1.
 func WithErr(err error) {
 	errs.Log(err)
-	atexit.Exit(1)
+	xos.Exit(1)
 }

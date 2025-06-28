@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // Target defines the method a target of notifications must implement.
@@ -35,7 +35,7 @@ type BatchTarget interface {
 
 // Notifier tracks targets of notifications and provides methods for notifying them.
 type Notifier struct {
-	recoveryHandler errs.RecoveryHandler
+	recoveryHandler func(error)
 	lockedData
 	lock sync.RWMutex
 }
@@ -50,7 +50,7 @@ type lockedData struct {
 }
 
 // New creates a new notifier.
-func New(recoveryHandler errs.RecoveryHandler) *Notifier {
+func New(recoveryHandler func(error)) *Notifier {
 	return &Notifier{
 		recoveryHandler: recoveryHandler,
 		lockedData: lockedData{
@@ -229,7 +229,7 @@ func (n *Notifier) NotifyWithData(name string, data, producer any) {
 }
 
 func (n *Notifier) notifyTarget(target Target, name string, data, producer any) {
-	defer errs.Recovery(n.recoveryHandler)
+	defer xos.PanicRecovery(n.recoveryHandler)
 	target.HandleNotification(name, data, producer)
 }
 
@@ -262,7 +262,7 @@ func (n *Notifier) StartBatch() {
 }
 
 func (n *Notifier) notifyBatchTarget(target BatchTarget, start bool) {
-	defer errs.Recovery(n.recoveryHandler)
+	defer xos.PanicRecovery(n.recoveryHandler)
 	target.BatchMode(start)
 }
 

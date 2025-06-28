@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 const (
@@ -422,13 +422,13 @@ func bitIndexForMask(mask uint64) int {
 		}
 	}
 	fmt.Printf("Unable to determine bit index for mask %064b\n", mask)
-	atexit.Exit(1)
+	xos.Exit(1)
 	return 0
 }
 
 func validateBitSetIndex(index int) {
 	if index < 0 {
 		fmt.Printf("Index must be positive (was %d)\n", index)
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
 }

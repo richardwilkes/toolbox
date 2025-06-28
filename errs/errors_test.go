@@ -18,21 +18,22 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func ExampleError() {
 	var bad *int
 	func() int {
-		defer errs.Recovery(func(err error) { fmt.Println(err) })
+		defer xos.PanicRecovery(func(err error) { fmt.Println(err) })
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
 	// Output: recovered from panic
-	//   [github.com/richardwilkes/toolbox/v2/errs.Recovery] errs/recovery.go:31
+	//   [github.com/richardwilkes/toolbox/v2/xos.PanicRecovery] xos/panic_recovery.go:35
 	//   [runtime.gopanic] runtime/panic.go:792
 	//   [runtime.panicmem] runtime/panic.go:262
 	//   [runtime.sigpanic] runtime/signal_unix.go:925
-	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errs/errors_test.go:27
-	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errs/errors_test.go:28
+	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errs/errors_test.go:28
+	//   [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errs/errors_test.go:29
 	//   [testing.runExample] testing/run_example.go:63
 	//   [testing.runExamples] testing/example.go:41
 	//   [testing.(*M).Run] testing/testing.go:2144

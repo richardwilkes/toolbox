@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/i18n"
 	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 					var file *ast.File
 					if file, err = parser.ParseFile(fileSet, path, nil, 0); err != nil {
 						fmt.Fprintln(os.Stderr, err)
-						atexit.Exit(1)
+						xos.Exit(1)
 					}
 					const (
 						LookForPackageState = iota
@@ -121,7 +121,7 @@ func main() {
 	out, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
 	fmt.Fprintf(out, `# Generated on %v
 #
@@ -140,19 +140,19 @@ func main() {
 		for _, p := range strings.Split(key, "\n") {
 			if _, err = fmt.Fprintf(out, "k:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				atexit.Exit(1)
+				xos.Exit(1)
 			}
 		}
 		for _, p := range strings.Split(key, "\n") {
 			if _, err = fmt.Fprintf(out, "v:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				atexit.Exit(1)
+				xos.Exit(1)
 			}
 		}
 	}
 	if err = out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
-	atexit.Exit(0)
+	xos.Exit(0)
 }

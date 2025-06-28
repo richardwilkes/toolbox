@@ -12,8 +12,8 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 type helpCmd struct{}
@@ -45,6 +45,6 @@ func (c *helpCmd) Run(cmdLine *CmdLine, args []string) error {
 		}
 	}
 	cmdLine.DisplayUsage()
-	atexit.Exit(1)
+	xos.Exit(1)
 	return nil
 }

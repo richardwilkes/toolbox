@@ -12,9 +12,9 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // Value represents a value that can be set for an Option.
@@ -60,7 +60,7 @@ func (op *Option) SetName(name string) *Option {
 		op.name = name
 	} else {
 		fmt.Println("Name must be 2+ characters")
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
 	return op
 }

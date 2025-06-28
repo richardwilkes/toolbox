@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 var benchSet []string
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	if f := flag.Lookup("test.bench"); f != nil && f.Value.String() != "" {
 		initBenchSet()
 	}
-	atexit.Exit(m.Run())
+	xos.Exit(m.Run())
 }
 
 func TestNaturalLess(t *testing.T) {

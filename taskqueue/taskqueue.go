@@ -13,7 +13,7 @@ package taskqueue
 import (
 	"runtime"
 
-	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // Logger provides a way to log panics caused by workers in a queue.
@@ -29,14 +29,14 @@ type Option func(*Queue)
 type Queue struct {
 	in              chan Task
 	done            chan bool
-	recoveryHandler errs.RecoveryHandler
+	recoveryHandler func(error)
 	depth           int
 	workers         int
 }
 
 // RecoveryHandler sets the recovery handler to use for tasks that panic. Defaults to none, which silently ignores the
 // panic.
-func RecoveryHandler(recoveryHandler errs.RecoveryHandler) Option {
+func RecoveryHandler(recoveryHandler func(error)) Option {
 	return func(q *Queue) { q.recoveryHandler = recoveryHandler }
 }
 
@@ -162,6 +162,6 @@ func (q *Queue) work(tasks <-chan Task, ready chan<- bool) {
 }
 
 func (q *Queue) runTask(task Task) {
-	defer errs.Recovery(q.recoveryHandler)
+	defer xos.PanicRecovery(q.recoveryHandler)
 	task()
 }

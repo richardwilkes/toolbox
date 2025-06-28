@@ -14,6 +14,7 @@ import (
 	"log/slog"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 var _ slog.Handler = &Handler{}
@@ -71,7 +72,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error { //nolint:go
 }
 
 func runHandler(ctx context.Context, r *slog.Record, h slog.Handler) (err error) {
-	defer errs.Recovery(func(rerr error) { err = rerr })
+	defer xos.PanicRecovery(func(rerr error) { err = rerr })
 	err = h.Handle(ctx, r.Clone())
 	return err
 }

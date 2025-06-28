@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio/network"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // Constants for protocols the server can provide.
@@ -94,7 +94,7 @@ func (s *Server) String() string {
 
 // Run the server. Does not return until the server is shutdown.
 func (s *Server) Run() error {
-	s.shutdownID = atexit.Register(s.Shutdown)
+	s.shutdownID = xos.RunAtExit(s.Shutdown)
 	if s.Logger == nil {
 		s.Logger = slog.Default()
 	}
@@ -163,7 +163,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Shutdown the server gracefully.
 func (s *Server) Shutdown() {
-	atexit.Unregister(s.shutdownID)
+	xos.CancelRunAtExit(s.shutdownID)
 	startedAt := time.Now()
 	logger := s.Logger.With("protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
 	logger.Info("starting shutdown")

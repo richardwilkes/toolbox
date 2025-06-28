@@ -17,11 +17,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/collection"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/i18n"
 	"github.com/richardwilkes/toolbox/v2/xio/term"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // CmdLine holds information about the command line.
@@ -181,15 +181,15 @@ func (cl *CmdLine) Parse(args []string) []string {
 	}
 	if cl.showHelp {
 		cl.DisplayUsage()
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
 	if cl.showLongVersion {
 		fmt.Println(LongVersion())
-		atexit.Exit(0)
+		xos.Exit(0)
 	}
 	if cl.showVersion {
 		fmt.Println(ShortVersion())
-		atexit.Exit(0)
+		xos.Exit(0)
 	}
 	return remainingArgs
 }
@@ -208,7 +208,7 @@ func (cl *CmdLine) FatalMsg(msg string) {
 	fmt.Fprint(cl, msg)
 	cl.out.FgReset()
 	fmt.Fprintln(cl)
-	atexit.Exit(1)
+	xos.Exit(1)
 }
 
 // FatalError emits an error message and causes the program to exit.

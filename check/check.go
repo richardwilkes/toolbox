@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
@@ -135,7 +135,7 @@ func NotPanics(t *testing.T, f func(), msgAndArgs ...any) {
 }
 
 func doesPanic(f func()) (panicErr error) {
-	defer errs.Recovery(func(err error) { panicErr = err })
+	defer xos.PanicRecovery(func(err error) { panicErr = err })
 	f()
 	return
 }

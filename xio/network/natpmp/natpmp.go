@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/toolbox/v2/atexit"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio/network/gateway"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 const (
@@ -226,7 +226,7 @@ func call(msg []byte, resultSize int) ([]byte, error) {
 
 func setupGateway() {
 	if gw = gateway.Default(); gw != nil {
-		atexit.Register(cleanup)
+		xos.RunAtExit(cleanup)
 		go renewals()
 	}
 }
