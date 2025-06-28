@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -286,16 +285,16 @@ func (e *Error) StackTrace(trimRuntime bool) string {
 			buffer.WriteString("] ")
 			file := frame.File
 			if i := strings.Index(file, "."); i != -1 {
-				for i > 0 && file[i] != os.PathSeparator {
+				for i > 0 && file[i] != '/' {
 					i--
 				}
 				if i > 0 {
 					file = file[i+1:]
 				}
-				if i = strings.LastIndexByte(file, os.PathSeparator); i != -1 {
+				if i = strings.LastIndexByte(file, '/'); i != -1 {
 					path := file[:i]
 					offset := i + 1
-					if i = strings.LastIndexByte(path, os.PathSeparator); i != -1 {
+					if i = strings.LastIndexByte(path, '/'); i != -1 {
 						if path[i+1:] == "_obj" {
 							path = path[:i]
 						}
