@@ -95,7 +95,12 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 //nolint:gocritic // The API cannot be changed
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := poolBuffer.Get()
-	defer poolBuffer.Put(buf)
+	defer func() {
+		if cap(buf) <= 8192 { // Only return buffers <= 8KiB to keep peak allocation low
+			buf = buf[:0]
+			poolBuffer.Put(buf)
+		}
+	}()
 	buf = h.writeLevel(buf, r.Level)
 	buf = h.writeDateTime(buf, r.Time)
 	buf = h.writeMessage(buf, r.Message)
