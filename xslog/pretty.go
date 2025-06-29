@@ -237,6 +237,7 @@ func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		handler:          h.handler.WithAttrs(attrs),
 		sharedBufferLock: h.sharedBufferLock,
 		buffer:           h.buffer,
+		sharedWriterLock: h.sharedWriterLock,
 		w:                h.w,
 	}
 }
@@ -247,6 +248,7 @@ func (h *PrettyHandler) WithGroup(name string) slog.Handler {
 		handler:          h.handler.WithGroup(name),
 		sharedBufferLock: h.sharedBufferLock,
 		buffer:           h.buffer,
+		sharedWriterLock: h.sharedWriterLock,
 		w:                h.w,
 	}
 }
