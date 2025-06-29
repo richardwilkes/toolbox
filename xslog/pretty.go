@@ -45,7 +45,7 @@ type PrettyOptions struct {
 	ColorSupportOverride term.Kind
 }
 
-var poolBuffer = xsync.NewPool[[]byte](func() []byte { return make([]byte, 0, 1024) })
+var poolBuffer = xsync.NewPool(func() []byte { return make([]byte, 0, 1024) })
 
 // NewPrettyHandler creates a new handler with "pretty" output.
 func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
