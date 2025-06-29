@@ -148,26 +148,26 @@ func Copyright() string {
 
 // DisplayUsage displays the program usage information.
 func (cl *CmdLine) DisplayUsage() {
-	cl.out.WrapText("", AppName)
+	cl.w.WrapText("", AppName)
 	buildInfo := fmt.Sprintf(i18n.Text("Version %s"), ShortVersion())
 	if BuildNumber != "" {
 		buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
 	}
-	cl.out.WrapText("  ", buildInfo)
+	cl.w.WrapText("  ", buildInfo)
 	if GitVersion != "" {
 		str := vcs + ": " + GitVersion
 		if VCSModified {
 			str += "-modified"
 		}
-		cl.out.WrapText("  ", str)
+		cl.w.WrapText("  ", str)
 	}
-	cl.out.WrapText("  ", Copyright())
+	cl.w.WrapText("  ", Copyright())
 	if License != "" {
-		cl.out.WrapText("  ", fmt.Sprintf(i18n.Text("License: %s"), License))
+		cl.w.WrapText("  ", fmt.Sprintf(i18n.Text("License: %s"), License))
 	}
 	fmt.Fprintln(cl)
 	if cl.Description != "" {
-		cl.out.WrapText("", cl.Description)
+		cl.w.WrapText("", cl.Description)
 		fmt.Fprintln(cl)
 	}
 	usage := fmt.Sprintf(i18n.Text("%s [options]"), AppCmdName)
@@ -190,7 +190,7 @@ func (cl *CmdLine) DisplayUsage() {
 	if cl.UsageSuffix != "" {
 		usage += " " + cl.UsageSuffix
 	}
-	cl.out.WrapText(i18n.Text("Usage: "), usage)
+	cl.w.WrapText(i18n.Text("Usage: "), usage)
 	for i := len(stack) - 1; i >= 0; i-- {
 		one := stack[i]
 		fmt.Fprintln(one)
@@ -208,7 +208,7 @@ func (cl *CmdLine) DisplayUsage() {
 	cl.displayCommands(2)
 	if cl.UsageTrailer != "" {
 		fmt.Fprintln(cl)
-		cl.out.WrapText("", cl.UsageTrailer)
+		cl.w.WrapText("", cl.UsageTrailer)
 	}
 }
 
@@ -274,14 +274,14 @@ func (cl *CmdLine) displayOptions() {
 			usage += i18n.Text(" Default: ")
 			usage += option.def
 		}
-		cl.out.WrapText(prefix, usage)
+		cl.w.WrapText(prefix, usage)
 	}
 }
 
 func (cl *CmdLine) displayCommands(indent int) {
 	if len(cl.cmds) > 0 {
 		fmt.Fprintln(cl)
-		cl.out.WrapText("", i18n.Text("Available commands:"))
+		cl.w.WrapText("", i18n.Text("Available commands:"))
 		fmt.Fprintln(cl)
 		var all []string
 		largest := 0
@@ -295,9 +295,9 @@ func (cl *CmdLine) displayCommands(indent int) {
 		sort.Strings(all)
 		format := fmt.Sprintf("%s%%-%ds  ", strings.Repeat(" ", indent), largest)
 		for _, cmd := range all {
-			cl.out.WrapText(fmt.Sprintf(format, cmd), cl.cmds[cmd].Usage())
+			cl.w.WrapText(fmt.Sprintf(format, cmd), cl.cmds[cmd].Usage())
 		}
 		fmt.Fprintln(cl)
-		cl.out.WrapText("", fmt.Sprintf(i18n.Text("Use '%s help <command>' to see command options"), AppCmdName))
+		cl.w.WrapText("", fmt.Sprintf(i18n.Text("Use '%s help <command>' to see command options"), AppCmdName))
 	}
 }

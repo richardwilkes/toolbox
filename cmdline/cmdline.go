@@ -35,7 +35,7 @@ type CmdLine struct {
 	cmds            map[string]Cmd
 	parent          *CmdLine
 	cmd             Cmd
-	out             *term.ANSI
+	w               *term.AnsiWriter
 	options         Options
 	showHelp        bool
 	showVersion     bool
@@ -48,7 +48,7 @@ type CmdLine struct {
 func New(includeDefaultOptions bool) *CmdLine {
 	cl := &CmdLine{
 		cmds: make(map[string]Cmd),
-		out:  term.NewANSI(os.Stderr),
+		w:    term.NewAnsiWriter(os.Stderr),
 	}
 	help := cl.NewGeneralOption(&cl.showHelp).SetSingle('h').SetName("help")
 	if includeDefaultOptions {
@@ -202,11 +202,11 @@ func (cl *CmdLine) setOrFail(op *Option, arg, value string) {
 
 // FatalMsg emits an error message and causes the program to exit.
 func (cl *CmdLine) FatalMsg(msg string) {
-	cl.out.Bell()
-	cl.out.Reset()
-	cl.out.Red()
+	cl.w.Bell()
+	cl.w.Reset()
+	cl.w.Red()
 	fmt.Fprint(cl, msg)
-	cl.out.FgReset()
+	cl.w.FgReset()
 	fmt.Fprintln(cl)
 	xos.Exit(1)
 }
@@ -272,10 +272,15 @@ func (cl *CmdLine) loadArgsFromFile(path string) (args []string, err error) {
 
 // SetWriter sets the io.Writer to use for output. By default, a new CmdLine uses os.Stderr.
 func (cl *CmdLine) SetWriter(w io.Writer) {
-	cl.out = term.NewANSI(w)
+	switch t := w.(type) {
+	case *term.AnsiWriter:
+		cl.w = t
+	default:
+		cl.w = term.NewAnsiWriter(w)
+	}
 }
 
 // Write implements the io.Writer interface.
 func (cl *CmdLine) Write(p []byte) (n int, err error) {
-	return cl.out.Write(p)
+	return cl.w.Write(p)
 }

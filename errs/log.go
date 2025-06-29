@@ -17,7 +17,7 @@ import (
 )
 
 // StackTraceKey is the key used for logging the stack trace.
-const StackTraceKey = "stack_trace"
+const StackTraceKey = "stack" // Keep in sync with xslog.StackKey
 
 // Log an error with a stack trace.
 func Log(err error, args ...any) {

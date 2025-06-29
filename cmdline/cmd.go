@@ -28,7 +28,7 @@ type Cmd interface {
 
 func (cl *CmdLine) newWithCmd(cmd Cmd) *CmdLine {
 	cmdLine := New(false)
-	cmdLine.out = cl.out
+	cmdLine.w = cl.w
 	cmdLine.parent = cl
 	cmdLine.cmd = cmd
 	return cmdLine

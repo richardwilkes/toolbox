@@ -28,7 +28,7 @@ func ExampleError() {
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
 	// Output: recovered from panic
-	//   [github.com/richardwilkes/toolbox/v2/xos.PanicRecovery] xos/panic_recovery.go:35
+	//   [github.com/richardwilkes/toolbox/v2/xos.PanicRecovery] xos/panic_recovery.go:33
 	//   [runtime.gopanic] runtime/panic.go:792
 	//   [runtime.panicmem] runtime/panic.go:262
 	//   [runtime.sigpanic] runtime/signal_unix.go:925
