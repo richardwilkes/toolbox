@@ -37,6 +37,7 @@ type PrettyHandler struct {
 	w          io.Writer
 	stack      []string
 	kind       term.Kind
+	addSource  bool
 }
 
 // PrettyOptions is used to configure the PrettyHandler.
@@ -59,6 +60,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 		jsonHandlerOpts = opts.HandlerOptions
 		h.kind = opts.ColorSupportOverride
 	}
+	h.addSource = jsonHandlerOpts.AddSource
 	if h.kind == term.InvalidKind {
 		h.kind = term.DetectKind(w)
 	}
@@ -159,7 +161,7 @@ func (h *PrettyHandler) writeLevel(buf []byte, level slog.Level) []byte {
 }
 
 func (h *PrettyHandler) writeCaller(buf []byte, pc uintptr) []byte {
-	if pc == 0 {
+	if pc == 0 || !h.addSource {
 		return buf
 	}
 	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
