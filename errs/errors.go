@@ -249,9 +249,9 @@ func (e *Error) Detail() string {
 // StackTrace returns just the stack trace portion of the message.
 func (e *Error) StackTrace() string {
 	var buffer strings.Builder
-	buffer.WriteString("  " + strings.Join(xruntime.PCsToStackTrace(e.stack), "\n  "))
+	buffer.WriteString("    " + strings.Join(xruntime.PCsToStackTrace(e.stack), "\n    "))
 	if e.cause != nil && !e.wrapped {
-		buffer.WriteString("\n Caused by: ")
+		buffer.WriteString("\n  Caused by: ")
 		//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		if detailed, ok := e.cause.(*Error); ok {
 			buffer.WriteString(detailed.Detail())
@@ -317,7 +317,7 @@ func (e *Error) Format(state fmt.State, verb rune) {
 // LogValue implements the slog.LogValuer interface.
 func (e *Error) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.String(slog.MessageKey, e.Message()),
+		slog.String("error", e.Message()),
 		slog.Any(StackTraceKey, &stackValue{err: e}),
 	)
 }

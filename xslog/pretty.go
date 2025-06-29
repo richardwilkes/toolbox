@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/xio/term"
 	"github.com/richardwilkes/toolbox/v2/xruntime"
@@ -31,13 +32,14 @@ const StackKey = "stack" // Keep in sync with errs.StackTraceKey
 
 // PrettyHandler is an slog.Handler that outputs a "pretty" format: colorful and supporting formatted stack traces.
 type PrettyHandler struct {
-	handler    slog.Handler
-	sharedLock *sync.Mutex
-	buffer     *bytes.Buffer
-	w          io.Writer
-	stack      []string
-	kind       term.Kind
-	addSource  bool
+	handler          slog.Handler
+	sharedBufferLock *sync.Mutex
+	buffer           *bytes.Buffer
+	sharedWriterLock *sync.Mutex
+	w                io.Writer
+	stack            []string
+	kind             term.Kind
+	addSource        bool
 }
 
 // PrettyOptions is used to configure the PrettyHandler.
@@ -51,9 +53,10 @@ var poolBuffer = xsync.NewPool(func() []byte { return make([]byte, 0, 1024) })
 // NewPrettyHandler creates a new handler with "pretty" output.
 func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 	h := &PrettyHandler{
-		sharedLock: &sync.Mutex{},
-		buffer:     &bytes.Buffer{},
-		w:          w,
+		sharedBufferLock: &sync.Mutex{},
+		buffer:           &bytes.Buffer{},
+		sharedWriterLock: &sync.Mutex{},
+		w:                w,
 	}
 	var jsonHandlerOpts slog.HandlerOptions
 	if opts != nil {
@@ -94,37 +97,18 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := poolBuffer.Get()
 	defer poolBuffer.Put(buf)
 	buf = h.writeLevel(buf, r.Level)
-	if !r.Time.IsZero() {
-		buf = h.writeDivider(buf)
-		buf = append(buf, r.Time.Format("2006-01-02")...)
-		buf = h.writeDivider(buf)
-		buf = append(buf, r.Time.Format("15:04:05.000")...)
-	}
+	buf = h.writeDateTime(buf, r.Time)
+	buf = h.writeMessage(buf, r.Message)
 	buf = h.writeCaller(buf, r.PC)
-	if r.Message != "" {
-		buf = h.writeDivider(buf)
-		buf = append(buf, h.kind.Green()...)
-		buf = append(buf, r.Message...)
-		buf = append(buf, h.kind.Reset()...)
-	}
 	attrs, stack, err := h.collectAttrs(ctx, &r)
 	if err != nil {
 		return err
 	}
-	if attrs != "" && attrs != "{}" {
-		buf = h.writeDivider(buf)
-		buf = append(buf, attrs...)
-	}
-	if len(stack) > 0 {
-		buf = append(buf, '\n', '\t')
-		buf = append(buf, h.kind.Dim()...)
-		buf = append(buf, h.kind.Yellow()...)
-		buf = append(buf, strings.Join(stack, "\n\t")...)
-		buf = append(buf, h.kind.Reset()...)
-	}
+	buf = h.writeAttributes(buf, attrs)
+	buf = h.writeStack(buf, stack)
 	buf = append(buf, '\n')
-	h.sharedLock.Lock()
-	defer h.sharedLock.Unlock()
+	h.sharedWriterLock.Lock()
+	defer h.sharedWriterLock.Unlock()
 	_, err = h.w.Write(buf)
 	return err
 }
@@ -160,6 +144,41 @@ func (h *PrettyHandler) writeLevel(buf []byte, level slog.Level) []byte {
 	return append(buf, h.kind.Reset()...)
 }
 
+func (h *PrettyHandler) writeDateTime(buf []byte, t time.Time) []byte {
+	if !t.IsZero() {
+		buf = h.writeDate(buf, t)
+		buf = h.writeTime(buf, t)
+	}
+	return buf
+}
+
+func (h *PrettyHandler) writeDate(buf []byte, t time.Time) []byte {
+	buf = h.writeDivider(buf)
+	buf = append(buf, t.Format("2006-01-02")...)
+	return buf
+}
+
+func (h *PrettyHandler) writeTime(buf []byte, t time.Time) []byte {
+	buf = h.writeDivider(buf)
+	buf = append(buf, t.Format("15:04:05.000")...)
+	return buf
+}
+
+func (h *PrettyHandler) writeMessage(buf []byte, msg string) []byte {
+	if msg == "" {
+		return buf
+	}
+	buf = h.writeDivider(buf)
+	buf = append(buf, h.kind.Green()...)
+	if strings.Contains(msg, "\n") {
+		buf = append(buf, strings.ReplaceAll(msg, "\n", "\n    ")...)
+	} else {
+		buf = append(buf, msg...)
+	}
+	buf = append(buf, h.kind.Reset()...)
+	return buf
+}
+
 func (h *PrettyHandler) writeCaller(buf []byte, pc uintptr) []byte {
 	if pc == 0 || !h.addSource {
 		return buf
@@ -174,16 +193,37 @@ func (h *PrettyHandler) writeCaller(buf []byte, pc uintptr) []byte {
 }
 
 func (h *PrettyHandler) collectAttrs(ctx context.Context, r *slog.Record) (textAttr string, stack []string, err error) {
-	h.sharedLock.Lock()
+	h.sharedBufferLock.Lock()
 	defer func() {
 		h.stack = nil
 		h.buffer.Reset()
-		h.sharedLock.Unlock()
+		h.sharedBufferLock.Unlock()
 	}()
 	if err = h.handler.Handle(ctx, *r); err != nil {
 		return "", nil, err
 	}
 	return strings.TrimRight(h.buffer.String(), "\n"), h.stack, nil
+}
+
+func (h *PrettyHandler) writeAttributes(buf []byte, attrs string) []byte {
+	if attrs == "" || attrs == "{}" {
+		return buf
+	}
+	buf = h.writeDivider(buf)
+	buf = append(buf, attrs...)
+	return buf
+}
+
+func (h *PrettyHandler) writeStack(buf []byte, stack []string) []byte {
+	if len(stack) == 0 {
+		return buf
+	}
+	buf = append(buf, "\n    "...)
+	buf = append(buf, h.kind.Dim()...)
+	buf = append(buf, h.kind.Yellow()...)
+	buf = append(buf, strings.Join(stack, "\n    ")...)
+	buf = append(buf, h.kind.Reset()...)
+	return buf
 }
 
 // Enabled implements slog.Handler interface.
@@ -194,19 +234,19 @@ func (h *PrettyHandler) Enabled(ctx context.Context, level slog.Level) bool {
 // WithAttrs implements slog.Handler interface.
 func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &PrettyHandler{
-		handler:    h.handler.WithAttrs(attrs),
-		sharedLock: h.sharedLock,
-		buffer:     h.buffer,
-		w:          h.w,
+		handler:          h.handler.WithAttrs(attrs),
+		sharedBufferLock: h.sharedBufferLock,
+		buffer:           h.buffer,
+		w:                h.w,
 	}
 }
 
 // WithGroup implements slog.Handler interface.
 func (h *PrettyHandler) WithGroup(name string) slog.Handler {
 	return &PrettyHandler{
-		handler:    h.handler.WithGroup(name),
-		sharedLock: h.sharedLock,
-		buffer:     h.buffer,
-		w:          h.w,
+		handler:          h.handler.WithGroup(name),
+		sharedBufferLock: h.sharedBufferLock,
+		buffer:           h.buffer,
+		w:                h.w,
 	}
 }
