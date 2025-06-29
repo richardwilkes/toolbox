@@ -28,17 +28,8 @@ func ExampleError() {
 		return *bad // trigger a panic due to a nil pointer dereference
 	}()
 	// Output: recovered from panic
-	//     [github.com/richardwilkes/toolbox/v2/xos.PanicRecovery] xos/panic_recovery.go:33
-	//     [runtime.gopanic] runtime/panic.go:792
-	//     [runtime.panicmem] runtime/panic.go:262
-	//     [runtime.sigpanic] runtime/signal_unix.go:925
 	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError.func1] errs/errors_test.go:28
 	//     [github.com/richardwilkes/toolbox/v2/errs_test.ExampleError] errs/errors_test.go:29
-	//     [testing.runExample] testing/run_example.go:63
-	//     [testing.runExamples] testing/example.go:41
-	//     [testing.(*M).Run] testing/testing.go:2144
-	//     [main.main] _testmain.go:87
-	//     [runtime.main] runtime/proc.go:283
 	//   Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
@@ -112,7 +103,7 @@ func TestWrap(t *testing.T) {
 	notError := errors.New("foo")
 	result := errs.Wrap(notError)
 	check.NotNil(t, result)
-	check.Equal(t, 2, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
 }
 
 func TestDoubleWrap(t *testing.T) {
@@ -170,13 +161,13 @@ func TestAs(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	result := errs.New("foo")
-	check.Equal(t, 2, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 1, strings.Count(result.Error(), "\n"))
 }
 
 func TestNewWithCause(t *testing.T) {
 	cause := errs.New("bar")
 	result := errs.NewWithCause("foo", cause)
-	check.Equal(t, 5, strings.Count(result.Error(), "\n"))
+	check.Equal(t, 3, strings.Count(result.Error(), "\n"))
 }
 
 func TestFormat(t *testing.T) {

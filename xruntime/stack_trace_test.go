@@ -19,30 +19,48 @@ import (
 )
 
 func TestStackTrace(t *testing.T) {
-	stack := xruntime.StackTrace(0)
+	stack := nextLevelStackTrace(0)
 	check.True(t, len(stack) > 1, "stack trace should have more than one entry")
 	check.True(t, slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "TestStackTrace") }),
 		"stack trace should contain TestStackTrace")
-	check.True(t, slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "testing.tRunner") }),
-		"stack trace should contain testing.tRunner")
+	check.True(t, slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "nextLevelStackTrace") }),
+		"stack trace should contain nextLevelStackTrace")
+}
+
+func nextLevelStackTrace(skip int) []string {
+	return xruntime.StackTrace(skip)
 }
 
 func TestStackTraceSkip(t *testing.T) {
-	stack0 := xruntime.StackTrace(0)
-	stack1 := xruntime.StackTrace(1)
-	stack2 := xruntime.StackTrace(2)
+	stack0 := nextLevelStackTrace(0)
+	stack1 := nextLevelStackTrace(1)
+	stack2 := nextLevelStackTrace(2)
 	check.True(t, len(stack0) > len(stack1))
 	check.True(t, len(stack1) > len(stack2))
 }
 
 func TestStackTracePath(t *testing.T) {
-	check.Equal(t, "bar/baz.go", xruntime.StackTracePath("/Users/user/code/project/foo/bar/baz.go"),
-		"full path with more than one directory")
-	check.Equal(t, "xruntime/stack_trace.go", xruntime.StackTracePath("toolbox/xruntime/stack_trace.go"),
-		"relative path with more than one directory")
-	check.Equal(t, "home/main.go", xruntime.StackTracePath("/home/main.go"), "path with one directory")
-	check.Equal(t, "main.go", xruntime.StackTracePath("main.go"), "path with just filename")
-	check.Equal(t, "", xruntime.StackTracePath(""), "empty path")
-	check.Equal(t, "dir/", xruntime.StackTracePath("/some/path/dir/"), "path ending with slash")
-	check.Equal(t, "/file.go", xruntime.StackTracePath("/file.go"), "path with file at root")
+	for _, one := range []struct {
+		function string
+		file     string
+		expected string
+	}{
+		{
+			function: "github.com/user/play/internal/stuff.DoSomething",
+			file:     "/Users/user/code/play/internal/stuff/stuff.go",
+			expected: "play/internal/stuff/stuff.go",
+		},
+		{
+			function: "main.main",
+			file:     "/Users/user/code/play/main.go",
+			expected: "main.go",
+		},
+		{
+			function: "main.foo.bar",
+			file:     "/Users/user/code/play/main.go",
+			expected: "main.go",
+		},
+	} {
+		check.Equal(t, one.expected, xruntime.StackTracePath(one.function, one.file))
+	}
 }

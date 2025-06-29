@@ -2,9 +2,21 @@ package xruntime
 
 import (
 	"fmt"
+	"path"
 	"runtime"
+	"slices"
 	"strings"
 )
+
+// StackFuncPrefixesToFilter is a list of function prefixes to filter out of the stack trace.
+//
+// This variable is not used in a thread-safe manner, so any alterations should be done before any goroutines are
+// started.
+var StackFuncPrefixesToFilter = []string{
+	"runtime.",
+	"testing.",
+	"github.com/richardwilkes/toolbox/v2/xos.PanicRecovery",
+}
 
 // StackTrace returns a slice of strings, each of which is a text representation of a frame in the stack trace. 'skip'
 // is the number of stack frames to skip before processing, with 0 identifying the caller of StackTrace.
@@ -18,24 +30,33 @@ func StackTrace(skip int) []string {
 func PCsToStackTrace(pcs []uintptr) []string {
 	stack := make([]string, 0, len(pcs))
 	frames := runtime.CallersFrames(pcs)
-	for {
-		f, more := frames.Next()
-		if !more {
-			break
+	more := true
+	for more {
+		var f runtime.Frame
+		if f, more = frames.Next(); f.PC != 0 && (f.Function != "main.main" || f.File != "_testmain.go") &&
+			!slices.ContainsFunc(StackFuncPrefixesToFilter, func(prefix string) bool {
+				return strings.HasPrefix(f.Function, prefix)
+			}) {
+			stack = append(stack, fmt.Sprintf("[%s] %s:%d", f.Function, StackTracePath(f.Function, f.File), f.Line))
 		}
-		stack = append(stack, fmt.Sprintf("[%s] %s:%d", f.Function, StackTracePath(f.File), f.Line))
 	}
 	return stack
 }
 
-// StackTracePath returns the last directory and the file name component of the path. Generally, this allows the stack
-// trace entries to contain enough of a path to be useful and to allow the IDE to find and open the file, but doesn't
-// include long full paths.
-func StackTracePath(path string) string {
-	if i := strings.LastIndexByte(path, '/'); i != -1 {
-		if i = strings.LastIndexByte(path[:i], '/'); i != -1 {
-			return path[i+1:]
-		}
+// StackTracePath returns a shortened path for the function and file that should still be unique enough for an IDE to
+// identify the location within the project.
+func StackTracePath(function, file string) string {
+	dirs := strings.Split(path.Dir(file), "/")
+	functions := strings.Split(function, "/")
+	if len(functions) > 0 {
+		functions[len(functions)-1] = strings.TrimSuffix(
+			strings.SplitN(functions[len(functions)-1], ".", 2)[0], "_test")
 	}
-	return path
+	i := len(functions)
+	j := len(dirs)
+	for i > 0 && j > 0 && functions[i-1] == dirs[j-1] {
+		i--
+		j--
+	}
+	return strings.Join(append(dirs[j:], path.Base(file)), "/")
 }

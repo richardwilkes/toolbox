@@ -184,7 +184,7 @@ func (h *PrettyHandler) writeCaller(buf []byte, pc uintptr) []byte {
 		return buf
 	}
 	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
-	file := xruntime.StackTracePath(f.File)
+	file := xruntime.StackTracePath(f.Function, f.File)
 	if file == "" {
 		return buf
 	}
