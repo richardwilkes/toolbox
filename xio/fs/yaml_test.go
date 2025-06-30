@@ -27,11 +27,12 @@ func TestLoadSaveYAML(t *testing.T) {
 		Count: 22,
 	}
 	f, err := os.CreateTemp("", "yaml_test")
-	check.NoError(t, err)
-	check.NoError(t, f.Close())
-	check.NoError(t, fs.SaveYAMLWithMode(f.Name(), value, 0o600))
+	c := check.New(t)
+	c.NoError(err)
+	c.NoError(f.Close())
+	c.NoError(fs.SaveYAMLWithMode(f.Name(), value, 0o600))
 	var value2 data
-	check.NoError(t, fs.LoadYAML(f.Name(), &value2))
-	check.NoError(t, os.Remove(f.Name()))
-	check.Equal(t, value, &value2)
+	c.NoError(fs.LoadYAML(f.Name(), &value2))
+	c.NoError(os.Remove(f.Name()))
+	c.Equal(value, &value2)
 }

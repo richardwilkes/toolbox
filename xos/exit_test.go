@@ -37,13 +37,14 @@ func TestExecutionOrderExit(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.Error(t, err)
-	check.Equal(t, "321", string(output))
+	c := check.New(t)
+	c.HasError(err)
+	c.Equal("321", string(output))
 	var exitError *exec.ExitError
 	hasExitErr := errors.As(err, &exitError)
-	check.True(t, hasExitErr)
+	c.True(hasExitErr)
 	if hasExitErr {
-		check.Equal(t, 22, exitError.ExitCode())
+		c.Equal(22, exitError.ExitCode())
 	}
 }
 
@@ -61,13 +62,14 @@ func TestExecutionOrderWithCancelExit(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderWithCancelExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST_WITH_CANCEL=1")
 	output, err := cmd.CombinedOutput()
-	check.Error(t, err)
-	check.Equal(t, "31", string(output))
+	c := check.New(t)
+	c.HasError(err)
+	c.Equal("31", string(output))
 	var exitError *exec.ExitError
 	hasExitErr := errors.As(err, &exitError)
-	check.True(t, hasExitErr)
+	c.True(hasExitErr)
 	if hasExitErr {
-		check.Equal(t, 22, exitError.ExitCode())
+		c.Equal(22, exitError.ExitCode())
 	}
 }
 
@@ -97,8 +99,9 @@ func TestConcurrentCallsExit(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestConcurrentCallsExit")
 	cmd.Env = append(os.Environ(), "CONCURRENT_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Equal(t, "executed", string(output))
+	c := check.New(t)
+	c.NoError(err)
+	c.Equal("executed", string(output))
 }
 
 func TestPanicInExitFunction(t *testing.T) {
@@ -113,10 +116,11 @@ func TestPanicInExitFunction(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestPanicInExitFunction")
 	cmd.Env = append(os.Environ(), "PANIC_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), "first")
-	check.Contains(t, string(output), "test panic in exit function")
-	check.Contains(t, string(output), "third")
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), "first")
+	c.Contains(string(output), "test panic in exit function")
+	c.Contains(string(output), "third")
 }
 
 func TestRecursiveExit(t *testing.T) {
@@ -130,9 +134,10 @@ func TestRecursiveExit(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestRecursiveExit")
 	cmd.Env = append(os.Environ(), "RECURSIVE_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), "recursive call of xos.Exit()")
-	check.Contains(t, string(output), "normal")
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), "recursive call of xos.Exit()")
+	c.Contains(string(output), "normal")
 }
 
 func TestSIGINT(t *testing.T) {
@@ -144,16 +149,17 @@ func TestSIGINT(t *testing.T) {
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=TestSIGINT")
 	cmd.Env = append(os.Environ(), "SIGINT_EXIT_TEST=1")
-	check.NoError(t, cmd.Start())
+	c := check.New(t)
+	c.NoError(cmd.Start())
 	time.Sleep(100 * time.Millisecond) // Give the command time to start
-	check.NoError(t, cmd.Process.Signal(syscall.SIGINT))
+	c.NoError(cmd.Process.Signal(syscall.SIGINT))
 	err := cmd.Wait()
-	check.Error(t, err)
+	c.HasError(err)
 	var exitError *exec.ExitError
 	hasExitErr := errors.As(err, &exitError)
-	check.True(t, hasExitErr)
+	c.True(hasExitErr)
 	if hasExitErr {
-		check.Equal(t, 99, exitError.ExitCode())
+		c.Equal(99, exitError.ExitCode())
 	}
 }
 
@@ -166,15 +172,16 @@ func TestSIGTERM(t *testing.T) {
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=TestSIGTERM")
 	cmd.Env = append(os.Environ(), "SIGTERM_EXIT_TEST=1")
-	check.NoError(t, cmd.Start())
+	c := check.New(t)
+	c.NoError(cmd.Start())
 	time.Sleep(100 * time.Millisecond) // Give the command time to start
-	check.NoError(t, cmd.Process.Signal(syscall.SIGTERM))
+	c.NoError(cmd.Process.Signal(syscall.SIGTERM))
 	err := cmd.Wait()
-	check.Error(t, err)
+	c.HasError(err)
 	var exitError *exec.ExitError
 	hasExitErr := errors.As(err, &exitError)
-	check.True(t, hasExitErr)
+	c.True(hasExitErr)
 	if hasExitErr {
-		check.Equal(t, 123, exitError.ExitCode())
+		c.Equal(123, exitError.ExitCode())
 	}
 }

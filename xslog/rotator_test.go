@@ -41,43 +41,46 @@ func TestRotator(t *testing.T) {
 		MaxBackups: maxBackups,
 	}
 	r := cfg.NewWriteCloser()
-	check.NotNil(t, r)
+	c := check.New(t)
+	c.NotNil(r)
 	_, err := os.Stat(logFiles[0] + xslog.LogFileExt)
-	check.Error(t, err)
-	check.True(t, os.IsNotExist(err))
+	c.HasError(err)
+	c.True(os.IsNotExist(err))
 	for i := range maxSize * (2 + maxBackups) {
 		_, err = fmt.Fprintln(r, i)
-		check.NoError(t, err)
+		c.NoError(err)
 	}
 	_, err = fmt.Fprintln(r, "goodbye")
-	check.NoError(t, err)
-	check.NoError(t, r.Close())
+	c.NoError(err)
+	c.NoError(r.Close())
 	for _, f := range logFiles {
 		fi, fErr := os.Stat(f + xslog.LogFileExt)
-		check.NoError(t, fErr)
-		check.True(t, fi.Size() <= maxSize)
+		c.NoError(fErr)
+		c.True(fi.Size() <= maxSize)
 	}
 
 	// Verify that we can start again
 	r = cfg.NewWriteCloser()
-	check.NotNil(t, r)
+	c.NotNil(r)
 	_, err = fmt.Fprintln(r, "hello")
-	check.NoError(t, err)
-	check.NoError(t, r.Close())
+	c.NoError(err)
+	c.NoError(r.Close())
 }
 
 func TestRotatorDefaults(t *testing.T) {
 	var r xslog.Rotator
 	r.Normalize()
-	check.Equal(t, filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+xslog.LogFileExt), r.Path)
-	check.Equal(t, int64(10*1024*1024), r.MaxSize) //
-	check.Equal(t, 1, r.MaxBackups)
-	check.Equal(t, os.FileMode(0o644), r.FileMode)
-	check.Equal(t, os.FileMode(0o755), r.DirMode)
+	c := check.New(t)
+	c.Equal(filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+xslog.LogFileExt), r.Path)
+	c.Equal(int64(10*1024*1024), r.MaxSize) //
+	c.Equal(1, r.MaxBackups)
+	c.Equal(os.FileMode(0o644), r.FileMode)
+	c.Equal(os.FileMode(0o755), r.DirMode)
 }
 
 func TestRotatorWithNilConfig(t *testing.T) {
-	check.NotNil(t, ((*xslog.Rotator)(nil)).NewWriteCloser())
+	c := check.New(t)
+	c.NotNil(((*xslog.Rotator)(nil)).NewWriteCloser())
 }
 
 func TestRotatorCmdLineOpts(t *testing.T) {
@@ -93,8 +96,9 @@ func TestRotatorCmdLineOpts(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestRotatorCmdLineOpts")
 	cmd.Env = append(os.Environ(), "ROTATOR_CMDLINE_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), "--log-file <value>")
-	check.Contains(t, string(output), "--log-file-backups <value>")
-	check.Contains(t, string(output), "--log-file-size <value>")
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), "--log-file <value>")
+	c.Contains(string(output), "--log-file-backups <value>")
+	c.Contains(string(output), "--log-file-size <value>")
 }

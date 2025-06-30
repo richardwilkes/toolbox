@@ -17,6 +17,7 @@ import (
 )
 
 func TestZeroedDelete(t *testing.T) {
+	c := check.New(t)
 	type data struct {
 		a int
 	}
@@ -61,9 +62,9 @@ func TestZeroedDelete(t *testing.T) {
 	} {
 		theCopy := append([]*data{}, test.s...)
 		result := slice.ZeroedDelete(theCopy, test.i, test.j)
-		check.Equal(t, result, test.want, "ZeroedDelete(%v, %d, %d) = %v, want %v", test.s, test.i, test.j, result, test.want)
+		c.Equal(result, test.want, "ZeroedDelete(%v, %d, %d) = %v, want %v", test.s, test.i, test.j, result, test.want)
 		for i := len(result); i < len(theCopy); i++ {
-			check.Nil(t, theCopy[i], "residual element %d should have been nil, was %v", i, theCopy[i])
+			c.Nil(theCopy[i], "residual element %d should have been nil, was %v", i, theCopy[i])
 		}
 	}
 }

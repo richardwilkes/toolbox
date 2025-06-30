@@ -18,26 +18,28 @@ import (
 )
 
 func TestCap(t *testing.T) {
+	c := check.New(t)
 	rl := rate.New(50*1024, time.Second)
-	check.Equal(t, 50*1024, rl.Cap(true))
+	c.Equal(50*1024, rl.Cap(true))
 	sub := rl.New(100 * 1024)
-	check.Equal(t, 100*1024, sub.Cap(false))
-	check.Equal(t, 50*1024, sub.Cap(true))
+	c.Equal(100*1024, sub.Cap(false))
+	c.Equal(50*1024, sub.Cap(true))
 	sub.SetCap(1024)
-	check.Equal(t, 1024, sub.Cap(true))
+	c.Equal(1024, sub.Cap(true))
 	rl.Close()
-	check.True(t, sub.Closed())
-	check.True(t, rl.Closed())
+	c.True(sub.Closed())
+	c.True(rl.Closed())
 }
 
 func TestUse(t *testing.T) {
+	c := check.New(t)
 	rl := rate.New(100, 100*time.Millisecond)
 	endAfter := time.Now().Add(250 * time.Millisecond)
 	for endAfter.After(time.Now()) {
 		err := <-rl.Use(1)
-		check.NoError(t, err)
+		c.NoError(err)
 	}
-	check.Equal(t, 100, rl.LastUsed())
+	c.Equal(100, rl.LastUsed())
 	rl.Close()
-	check.True(t, rl.Closed())
+	c.True(rl.Closed())
 }

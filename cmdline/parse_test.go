@@ -17,6 +17,7 @@ import (
 )
 
 func TestParseCommandLine(t *testing.T) {
+	c := check.New(t)
 	tests := []struct {
 		input    string
 		expected []string
@@ -30,7 +31,7 @@ func TestParseCommandLine(t *testing.T) {
 	}
 	for i, one := range tests {
 		parts, err := cmdline.Parse(one.input)
-		check.NoError(t, err, i)
-		check.Equal(t, one.expected, parts, i)
+		c.NoError(err, i)
+		c.Equal(one.expected, parts, i)
 	}
 }

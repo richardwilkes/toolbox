@@ -19,6 +19,7 @@ import (
 )
 
 func TestFormatDuration(t *testing.T) {
+	c := check.New(t)
 	for i, one := range []struct {
 		Expected      string
 		Duration      time.Duration
@@ -32,11 +33,12 @@ func TestFormatDuration(t *testing.T) {
 		{"1:01:00", 61 * time.Minute, false},
 		{"61:00:00", 61 * time.Hour, false},
 	} {
-		check.Equal(t, one.Expected, txt.FormatDuration(one.Duration, one.IncludeMillis), "Index %d", i)
+		c.Equal(one.Expected, txt.FormatDuration(one.Duration, one.IncludeMillis), "Index %d", i)
 	}
 }
 
 func TestParseDuration(t *testing.T) {
+	c := check.New(t)
 	for i, one := range []struct {
 		Input            string
 		ExpectedDuration time.Duration
@@ -56,10 +58,10 @@ func TestParseDuration(t *testing.T) {
 		result, err := txt.ParseDuration(one.Input)
 		desc := fmt.Sprintf("Index %d: %s", i, one.Input)
 		if one.ExpectErr {
-			check.Error(t, err, desc)
+			c.HasError(err, desc)
 		} else {
-			check.NoError(t, err, desc)
-			check.Equal(t, one.ExpectedDuration, result, desc)
+			c.NoError(err, desc)
+			c.Equal(one.ExpectedDuration, result, desc)
 		}
 	}
 }

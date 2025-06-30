@@ -18,75 +18,77 @@ import (
 )
 
 func TestIsNil(t *testing.T) {
+	c := check.New(t)
+
 	// Test explicit nil
-	check.True(t, xreflect.IsNil(nil))
+	c.True(xreflect.IsNil(nil))
 
 	// Test non-nilable types
-	check.False(t, xreflect.IsNil(42))
-	check.False(t, xreflect.IsNil(42.0))
-	check.False(t, xreflect.IsNil("hello"))
-	check.False(t, xreflect.IsNil(true))
-	check.False(t, xreflect.IsNil(struct{}{}))
-	check.False(t, xreflect.IsNil(complex(0, 0)))
+	c.False(xreflect.IsNil(42))
+	c.False(xreflect.IsNil(42.0))
+	c.False(xreflect.IsNil("hello"))
+	c.False(xreflect.IsNil(true))
+	c.False(xreflect.IsNil(struct{}{}))
+	c.False(xreflect.IsNil(complex(0, 0)))
 
 	// Test nil pointers
 	var p *int
-	check.True(t, xreflect.IsNil(p))
+	c.True(xreflect.IsNil(p))
 	var sp *string
-	check.True(t, xreflect.IsNil(sp))
+	c.True(xreflect.IsNil(sp))
 	var stp *struct{}
-	check.True(t, xreflect.IsNil(stp))
+	c.True(xreflect.IsNil(stp))
 	var up unsafe.Pointer
-	check.True(t, xreflect.IsNil(up))
+	c.True(xreflect.IsNil(up))
 
 	// Test non-nil pointer
 	n := 42
-	check.False(t, xreflect.IsNil(&n))
+	c.False(xreflect.IsNil(&n))
 	str := "hi"
-	check.False(t, xreflect.IsNil(&str))
+	c.False(xreflect.IsNil(&str))
 	var strct struct{}
-	check.False(t, xreflect.IsNil(&strct))
-	check.False(t, xreflect.IsNil(unsafe.Pointer(&n)))
+	c.False(xreflect.IsNil(&strct))
+	c.False(xreflect.IsNil(unsafe.Pointer(&n)))
 
 	// Test nil slice
 	var s []int
-	check.True(t, xreflect.IsNil(s))
+	c.True(xreflect.IsNil(s))
 
 	// Test non-nil slice
-	check.False(t, xreflect.IsNil([]int{1, 2, 3}))
-	check.False(t, xreflect.IsNil(make([]int, 0)))
+	c.False(xreflect.IsNil([]int{1, 2, 3}))
+	c.False(xreflect.IsNil(make([]int, 0)))
 
 	// Test nil map
 	var m map[string]int
-	check.True(t, xreflect.IsNil(m))
+	c.True(xreflect.IsNil(m))
 
 	// Test non-nil map
-	check.False(t, xreflect.IsNil(make(map[string]int)))
+	c.False(xreflect.IsNil(make(map[string]int)))
 
 	// Test nil channel
 	var ch chan int
-	check.True(t, xreflect.IsNil(ch))
+	c.True(xreflect.IsNil(ch))
 
 	// Test non-nil channel
-	check.False(t, xreflect.IsNil(make(chan int)))
+	c.False(xreflect.IsNil(make(chan int)))
 
 	// Test nil function
 	var f func()
-	check.True(t, xreflect.IsNil(f))
+	c.True(xreflect.IsNil(f))
 
 	// Test non-nil function
-	check.False(t, xreflect.IsNil(func() {}))
+	c.False(xreflect.IsNil(func() {}))
 
 	// Test nil interface
 	var err error
-	check.True(t, xreflect.IsNil(err))
+	c.True(xreflect.IsNil(err))
 
 	// Test interface with nil pointer
 	var nilPtr *int
 	var iface any = nilPtr
-	check.True(t, xreflect.IsNil(iface))
+	c.True(xreflect.IsNil(iface))
 
 	// Test interface with non-nil value
 	var nonNilIface any = 42
-	check.False(t, xreflect.IsNil(nonNilIface))
+	c.False(xreflect.IsNil(nonNilIface))
 }

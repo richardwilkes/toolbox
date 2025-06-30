@@ -31,8 +31,9 @@ func TestFirstN(t *testing.T) {
 		{In: "aécd", N: 0, Out: ""},
 		{In: "aécd", N: -1, Out: ""},
 	}
+	c := check.New(t)
 	for i, one := range table {
-		check.Equal(t, one.Out, txt.FirstN(one.In, one.N), "#%d", i)
+		c.Equal(one.Out, txt.FirstN(one.In, one.N), "#%d", i)
 	}
 }
 
@@ -51,7 +52,8 @@ func TestLastN(t *testing.T) {
 		{In: "aécd", N: 0, Out: ""},
 		{In: "aécd", N: -1, Out: ""},
 	}
+	c := check.New(t)
 	for i, one := range table {
-		check.Equal(t, one.Out, txt.LastN(one.In, one.N), "#%d", i)
+		c.Equal(one.Out, txt.LastN(one.In, one.N), "#%d", i)
 	}
 }

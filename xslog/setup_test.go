@@ -50,14 +50,15 @@ func TestSetupStd(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestSetupStd")
 	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), " | test message | xslog/setup_test.go:")
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), " | test message | xslog/setup_test.go:")
 
 	cmd = exec.Command(os.Args[0], "-test.run=TestSetupStd")
 	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TEST=2")
 	output, err = cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Equal(t, "", string(output))
+	c.NoError(err)
+	c.Equal("", string(output))
 }
 
 func TestSetupConsole(t *testing.T) {
@@ -74,6 +75,7 @@ func TestSetupConsole(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestSetupConsole")
 	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TO_CONSOLE_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), ` | test message | xslog/setup_test.go:`)
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), ` | test message | xslog/setup_test.go:`)
 }

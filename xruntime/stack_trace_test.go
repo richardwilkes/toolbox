@@ -20,10 +20,11 @@ import (
 
 func TestStackTrace(t *testing.T) {
 	stack := nextLevelStackTrace(0)
-	check.True(t, len(stack) > 1, "stack trace should have more than one entry")
-	check.True(t, slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "TestStackTrace") }),
+	c := check.New(t)
+	c.True(len(stack) > 1, "stack trace should have more than one entry")
+	c.True(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "TestStackTrace") }),
 		"stack trace should contain TestStackTrace")
-	check.True(t, slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "nextLevelStackTrace") }),
+	c.True(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "nextLevelStackTrace") }),
 		"stack trace should contain nextLevelStackTrace")
 }
 
@@ -35,11 +36,13 @@ func TestStackTraceSkip(t *testing.T) {
 	stack0 := nextLevelStackTrace(0)
 	stack1 := nextLevelStackTrace(1)
 	stack2 := nextLevelStackTrace(2)
-	check.True(t, len(stack0) > len(stack1))
-	check.True(t, len(stack1) > len(stack2))
+	c := check.New(t)
+	c.True(len(stack0) > len(stack1))
+	c.True(len(stack1) > len(stack2))
 }
 
 func TestStackTracePath(t *testing.T) {
+	c := check.New(t)
 	for _, one := range []struct {
 		function string
 		file     string
@@ -61,6 +64,6 @@ func TestStackTracePath(t *testing.T) {
 			expected: "main.go",
 		},
 	} {
-		check.Equal(t, one.expected, xruntime.StackTracePath(one.function, one.file))
+		c.Equal(one.expected, xruntime.StackTracePath(one.function, one.file))
 	}
 }

@@ -10,13 +10,15 @@
 package xsync
 
 import (
+	"runtime/debug"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 )
 
 func TestPoolWithNil(t *testing.T) {
-	defer func() { check.NotNil(t, recover()) }()
+	c := check.New(t)
+	defer func() { c.NotNil(recover()) }()
 	NewPool[any](nil)
 }
 
@@ -26,12 +28,21 @@ func TestEmptyPoolCallsNew(t *testing.T) {
 		i++
 		return i
 	})
-	check.Equal(t, 1, p.Get())
-	check.Equal(t, 2, p.Get())
-	check.Equal(t, 2, i, "Should be the number of times Get was called")
+	c := check.New(t)
+	c.Equal(1, p.Get())
+	c.Equal(2, p.Get())
+	c.Equal(2, i, "Should be the number of times Get was called")
 }
 
 func TestPoolPutGet(t *testing.T) {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "-race" && setting.Value == "true" {
+				// When -race is enabled, one quarter of the Put requests get randomly dropped, so can't reliably test
+				return
+			}
+		}
+	}
 	var i int
 	p := NewPool(func() int {
 		i++
@@ -41,8 +52,9 @@ func TestPoolPutGet(t *testing.T) {
 	p.Put(20)
 	g1 := p.Get()
 	g2 := p.Get()
-	check.True(t, (g1 == 10 && g2 == 20) || (g1 == 20 && g2 == 10), "Any order is fine")
-	check.Equal(t, 1, p.Get(), "Getting from an empty pool should call the new function")
+	c := check.New(t)
+	c.True((g1 == 10 && g2 == 20) || (g1 == 20 && g2 == 10), "Any order is fine")
+	c.Equal(1, p.Get(), "Getting from an empty pool should call the new function")
 	p.Put(30)
-	check.Equal(t, 30, p.Get(), "Should return the only value in the pool, which we just placed there")
+	c.Equal(30, p.Get(), "Should return the only value in the pool, which we just placed there")
 }

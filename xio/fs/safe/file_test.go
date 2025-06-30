@@ -19,89 +19,76 @@ import (
 )
 
 func TestAbortNonExisting(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "safe_test_")
-	check.NoError(t, err)
-	defer removeAll(t, tmpdir)
+	c := check.New(t)
+	tmpdir := c.TempDir()
 	filename := filepath.Join(tmpdir, "abort.txt")
-	var f *safe.File
-	f, err = safe.CreateWithMode(filename, 0o600)
-	check.NoError(t, err)
+	f, err := safe.CreateWithMode(filename, 0o600)
+	c.NoError(err)
 	var n int
 	n, err = f.WriteString("abort")
-	check.NoError(t, err)
-	check.Equal(t, 5, n)
-	check.NoError(t, f.Close())
+	c.NoError(err)
+	c.Equal(5, n)
+	c.NoError(f.Close())
 	_, err = os.Stat(filename)
-	check.Error(t, err)
-}
-
-func removeAll(t *testing.T, path string) {
-	t.Helper()
-	check.NoError(t, os.RemoveAll(path))
+	c.HasError(err)
 }
 
 func TestCommitNonExisting(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "safe_test_")
-	check.NoError(t, err)
-	defer removeAll(t, tmpdir)
+	c := check.New(t)
+	tmpdir := c.TempDir()
 	filename := filepath.Join(tmpdir, "commit.txt")
-	var f *safe.File
-	f, err = safe.CreateWithMode(filename, 0o600)
-	check.NoError(t, err)
+	f, err := safe.CreateWithMode(filename, 0o600)
+	c.NoError(err)
 	var n int
 	n, err = f.WriteString("commit")
-	check.NoError(t, err)
-	check.Equal(t, 6, n)
-	check.NoError(t, f.Commit())
-	check.NoError(t, f.Close())
+	c.NoError(err)
+	c.Equal(6, n)
+	c.NoError(f.Commit())
+	c.NoError(f.Close())
 	_, err = os.Stat(filename)
-	check.NoError(t, err)
-	check.NoError(t, os.Remove(filename))
+	c.NoError(err)
+	c.NoError(os.Remove(filename))
 }
 
 func TestAbortExisting(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "safe_test_")
-	check.NoError(t, err)
-	defer removeAll(t, tmpdir)
+	c := check.New(t)
+	tmpdir := c.TempDir()
 	filename := filepath.Join(tmpdir, "safe.txt")
 	originalData := []byte("safe")
-	check.NoError(t, os.WriteFile(filename, originalData, 0o600))
-	var f *safe.File
-	f, err = safe.CreateWithMode(filename, 0o600)
-	check.NoError(t, err)
+	c.NoError(os.WriteFile(filename, originalData, 0o600))
+	f, err := safe.CreateWithMode(filename, 0o600)
+	c.NoError(err)
 	var n int
 	n, err = f.WriteString("bad")
-	check.NoError(t, err)
-	check.Equal(t, 3, n)
+	c.NoError(err)
+	c.Equal(3, n)
 	err = f.Close()
-	check.NoError(t, err)
+	c.NoError(err)
 	var data []byte
 	data, err = os.ReadFile(filename)
-	check.NoError(t, err)
-	check.Equal(t, originalData, data)
-	check.NoError(t, os.Remove(filename))
+	c.NoError(err)
+	c.Equal(originalData, data)
+	c.NoError(os.Remove(filename))
 }
 
 func TestCommitExisting(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "safe_test_")
-	check.NoError(t, err)
-	defer removeAll(t, tmpdir)
+	c := check.New(t)
+	tmpdir := c.TempDir()
 	filename := filepath.Join(tmpdir, "safe.txt")
 	originalData := []byte("safe")
 	replacement := []byte("replaced")
-	check.NoError(t, os.WriteFile(filename, originalData, 0o600))
-	var f *safe.File
-	f, err = safe.CreateWithMode(filename, 0o600)
-	check.NoError(t, err)
+	c.NoError(os.WriteFile(filename, originalData, 0o600))
+	f, err := safe.CreateWithMode(filename, 0o600)
+	c.NoError(err)
 	var n int
 	n, err = f.Write(replacement)
-	check.NoError(t, err)
-	check.Equal(t, len(replacement), n)
-	check.NoError(t, f.Commit())
-	check.NoError(t, f.Close())
+	c.NoError(err)
+	c.Equal(len(replacement), n)
+	c.NoError(f.Commit())
+	c.NoError(f.Close())
 	var data []byte
 	data, err = os.ReadFile(filename)
-	check.NoError(t, err)
-	check.Equal(t, replacement, data)
-	check.NoError(t, os.Remove(filename))
+	c.NoError(err)
+	c.Equal(replacement, data)
+	c.NoError(os.Remove(filename))
 }

@@ -26,7 +26,8 @@ func TestPanicRecovery_NoPanic(t *testing.T) {
 		defer xos.PanicRecovery(func(_ error) { called = true })
 		// Normal execution, no panic
 	}()
-	check.False(t, called)
+	c := check.New(t)
+	c.False(called)
 }
 
 func TestPanicRecovery_PanicWithError(t *testing.T) {
@@ -35,10 +36,11 @@ func TestPanicRecovery_PanicWithError(t *testing.T) {
 		defer xos.PanicRecovery(func(err error) { capturedErr = err })
 		panic(errors.New("original error"))
 	}()
-	check.NotNil(t, capturedErr)
+	c := check.New(t)
+	c.NotNil(capturedErr)
 	msg := capturedErr.Error()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "original error")
+	c.Contains(msg, "recovered from panic")
+	c.Contains(msg, "original error")
 }
 
 func TestPanicRecovery_PanicWithString(t *testing.T) {
@@ -47,10 +49,11 @@ func TestPanicRecovery_PanicWithString(t *testing.T) {
 		defer xos.PanicRecovery(func(err error) { capturedErr = err })
 		panic("string panic")
 	}()
-	check.NotNil(t, capturedErr)
+	c := check.New(t)
+	c.NotNil(capturedErr)
 	msg := capturedErr.Error()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "string panic")
+	c.Contains(msg, "recovered from panic")
+	c.Contains(msg, "string panic")
 }
 
 func TestPanicRecovery_PanicWithInt(t *testing.T) {
@@ -59,10 +62,11 @@ func TestPanicRecovery_PanicWithInt(t *testing.T) {
 		defer xos.PanicRecovery(func(err error) { capturedErr = err })
 		panic(42)
 	}()
-	check.NotNil(t, capturedErr)
+	c := check.New(t)
+	c.NotNil(capturedErr)
 	msg := capturedErr.Error()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "42")
+	c.Contains(msg, "recovered from panic")
+	c.Contains(msg, "42")
 }
 
 func TestPanicRecovery_NilHandler(t *testing.T) {
@@ -75,8 +79,9 @@ func TestPanicRecovery_NilHandler(t *testing.T) {
 		panic("test panic")
 	}()
 	msg := buf.String()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "test panic")
+	c := check.New(t)
+	c.Contains(msg, "recovered from panic")
+	c.Contains(msg, "test panic")
 }
 
 func TestPanicRecovery_HandlerPanics(t *testing.T) {
@@ -89,9 +94,10 @@ func TestPanicRecovery_HandlerPanics(t *testing.T) {
 		panic("original panic")
 	}()
 	msg := buf.String()
-	check.Contains(t, msg, "recovered from panic")
-	check.Contains(t, msg, "original panic")
-	check.Contains(t, msg, "handler panic")
+	c := check.New(t)
+	c.Contains(msg, "recovered from panic")
+	c.Contains(msg, "original panic")
+	c.Contains(msg, "handler panic")
 }
 
 func TestPanicRecovery_PanicWithNil(t *testing.T) {
@@ -100,8 +106,9 @@ func TestPanicRecovery_PanicWithNil(t *testing.T) {
 		defer xos.PanicRecovery(func(err error) { capturedErr = err })
 		panic(nil) //nolint:govet // Intentionally panicking with nil
 	}()
-	check.NotNil(t, capturedErr)
-	check.Contains(t, capturedErr.Error(), "recovered from panic")
+	c := check.New(t)
+	c.NotNil(capturedErr)
+	c.Contains(capturedErr.Error(), "recovered from panic")
 }
 
 func TestPanicRecovery_ErrorWrapping(t *testing.T) {
@@ -111,8 +118,9 @@ func TestPanicRecovery_ErrorWrapping(t *testing.T) {
 		defer xos.PanicRecovery(func(err error) { capturedErr = err })
 		panic(originalErr)
 	}()
-	check.NotNil(t, capturedErr)
-	check.NotEqual(t, originalErr, capturedErr)
-	check.Contains(t, capturedErr.Error(), "recovered from panic")
-	check.Contains(t, capturedErr.Error(), originalErr.Error())
+	c := check.New(t)
+	c.NotNil(capturedErr)
+	c.NotEqual(originalErr, capturedErr)
+	c.Contains(capturedErr.Error(), "recovered from panic")
+	c.Contains(capturedErr.Error(), originalErr.Error())
 }

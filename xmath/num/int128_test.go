@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/check"
 	"gopkg.in/yaml.v3"
 
+	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xmath/num"
 )
 
@@ -121,50 +121,57 @@ func init() {
 func bigIntFromStr(t *testing.T, one *info, index int) *big.Int {
 	t.Helper()
 	b, ok := new(big.Int).SetString(one.ValueAsStr, 10)
-	check.True(t, ok, indexFmt, index)
-	check.Equal(t, one.ValueAsStr, b.String(), indexFmt, index)
+	c := check.New(t)
+	c.True(ok, indexFmt, index)
+	c.Equal(one.ValueAsStr, b.String(), indexFmt, index)
 	return b
 }
 
 func TestInt128FromInt64(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt64 {
-			check.Equal(t, one.ExpectedConversionAsStr, num.Int128From64(one.Int64).String(), indexFmt, i)
+			c.Equal(one.ExpectedConversionAsStr, num.Int128From64(one.Int64).String(), indexFmt, i)
 		}
 	}
 }
 
 func TestInt128FromBigInt(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
-		check.Equal(t, one.ExpectedConversionAsStr, num.Int128FromBigInt(bigIntFromStr(t, one, i)).String(), indexFmt, i)
+		c.Equal(one.ExpectedConversionAsStr, num.Int128FromBigInt(bigIntFromStr(t, one, i)).String(), indexFmt, i)
 	}
 }
 
 func TestInt128AsBigInt(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt128 {
-			check.Equal(t, one.ValueAsStr, num.Int128FromBigInt(bigIntFromStr(t, one, i)).AsBigInt().String(), indexFmt, i)
+			c.Equal(one.ValueAsStr, num.Int128FromBigInt(bigIntFromStr(t, one, i)).AsBigInt().String(), indexFmt, i)
 		}
 	}
 }
 
 func TestInt128AsInt64(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt64 {
-			check.Equal(t, one.Int64, num.Int128From64(one.Int64).AsInt64(), indexFmt, i)
+			c.Equal(one.Int64, num.Int128From64(one.Int64).AsInt64(), indexFmt, i)
 		}
 	}
 }
 
 func TestInt128IsInt64(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt128 {
-			check.Equal(t, one.IsInt64, num.Int128FromBigInt(bigIntFromStr(t, one, i)).IsInt64(), indexFmt, i)
+			c.Equal(one.IsInt64, num.Int128FromBigInt(bigIntFromStr(t, one, i)).IsInt64(), indexFmt, i)
 		}
 	}
 }
 
 func TestInt128Sign(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt128 {
 			var sign int
@@ -176,249 +183,265 @@ func TestInt128Sign(t *testing.T) {
 			default:
 				sign = 1
 			}
-			check.Equal(t, sign, num.Int128FromBigInt(bigIntFromStr(t, one, i)).Sign(), indexFmt, i)
+			c.Equal(sign, num.Int128FromBigInt(bigIntFromStr(t, one, i)).Sign(), indexFmt, i)
 		}
 	}
 }
 
 func TestInt128Inc(t *testing.T) {
+	c := check.New(t)
 	big1 := new(big.Int).SetInt64(1)
 	for i, one := range table {
 		if one.IsInt128 {
 			b := bigIntFromStr(t, one, i)
 			v := num.Int128FromBigInt(b)
 			if v == num.MaxInt128 {
-				check.Equal(t, num.MinInt128, v.Inc(), indexFmt, i)
+				c.Equal(num.MinInt128, v.Inc(), indexFmt, i)
 			} else {
 				b.Add(b, big1)
-				check.Equal(t, b.String(), v.Inc().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Inc().AsBigInt().String(), indexFmt, i)
 			}
 		}
 	}
 }
 
 func TestInt128Dec(t *testing.T) {
+	c := check.New(t)
 	big1 := new(big.Int).SetInt64(1)
 	for i, one := range table {
 		if one.IsInt128 {
 			b := bigIntFromStr(t, one, i)
 			v := num.Int128FromBigInt(b)
 			if v == num.MinInt128 {
-				check.Equal(t, num.MaxInt128, v.Dec(), indexFmt, i)
+				c.Equal(num.MaxInt128, v.Dec(), indexFmt, i)
 			} else {
 				b.Sub(b, big1)
-				check.Equal(t, b.String(), v.Dec().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Dec().AsBigInt().String(), indexFmt, i)
 			}
 		}
 	}
 }
 
 func TestInt128Add(t *testing.T) {
-	check.Equal(t, num.Int128From64(0), num.Int128From64(0).Add(num.Int128From64(0)))
-	check.Equal(t, num.Int128From64(-3), num.Int128From64(-2).Add(num.Int128From64(-1)))
-	check.Equal(t, num.Int128From64(0), num.Int128From64(1).Add(num.Int128From64(-1)))
-	check.Equal(t, num.Int128From64(-1), num.Int128From64(-2).Add(num.Int128From64(1)))
-	check.Equal(t, num.Int128From64(120), num.Int128From64(22).Add(num.Int128From64(98)))
-	check.Equal(t, num.Int128FromComponents(1, 0), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Add(num.Int128From64(1)))
-	check.Equal(t, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(1, 0).Add(num.Int128From64(-1)))
-	check.Equal(t, num.MinInt128, num.MaxInt128.Add(num.Int128From64(1)))
+	c := check.New(t)
+	c.Equal(num.Int128From64(0), num.Int128From64(0).Add(num.Int128From64(0)))
+	c.Equal(num.Int128From64(-3), num.Int128From64(-2).Add(num.Int128From64(-1)))
+	c.Equal(num.Int128From64(0), num.Int128From64(1).Add(num.Int128From64(-1)))
+	c.Equal(num.Int128From64(-1), num.Int128From64(-2).Add(num.Int128From64(1)))
+	c.Equal(num.Int128From64(120), num.Int128From64(22).Add(num.Int128From64(98)))
+	c.Equal(num.Int128FromComponents(1, 0), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Add(num.Int128From64(1)))
+	c.Equal(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(1, 0).Add(num.Int128From64(-1)))
+	c.Equal(num.MinInt128, num.MaxInt128.Add(num.Int128From64(1)))
 }
 
 func TestInt128Sub(t *testing.T) {
-	check.Equal(t, num.Int128From64(0), num.Int128From64(0).Sub(num.Int128From64(0)))
-	check.Equal(t, num.Int128From64(-1), num.Int128From64(-2).Sub(num.Int128From64(-1)))
-	check.Equal(t, num.Int128From64(-1), num.Int128From64(1).Sub(num.Int128From64(2)))
-	check.Equal(t, num.Int128From64(1), num.Int128From64(-1).Sub(num.Int128From64(-2)))
-	check.Equal(t, num.Int128From64(2), num.Int128From64(1).Sub(num.Int128From64(-1)))
-	check.Equal(t, num.Int128From64(-2), num.Int128From64(-1).Sub(num.Int128From64(1)))
-	check.Equal(t, num.Int128From64(-3), num.Int128From64(-2).Sub(num.Int128From64(1)))
-	check.Equal(t, num.Int128From64(-76), num.Int128From64(22).Sub(num.Int128From64(98)))
-	check.Equal(t, num.Int128FromComponents(1, 0), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Sub(num.Int128From64(-1)))
-	check.Equal(t, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(1, 0).Sub(num.Int128From64(1)))
-	check.Equal(t, num.MaxInt128, num.MinInt128.Sub(num.Int128From64(1)))
-	check.Equal(t, num.MinInt128, num.MaxInt128.Sub(num.Int128From64(-1)))
-	check.Equal(t, num.Int128FromComponents(0x8000000000000000, 1), num.MinInt128.Sub(num.Int128From64(-1)))
+	c := check.New(t)
+	c.Equal(num.Int128From64(0), num.Int128From64(0).Sub(num.Int128From64(0)))
+	c.Equal(num.Int128From64(-1), num.Int128From64(-2).Sub(num.Int128From64(-1)))
+	c.Equal(num.Int128From64(-1), num.Int128From64(1).Sub(num.Int128From64(2)))
+	c.Equal(num.Int128From64(1), num.Int128From64(-1).Sub(num.Int128From64(-2)))
+	c.Equal(num.Int128From64(2), num.Int128From64(1).Sub(num.Int128From64(-1)))
+	c.Equal(num.Int128From64(-2), num.Int128From64(-1).Sub(num.Int128From64(1)))
+	c.Equal(num.Int128From64(-3), num.Int128From64(-2).Sub(num.Int128From64(1)))
+	c.Equal(num.Int128From64(-76), num.Int128From64(22).Sub(num.Int128From64(98)))
+	c.Equal(num.Int128FromComponents(1, 0), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Sub(num.Int128From64(-1)))
+	c.Equal(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(1, 0).Sub(num.Int128From64(1)))
+	c.Equal(num.MaxInt128, num.MinInt128.Sub(num.Int128From64(1)))
+	c.Equal(num.MinInt128, num.MaxInt128.Sub(num.Int128From64(-1)))
+	c.Equal(num.Int128FromComponents(0x8000000000000000, 1), num.MinInt128.Sub(num.Int128From64(-1)))
 }
 
 func TestInt128Neg(t *testing.T) {
-	check.Equal(t, num.Int128From64(0), num.Int128From64(0).Neg())
-	check.Equal(t, num.Int128From64(1), num.Int128From64(-1).Neg())
-	check.Equal(t, num.Int128From64(-1), num.Int128From64(1).Neg())
-	check.Equal(t, num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 1), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Neg())
-	check.Equal(t, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 1).Neg())
-	check.Equal(t, num.Int128FromComponents(0x8000000000000000, 1), num.MaxInt128.Neg())
-	check.Equal(t, num.MinInt128, num.MinInt128.Neg())
-	check.Equal(t, num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0), num.Int128FromComponents(1, 0).Neg())
+	c := check.New(t)
+	c.Equal(num.Int128From64(0), num.Int128From64(0).Neg())
+	c.Equal(num.Int128From64(1), num.Int128From64(-1).Neg())
+	c.Equal(num.Int128From64(-1), num.Int128From64(1).Neg())
+	c.Equal(num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 1), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Neg())
+	c.Equal(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 1).Neg())
+	c.Equal(num.Int128FromComponents(0x8000000000000000, 1), num.MaxInt128.Neg())
+	c.Equal(num.MinInt128, num.MinInt128.Neg())
+	c.Equal(num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0), num.Int128FromComponents(1, 0).Neg())
 }
 
 func TestInt128Abs(t *testing.T) {
-	check.Equal(t, num.Int128From64(0), num.Int128From64(0).Abs())
-	check.Equal(t, num.Int128From64(1), num.Int128From64(-1).Abs())
-	check.Equal(t, num.Int128From64(1), num.Int128From64(1).Abs())
-	check.Equal(t, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Abs())
-	check.Equal(t, num.Int128FromComponents(1, 0), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0).Abs())
-	check.Equal(t, num.MaxInt128, num.MaxInt128.Abs())
-	check.Equal(t, num.MinInt128, num.MinInt128.Abs())
+	c := check.New(t)
+	c.Equal(num.Int128From64(0), num.Int128From64(0).Abs())
+	c.Equal(num.Int128From64(1), num.Int128From64(-1).Abs())
+	c.Equal(num.Int128From64(1), num.Int128From64(1).Abs())
+	c.Equal(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Abs())
+	c.Equal(num.Int128FromComponents(1, 0), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0).Abs())
+	c.Equal(num.MaxInt128, num.MaxInt128.Abs())
+	c.Equal(num.MinInt128, num.MinInt128.Abs())
 }
 
 func TestInt128AbsUint128(t *testing.T) {
-	check.Equal(t, num.Uint128From64(0), num.Int128From64(0).AbsUint128())
-	check.Equal(t, num.Uint128From64(1), num.Int128From64(-1).AbsUint128())
-	check.Equal(t, num.Uint128From64(1), num.Int128From64(1).AbsUint128())
-	check.Equal(t, num.Uint128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).AbsUint128())
-	check.Equal(t, num.Uint128FromComponents(1, 0), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0).AbsUint128())
-	check.Equal(t, num.Uint128FromComponents(0x7FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF), num.MaxInt128.AbsUint128())
-	check.Equal(t, num.Uint128FromComponents(0x8000000000000000, 0), num.MinInt128.AbsUint128())
+	c := check.New(t)
+	c.Equal(num.Uint128From64(0), num.Int128From64(0).AbsUint128())
+	c.Equal(num.Uint128From64(1), num.Int128From64(-1).AbsUint128())
+	c.Equal(num.Uint128From64(1), num.Int128From64(1).AbsUint128())
+	c.Equal(num.Uint128FromComponents(0, 0xFFFFFFFFFFFFFFFF), num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).AbsUint128())
+	c.Equal(num.Uint128FromComponents(1, 0), num.Int128FromComponents(0xFFFFFFFFFFFFFFFF, 0).AbsUint128())
+	c.Equal(num.Uint128FromComponents(0x7FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF), num.MaxInt128.AbsUint128())
+	c.Equal(num.Uint128FromComponents(0x8000000000000000, 0), num.MinInt128.AbsUint128())
 }
 
 func TestInt128Cmp(t *testing.T) {
-	check.Equal(t, 0, num.Int128From64(0).Cmp(num.Int128From64(0)))
-	check.Equal(t, -1, num.Int128From64(-2).Cmp(num.Int128From64(-1)))
-	check.Equal(t, -1, num.Int128From64(1).Cmp(num.Int128From64(2)))
-	check.Equal(t, 1, num.Int128From64(-1).Cmp(num.Int128From64(-2)))
-	check.Equal(t, 1, num.Int128From64(1).Cmp(num.Int128From64(-1)))
-	check.Equal(t, -1, num.Int128From64(-1).Cmp(num.Int128From64(1)))
-	check.Equal(t, -1, num.Int128From64(-2).Cmp(num.Int128From64(1)))
-	check.Equal(t, -1, num.Int128From64(22).Cmp(num.Int128From64(98)))
-	check.Equal(t, 1, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Cmp(num.Int128From64(-1)))
-	check.Equal(t, 1, num.Int128FromComponents(1, 0).Cmp(num.Int128From64(1)))
-	check.Equal(t, -1, num.MinInt128.Cmp(num.Int128From64(1)))
-	check.Equal(t, 1, num.MaxInt128.Cmp(num.Int128From64(-1)))
-	check.Equal(t, -1, num.MinInt128.Cmp(num.MaxInt128))
-	check.Equal(t, 1, num.MaxInt128.Cmp(num.MinInt128))
-	check.Equal(t, 0, num.MaxInt128.Cmp(num.MaxInt128)) //nolint:gocritic // Yes, we meant to compare the same value
-	check.Equal(t, 0, num.MinInt128.Cmp(num.MinInt128)) //nolint:gocritic // Yes, we meant to compare the same value
+	c := check.New(t)
+	c.Equal(0, num.Int128From64(0).Cmp(num.Int128From64(0)))
+	c.Equal(-1, num.Int128From64(-2).Cmp(num.Int128From64(-1)))
+	c.Equal(-1, num.Int128From64(1).Cmp(num.Int128From64(2)))
+	c.Equal(1, num.Int128From64(-1).Cmp(num.Int128From64(-2)))
+	c.Equal(1, num.Int128From64(1).Cmp(num.Int128From64(-1)))
+	c.Equal(-1, num.Int128From64(-1).Cmp(num.Int128From64(1)))
+	c.Equal(-1, num.Int128From64(-2).Cmp(num.Int128From64(1)))
+	c.Equal(-1, num.Int128From64(22).Cmp(num.Int128From64(98)))
+	c.Equal(1, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).Cmp(num.Int128From64(-1)))
+	c.Equal(1, num.Int128FromComponents(1, 0).Cmp(num.Int128From64(1)))
+	c.Equal(-1, num.MinInt128.Cmp(num.Int128From64(1)))
+	c.Equal(1, num.MaxInt128.Cmp(num.Int128From64(-1)))
+	c.Equal(-1, num.MinInt128.Cmp(num.MaxInt128))
+	c.Equal(1, num.MaxInt128.Cmp(num.MinInt128))
+	c.Equal(0, num.MaxInt128.Cmp(num.MaxInt128)) //nolint:gocritic // Yes, we meant to compare the same value
+	c.Equal(0, num.MinInt128.Cmp(num.MinInt128)) //nolint:gocritic // Yes, we meant to compare the same value
 }
 
 func TestInt128GreaterThan(t *testing.T) {
-	check.Equal(t, false, num.Int128From64(0).GreaterThan(num.Int128From64(0)))
-	check.Equal(t, false, num.Int128From64(-2).GreaterThan(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128From64(1).GreaterThan(num.Int128From64(2)))
-	check.Equal(t, false, num.Int128From64(-1).GreaterThan(num.Int128From64(1)))
-	check.Equal(t, false, num.Int128From64(-2).GreaterThan(num.Int128From64(1)))
-	check.Equal(t, false, num.Int128From64(22).GreaterThan(num.Int128From64(98)))
-	check.Equal(t, false, num.MinInt128.GreaterThan(num.Int128From64(1)))
-	check.Equal(t, false, num.MinInt128.GreaterThan(num.MaxInt128))
-	check.Equal(t, false, num.MaxInt128.GreaterThan(num.MaxInt128))
-	check.Equal(t, false, num.MinInt128.GreaterThan(num.MinInt128))
-	check.Equal(t, true, num.Int128From64(-1).GreaterThan(num.Int128From64(-2)))
-	check.Equal(t, true, num.Int128From64(1).GreaterThan(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).GreaterThan(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128FromComponents(1, 0).GreaterThan(num.Int128From64(1)))
-	check.Equal(t, true, num.MaxInt128.GreaterThan(num.Int128From64(-1)))
-	check.Equal(t, true, num.MaxInt128.GreaterThan(num.MinInt128))
+	c := check.New(t)
+	c.False(num.Int128From64(0).GreaterThan(num.Int128From64(0)))
+	c.False(num.Int128From64(-2).GreaterThan(num.Int128From64(-1)))
+	c.False(num.Int128From64(1).GreaterThan(num.Int128From64(2)))
+	c.False(num.Int128From64(-1).GreaterThan(num.Int128From64(1)))
+	c.False(num.Int128From64(-2).GreaterThan(num.Int128From64(1)))
+	c.False(num.Int128From64(22).GreaterThan(num.Int128From64(98)))
+	c.False(num.MinInt128.GreaterThan(num.Int128From64(1)))
+	c.False(num.MinInt128.GreaterThan(num.MaxInt128))
+	c.False(num.MaxInt128.GreaterThan(num.MaxInt128))
+	c.False(num.MinInt128.GreaterThan(num.MinInt128))
+	c.True(num.Int128From64(-1).GreaterThan(num.Int128From64(-2)))
+	c.True(num.Int128From64(1).GreaterThan(num.Int128From64(-1)))
+	c.True(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).GreaterThan(num.Int128From64(-1)))
+	c.True(num.Int128FromComponents(1, 0).GreaterThan(num.Int128From64(1)))
+	c.True(num.MaxInt128.GreaterThan(num.Int128From64(-1)))
+	c.True(num.MaxInt128.GreaterThan(num.MinInt128))
 }
 
 func TestInt128GreaterOrEqualTo(t *testing.T) {
-	check.Equal(t, true, num.Int128From64(0).GreaterThanOrEqual(num.Int128From64(0)))
-	check.Equal(t, false, num.Int128From64(-2).GreaterThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128From64(1).GreaterThanOrEqual(num.Int128From64(2)))
-	check.Equal(t, false, num.Int128From64(-1).GreaterThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, false, num.Int128From64(-2).GreaterThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, false, num.Int128From64(22).GreaterThanOrEqual(num.Int128From64(98)))
-	check.Equal(t, false, num.MinInt128.GreaterThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, false, num.MinInt128.GreaterThanOrEqual(num.MaxInt128))
-	check.Equal(t, true, num.MaxInt128.GreaterThanOrEqual(num.MaxInt128))
-	check.Equal(t, true, num.MinInt128.GreaterThanOrEqual(num.MinInt128))
-	check.Equal(t, true, num.Int128From64(-1).GreaterThanOrEqual(num.Int128From64(-2)))
-	check.Equal(t, true, num.Int128From64(1).GreaterThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).GreaterThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128FromComponents(1, 0).GreaterThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, true, num.MaxInt128.GreaterThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, true, num.MaxInt128.GreaterThanOrEqual(num.MinInt128))
+	c := check.New(t)
+	c.True(num.Int128From64(0).GreaterThanOrEqual(num.Int128From64(0)))
+	c.False(num.Int128From64(-2).GreaterThanOrEqual(num.Int128From64(-1)))
+	c.False(num.Int128From64(1).GreaterThanOrEqual(num.Int128From64(2)))
+	c.False(num.Int128From64(-1).GreaterThanOrEqual(num.Int128From64(1)))
+	c.False(num.Int128From64(-2).GreaterThanOrEqual(num.Int128From64(1)))
+	c.False(num.Int128From64(22).GreaterThanOrEqual(num.Int128From64(98)))
+	c.False(num.MinInt128.GreaterThanOrEqual(num.Int128From64(1)))
+	c.False(num.MinInt128.GreaterThanOrEqual(num.MaxInt128))
+	c.True(num.MaxInt128.GreaterThanOrEqual(num.MaxInt128))
+	c.True(num.MinInt128.GreaterThanOrEqual(num.MinInt128))
+	c.True(num.Int128From64(-1).GreaterThanOrEqual(num.Int128From64(-2)))
+	c.True(num.Int128From64(1).GreaterThanOrEqual(num.Int128From64(-1)))
+	c.True(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).GreaterThanOrEqual(num.Int128From64(-1)))
+	c.True(num.Int128FromComponents(1, 0).GreaterThanOrEqual(num.Int128From64(1)))
+	c.True(num.MaxInt128.GreaterThanOrEqual(num.Int128From64(-1)))
+	c.True(num.MaxInt128.GreaterThanOrEqual(num.MinInt128))
 }
 
 func TestInt128LessThan(t *testing.T) {
-	check.Equal(t, false, num.Int128From64(0).LessThan(num.Int128From64(0)))
-	check.Equal(t, true, num.Int128From64(-2).LessThan(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128From64(1).LessThan(num.Int128From64(2)))
-	check.Equal(t, true, num.Int128From64(-1).LessThan(num.Int128From64(1)))
-	check.Equal(t, true, num.Int128From64(-2).LessThan(num.Int128From64(1)))
-	check.Equal(t, true, num.Int128From64(22).LessThan(num.Int128From64(98)))
-	check.Equal(t, true, num.MinInt128.LessThan(num.Int128From64(1)))
-	check.Equal(t, true, num.MinInt128.LessThan(num.MaxInt128))
-	check.Equal(t, false, num.MaxInt128.LessThan(num.MaxInt128))
-	check.Equal(t, false, num.MinInt128.LessThan(num.MinInt128))
-	check.Equal(t, false, num.Int128From64(-1).LessThan(num.Int128From64(-2)))
-	check.Equal(t, false, num.Int128From64(1).LessThan(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).LessThan(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128FromComponents(1, 0).LessThan(num.Int128From64(1)))
-	check.Equal(t, false, num.MaxInt128.LessThan(num.Int128From64(-1)))
-	check.Equal(t, false, num.MaxInt128.LessThan(num.MinInt128))
+	c := check.New(t)
+	c.False(num.Int128From64(0).LessThan(num.Int128From64(0)))
+	c.True(num.Int128From64(-2).LessThan(num.Int128From64(-1)))
+	c.True(num.Int128From64(1).LessThan(num.Int128From64(2)))
+	c.True(num.Int128From64(-1).LessThan(num.Int128From64(1)))
+	c.True(num.Int128From64(-2).LessThan(num.Int128From64(1)))
+	c.True(num.Int128From64(22).LessThan(num.Int128From64(98)))
+	c.True(num.MinInt128.LessThan(num.Int128From64(1)))
+	c.True(num.MinInt128.LessThan(num.MaxInt128))
+	c.False(num.MaxInt128.LessThan(num.MaxInt128))
+	c.False(num.MinInt128.LessThan(num.MinInt128))
+	c.False(num.Int128From64(-1).LessThan(num.Int128From64(-2)))
+	c.False(num.Int128From64(1).LessThan(num.Int128From64(-1)))
+	c.False(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).LessThan(num.Int128From64(-1)))
+	c.False(num.Int128FromComponents(1, 0).LessThan(num.Int128From64(1)))
+	c.False(num.MaxInt128.LessThan(num.Int128From64(-1)))
+	c.False(num.MaxInt128.LessThan(num.MinInt128))
 }
 
 func TestInt128LessOrEqualTo(t *testing.T) {
-	check.Equal(t, true, num.Int128From64(0).LessThanOrEqual(num.Int128From64(0)))
-	check.Equal(t, true, num.Int128From64(-2).LessThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, true, num.Int128From64(1).LessThanOrEqual(num.Int128From64(2)))
-	check.Equal(t, true, num.Int128From64(-1).LessThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, true, num.Int128From64(-2).LessThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, true, num.Int128From64(22).LessThanOrEqual(num.Int128From64(98)))
-	check.Equal(t, true, num.MinInt128.LessThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, true, num.MinInt128.LessThanOrEqual(num.MaxInt128))
-	check.Equal(t, true, num.MaxInt128.LessThanOrEqual(num.MaxInt128))
-	check.Equal(t, true, num.MinInt128.LessThanOrEqual(num.MinInt128))
-	check.Equal(t, false, num.Int128From64(-1).LessThanOrEqual(num.Int128From64(-2)))
-	check.Equal(t, false, num.Int128From64(1).LessThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).LessThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, false, num.Int128FromComponents(1, 0).LessThanOrEqual(num.Int128From64(1)))
-	check.Equal(t, false, num.MaxInt128.LessThanOrEqual(num.Int128From64(-1)))
-	check.Equal(t, false, num.MaxInt128.LessThanOrEqual(num.MinInt128))
+	c := check.New(t)
+	c.True(num.Int128From64(0).LessThanOrEqual(num.Int128From64(0)))
+	c.True(num.Int128From64(-2).LessThanOrEqual(num.Int128From64(-1)))
+	c.True(num.Int128From64(1).LessThanOrEqual(num.Int128From64(2)))
+	c.True(num.Int128From64(-1).LessThanOrEqual(num.Int128From64(1)))
+	c.True(num.Int128From64(-2).LessThanOrEqual(num.Int128From64(1)))
+	c.True(num.Int128From64(22).LessThanOrEqual(num.Int128From64(98)))
+	c.True(num.MinInt128.LessThanOrEqual(num.Int128From64(1)))
+	c.True(num.MinInt128.LessThanOrEqual(num.MaxInt128))
+	c.True(num.MaxInt128.LessThanOrEqual(num.MaxInt128))
+	c.True(num.MinInt128.LessThanOrEqual(num.MinInt128))
+	c.False(num.Int128From64(-1).LessThanOrEqual(num.Int128From64(-2)))
+	c.False(num.Int128From64(1).LessThanOrEqual(num.Int128From64(-1)))
+	c.False(num.Int128FromComponents(0, 0xFFFFFFFFFFFFFFFF).LessThanOrEqual(num.Int128From64(-1)))
+	c.False(num.Int128FromComponents(1, 0).LessThanOrEqual(num.Int128From64(1)))
+	c.False(num.MaxInt128.LessThanOrEqual(num.Int128From64(-1)))
+	c.False(num.MaxInt128.LessThanOrEqual(num.MinInt128))
 }
 
 func TestInt128Mul(t *testing.T) {
+	c := check.New(t)
 	bigMax64 := new(big.Int).SetInt64(math.MaxInt64)
 	bigMin64 := new(big.Int).SetInt64(math.MinInt64)
-	check.Equal(t, num.Int128From64(0), num.Int128From64(0).Mul(num.Int128From64(0)))
-	check.Equal(t, num.Int128From64(4), num.Int128From64(-2).Mul(num.Int128From64(-2)))
-	check.Equal(t, num.Int128From64(-4), num.Int128From64(-2).Mul(num.Int128From64(2)))
-	check.Equal(t, num.Int128From64(0), num.Int128From64(1).Mul(num.Int128From64(0)))
-	check.Equal(t, num.Int128From64(1176), num.Int128From64(12).Mul(num.Int128From64(98)))
-	check.Equal(t, num.Int128FromBigInt(new(big.Int).Mul(bigMax64, bigMax64)), num.Int128From64(math.MaxInt64).Mul(num.Int128From64(math.MaxInt64)))
-	check.Equal(t, num.Int128FromBigInt(new(big.Int).Mul(bigMin64, bigMin64)), num.Int128From64(math.MinInt64).Mul(num.Int128From64(math.MinInt64)))
-	check.Equal(t, num.Int128FromBigInt(new(big.Int).Mul(bigMin64, bigMax64)), num.Int128From64(math.MinInt64).Mul(num.Int128From64(math.MaxInt64)))
+	c.Equal(num.Int128From64(0), num.Int128From64(0).Mul(num.Int128From64(0)))
+	c.Equal(num.Int128From64(4), num.Int128From64(-2).Mul(num.Int128From64(-2)))
+	c.Equal(num.Int128From64(-4), num.Int128From64(-2).Mul(num.Int128From64(2)))
+	c.Equal(num.Int128From64(0), num.Int128From64(1).Mul(num.Int128From64(0)))
+	c.Equal(num.Int128From64(1176), num.Int128From64(12).Mul(num.Int128From64(98)))
+	c.Equal(num.Int128FromBigInt(new(big.Int).Mul(bigMax64, bigMax64)), num.Int128From64(math.MaxInt64).Mul(num.Int128From64(math.MaxInt64)))
+	c.Equal(num.Int128FromBigInt(new(big.Int).Mul(bigMin64, bigMin64)), num.Int128From64(math.MinInt64).Mul(num.Int128From64(math.MinInt64)))
+	c.Equal(num.Int128FromBigInt(new(big.Int).Mul(bigMin64, bigMax64)), num.Int128From64(math.MinInt64).Mul(num.Int128From64(math.MaxInt64)))
 }
 
 func TestInt128Div(t *testing.T) {
 	left, _ := new(big.Int).SetString("-170141183460469231731687303715884105728", 10)
 	result, _ := new(big.Int).SetString("-17014118346046923173168730371588410", 10)
-	check.Equal(t, num.Int128From64(0), num.Int128From64(1).Div(num.Int128From64(2)))
-	check.Equal(t, num.Int128From64(3), num.Int128From64(11).Div(num.Int128From64(3)))
-	check.Equal(t, num.Int128From64(4), num.Int128From64(12).Div(num.Int128From64(3)))
-	check.Equal(t, num.Int128From64(-3), num.Int128From64(11).Div(num.Int128From64(-3)))
-	check.Equal(t, num.Int128From64(-4), num.Int128From64(12).Div(num.Int128From64(-3)))
-	check.Equal(t, num.Int128From64(1), num.Int128From64(10).Div(num.Int128From64(10)))
-	check.Equal(t, num.Int128From64(-1), num.Int128From64(10).Div(num.Int128From64(-10)))
-	check.Equal(t, num.Int128From64(1), num.Int128FromComponents(1, 0).Div(num.Int128FromComponents(1, 0)))
-	check.Equal(t, num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(123, 0)))
-	check.Equal(t, num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(122, 0)))
-	check.Equal(t, num.Int128FromBigInt(result), num.Int128FromBigInt(left).Div(num.Int128From64(10000)))
+	c := check.New(t)
+	c.Equal(num.Int128From64(0), num.Int128From64(1).Div(num.Int128From64(2)))
+	c.Equal(num.Int128From64(3), num.Int128From64(11).Div(num.Int128From64(3)))
+	c.Equal(num.Int128From64(4), num.Int128From64(12).Div(num.Int128From64(3)))
+	c.Equal(num.Int128From64(-3), num.Int128From64(11).Div(num.Int128From64(-3)))
+	c.Equal(num.Int128From64(-4), num.Int128From64(12).Div(num.Int128From64(-3)))
+	c.Equal(num.Int128From64(1), num.Int128From64(10).Div(num.Int128From64(10)))
+	c.Equal(num.Int128From64(-1), num.Int128From64(10).Div(num.Int128From64(-10)))
+	c.Equal(num.Int128From64(1), num.Int128FromComponents(1, 0).Div(num.Int128FromComponents(1, 0)))
+	c.Equal(num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(123, 0)))
+	c.Equal(num.Int128From64(2), num.Int128FromComponents(246, 0).Div(num.Int128FromComponents(122, 0)))
+	c.Equal(num.Int128FromBigInt(result), num.Int128FromBigInt(left).Div(num.Int128From64(10000)))
 }
 
 func TestInt128Json(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if !one.IsInt128 {
 			continue
 		}
 		in := num.Int128FromStringNoCheck(one.ValueAsStr)
 		data, err := json.Marshal(in)
-		check.NoError(t, err, indexFmt, i)
+		c.NoError(err, indexFmt, i)
 		var out num.Int128
-		check.NoError(t, json.Unmarshal(data, &out), indexFmt, i)
-		check.Equal(t, in, out, indexFmt, i)
+		c.NoError(json.Unmarshal(data, &out), indexFmt, i)
+		c.Equal(in, out, indexFmt, i)
 	}
 }
 
 func TestInt128Yaml(t *testing.T) {
+	c := check.New(t)
 	for i, one := range table {
 		if !one.IsInt128 {
 			continue
 		}
 		in := num.Int128FromStringNoCheck(one.ValueAsStr)
 		data, err := yaml.Marshal(in)
-		check.NoError(t, err, indexFmt, i)
+		c.NoError(err, indexFmt, i)
 		var out num.Int128
-		check.NoError(t, yaml.Unmarshal(data, &out), indexFmt, i)
-		check.Equal(t, in, out, indexFmt, i)
+		c.NoError(yaml.Unmarshal(data, &out), indexFmt, i)
+		c.Equal(in, out, indexFmt, i)
 	}
 }

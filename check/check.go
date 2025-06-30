@@ -20,23 +20,33 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
+// Checker provides some simple helpers for testing.
+type Checker struct {
+	*testing.T
+}
+
+// New creates a new Checker from the testing.T.
+func New(t *testing.T) Checker {
+	return Checker{T: t}
+}
+
 // Equal compares two values for equality.
-func Equal(t *testing.T, expected, actual any, msgAndArgs ...any) {
-	t.Helper()
-	if !equal(expected, actual) {
-		errMsg(t, fmt.Sprintf("Expected %v, got %v", expected, actual), msgAndArgs...)
+func (c Checker) Equal(expected, actual any, msgAndArgs ...any) {
+	c.Helper()
+	if !c.equal(expected, actual) {
+		c.errMsg(fmt.Sprintf("Expected %v, got %v", expected, actual), msgAndArgs...)
 	}
 }
 
 // NotEqual compares two values for inequality.
-func NotEqual(t *testing.T, expected, actual any, msgAndArgs ...any) {
-	t.Helper()
-	if equal(expected, actual) {
-		errMsg(t, fmt.Sprintf("Expected %v to not be %v", expected, actual), msgAndArgs...)
+func (c Checker) NotEqual(expected, actual any, msgAndArgs ...any) {
+	c.Helper()
+	if c.equal(expected, actual) {
+		c.errMsg(fmt.Sprintf("Expected %v to not be %v", expected, actual), msgAndArgs...)
 	}
 }
 
-func equal(expected, actual any) bool {
+func (c Checker) equal(expected, actual any) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
@@ -55,93 +65,93 @@ func equal(expected, actual any) bool {
 }
 
 // Nil expects value to be nil.
-func Nil(t *testing.T, value any, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) Nil(value any, msgAndArgs ...any) {
+	c.Helper()
 	if !xreflect.IsNil(value) {
-		errMsg(t, fmt.Sprintf("Expected nil, instead got %v", value), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected nil, instead got %v", value), msgAndArgs...)
 	}
 }
 
 // NotNil expects value to not be nil.
-func NotNil(t *testing.T, value any, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) NotNil(value any, msgAndArgs ...any) {
+	c.Helper()
 	if xreflect.IsNil(value) {
-		errMsg(t, "Expected a non-nil value", msgAndArgs...)
+		c.errMsg("Expected a non-nil value", msgAndArgs...)
 	}
 }
 
 // True expects value to be true.
-func True(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) True(value bool, msgAndArgs ...any) {
+	c.Helper()
 	if !value {
-		errMsg(t, "Expected true", msgAndArgs...)
+		c.errMsg("Expected true", msgAndArgs...)
 	}
 }
 
 // False expects value to be false.
-func False(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) False(value bool, msgAndArgs ...any) {
+	c.Helper()
 	if value {
-		errMsg(t, "Expected false", msgAndArgs...)
+		c.errMsg("Expected false", msgAndArgs...)
 	}
 }
 
 // Contains expects s to contain substr.
-func Contains(t *testing.T, s, substr string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) Contains(s, substr string, msgAndArgs ...any) {
+	c.Helper()
 	if !strings.Contains(s, substr) {
-		errMsg(t, fmt.Sprintf("Expected string %q to contain %q", s, substr), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected string %q to contain %q", s, substr), msgAndArgs...)
 	}
 }
 
 // NotContains expects s not to contain substr.
-func NotContains(t *testing.T, s, substr string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) NotContains(s, substr string, msgAndArgs ...any) {
+	c.Helper()
 	if strings.Contains(s, substr) {
-		errMsg(t, fmt.Sprintf("Expected string %q not to contain %q", s, substr), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected string %q not to contain %q", s, substr), msgAndArgs...)
 	}
 }
 
 // NoError expects err to be nil.
-func NoError(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) NoError(err error, msgAndArgs ...any) {
+	c.Helper()
 	if err != nil {
-		errMsg(t, fmt.Sprintf("Expected no error, got %v", err), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected no error, got %v", err), msgAndArgs...)
 	}
 }
 
-// Error expects err to not be nil.
-func Error(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+// HasError expects err to not be nil.
+func (c Checker) HasError(err error, msgAndArgs ...any) {
+	c.Helper()
 	if err == nil {
-		errMsg(t, "Expected an error", msgAndArgs...)
+		c.errMsg("Expected an error", msgAndArgs...)
 	}
 }
 
 // Panics expects f to panic when called.
-func Panics(t *testing.T, f func(), msgAndArgs ...any) {
-	t.Helper()
-	if err := doesPanic(f); err == nil {
-		errMsg(t, "Expected panic, but got none", msgAndArgs...)
+func (c Checker) Panics(f func(), msgAndArgs ...any) {
+	c.Helper()
+	if err := c.doesPanic(f); err == nil {
+		c.errMsg("Expected panic, but got none", msgAndArgs...)
 	}
 }
 
 // NotPanics expects no panic when f is called.
-func NotPanics(t *testing.T, f func(), msgAndArgs ...any) {
-	t.Helper()
-	if err := doesPanic(f); err != nil {
-		errMsg(t, fmt.Sprintf("Expected no panic, but does: %v", err), msgAndArgs...)
+func (c Checker) NotPanics(f func(), msgAndArgs ...any) {
+	c.Helper()
+	if err := c.doesPanic(f); err != nil {
+		c.errMsg(fmt.Sprintf("Expected no panic, but does: %v", err), msgAndArgs...)
 	}
 }
 
-func doesPanic(f func()) (panicErr error) {
+func (c Checker) doesPanic(f func()) (panicErr error) {
 	defer xos.PanicRecovery(func(err error) { panicErr = err })
 	f()
 	return
 }
 
-func errMsg(t *testing.T, prefix string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) errMsg(prefix string, msgAndArgs ...any) {
+	c.Helper()
 	var buffer strings.Builder
 	buffer.WriteString(prefix)
 	switch len(msgAndArgs) {
@@ -158,5 +168,5 @@ func errMsg(t *testing.T, prefix string, msgAndArgs ...any) {
 			}
 		}
 	}
-	t.Error(buffer.String())
+	c.Error(buffer.String())
 }

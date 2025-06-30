@@ -27,11 +27,12 @@ func TestLoadSaveJSON(t *testing.T) {
 		Count: 22,
 	}
 	f, err := os.CreateTemp("", "json_test")
-	check.NoError(t, err)
-	check.NoError(t, f.Close())
-	check.NoError(t, fs.SaveJSONWithMode(f.Name(), value, false, 0o600))
+	c := check.New(t)
+	c.NoError(err)
+	c.NoError(f.Close())
+	c.NoError(fs.SaveJSONWithMode(f.Name(), value, false, 0o600))
 	var value2 data
-	check.NoError(t, fs.LoadJSON(f.Name(), &value2))
-	check.NoError(t, os.Remove(f.Name()))
-	check.Equal(t, value, &value2)
+	c.NoError(fs.LoadJSON(f.Name(), &value2))
+	c.NoError(os.Remove(f.Name()))
+	c.Equal(value, &value2)
 }

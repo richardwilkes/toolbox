@@ -58,7 +58,8 @@ func TestSplit(t *testing.T) {
 			out: []string{full, "two.txt"},
 		},
 	}
+	c := check.New(t)
 	for i, one := range data {
-		check.Equal(t, one.out, fs.Split(one.in), "%d", i)
+		c.Equal(one.out, fs.Split(one.in), "%d", i)
 	}
 }

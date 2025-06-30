@@ -69,8 +69,9 @@ func TestNaturalLess(t *testing.T) {
 		{"1.12.34", "1.2", false, false},
 		{"1.2.34", "1.11.11", false, true},
 	}
+	c := check.New(t)
 	for _, v := range testset {
-		check.Equal(t, v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
+		c.Equal(v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
 	}
 }
 

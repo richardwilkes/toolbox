@@ -37,8 +37,9 @@ func TestSerialQueue(t *testing.T) {
 		submitSerial(q, i)
 	}
 	q.Shutdown()
-	check.Equal(t, 199, prev)
-	check.Equal(t, 200, counter)
+	c := check.New(t)
+	c.Equal(199, prev)
+	c.Equal(200, counter)
 }
 
 func submitSerial(q *taskqueue.Queue, i int) {
@@ -58,8 +59,9 @@ func TestParallelQueue(t *testing.T) {
 		submitParallel(q, i)
 	}
 	q.Shutdown()
-	check.Equal(t, parallelWorkSubmissions, int(count))
-	check.Equal(t, workTotal, int(total))
+	c := check.New(t)
+	c.Equal(parallelWorkSubmissions, int(count))
+	c.Equal(workTotal, int(total))
 }
 
 func submitParallel(q *taskqueue.Queue, i int) {
@@ -70,19 +72,21 @@ func submitParallel(q *taskqueue.Queue, i int) {
 }
 
 func TestRecovery(t *testing.T) {
-	check.Panics(t, boom)
+	c := check.New(t)
+	c.Panics(boom)
 	logged := false
-	check.NotPanics(t, func() {
+	c.NotPanics(func() {
 		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { logged = true }))
 		q.Submit(boom)
 		q.Shutdown()
 	})
-	check.True(t, logged)
+	c.True(logged)
 }
 
 func TestRecoveryWithBadLogger(t *testing.T) {
-	check.Panics(t, boom)
-	check.NotPanics(t, func() {
+	c := check.New(t)
+	c.Panics(boom)
+	c.NotPanics(func() {
 		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { boom() }))
 		q.Submit(boom)
 		q.Shutdown()

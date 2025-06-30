@@ -17,25 +17,28 @@ import (
 )
 
 func TestToCamelCase(t *testing.T) {
-	check.Equal(t, "SnakeCase", txt.ToCamelCase("snake_case"))
-	check.Equal(t, "SnakeCase", txt.ToCamelCase("snake__case"))
-	check.Equal(t, "CamelCase", txt.ToCamelCase("CamelCase"))
+	c := check.New(t)
+	c.Equal("SnakeCase", txt.ToCamelCase("snake_case"))
+	c.Equal("SnakeCase", txt.ToCamelCase("snake__case"))
+	c.Equal("CamelCase", txt.ToCamelCase("CamelCase"))
 }
 
 func TestToCamelCaseWithExceptions(t *testing.T) {
-	check.Equal(t, "ID", txt.ToCamelCaseWithExceptions("id", txt.StdAllCaps))
-	check.Equal(t, "世界ID", txt.ToCamelCaseWithExceptions("世界_id", txt.StdAllCaps))
-	check.Equal(t, "OneID", txt.ToCamelCaseWithExceptions("one_id", txt.StdAllCaps))
-	check.Equal(t, "IDOne", txt.ToCamelCaseWithExceptions("id_one", txt.StdAllCaps))
-	check.Equal(t, "OneIDTwo", txt.ToCamelCaseWithExceptions("one_id_two", txt.StdAllCaps))
-	check.Equal(t, "OneIDTwoID", txt.ToCamelCaseWithExceptions("one_id_two_id", txt.StdAllCaps))
-	check.Equal(t, "OneIDID", txt.ToCamelCaseWithExceptions("one_id_id", txt.StdAllCaps))
-	check.Equal(t, "Orchid", txt.ToCamelCaseWithExceptions("orchid", txt.StdAllCaps))
-	check.Equal(t, "OneURLTwo", txt.ToCamelCaseWithExceptions("one_url_two", txt.StdAllCaps))
-	check.Equal(t, "URLID", txt.ToCamelCaseWithExceptions("url_id", txt.StdAllCaps))
+	c := check.New(t)
+	c.Equal("ID", txt.ToCamelCaseWithExceptions("id", txt.StdAllCaps))
+	c.Equal("世界ID", txt.ToCamelCaseWithExceptions("世界_id", txt.StdAllCaps))
+	c.Equal("OneID", txt.ToCamelCaseWithExceptions("one_id", txt.StdAllCaps))
+	c.Equal("IDOne", txt.ToCamelCaseWithExceptions("id_one", txt.StdAllCaps))
+	c.Equal("OneIDTwo", txt.ToCamelCaseWithExceptions("one_id_two", txt.StdAllCaps))
+	c.Equal("OneIDTwoID", txt.ToCamelCaseWithExceptions("one_id_two_id", txt.StdAllCaps))
+	c.Equal("OneIDID", txt.ToCamelCaseWithExceptions("one_id_id", txt.StdAllCaps))
+	c.Equal("Orchid", txt.ToCamelCaseWithExceptions("orchid", txt.StdAllCaps))
+	c.Equal("OneURLTwo", txt.ToCamelCaseWithExceptions("one_url_two", txt.StdAllCaps))
+	c.Equal("URLID", txt.ToCamelCaseWithExceptions("url_id", txt.StdAllCaps))
 }
 
 func TestToSnakeCase(t *testing.T) {
-	check.Equal(t, "snake_case", txt.ToSnakeCase("snake_case"))
-	check.Equal(t, "camel_case", txt.ToSnakeCase("CamelCase"))
+	c := check.New(t)
+	c.Equal("snake_case", txt.ToSnakeCase("snake_case"))
+	c.Equal("camel_case", txt.ToSnakeCase("CamelCase"))
 }

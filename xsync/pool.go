@@ -13,7 +13,7 @@ import "sync"
 
 // Pool provides a type-safe wrapper around sync.Pool.
 type Pool[T any] struct {
-	internalPool sync.Pool
+	internalPool *sync.Pool
 }
 
 // NewPool creates a new, empty, Pool.
@@ -21,8 +21,8 @@ func NewPool[T any](newFunc func() T) (p Pool[T]) {
 	if newFunc == nil {
 		panic("newFunc must not be nil")
 	}
-	p.internalPool.New = func() any { return newFunc() }
-	return
+	p.internalPool = &sync.Pool{New: func() any { return newFunc() }}
+	return p
 }
 
 // Put adds x to the pool.

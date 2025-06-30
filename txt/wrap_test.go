@@ -31,7 +31,8 @@ func TestWrap(t *testing.T) {
 		{Prefix: "", Text: "some text that is longer, yep", Max: 4, Out: "some\ntext\nthat\nis\nlonger,\nyep"},
 		{Prefix: "", Text: "some text\nwith embedded line feeds", Max: 16, Out: "some text\nwith embedded\nline feeds"},
 	}
+	c := check.New(t)
 	for i, one := range table {
-		check.Equal(t, one.Out, txt.Wrap(one.Prefix, one.Text, one.Max), "#%d", i)
+		c.Equal(one.Out, txt.Wrap(one.Prefix, one.Text, one.Max), "#%d", i)
 	}
 }

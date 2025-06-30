@@ -63,59 +63,61 @@ var (
 )
 
 func TestFixedEvaluator(t *testing.T) {
+	c := check.New(t)
 	e := eval.NewFixedEvaluator[fixed.D4](resolver{}, true)
 	for i := 0; i < len(numExpr); i += 3 {
 		result, err := e.Evaluate(numExpr[i])
-		check.NoError(t, err, "%d: %s == %s", i, numExpr[i], numExpr[i+1])
-		check.Equal(t, numExpr[i+1], fmt.Sprintf("%v", result), "%d: %s == %s", i, numExpr[i], numExpr[i+1])
+		c.NoError(err, "%d: %s == %s", i, numExpr[i], numExpr[i+1])
+		c.Equal(numExpr[i+1], fmt.Sprintf("%v", result), "%d: %s == %s", i, numExpr[i], numExpr[i+1])
 	}
 	for i := 0; i < len(strExpr); i += 2 {
 		result, err := e.Evaluate(strExpr[i])
-		check.NoError(t, err, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
-		check.Equal(t, strExpr[i+1], result, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
+		c.NoError(err, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
+		c.Equal(strExpr[i+1], result, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
 	}
 
 	result, err := e.Evaluate("2 >= 1")
-	check.NoError(t, err)
-	check.Equal(t, true, result)
+	c.NoError(err)
+	c.Equal(true, result)
 
 	result, err = e.Evaluate("2 >= 2")
-	check.NoError(t, err)
-	check.Equal(t, true, result)
+	c.NoError(err)
+	c.Equal(true, result)
 
 	result, err = e.Evaluate("2 >= 3")
-	check.NoError(t, err)
-	check.Equal(t, false, result)
+	c.NoError(err)
+	c.Equal(false, result)
 
 	result, err = e.Evaluate("2 > 1")
-	check.NoError(t, err)
-	check.Equal(t, true, result)
+	c.NoError(err)
+	c.Equal(true, result)
 
 	e = eval.NewFixedEvaluator[fixed.D4](resolver{}, false)
 	_, err = e.Evaluate("1 / 0")
-	check.Error(t, err)
+	c.HasError(err)
 }
 
 func TestFloatEvaluator(t *testing.T) {
+	c := check.New(t)
 	e := eval.NewFloatEvaluator[float64](resolver{}, true)
 	for i := 0; i < len(numExpr); i += 3 {
 		result, err := e.Evaluate(numExpr[i])
-		check.NoError(t, err, "%d: %s == %s", i, numExpr[i], numExpr[i+2])
-		check.Equal(t, numExpr[i+2], fmt.Sprintf("%0.16f", result), "%d: %s == %s", i, numExpr[i], numExpr[i+2])
+		c.NoError(err, "%d: %s == %s", i, numExpr[i], numExpr[i+2])
+		c.Equal(numExpr[i+2], fmt.Sprintf("%0.16f", result), "%d: %s == %s", i, numExpr[i], numExpr[i+2])
 	}
 	for i := 0; i < len(strExpr); i += 2 {
 		result, err := e.Evaluate(strExpr[i])
-		check.NoError(t, err, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
-		check.Equal(t, strExpr[i+1], result, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
+		c.NoError(err, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
+		c.Equal(strExpr[i+1], result, "%d: %s == %s", i, strExpr[i], strExpr[i+1])
 	}
 
 	result, err := e.Evaluate("2 > 1")
-	check.NoError(t, err)
-	check.Equal(t, true, result)
+	c.NoError(err)
+	c.Equal(true, result)
 
 	e = eval.NewFloatEvaluator[float64](resolver{}, false)
 	_, err = e.Evaluate("1 / 0")
-	check.Error(t, err)
+	c.HasError(err)
 }
 
 type resolver struct{}

@@ -22,8 +22,9 @@ import (
 
 func TestLevelValueSet(t *testing.T) {
 	var v xslog.LevelValue
-	check.NoError(t, v.Set("error"))
-	check.Equal(t, v.Level(), slog.LevelError)
+	c := check.New(t)
+	c.NoError(v.Set("error"))
+	c.Equal(v.Level(), slog.LevelError)
 }
 
 func TestLevelValueCmdLineOpts(t *testing.T) {
@@ -39,6 +40,7 @@ func TestLevelValueCmdLineOpts(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=TestLevelValueCmdLineOpts")
 	cmd.Env = append(os.Environ(), "LEVEL_VALUE_CMDLINE_TEST=1")
 	output, err := cmd.CombinedOutput()
-	check.NoError(t, err)
-	check.Contains(t, string(output), "--log-level <value>")
+	c := check.New(t)
+	c.NoError(err)
+	c.Contains(string(output), "--log-level <value>")
 }

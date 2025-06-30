@@ -30,6 +30,7 @@ func TestContains(t *testing.T) {
 }
 
 func testContains[T ~float32 | ~float64](t *testing.T) {
+	c := check.New(t)
 	p := poly.Polygon[T]{
 		{{200, 20}, {300, 20}, {300, 120}, {200, 120}},
 		{{250, 50}, {280, 50}, {280, 80}, {250, 80}},
@@ -48,7 +49,7 @@ func testContains[T ~float32 | ~float64](t *testing.T) {
 		{Point: geom.Point[T]{X: 320, Y: 141}, contains: false},
 	}
 	for i, test := range containsTests {
-		check.Equal(t, test.contains, p.Contains(test.Point), "%T contains case #%d", p, i)
+		c.Equal(test.contains, p.Contains(test.Point), "%T contains case #%d", p, i)
 	}
 	containsEvenOddTests := []containsCase[T]{
 		{Point: geom.Point[T]{X: 199, Y: 20}, contains: false},
@@ -62,7 +63,7 @@ func testContains[T ~float32 | ~float64](t *testing.T) {
 		{Point: geom.Point[T]{X: 320, Y: 141}, contains: false},
 	}
 	for i, test := range containsEvenOddTests {
-		check.Equal(t, test.contains, p.ContainsEvenOdd(test.Point), "%T contains even/odd case #%d", p, i)
+		c.Equal(test.contains, p.ContainsEvenOdd(test.Point), "%T contains even/odd case #%d", p, i)
 	}
 }
 
@@ -246,9 +247,10 @@ func testUnion[T ~float32 | ~float64](t *testing.T) {
 			expected: poly.Polygon[T]{{{2, 0.75}, {3, 0.75}, {3, 0.25}, {2, 0.25}, {2, 0}, {0, 0}, {0, 0.25}, {0, 0.75}, {0, 1}, {2, 1}}},
 		},
 	}
+	c := check.New(t)
 	for i, test := range tests {
 		result := test.subject.Union(test.clipping)
-		check.True(t, matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
+		c.True(matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
 	}
 }
 
@@ -349,9 +351,10 @@ func testIntersect[T ~float32 | ~float64](t *testing.T) {
 			expected: poly.Polygon[T]{{{2, 0.25}, {0, 0.25}, {0, 0.75}, {2, 0.75}}},
 		},
 	}
+	c := check.New(t)
 	for i, test := range tests {
 		result := test.subject.Intersect(test.clipping)
-		check.True(t, matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
+		c.True(matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
 	}
 }
 
@@ -434,9 +437,10 @@ func testSubtract[T ~float32 | ~float64](t *testing.T) {
 			},
 		},
 	}
+	c := check.New(t)
 	for i, test := range tests {
 		result := test.subject.Sub(test.clipping)
-		check.True(t, matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
+		c.True(matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
 	}
 }
 
@@ -469,9 +473,10 @@ func testXor[T ~float32 | ~float64](t *testing.T) {
 			},
 		},
 	}
+	c := check.New(t)
 	for i, test := range tests {
 		result := test.subject.Xor(test.clipping)
-		check.True(t, matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
+		c.True(matchPolys(test.expected, result), "%T test case %d (%s): %v", test.subject, i, test.name, result)
 	}
 }
 
@@ -481,11 +486,11 @@ func matchPolys[T ~float32 | ~float64](left, right poly.Polygon[T]) bool {
 	if len(left) != len(right) {
 		return false
 	}
-	for i, c := range left {
-		if len(c) != len(right[i]) {
+	for i, x := range left {
+		if len(x) != len(right[i]) {
 			return false
 		}
-		for j, pt := range c {
+		for j, pt := range x {
 			if !pt.EqualWithin(right[i][j], 0.0001) {
 				return false
 			}
@@ -496,10 +501,10 @@ func matchPolys[T ~float32 | ~float64](left, right poly.Polygon[T]) bool {
 
 func simplifyPoly[T ~float32 | ~float64](p poly.Polygon[T]) poly.Polygon[T] {
 	var revised poly.Polygon[T]
-	for _, c := range p {
+	for _, x := range p {
 		var nc poly.Contour[T]
-		for i, pt := range c {
-			if i == 0 || !pt.EqualWithin(c[i-1], 0.0001) {
+		for i, pt := range x {
+			if i == 0 || !pt.EqualWithin(x[i-1], 0.0001) {
 				nc = append(nc, pt)
 			}
 		}

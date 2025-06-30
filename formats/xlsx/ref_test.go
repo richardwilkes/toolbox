@@ -17,6 +17,7 @@ import (
 )
 
 func TestRef(t *testing.T) {
+	c := check.New(t)
 	for i, d := range []struct {
 		Text string
 		Col  int
@@ -29,16 +30,16 @@ func TestRef(t *testing.T) {
 		{"ZZ100", 701, 99},
 	} {
 		ref := xlsx.ParseRef(d.Text)
-		check.Equal(t, d.Col, ref.Col, "column for index %d: %s", i, d.Text)
-		check.Equal(t, d.Row, ref.Row, "row for index %d: %s", i, d.Text)
-		check.Equal(t, d.Text, ref.String(), "String() for index %d: %s", i, d.Text)
+		c.Equal(d.Col, ref.Col, "column for index %d: %s", i, d.Text)
+		c.Equal(d.Row, ref.Row, "row for index %d: %s", i, d.Text)
+		c.Equal(d.Text, ref.String(), "String() for index %d: %s", i, d.Text)
 	}
 
-	for r := range 100 {
-		for c := range 10000 {
-			in := xlsx.Ref{Row: r, Col: c}
+	for y := range 100 {
+		for x := range 10000 {
+			in := xlsx.Ref{Row: y, Col: x}
 			out := xlsx.ParseRef(in.String())
-			check.Equal(t, in, out)
+			c.Equal(in, out)
 		}
 	}
 }

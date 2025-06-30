@@ -12,7 +12,6 @@ package fs_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xio/fs"
 )
 
@@ -28,6 +27,6 @@ func TestWindowsSplit(t *testing.T) {
 		},
 	}
 	for i, one := range data {
-		check.Equal(t, one.out, fs.Split(one.in), "%d", i)
+		c.Equal(one.out, fs.Split(one.in), "%d", i)
 	}
 }

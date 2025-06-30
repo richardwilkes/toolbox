@@ -21,11 +21,13 @@ func TestDigitToValue(t *testing.T) {
 	checkDigitToValue('٥', 5, t)
 	checkDigitToValue('𑁯', 9, t)
 	_, err := txt.DigitToValue('a')
-	check.Error(t, err)
+	c := check.New(t)
+	c.HasError(err)
 }
 
 func checkDigitToValue(ch rune, expected int, t *testing.T) {
+	c := check.New(t)
 	value, err := txt.DigitToValue(ch)
-	check.NoError(t, err)
-	check.Equal(t, expected, value)
+	c.NoError(err)
+	c.Equal(expected, value)
 }

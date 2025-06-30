@@ -18,40 +18,41 @@ import (
 )
 
 func TestColumnSort(t *testing.T) {
+	c := check.New(t)
 	s := []int{0, 1, 2, 3, 4, 5, 6}
 	slice.ColumnSort(s, 2, cmp.Compare)
 	// 0 4
 	// 1 5
 	// 2 6
 	// 3
-	check.Equal(t, []int{0, 4, 1, 5, 2, 6, 3}, s)
+	c.Equal([]int{0, 4, 1, 5, 2, 6, 3}, s)
 
 	slice.ColumnSort(s, 3, cmp.Compare)
 	// 0 3 5
 	// 1 4 6
 	// 2
-	check.Equal(t, []int{0, 3, 5, 1, 4, 6, 2}, s)
+	c.Equal([]int{0, 3, 5, 1, 4, 6, 2}, s)
 
 	s = []int{0, 1, 2, 3, 4, 5}
 	slice.ColumnSort(s, 2, cmp.Compare)
 	// 0 3
 	// 1 4
 	// 2 5
-	check.Equal(t, []int{0, 3, 1, 4, 2, 5}, s)
+	c.Equal([]int{0, 3, 1, 4, 2, 5}, s)
 
 	slice.ColumnSort(s, 4, cmp.Compare)
 	// 0 2 4 5
 	// 1 3
-	check.Equal(t, []int{0, 2, 4, 5, 1, 3}, s)
+	c.Equal([]int{0, 2, 4, 5, 1, 3}, s)
 
 	slice.ColumnSort(s, 10, cmp.Compare)
 	// 0 1 2 3 4 5
-	check.Equal(t, []int{0, 1, 2, 3, 4, 5}, s)
+	c.Equal([]int{0, 1, 2, 3, 4, 5}, s)
 
 	s = []int{0, 1, 2, 3, 4, 5, 6, 7}
 	slice.ColumnSort(s, 3, cmp.Compare)
 	// 0 3 6
 	// 1 4 7
 	// 2 5
-	check.Equal(t, []int{0, 3, 6, 1, 4, 7, 2, 5}, s)
+	c.Equal([]int{0, 3, 6, 1, 4, 7, 2, 5}, s)
 }
