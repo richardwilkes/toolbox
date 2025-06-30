@@ -47,45 +47,45 @@ type Rotator struct {
 
 // NewWriteCloser creates a new io.WriteCloser that will write to the log file specified in the configuration. It will
 // create the file if it does not exist when needed, and will rotate the log file when it exceeds the maximum size.
-func (c *Rotator) NewWriteCloser() io.WriteCloser {
-	var r rotatingWriter
-	if c != nil {
-		c.Normalize()
-		r.cfg = *c
+func (r *Rotator) NewWriteCloser() io.WriteCloser {
+	var w rotatingWriter
+	if r != nil {
+		r.Normalize()
+		w.cfg = *r
 	} else {
-		r.cfg.Normalize()
+		w.cfg.Normalize()
 	}
-	r.cfg.Path = strings.TrimSuffix(r.cfg.Path, LogFileExt)
-	return &r
+	w.cfg.Path = strings.TrimSuffix(w.cfg.Path, LogFileExt)
+	return &w
 }
 
 // AddStdCmdLineOptions adds the standard command-line options for controlling log rotation.
-func (c *Rotator) AddStdCmdLineOptions(cl *cmdline.CmdLine) {
-	c.Normalize()
-	cl.NewGeneralOption(&c.Path).SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
-	cl.NewGeneralOption(&c.MaxSize).SetName("log-file-size").
+func (r *Rotator) AddStdCmdLineOptions(cl *cmdline.CmdLine) {
+	r.Normalize()
+	cl.NewGeneralOption(&r.Path).SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
+	cl.NewGeneralOption(&r.MaxSize).SetName("log-file-size").
 		SetUsage(i18n.Text("The maximum number of bytes to write to a log file before rotating it"))
-	cl.NewGeneralOption(&c.MaxBackups).SetName("log-file-backups").
+	cl.NewGeneralOption(&r.MaxBackups).SetName("log-file-backups").
 		SetUsage(i18n.Text("The maximum number of old logs files to retain"))
 }
 
 // Normalize ensures that the configuration is valid. It sets defaults for any fields that are not set. It is not
 // necessary to call this, but might be useful if you want to programmatically determine the default values.
-func (c *Rotator) Normalize() {
-	if c.Path == "" {
-		c.Path = filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+LogFileExt)
+func (r *Rotator) Normalize() {
+	if r.Path == "" {
+		r.Path = filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+LogFileExt)
 	}
-	if c.MaxSize <= 0 {
-		c.MaxSize = 10 * 1024 * 1024
+	if r.MaxSize <= 0 {
+		r.MaxSize = 10 * 1024 * 1024
 	}
-	if c.MaxBackups <= 0 {
-		c.MaxBackups = 1
+	if r.MaxBackups <= 0 {
+		r.MaxBackups = 1
 	}
-	if c.DirMode == 0 {
-		c.DirMode = 0o755
+	if r.DirMode == 0 {
+		r.DirMode = 0o755
 	}
-	if c.FileMode == 0 {
-		c.FileMode = 0o644
+	if r.FileMode == 0 {
+		r.FileMode = 0o644
 	}
 }
 
