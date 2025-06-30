@@ -11,7 +11,7 @@
 package geom
 
 import (
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // Rect defines a rectangle.

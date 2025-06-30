@@ -17,7 +17,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/rand"
+	"github.com/richardwilkes/toolbox/v2/xmath/rand"
 )
 
 // CreateTemp is essentially the same as os.CreateTemp, except it allows you to specify the file mode of the newly

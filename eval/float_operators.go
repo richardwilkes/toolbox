@@ -14,8 +14,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // FloatOperators returns standard operators that work with floating point values.

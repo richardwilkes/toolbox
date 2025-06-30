@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f128"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f128"
 	"gopkg.in/yaml.v3"
 )
 

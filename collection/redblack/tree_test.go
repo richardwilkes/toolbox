@@ -13,8 +13,8 @@ import (
 	"cmp"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/collection/redblack"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/collection/redblack"
 )
 
 func TestRedBlackTree(t *testing.T) {

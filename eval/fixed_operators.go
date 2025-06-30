@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f64"
 )
 
 // FixedOperators returns standard operators that work with 64-bit fixed-point values.

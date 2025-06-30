@@ -17,7 +17,7 @@ import (
 	"crypto/sha256"
 	"io"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // EncryptStreamWithPublicKey copies 'in' to 'out', encrypting the bytes along the way. Note that the output stream will

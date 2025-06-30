@@ -12,7 +12,7 @@ package poly
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 const (

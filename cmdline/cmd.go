@@ -10,8 +10,8 @@
 package cmdline
 
 import (
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/i18n"
 )
 
 // Cmd represents a sub-command available on the command-line.
@@ -28,7 +28,7 @@ type Cmd interface {
 
 func (cl *CmdLine) newWithCmd(cmd Cmd) *CmdLine {
 	cmdLine := New(false)
-	cmdLine.out = cl.out
+	cmdLine.w = cl.w
 	cmdLine.parent = cl
 	cmdLine.cmd = cmd
 	return cmdLine

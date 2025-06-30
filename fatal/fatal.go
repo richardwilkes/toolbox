@@ -10,14 +10,14 @@
 package fatal
 
 import (
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
 // IfErr checks the error and if it isn't nil, calls fatal.WithErr(err).
 func IfErr(err error) {
-	if !toolbox.IsNil(err) {
+	if !xreflect.IsNil(err) {
 		WithErr(err)
 	}
 }
@@ -25,5 +25,5 @@ func IfErr(err error) {
 // WithErr logs the error and then exits with code 1.
 func WithErr(err error) {
 	errs.Log(err)
-	atexit.Exit(1)
+	xos.Exit(1)
 }

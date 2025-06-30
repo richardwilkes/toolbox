@@ -13,7 +13,7 @@ package desktop
 import (
 	"os/exec"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Open asks the system to open the provided path or URL.

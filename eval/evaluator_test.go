@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/eval"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/eval"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
 )
 
 var (

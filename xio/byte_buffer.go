@@ -13,7 +13,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // ByteBuffer is a variable-sized buffer of bytes with Write and Insert methods. The zero value for ByteBuffer is an

@@ -12,7 +12,7 @@ package i18n
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
+	"github.com/richardwilkes/toolbox/v2/check"
 )
 
 func TestLocalization(t *testing.T) {

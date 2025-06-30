@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/softref"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/softref"
 )
 
 type res struct {

@@ -12,8 +12,8 @@ package cmdline_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/cmdline"
 )
 
 func TestParseCommandLine(t *testing.T) {

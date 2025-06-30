@@ -12,8 +12,8 @@ package xlsx_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/formats/xlsx"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/formats/xlsx"
 )
 
 func TestRef(t *testing.T) {

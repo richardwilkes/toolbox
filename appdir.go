@@ -15,7 +15,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // AppDir returns the logical directory the application resides within. For macOS, this means the directory where the

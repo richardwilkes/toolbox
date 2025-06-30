@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/collection"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/collection"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 // Constants for common network addresses.

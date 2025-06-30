@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
 )
 
 // Fraction holds a fractional value.

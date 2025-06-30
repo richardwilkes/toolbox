@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // Comma returns text version of the value that uses commas for every 3 orders of magnitude.

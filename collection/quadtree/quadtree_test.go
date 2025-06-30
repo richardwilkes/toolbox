@@ -14,9 +14,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/collection/quadtree"
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 type node[T ~float32 | ~float64] struct {

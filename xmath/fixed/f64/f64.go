@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
 	"gopkg.in/yaml.v3"
 )
 

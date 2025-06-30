@@ -15,9 +15,9 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xio/fs/safe"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio"
+	"github.com/richardwilkes/toolbox/v2/xio/fs/safe"
 
 	"gopkg.in/yaml.v3"
 )

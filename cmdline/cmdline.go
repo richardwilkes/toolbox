@@ -17,11 +17,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/collection"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/xio/term"
+	"github.com/richardwilkes/toolbox/v2/collection"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xio/term"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // CmdLine holds information about the command line.
@@ -35,7 +35,7 @@ type CmdLine struct {
 	cmds            map[string]Cmd
 	parent          *CmdLine
 	cmd             Cmd
-	out             *term.ANSI
+	w               *term.AnsiWriter
 	options         Options
 	showHelp        bool
 	showVersion     bool
@@ -48,13 +48,15 @@ type CmdLine struct {
 func New(includeDefaultOptions bool) *CmdLine {
 	cl := &CmdLine{
 		cmds: make(map[string]Cmd),
-		out:  term.NewANSI(os.Stderr),
+		w:    term.NewAnsiWriter(os.Stderr),
 	}
 	help := cl.NewGeneralOption(&cl.showHelp).SetSingle('h').SetName("help")
 	if includeDefaultOptions {
 		help.SetUsage(i18n.Text("Display this help information and exit."))
-		cl.NewGeneralOption(&cl.showVersion).SetSingle('v').SetName("version").SetUsage(i18n.Text("Display short version information and exit"))
-		cl.NewGeneralOption(&cl.showLongVersion).SetSingle('V').SetName("Version").SetUsage(i18n.Text("Display the full version information and exit"))
+		cl.NewGeneralOption(&cl.showVersion).SetSingle('v').SetName("version").
+			SetUsage(i18n.Text("Display short version information and exit"))
+		cl.NewGeneralOption(&cl.showLongVersion).SetSingle('V').SetName("Version").
+			SetUsage(i18n.Text("Display the full version information and exit"))
 	}
 	return cl
 }
@@ -181,15 +183,15 @@ func (cl *CmdLine) Parse(args []string) []string {
 	}
 	if cl.showHelp {
 		cl.DisplayUsage()
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
 	if cl.showLongVersion {
 		fmt.Println(LongVersion())
-		atexit.Exit(0)
+		xos.Exit(0)
 	}
 	if cl.showVersion {
 		fmt.Println(ShortVersion())
-		atexit.Exit(0)
+		xos.Exit(0)
 	}
 	return remainingArgs
 }
@@ -202,13 +204,13 @@ func (cl *CmdLine) setOrFail(op *Option, arg, value string) {
 
 // FatalMsg emits an error message and causes the program to exit.
 func (cl *CmdLine) FatalMsg(msg string) {
-	cl.out.Bell()
-	cl.out.Reset()
-	cl.out.Red()
+	cl.w.Bell()
+	cl.w.Reset()
+	cl.w.Red()
 	fmt.Fprint(cl, msg)
-	cl.out.FgReset()
+	cl.w.FgReset()
 	fmt.Fprintln(cl)
-	atexit.Exit(1)
+	xos.Exit(1)
 }
 
 // FatalError emits an error message and causes the program to exit.
@@ -272,10 +274,15 @@ func (cl *CmdLine) loadArgsFromFile(path string) (args []string, err error) {
 
 // SetWriter sets the io.Writer to use for output. By default, a new CmdLine uses os.Stderr.
 func (cl *CmdLine) SetWriter(w io.Writer) {
-	cl.out = term.NewANSI(w)
+	switch t := w.(type) {
+	case *term.AnsiWriter:
+		cl.w = t
+	default:
+		cl.w = term.NewAnsiWriter(w)
+	}
 }
 
 // Write implements the io.Writer interface.
 func (cl *CmdLine) Write(p []byte) (n int, err error) {
-	return cl.out.Write(p)
+	return cl.w.Write(p)
 }

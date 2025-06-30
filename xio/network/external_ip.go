@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 var sites = []string{

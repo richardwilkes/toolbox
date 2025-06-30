@@ -16,7 +16,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // Copy src to dst. src may be a directory, file, or symlink.

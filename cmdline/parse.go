@@ -12,7 +12,7 @@ package cmdline
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // Parse a command line string into its component parts.
