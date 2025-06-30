@@ -119,10 +119,6 @@ type stackValue struct {
 	err StackError
 }
 
-func (v *stackValue) StackError() StackError {
-	return v.err
-}
-
 func (v *stackValue) LogValue() slog.Value {
 	return slog.AnyValue(strings.Split(v.err.StackTrace(), "\n"))
 }

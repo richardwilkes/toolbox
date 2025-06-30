@@ -249,9 +249,16 @@ func (e *Error) Detail() string {
 // StackTrace returns just the stack trace portion of the message.
 func (e *Error) StackTrace() string {
 	var buffer strings.Builder
-	buffer.WriteString("    " + strings.Join(xruntime.PCsToStackTrace(e.stack), "\n    "))
+	stack := strings.Join(xruntime.PCsToStackTrace(e.stack), "\n    ")
+	if stack != "" {
+		buffer.WriteString("    ")
+	}
+	buffer.WriteString(stack)
 	if e.cause != nil && !e.wrapped {
-		buffer.WriteString("\n  Caused by: ")
+		if buffer.Len() != 0 {
+			buffer.WriteByte('\n')
+		}
+		buffer.WriteString("  Caused by: ")
 		//nolint:errorlint // Explicitly only want to look at this exact error and not things wrapped inside it
 		if detailed, ok := e.cause.(*Error); ok {
 			buffer.WriteString(detailed.Detail())

@@ -112,6 +112,22 @@ func (c Checker) NotContains(s, substr string, msgAndArgs ...any) {
 	}
 }
 
+// HasPrefix expects s to have the prefix substr.
+func (c Checker) HasPrefix(s, prefix string, msgAndArgs ...any) {
+	c.Helper()
+	if !strings.HasPrefix(s, prefix) {
+		c.errMsg(fmt.Sprintf("Expected string %q to have prefix %q", s, prefix), msgAndArgs...)
+	}
+}
+
+// NoPrefix expects s not to have the prefix substr.
+func (c Checker) NoPrefix(s, prefix string, msgAndArgs ...any) {
+	c.Helper()
+	if strings.HasPrefix(s, prefix) {
+		c.errMsg(fmt.Sprintf("Expected string %q not to have prefix %q", s, prefix), msgAndArgs...)
+	}
+}
+
 // NoError expects err to be nil.
 func (c Checker) NoError(err error, msgAndArgs ...any) {
 	c.Helper()

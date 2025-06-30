@@ -33,6 +33,14 @@ func ExampleError() {
 	//   Caused by: runtime error: invalid memory address or nil pointer dereference
 }
 
+func TestDetail(t *testing.T) {
+	c := check.New(t)
+	detail := errs.New("").Detail()
+	c.HasPrefix(detail, "    [github.com/richardwilkes/toolbox/v2/errs_test.TestDetail] errs/errors_test.go:")
+	detail = (&errs.Error{}).Detail()
+	c.Equal("<no detail>", detail)
+}
+
 func TestAppendError(t *testing.T) {
 	c := check.New(t)
 	original := errs.New("foo")
@@ -49,7 +57,7 @@ func TestAppendToEmptyError(t *testing.T) {
 
 func TestAppendFlattening(t *testing.T) {
 	c := check.New(t)
-	original := errs.New("foo")
+	original := errs.Newf("foo%d", 1)
 	result := errs.Append(original, errs.Append(nil, errs.New("foo"), errs.New("bar")))
 	c.Equal(3, result.Count())
 }
@@ -94,8 +102,8 @@ func TestAppendNonErrorError(t *testing.T) {
 func TestAppendNonErrorErrorWithAppend(t *testing.T) {
 	c := check.New(t)
 	original := errors.New("foo")
-	result := errs.Append(original, errs.Append(nil, errors.New("bar")))
-	c.Equal(2, result.Count())
+	result := errs.Append(original, errs.Append(nil, errors.New("bar"), errors.New("baz")))
+	c.Equal(3, result.Count())
 }
 
 func TestErrorOrNil(t *testing.T) {
@@ -116,6 +124,12 @@ func TestWrap(t *testing.T) {
 	result := errs.Wrap(notError)
 	c.NotNil(result)
 	c.Equal(1, strings.Count(result.Error(), "\n"))
+}
+
+func TestNilWrap(t *testing.T) {
+	c := check.New(t)
+	c.Nil(errs.Wrap(nil))
+	c.Nil(errs.WrapTyped(nil))
 }
 
 func TestDoubleWrap(t *testing.T) {
@@ -145,8 +159,8 @@ func TestDoubleWrapTyped(t *testing.T) {
 	c.Equal(error(errError), errors.Unwrap(wrappedErr))
 
 	// It seems the best thing to do here is to wrap again
-	rewrappedError := errs.WrapTyped(wrappedErr)
-	c.Equal(wrappedErr, errors.Unwrap(rewrappedError))
+	rewrittenError := errs.WrapTyped(wrappedErr)
+	c.Equal(wrappedErr, errors.Unwrap(rewrittenError))
 }
 
 func TestIs(t *testing.T) {
@@ -186,6 +200,8 @@ func TestNewWithCause(t *testing.T) {
 	cause := errs.New("bar")
 	result := errs.NewWithCause("foo", cause)
 	c.Equal(3, strings.Count(result.Error(), "\n"))
+	result = errs.NewWithCausef(cause, "foo%d", 1)
+	c.Equal(3, strings.Count(result.Error(), "\n"))
 }
 
 func TestFormat(t *testing.T) {
@@ -217,4 +233,55 @@ func TestWrappedErrors(t *testing.T) {
 	c.Equal("bar", strings.SplitN(list[1].Error(), "\n", 2)[0])
 	c.Equal("foo2", strings.SplitN(list[2].Error(), "\n", 2)[0])
 	c.Equal("bar2", strings.SplitN(list[3].Error(), "\n", 2)[0])
+}
+
+func TestCloneWithPrefixMessage(t *testing.T) {
+	c := check.New(t)
+	err := errs.New("foo")
+	cloned := err.CloneWithPrefixMessage("prefix: ")
+	c.NotNil(cloned)
+	c.Contains(cloned.Error(), "prefix: foo")
+	c.NotEqual(err, cloned)
+}
+
+func TestRawStackTrace(t *testing.T) {
+	c := check.New(t)
+	err := errs.New("foo")
+	raw := err.RawStackTrace()
+	c.NotNil(raw)
+	c.True(len(raw) > 0)
+}
+
+func TestEmptyMethod(t *testing.T) {
+	c := check.New(t)
+	var e *errs.Error
+	c.True(e.ErrorOrNil() == nil)
+	emptyErr := &errs.Error{}
+	c.True(emptyErr.ErrorOrNil() == nil)
+	nonEmptyErr := errs.New("foo")
+	c.False(nonEmptyErr.ErrorOrNil() == nil)
+}
+
+func TestLogValue(t *testing.T) {
+	c := check.New(t)
+	err := errs.New("foo")
+	val := err.LogValue()
+	c.Equal("Group", val.Kind().String())
+	// Check that the group contains the error message
+	c.Contains(val.Group()[0].Value.String(), "foo")
+}
+
+func TestAppendWithNilMix(t *testing.T) {
+	c := check.New(t)
+	err1 := errs.New("foo")
+	var nilErr *errs.Error
+	result := errs.Append(err1, nilErr, errs.New("bar"), nil)
+	c.Equal(2, result.Count())
+}
+
+func TestMultiErrorMessage(t *testing.T) {
+	c := check.New(t)
+	err := errs.Append(errs.New("foo"), errs.New("bar"))
+	msg := err.Message()
+	c.Equal(msg, "Multiple (2) errors occurred:\n- foo\n- bar")
 }
