@@ -17,6 +17,9 @@ import (
 	"slices"
 	"sync"
 	"syscall"
+
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
 var (
@@ -117,4 +120,17 @@ func Exit(status int) {
 		SafeCall(f[i], ExitRecoveryHandler)
 	}
 	os.Exit(status)
+}
+
+// ExitIfErr checks the error and if it isn't nil, calls xos.ExitWithErr(err).
+func ExitIfErr(err error) {
+	if !xreflect.IsNil(err) {
+		ExitWithErr(err)
+	}
+}
+
+// ExitWithErr logs the error and then exits with code 1.
+func ExitWithErr(err error) {
+	errs.Log(err)
+	Exit(1)
 }

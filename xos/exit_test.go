@@ -185,3 +185,51 @@ func TestSIGTERM(t *testing.T) {
 		c.Equal(123, exitError.ExitCode())
 	}
 }
+
+func TestExitWithError(t *testing.T) {
+	if os.Getenv("EXIT_WITH_ERROR_TEST") == "1" {
+		// This is the subprocess
+		xos.ExitWithErr(errors.New("boom"))
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestExitWithError")
+	cmd.Env = append(os.Environ(), "EXIT_WITH_ERROR_TEST=1")
+	output, err := cmd.CombinedOutput()
+	c := check.New(t)
+	c.HasError(err)
+	c.Contains(string(output), "boom")
+	var exitError *exec.ExitError
+	hasExitErr := errors.As(err, &exitError)
+	c.True(hasExitErr)
+	if hasExitErr {
+		c.Equal(1, exitError.ExitCode())
+	}
+}
+
+func TestExitIfErr(t *testing.T) {
+	if os.Getenv("EXIT_IF_ERROR_TEST") == "1" {
+		// This is the subprocess
+		xos.ExitIfErr(errors.New("bang"))
+		return
+	}
+	if os.Getenv("EXIT_IF_ERROR_TEST") == "2" {
+		// This is the subprocess
+		xos.ExitIfErr(nil)
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestExitIfErr")
+	cmd.Env = append(os.Environ(), "EXIT_IF_ERROR_TEST=1")
+	output, err := cmd.CombinedOutput()
+	c := check.New(t)
+	c.HasError(err)
+	c.Contains(string(output), "bang")
+	var exitError *exec.ExitError
+	hasExitErr := errors.As(err, &exitError)
+	c.True(hasExitErr)
+	if hasExitErr {
+		c.Equal(1, exitError.ExitCode())
+	}
+	cmd = exec.Command(os.Args[0], "-test.run=TestExitIfErr")
+	cmd.Env = append(os.Environ(), "EXIT_IF_ERROR_TEST=2")
+	_, err = cmd.CombinedOutput()
+	c.NoError(err)
+}
