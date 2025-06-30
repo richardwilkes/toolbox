@@ -18,9 +18,10 @@ type Pool[T any] struct {
 
 // NewPool creates a new, empty, Pool.
 func NewPool[T any](newFunc func() T) (p Pool[T]) {
-	if newFunc != nil {
-		p.internalPool.New = func() any { return newFunc() }
+	if newFunc == nil {
+		panic("newFunc must not be nil")
 	}
+	p.internalPool.New = func() any { return newFunc() }
 	return
 }
 
