@@ -45,12 +45,12 @@ func TestPrettyHandlerLevels(t *testing.T) {
 		prefix string
 		level  slog.Level
 	}{
-		{prefix: "DBG ", level: slog.LevelDebug},
-		{prefix: "INF ", level: slog.LevelInfo},
-		{prefix: "WRN ", level: slog.LevelWarn},
-		{prefix: "ERR ", level: slog.LevelError},
-		{prefix: "WRN+2 ", level: slog.LevelWarn + 2},
-		{prefix: "DBG-2 ", level: slog.LevelDebug - 2},
+		{prefix: "DEBUG ", level: slog.LevelDebug},
+		{prefix: "INFO ", level: slog.LevelInfo},
+		{prefix: "WARN ", level: slog.LevelWarn},
+		{prefix: "ERROR ", level: slog.LevelError},
+		{prefix: "WARN+2 ", level: slog.LevelWarn + 2},
+		{prefix: "DEBUG-2 ", level: slog.LevelDebug - 2},
 	} {
 		t.Run(one.level.String(), func(t *testing.T) {
 			record := slog.NewRecord(time.Now(), one.level, "level msg", 0)

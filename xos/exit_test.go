@@ -24,7 +24,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-func TestExit_ExecutionOrder(t *testing.T) {
+func TestExecutionOrderExit(t *testing.T) {
 	if os.Getenv("EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.RunAtExit(func() { fmt.Print("1") })
@@ -34,7 +34,7 @@ func TestExit_ExecutionOrder(t *testing.T) {
 		return
 	}
 	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_ExecutionOrder")
+	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.Error(t, err)
@@ -47,7 +47,7 @@ func TestExit_ExecutionOrder(t *testing.T) {
 	}
 }
 
-func TestExit_ExecutionOrderWithCancel(t *testing.T) {
+func TestExecutionOrderWithCancelExit(t *testing.T) {
 	if os.Getenv("EXIT_TEST_WITH_CANCEL") == "1" {
 		// This is the subprocess
 		xos.RunAtExit(func() { fmt.Print("1") })
@@ -58,7 +58,7 @@ func TestExit_ExecutionOrderWithCancel(t *testing.T) {
 		return
 	}
 	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_ExecutionOrderWithCancel")
+	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderWithCancelExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST_WITH_CANCEL=1")
 	output, err := cmd.CombinedOutput()
 	check.Error(t, err)
@@ -71,7 +71,7 @@ func TestExit_ExecutionOrderWithCancel(t *testing.T) {
 	}
 }
 
-func TestExit_ConcurrentCalls(t *testing.T) {
+func TestConcurrentCallsExit(t *testing.T) {
 	if os.Getenv("CONCURRENT_EXIT_TEST") == "1" {
 		// This is the subprocess
 		var executionCount int64
@@ -94,14 +94,14 @@ func TestExit_ConcurrentCalls(t *testing.T) {
 		wg.Wait()
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_ConcurrentCalls")
+	cmd := exec.Command(os.Args[0], "-test.run=TestConcurrentCallsExit")
 	cmd.Env = append(os.Environ(), "CONCURRENT_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.NoError(t, err)
 	check.Equal(t, "executed", string(output))
 }
 
-func TestExit_PanicInExitFunction(t *testing.T) {
+func TestPanicInExitFunction(t *testing.T) {
 	if os.Getenv("PANIC_EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.RunAtExit(func() { fmt.Print("first") })
@@ -110,7 +110,7 @@ func TestExit_PanicInExitFunction(t *testing.T) {
 		xos.Exit(0)
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_PanicInExitFunction")
+	cmd := exec.Command(os.Args[0], "-test.run=TestPanicInExitFunction")
 	cmd.Env = append(os.Environ(), "PANIC_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.NoError(t, err)
@@ -119,7 +119,7 @@ func TestExit_PanicInExitFunction(t *testing.T) {
 	check.Contains(t, string(output), "third")
 }
 
-func TestExit_RecursiveExit(t *testing.T) {
+func TestRecursiveExit(t *testing.T) {
 	if os.Getenv("RECURSIVE_EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.RunAtExit(func() { xos.Exit(2) })
@@ -127,7 +127,7 @@ func TestExit_RecursiveExit(t *testing.T) {
 		xos.Exit(0)
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_RecursiveExit")
+	cmd := exec.Command(os.Args[0], "-test.run=TestRecursiveExit")
 	cmd.Env = append(os.Environ(), "RECURSIVE_EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.NoError(t, err)
@@ -135,14 +135,14 @@ func TestExit_RecursiveExit(t *testing.T) {
 	check.Contains(t, string(output), "normal")
 }
 
-func TestExit_SIGINT(t *testing.T) {
+func TestSIGINT(t *testing.T) {
 	if os.Getenv("SIGINT_EXIT_TEST") == "1" {
 		// This is the subprocess
-		xos.ExitCodeForSIGINT = 234
+		xos.ExitCodeForSIGINT = 99
 		xos.EnsureAtSignalHandlersAreInstalled()
 		select {}
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_SIGINT")
+	cmd := exec.Command(os.Args[0], "-test.run=TestSIGINT")
 	cmd.Env = append(os.Environ(), "SIGINT_EXIT_TEST=1")
 	check.NoError(t, cmd.Start())
 	time.Sleep(100 * time.Millisecond) // Give the command time to start
@@ -153,18 +153,18 @@ func TestExit_SIGINT(t *testing.T) {
 	hasExitErr := errors.As(err, &exitError)
 	check.True(t, hasExitErr)
 	if hasExitErr {
-		check.Equal(t, 234, exitError.ExitCode())
+		check.Equal(t, 99, exitError.ExitCode())
 	}
 }
 
-func TestExit_SIGTERM(t *testing.T) {
+func TestSIGTERM(t *testing.T) {
 	if os.Getenv("SIGTERM_EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.ExitCodeForSIGTERM = 123
 		xos.EnsureAtSignalHandlersAreInstalled()
 		select {}
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExit_SIGTERM")
+	cmd := exec.Command(os.Args[0], "-test.run=TestSIGTERM")
 	cmd.Env = append(os.Environ(), "SIGTERM_EXIT_TEST=1")
 	check.NoError(t, cmd.Start())
 	time.Sleep(100 * time.Millisecond) // Give the command time to start

@@ -16,6 +16,8 @@ var StackFuncPrefixesToFilter = []string{
 	"runtime.",
 	"testing.",
 	"github.com/richardwilkes/toolbox/v2/xos.PanicRecovery",
+	"github.com/richardwilkes/toolbox/v2/errs.New",
+	"github.com/richardwilkes/toolbox/v2/errs.Wrap",
 }
 
 // StackTrace returns a slice of strings, each of which is a text representation of a frame in the stack trace. 'skip'

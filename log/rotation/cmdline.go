@@ -17,7 +17,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/i18n"
-	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // PathToLog holds the path to the log file that was configured on the command line when using ParseAndSetup().
@@ -33,7 +32,7 @@ func ParseAndSetupLogging(cl *cmdline.CmdLine, consoleOnByDefault bool) []string
 	var maxSize int64 = DefaultMaxSize
 	maxBackups := DefaultMaxBackups
 	consoleOption := false
-	cl.NewGeneralOption(&logFile).SetSingle('l').SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
+	cl.NewGeneralOption(&logFile).SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
 	cl.NewGeneralOption(&maxSize).SetName("log-file-size").SetUsage(i18n.Text("The maximum number of bytes to write to a log file before rotating it"))
 	cl.NewGeneralOption(&maxBackups).SetName("log-file-backups").SetUsage(i18n.Text("The maximum number of old logs files to retain"))
 	opt := cl.NewGeneralOption(&consoleOption)
@@ -47,7 +46,7 @@ func ParseAndSetupLogging(cl *cmdline.CmdLine, consoleOnByDefault bool) []string
 		if consoleOnByDefault == consoleOption {
 			log.SetOutput(rotator)
 		} else {
-			log.SetOutput(&xio.TeeWriter{Writers: []io.Writer{rotator, os.Stdout}})
+			log.SetOutput(io.MultiWriter(rotator, os.Stdout))
 		}
 		PathToLog = rotator.PathToLog()
 	} else {

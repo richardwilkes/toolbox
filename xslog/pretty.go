@@ -30,22 +30,22 @@ var _ slog.Handler = &PrettyHandler{}
 // StackKey is the key for the stack trace attribute.
 const StackKey = "stack" // Keep in sync with errs.StackTraceKey
 
-// PrettyHandler is an slog.Handler that outputs a "pretty" format: colorful and supporting formatted stack traces.
-type PrettyHandler struct {
-	handler          slog.Handler
-	sharedBufferLock *sync.Mutex
-	buffer           *bytes.Buffer
-	sharedWriterLock *sync.Mutex
-	w                io.Writer
-	stack            []string
-	kind             term.Kind
-	addSource        bool
-}
-
 // PrettyOptions is used to configure the PrettyHandler.
 type PrettyOptions struct {
 	slog.HandlerOptions
 	ColorSupportOverride term.Kind
+}
+
+// PrettyHandler is an slog.Handler that outputs a "pretty" format: colorful and supporting formatted stack traces.
+type PrettyHandler struct {
+	handler          slog.Handler
+	sharedBufferLock *sync.Mutex
+	buffer           *bytes.Buffer // Protected by sharedBufferLock
+	sharedWriterLock *sync.Mutex
+	w                io.Writer // Protected by sharedWriterLock
+	stack            []string  // Protected by sharedBufferLock
+	kind             term.Kind
+	addSource        bool
 }
 
 var poolBuffer = xsync.NewPool(func() []byte { return make([]byte, 0, 1024) })
@@ -96,7 +96,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := poolBuffer.Get()
 	defer func() {
-		if cap(buf) <= 8192 { // Only return buffers <= 8KiB to keep peak allocation low
+		if cap(buf) <= 8192 { // Only return buffers <= 8 KiB to keep peak allocation low
 			buf = buf[:0]
 			poolBuffer.Put(buf)
 		}
@@ -123,29 +123,19 @@ func (h *PrettyHandler) writeDivider(buf []byte) []byte {
 }
 
 func (h *PrettyHandler) writeLevel(buf []byte, level slog.Level) []byte {
-	var prefix string
-	var base slog.Level
+	var color string
 	switch {
 	case level < slog.LevelInfo:
-		prefix = h.kind.Cyan() + "DBG"
-		base = slog.LevelDebug
+		color = h.kind.Cyan()
 	case level < slog.LevelWarn:
-		prefix = h.kind.Green() + "INF"
-		base = slog.LevelInfo
+		color = h.kind.Green()
 	case level < slog.LevelError:
-		prefix = h.kind.Color256(214) + "WRN" // Orange
-		base = slog.LevelWarn
+		color = h.kind.Color256(214) // Orange
 	default:
-		prefix = h.kind.Red() + "ERR"
-		base = slog.LevelError
+		color = h.kind.Red()
 	}
-	buf = append(buf, prefix...)
-	if val := int(level - base); val != 0 {
-		if val >= 0 {
-			buf = append(buf, '+')
-		}
-		buf = append(buf, strconv.Itoa(val)...)
-	}
+	buf = append(buf, color...)
+	buf = append(buf, level.String()...)
 	return append(buf, h.kind.Reset()...)
 }
 
@@ -238,6 +228,9 @@ func (h *PrettyHandler) Enabled(ctx context.Context, level slog.Level) bool {
 
 // WithAttrs implements slog.Handler interface.
 func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	if len(attrs) == 0 {
+		return h
+	}
 	return &PrettyHandler{
 		handler:          h.handler.WithAttrs(attrs),
 		sharedBufferLock: h.sharedBufferLock,
@@ -249,6 +242,9 @@ func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 
 // WithGroup implements slog.Handler interface.
 func (h *PrettyHandler) WithGroup(name string) slog.Handler {
+	if name == "" {
+		return h
+	}
 	return &PrettyHandler{
 		handler:          h.handler.WithGroup(name),
 		sharedBufferLock: h.sharedBufferLock,

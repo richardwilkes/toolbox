@@ -10,41 +10,70 @@
 package xslog_test
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
 
-func TestSetupDev(t *testing.T) {
-	if os.Getenv("XSLOG_DEV_TEST") == "1" {
+func TestSetupStd(t *testing.T) {
+	if os.Getenv("XSLOG_SETUP_STD_TEST") == "1" {
 		// This is the subprocess
-		xslog.SetupStd(true)
+		saved := os.Args      // Save the original args
+		os.Args = os.Args[:1] // Reset args to just the program name
+		logFile, _ := xslog.SetupStd(cmdline.New(false))
+		os.Args = saved
 		slog.Info("test message")
-		return
+		if data, err := os.ReadFile(logFile); err != nil {
+			slog.Error("Failed to read log file", "error", err)
+		} else {
+			fmt.Println(string(data))
+		}
+		xos.Exit(0)
 	}
-	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestSetupDev")
-	cmd.Env = append(os.Environ(), "XSLOG_DEV_TEST=1")
+	if os.Getenv("XSLOG_SETUP_STD_TEST") == "2" {
+		// This is the subprocess
+		saved := os.Args      // Save the original args
+		os.Args = os.Args[:1] // Reset args to just the program name
+		xslog.SetupStd(cmdline.New(false))
+		os.Args = saved
+		slog.Info("test message")
+		xos.Exit(0)
+	}
+	// Run the tests in subprocesses
+	cmd := exec.Command(os.Args[0], "-test.run=TestSetupStd")
+	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.NoError(t, err)
-	check.Contains(t, string(output), "test message | xslog/setup_test.go:")
+	check.Contains(t, string(output), " | test message | xslog/setup_test.go:")
+
+	cmd = exec.Command(os.Args[0], "-test.run=TestSetupStd")
+	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TEST=2")
+	output, err = cmd.CombinedOutput()
+	check.NoError(t, err)
+	check.Equal(t, "", string(output))
 }
 
-func TestSetupNotDev(t *testing.T) {
-	if os.Getenv("XSLOG_NOTDEV_TEST") == "1" {
+func TestSetupConsole(t *testing.T) {
+	if os.Getenv("XSLOG_SETUP_STD_TO_CONSOLE_TEST") == "1" {
 		// This is the subprocess
-		xslog.SetupStd(false)
+		saved := os.Args      // Save the original args
+		os.Args = os.Args[:1] // Reset args to just the program name
+		xslog.SetupStdToConsole(cmdline.New(false))
+		os.Args = saved
 		slog.Info("test message")
-		return
+		xos.Exit(0)
 	}
 	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestSetupNotDev")
-	cmd.Env = append(os.Environ(), "XSLOG_NOTDEV_TEST=1")
+	cmd := exec.Command(os.Args[0], "-test.run=TestSetupConsole")
+	cmd.Env = append(os.Environ(), "XSLOG_SETUP_STD_TO_CONSOLE_TEST=1")
 	output, err := cmd.CombinedOutput()
 	check.NoError(t, err)
-	check.Contains(t, string(output), `"msg":"test message"`)
+	check.Contains(t, string(output), ` | test message | xslog/setup_test.go:`)
 }
