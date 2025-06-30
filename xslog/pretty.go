@@ -20,15 +20,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio/term"
 	"github.com/richardwilkes/toolbox/v2/xruntime"
 	"github.com/richardwilkes/toolbox/v2/xsync"
 )
 
 var _ slog.Handler = &PrettyHandler{}
-
-// StackKey is the key for the stack trace attribute.
-const StackKey = "stack" // Keep in sync with errs.StackTraceKey
 
 // PrettyOptions is used to configure the PrettyHandler.
 type PrettyOptions struct {
@@ -75,7 +73,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 			a.Key == slog.SourceKey {
 			return slog.Attr{}
 		}
-		if a.Key == StackKey {
+		if a.Key == errs.StackTraceKey {
 			if s, ok := a.Value.Any().([]string); ok {
 				h.stack = s
 			}

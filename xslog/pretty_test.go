@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
 
@@ -78,7 +79,7 @@ func TestPrettyHandlerStackTrace(t *testing.T) {
 	handler := xslog.NewPrettyHandler(&buf, nil)
 	pc, _, _, _ := runtime.Caller(0)
 	record := slog.NewRecord(time.Now(), slog.LevelInfo, "test stack", pc)
-	record.Add(xslog.StackKey, []string{
+	record.Add(errs.StackTraceKey, []string{
 		"[main.main] play/main.go:32",
 		"[runtime.main] runtime/proc.go:283",
 	})

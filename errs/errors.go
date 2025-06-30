@@ -85,7 +85,7 @@ func WrapTyped(cause error) *Error {
 		return nil
 	}
 	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
-	// to avoid losing information and still return a *Error
+	// to avoid losing information and still return an *Error
 	//nolint:errorlint // See note above
 	if err, ok := cause.(*Error); ok {
 		return err
