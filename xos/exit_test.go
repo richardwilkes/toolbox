@@ -233,3 +233,22 @@ func TestExitIfErr(t *testing.T) {
 	_, err = cmd.CombinedOutput()
 	c.NoError(err)
 }
+
+func TestExitWithMsg(t *testing.T) {
+	if os.Getenv("EXIT_WITH_MSG_TEST") == "1" {
+		// This is the subprocess
+		xos.ExitWithMsg("Outta here")
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestExitWithMsg")
+	cmd.Env = append(os.Environ(), "EXIT_WITH_MSG_TEST=1")
+	output, err := cmd.CombinedOutput()
+	c := check.New(t)
+	c.HasError(err)
+	c.Contains(string(output), "Outta here")
+	var exitError *exec.ExitError
+	hasExitErr := errors.As(err, &exitError)
+	c.True(hasExitErr)
+	if hasExitErr {
+		c.Equal(1, exitError.ExitCode())
+	}
+}

@@ -10,14 +10,14 @@
 package xslog_test
 
 import (
+	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/xflag"
 	"github.com/richardwilkes/toolbox/v2/xio/fs/paths"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
@@ -71,7 +71,7 @@ func TestRotatorDefaults(t *testing.T) {
 	var r xslog.Rotator
 	r.Normalize()
 	c := check.New(t)
-	c.Equal(filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+xslog.LogFileExt), r.Path)
+	c.Equal(filepath.Join(paths.AppLogDir(), xflag.AppCmdName+xslog.LogFileExt), r.Path)
 	c.Equal(int64(10*1024*1024), r.MaxSize) //
 	c.Equal(1, r.MaxBackups)
 	c.Equal(os.FileMode(0o644), r.FileMode)
@@ -83,22 +83,24 @@ func TestRotatorWithNilConfig(t *testing.T) {
 	c.NotNil(((*xslog.Rotator)(nil)).NewWriteCloser())
 }
 
-func TestRotatorCmdLineOpts(t *testing.T) {
-	cl := cmdline.New(false)
+func TestRotatorAddFlags(t *testing.T) {
 	var r xslog.Rotator
-	r.AddStdCmdLineOptions(cl)
-	if os.Getenv("ROTATOR_CMDLINE_TEST") == "1" {
-		// This is the subprocess
-		cl.DisplayUsage()
-		return
-	}
-	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestRotatorCmdLineOpts")
-	cmd.Env = append(os.Environ(), "ROTATOR_CMDLINE_TEST=1")
-	output, err := cmd.CombinedOutput()
+	r.AddFlags()
+	hasFile := false
+	hasBackups := false
+	hasSize := false
+	flag.VisitAll(func(f *flag.Flag) {
+		switch f.Name {
+		case "log-file":
+			hasFile = true
+		case "log-file-backups":
+			hasBackups = true
+		case "log-file-size":
+			hasSize = true
+		}
+	})
 	c := check.New(t)
-	c.NoError(err)
-	c.Contains(string(output), "--log-file <value>")
-	c.Contains(string(output), "--log-file-backups <value>")
-	c.Contains(string(output), "--log-file-size <value>")
+	c.True(hasFile)
+	c.True(hasBackups)
+	c.True(hasSize)
 }

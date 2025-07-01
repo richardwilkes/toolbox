@@ -37,6 +37,11 @@ func NewAnsiWriter(w io.Writer) *AnsiWriter {
 	return &AnsiWriter{w: w, kind: DetectKind(w)}
 }
 
+// Kind returns the term.Kind that this writer has been configured for.
+func (a *AnsiWriter) Kind() Kind {
+	return a.kind
+}
+
 // SetKind overrides the automatically detected terminal kind with the specified one.
 func (a *AnsiWriter) SetKind(kind Kind) {
 	if kind < Dumb || kind > Color24 {
@@ -457,12 +462,13 @@ func (a *AnsiWriter) writeByte(c byte) {
 func (a *AnsiWriter) WrapText(prefix, text string) {
 	a.writeString(prefix)
 	avail, _ := Size(a.w)
-	avail -= 1 + len(prefix)
+	prefixLength := len(colorSequenceMatcher.ReplaceAllString(prefix, ""))
+	avail -= 1 + prefixLength
 	if avail < 1 {
 		avail = 1
 	}
 	remaining := avail
-	indent := strings.Repeat(" ", len(prefix))
+	indent := strings.Repeat(" ", prefixLength)
 	for line := range strings.SplitSeq(text, "\n") {
 		for _, ch := range line {
 			if ch == ' ' {

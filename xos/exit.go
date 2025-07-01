@@ -134,3 +134,9 @@ func ExitWithErr(err error) {
 	errs.Log(err)
 	Exit(1)
 }
+
+// ExitWithMsg writes the message to stderr and then exits with code 1.
+func ExitWithMsg(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+	Exit(1)
+}

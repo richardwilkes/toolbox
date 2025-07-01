@@ -10,6 +10,7 @@
 package xslog
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -17,9 +18,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xflag"
 	"github.com/richardwilkes/toolbox/v2/xio/fs/paths"
 )
 
@@ -29,8 +30,8 @@ const LogFileExt = ".log"
 var _ io.WriteCloser = &rotatingWriter{}
 
 // Rotator provides configuration for creating a io.WriteCloser via a call to its NewWriteCloser() method that will
-// rotate a log file when it exceeds a certain size. You can also use the method AddStdCmdLineOptions() to add
-// command-line options to control the log rotation.
+// rotate a log file when it exceeds a certain size. You can also use the method AddFlags() to add command-line options
+// to control the log rotation.
 type Rotator struct {
 	// Path specifies the file to write logs to. Backup log files will be retained in the same directory. Leave empty to
 	// use the default log path.
@@ -59,21 +60,21 @@ func (r *Rotator) NewWriteCloser() io.WriteCloser {
 	return &w
 }
 
-// AddStdCmdLineOptions adds the standard command-line options for controlling log rotation.
-func (r *Rotator) AddStdCmdLineOptions(cl *cmdline.CmdLine) {
+// AddFlags adds command-line flags for controlling log rotation.
+func (r *Rotator) AddFlags() {
 	r.Normalize()
-	cl.NewGeneralOption(&r.Path).SetName("log-file").SetUsage(i18n.Text("The file to write logs to"))
-	cl.NewGeneralOption(&r.MaxSize).SetName("log-file-size").
-		SetUsage(i18n.Text("The maximum number of bytes to write to a log file before rotating it"))
-	cl.NewGeneralOption(&r.MaxBackups).SetName("log-file-backups").
-		SetUsage(i18n.Text("The maximum number of old logs files to retain"))
+	flag.StringVar(&r.Path, "log-file", r.Path, i18n.Text("The `file` to write logs to"))
+	flag.Int64Var(&r.MaxSize, "log-file-size", r.MaxSize,
+		i18n.Text("The maximum number of `bytes` to write to a log file before rotating it"))
+	flag.IntVar(&r.MaxBackups, "log-file-backups", r.MaxBackups,
+		i18n.Text("The maximum `number` of old logs files to retain"))
 }
 
 // Normalize ensures that the configuration is valid. It sets defaults for any fields that are not set. It is not
 // necessary to call this, but might be useful if you want to programmatically determine the default values.
 func (r *Rotator) Normalize() {
 	if r.Path == "" {
-		r.Path = filepath.Join(paths.AppLogDir(), cmdline.AppCmdName+LogFileExt)
+		r.Path = filepath.Join(paths.AppLogDir(), xflag.AppCmdName+LogFileExt)
 	}
 	if r.MaxSize <= 0 {
 		r.MaxSize = 10 * 1024 * 1024

@@ -10,13 +10,11 @@
 package xslog_test
 
 import (
+	"flag"
 	"log/slog"
-	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
 
@@ -27,20 +25,15 @@ func TestLevelValueSet(t *testing.T) {
 	c.Equal(v.Level(), slog.LevelError)
 }
 
-func TestLevelValueCmdLineOpts(t *testing.T) {
-	cl := cmdline.New(false)
+func TestLevelValueAddFlags(t *testing.T) {
 	var v xslog.LevelValue
-	v.AddStdCmdLineOptions(cl)
-	if os.Getenv("LEVEL_VALUE_CMDLINE_TEST") == "1" {
-		// This is the subprocess
-		cl.DisplayUsage()
-		return
-	}
-	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestLevelValueCmdLineOpts")
-	cmd.Env = append(os.Environ(), "LEVEL_VALUE_CMDLINE_TEST=1")
-	output, err := cmd.CombinedOutput()
+	v.AddFlags()
+	hasLevel := false
+	flag.VisitAll(func(f *flag.Flag) {
+		if f.Name == "log-level" {
+			hasLevel = true
+		}
+	})
 	c := check.New(t)
-	c.NoError(err)
-	c.Contains(string(output), "--log-level <value>")
+	c.True(hasLevel)
 }

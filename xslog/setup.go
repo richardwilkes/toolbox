@@ -10,35 +10,34 @@
 package xslog
 
 import (
+	"flag"
 	"io"
 	"log/slog"
 	"os"
 
-	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/xflag"
 	"github.com/richardwilkes/toolbox/v2/xio/term"
 )
 
-// SetupStd adds command-line options for controlling logging, parses the command line, instantiates a PrettyHandler and
-// a log Rotator, then attaches it to slog. Returns the remaining arguments that weren't used for option content. An
-// option to also send logs to the console will be added to the command line flags.
+// SetupStd adds command-line options for controlling logging (including one to also send logs to the console), parses
+// the command line, instantiates a PrettyHandler and a log Rotator, then attaches it to slog. Returns the path to the
+// log file.
 //
 // Note that this function sends colored output to the log file if os.Stdout supports colors.
-func SetupStd(cl *cmdline.CmdLine) (logFilePath string, remainingArgs []string) {
+func SetupStd(description, argsUsage string) string {
 	var logLevel LevelValue
-	logLevel.AddStdCmdLineOptions(cl)
+	logLevel.AddFlags()
 
 	var rotatorCfg Rotator
-	rotatorCfg.AddStdCmdLineOptions(cl)
+	rotatorCfg.AddFlags()
 
-	console := false
-	opt := cl.NewGeneralOption(&console)
-	opt.SetSingle('C').SetName("log-to-console").SetUsage(i18n.Text("Copy the log output to the console"))
-
-	remainingArgs = cl.Parse(os.Args[1:])
+	console := flag.Bool("console", false, i18n.Text("Copy the log output to the console"))
+	xflag.SetUsage(description, argsUsage)
+	flag.Parse()
 
 	w := io.Writer(rotatorCfg.NewWriteCloser())
-	if console {
+	if *console {
 		w = io.MultiWriter(w, os.Stdout)
 	}
 	slog.SetDefault(slog.New(NewPrettyHandler(w, &PrettyOptions{
@@ -49,27 +48,27 @@ func SetupStd(cl *cmdline.CmdLine) (logFilePath string, remainingArgs []string) 
 		ColorSupportOverride: term.DetectKind(os.Stdout),
 	})))
 
-	return rotatorCfg.Path, remainingArgs
+	return rotatorCfg.Path
 }
 
-// SetupStdToConsole adds command-line options for controlling logging, parses the command line, instantiates a
-// PrettyHandler and a log Rotator, then attaches it to slog. Returns the remaining arguments that weren't used for
-// option content. The logs will go to both the console and a file by default, but an option to suppress the console
-// output will be added to the command line flags.
+// SetupStdToConsole adds command-line options for controlling logging (including one to suppress the console output),
+// parses the command line, instantiates a PrettyHandler and a log Rotator, then attaches it to slog. Returns the path
+// to the log file.
 //
 // Note that this function sends colored output to the log file if os.Stdout supports colors.
-func SetupStdToConsole(cl *cmdline.CmdLine) (logFilePath string, remainingArgs []string) {
+func SetupStdToConsole(description, argsUsage string) string {
 	var logLevel LevelValue
-	logLevel.AddStdCmdLineOptions(cl)
+	logLevel.AddFlags()
 
 	var rotatorCfg Rotator
-	rotatorCfg.AddStdCmdLineOptions(cl)
+	rotatorCfg.AddFlags()
 
-	var quiet bool
-	opt := cl.NewGeneralOption(&quiet)
-	opt.SetSingle('q').SetName("quiet").SetUsage(i18n.Text("Suppress the log output to the console"))
-
-	remainingArgs = cl.Parse(os.Args[1:])
+	quiet := false
+	quietUsage := i18n.Text("Suppress the log output to the console")
+	flag.BoolVar(&quiet, "quiet", quiet, quietUsage)
+	flag.BoolVar(&quiet, "q", quiet, quietUsage)
+	xflag.SetUsage(description, argsUsage)
+	flag.Parse()
 
 	w := io.Writer(rotatorCfg.NewWriteCloser())
 	if !quiet {
@@ -83,5 +82,5 @@ func SetupStdToConsole(cl *cmdline.CmdLine) (logFilePath string, remainingArgs [
 		ColorSupportOverride: term.DetectKind(os.Stdout),
 	})))
 
-	return rotatorCfg.Path, remainingArgs
+	return rotatorCfg.Path
 }

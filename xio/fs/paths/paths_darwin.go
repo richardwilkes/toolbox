@@ -12,14 +12,14 @@ package paths
 import (
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/xflag"
 )
 
 // AppDataDir returns the application data directory.
 func AppDataDir() string {
 	path := filepath.Join(HomeDir(), "Library", "Application Support")
-	if cmdline.AppIdentifier != "" {
-		path = filepath.Join(path, cmdline.AppIdentifier)
+	if xflag.AppIdentifier != "" {
+		path = filepath.Join(path, xflag.AppIdentifier)
 	}
 	return path
 }
@@ -27,8 +27,8 @@ func AppDataDir() string {
 // AppLogDir returns the application log directory.
 func AppLogDir() string {
 	path := filepath.Join(HomeDir(), "Library", "Logs")
-	if cmdline.AppIdentifier != "" {
-		path = filepath.Join(path, cmdline.AppIdentifier)
+	if xflag.AppIdentifier != "" {
+		path = filepath.Join(path, xflag.AppIdentifier)
 	}
 	return path
 }

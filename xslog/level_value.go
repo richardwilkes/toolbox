@@ -10,19 +10,19 @@
 package xslog
 
 import (
+	"flag"
 	"log/slog"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/i18n"
 )
 
 var (
-	_ slog.Leveler  = LevelValue{}
-	_ cmdline.Value = &LevelValue{} // For command line parsing
+	_ slog.Leveler = LevelValue{}
+	_ flag.Value   = &LevelValue{} // For command line parsing
 )
 
-// LevelValue is a cmdline.Value that holds a slog.Level and can be used to set the log level from the command line.
+// LevelValue is a flag.Value that holds a slog.Level and can be used to set the log level from the command line.
 type LevelValue struct {
 	level slog.Level
 }
@@ -32,7 +32,7 @@ func (v LevelValue) Level() slog.Level {
 	return v.level
 }
 
-// Set implements the cmdline.Value interface.
+// Set implements the flag.Value interface.
 func (v *LevelValue) Set(value string) error {
 	return v.level.UnmarshalText([]byte(value))
 }
@@ -41,14 +41,13 @@ func (v LevelValue) String() string {
 	return v.level.String()
 }
 
-// AddStdCmdLineOptions adds the standard command-line options for controlling the log level.
-func (v *LevelValue) AddStdCmdLineOptions(cl *cmdline.CmdLine) {
-	cl.NewOption(v).SetName("log-level").
-		SetUsage(i18n.Text("The level of logging to use. Valid values are: ") +
-			strings.Join([]string{
-				slog.LevelDebug.String(),
-				slog.LevelInfo.String(),
-				slog.LevelWarn.String(),
-				slog.LevelError.String(),
-			}, ", "))
+// AddFlags adds command-line flags for controlling the log level.
+func (v *LevelValue) AddFlags() {
+	flag.Var(v, "log-level", i18n.Text("The level of logging to use. Valid values are: ")+
+		strings.Join([]string{
+			slog.LevelDebug.String(),
+			slog.LevelInfo.String(),
+			slog.LevelWarn.String(),
+			slog.LevelError.String(),
+		}, ", "))
 }

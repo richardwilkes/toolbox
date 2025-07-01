@@ -17,7 +17,6 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/cmdline"
 	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
@@ -27,7 +26,7 @@ func TestSetupStd(t *testing.T) {
 		// This is the subprocess
 		saved := os.Args      // Save the original args
 		os.Args = os.Args[:1] // Reset args to just the program name
-		logFile, _ := xslog.SetupStd(cmdline.New(false))
+		logFile := xslog.SetupStd("", "")
 		os.Args = saved
 		slog.Info("test message")
 		if data, err := os.ReadFile(logFile); err != nil {
@@ -41,7 +40,7 @@ func TestSetupStd(t *testing.T) {
 		// This is the subprocess
 		saved := os.Args      // Save the original args
 		os.Args = os.Args[:1] // Reset args to just the program name
-		xslog.SetupStd(cmdline.New(false))
+		xslog.SetupStd("", "")
 		os.Args = saved
 		slog.Info("test message")
 		xos.Exit(0)
@@ -66,7 +65,7 @@ func TestSetupConsole(t *testing.T) {
 		// This is the subprocess
 		saved := os.Args      // Save the original args
 		os.Args = os.Args[:1] // Reset args to just the program name
-		xslog.SetupStdToConsole(cmdline.New(false))
+		xslog.SetupStdToConsole("", "")
 		os.Args = saved
 		slog.Info("test message")
 		xos.Exit(0)

@@ -12,6 +12,7 @@ package fs_test
 import (
 	"testing"
 
+	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xio/fs"
 )
 
@@ -26,6 +27,7 @@ func TestWindowsSplit(t *testing.T) {
 			out: []string{`\\host\share\`, "one", "two.txt"},
 		},
 	}
+	c := check.New(t)
 	for i, one := range data {
 		c.Equal(one.out, fs.Split(one.in), "%d", i)
 	}

@@ -13,14 +13,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/v2/cmdline"
+	"github.com/richardwilkes/toolbox/v2/xflag"
 )
 
 // AppDataDir returns the application data directory.
 func AppDataDir() string {
 	path := filepath.Join(HomeDir(), "AppData", "Local")
-	if cmdline.AppIdentifier != "" {
-		path = filepath.Join(path, cmdline.AppIdentifier)
+	if xflag.AppIdentifier != "" {
+		path = filepath.Join(path, xflag.AppIdentifier)
 	}
 	return path
 }
