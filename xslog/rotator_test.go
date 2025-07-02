@@ -17,8 +17,7 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/xflag"
-	"github.com/richardwilkes/toolbox/v2/xio/fs/paths"
+	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xslog"
 )
 
@@ -71,7 +70,7 @@ func TestRotatorDefaults(t *testing.T) {
 	var r xslog.Rotator
 	r.Normalize()
 	c := check.New(t)
-	c.Equal(filepath.Join(paths.AppLogDir(), xflag.AppCmdName+xslog.LogFileExt), r.Path)
+	c.Equal(filepath.Join(xos.AppLogDir(true), xos.AppCmdName+xslog.LogFileExt), r.Path)
 	c.Equal(int64(10*1024*1024), r.MaxSize) //
 	c.Equal(1, r.MaxBackups)
 	c.Equal(os.FileMode(0o644), r.FileMode)

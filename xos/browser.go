@@ -7,7 +7,6 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package desktop provides desktop integration utilities.
 package xos
 
 import (
@@ -16,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
-	"github.com/richardwilkes/toolbox/v2/xruntime"
 )
 
 // OpenBrowser asks the system to open the provided path or URL.
@@ -24,13 +22,13 @@ func OpenBrowser(pathOrURL string) error {
 	var cmd string
 	var args []string
 	switch runtime.GOOS {
-	case xruntime.MacOS:
+	case MacOS:
 		cmd = "open"
 		args = append(args, pathOrURL)
-	case xruntime.LinuxOS:
+	case LinuxOS:
 		cmd = "xdg-open"
 		args = append(args, pathOrURL)
-	case xruntime.WindowsOS:
+	case WindowsOS:
 		if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
 			cmd = "cmd"
 			args = append(args, "/c", "start", pathOrURL)

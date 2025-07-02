@@ -37,32 +37,32 @@ func SetUsageFor(flagSet *flag.FlagSet, description, argsUsage string) {
 		}
 		kind := w.Kind()
 		w.WriteString(kind.Reset() + "\n")
-		w.WrapText("", kind.Green()+AppName+kind.Dim())
-		buildInfo := fmt.Sprintf(i18n.Text("Version %s"), ShortVersion())
-		if BuildNumber != "" {
-			buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, BuildNumber)
+		w.WrapText("", kind.Green()+xos.AppName+kind.Dim())
+		buildInfo := fmt.Sprintf(i18n.Text("Version %s"), xos.ShortAppVersion())
+		if xos.BuildNumber != "" {
+			buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, xos.BuildNumber)
 		}
 		w.WrapText("", buildInfo)
-		if VCSName != "" && VCSVersion != "" {
-			str := VCSName + ": " + VCSVersion
-			if VCSModified {
+		if xos.VCSName != "" && xos.VCSVersion != "" {
+			str := xos.VCSName + ": " + xos.VCSVersion
+			if xos.VCSModified {
 				str += "-modified"
 			}
 			w.WrapText("", str)
 		}
-		copyright := Copyright()
+		copyright := xos.Copyright()
 		if copyright != "" {
 			w.WrapText("", copyright)
 		}
-		if License != "" {
-			w.WrapText("", fmt.Sprintf(i18n.Text("License: %s"), License))
+		if xos.License != "" {
+			w.WrapText("", fmt.Sprintf(i18n.Text("License: %s"), xos.License))
 		}
 		w.WriteString(kind.Reset() + "\n")
 		if description != "" {
 			w.WrapText("", description)
 			w.WriteByte('\n')
 		}
-		usage := kind.Yellow() + AppCmdName
+		usage := kind.Yellow() + xos.AppCmdName
 		type state struct {
 			flag  *flag.Flag
 			name  string
@@ -135,15 +135,15 @@ func AddVersionFlags() (shortVersion, longVersion *bool) {
 		flag.Bool("version", false, i18n.Text("Show the full version and exit"))
 }
 
-// HandleVersionFlags will handle the version flags, if set. If one or both are set, this function will call
-// xos.Exit(0) after displaying the version.
+// HandleVersionFlags will handle the version flags, if set. If one or both are set, this function will call xos.Exit(0)
+// after displaying the version.
 func HandleVersionFlags(shortVersion, longVersion *bool) {
 	if *longVersion {
-		fmt.Println(LongVersion())
+		fmt.Println(xos.LongAppVersion())
 		xos.Exit(0)
 	}
 	if *shortVersion {
-		fmt.Println(ShortVersion())
+		fmt.Println(xos.ShortAppVersion())
 		xos.Exit(0)
 	}
 }

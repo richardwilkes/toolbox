@@ -20,8 +20,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/i18n"
-	"github.com/richardwilkes/toolbox/v2/xflag"
-	"github.com/richardwilkes/toolbox/v2/xio/fs/paths"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // LogFileExt is the extension used for log files.
@@ -74,7 +73,7 @@ func (r *Rotator) AddFlags() {
 // necessary to call this, but might be useful if you want to programmatically determine the default values.
 func (r *Rotator) Normalize() {
 	if r.Path == "" {
-		r.Path = filepath.Join(paths.AppLogDir(), xflag.AppCmdName+LogFileExt)
+		r.Path = filepath.Join(xos.AppLogDir(true), xos.AppCmdName+LogFileExt)
 	}
 	if r.MaxSize <= 0 {
 		r.MaxSize = 10 * 1024 * 1024

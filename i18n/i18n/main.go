@@ -29,9 +29,10 @@ import (
 )
 
 func main() {
-	xflag.CopyrightStartYear = "2016"
-	xflag.CopyrightHolder = "Richard A. Wilkes"
-	xflag.License = "Mozilla Public License 2.0"
+	xos.AppIdentifier = "com.trollworks.i18n"
+	xos.CopyrightStartYear = "2016"
+	xos.CopyrightHolder = "Richard A. Wilkes"
+	xos.License = "Mozilla Public License 2.0"
 	xflag.SetUsage(i18n.Text("Generates a template for a localization file from source code."), "<path> [path...]")
 	outPath := flag.String("output", "language.i18n", "The output `path`")
 	flag.Parse()

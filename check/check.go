@@ -16,7 +16,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/xos"
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
@@ -161,7 +160,16 @@ func (c Checker) NotPanics(f func(), msgAndArgs ...any) {
 }
 
 func (c Checker) doesPanic(f func()) (panicErr error) {
-	defer xos.PanicRecovery(func(err error) { panicErr = err })
+	// Can't use xos.PanicRecovery because that would cause an import cycle in some places
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			err, ok := recovered.(error)
+			if !ok {
+				err = fmt.Errorf("%+v", recovered)
+			}
+			panicErr = err
+		}
+	}()
 	f()
 	return
 }

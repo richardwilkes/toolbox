@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xflag
+package xos
 
 import (
 	"os"
@@ -112,23 +112,23 @@ func init() {
 	}
 }
 
-// ShortVersion returns the app version. If the code was built from a dirty version of a VCS checkout, a trailing '~'
+// ShortAppVersion returns the app version. If the code was built from a dirty version of a VCS checkout, a trailing '~'
 // character will be added.
-func ShortVersion() string {
-	return markModified(AppVersion)
+func ShortAppVersion() string {
+	return markAppVersionModified(AppVersion)
 }
 
-// LongVersion returns a combination of the app version and the build number. If the code was built from a dirty version
-// of a VCS checkout, a trailing '~' character will be added.
-func LongVersion() string {
+// LongAppVersion returns a combination of the app version and the build number. If the code was built from a dirty
+// version of a VCS checkout, a trailing '~' character will be added.
+func LongAppVersion() string {
 	version := AppVersion
 	if BuildNumber != "" {
 		version += "-" + BuildNumber
 	}
-	return markModified(version)
+	return markAppVersionModified(version)
 }
 
-func markModified(in string) string {
+func markAppVersionModified(in string) string {
 	if VCSModified {
 		return in + "~"
 	}
