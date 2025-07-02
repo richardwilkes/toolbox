@@ -7,8 +7,12 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package desktop
+// Package toolbox is the top level package for a collection of utility packages.
+package xruntime
 
-func cmdAndArgs(pathOrURL string) (cmdName string, args []string) {
-	return "open", []string{pathOrURL}
-}
+// Constants for comparison to runtime.GOOS
+const (
+	MacOS     = "darwin"
+	WindowsOS = "windows"
+	LinuxOS   = "linux"
+)
