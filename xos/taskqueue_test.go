@@ -7,14 +7,14 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package taskqueue_test
+package xos_test
 
 import (
 	"sync/atomic"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/taskqueue"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 const (
@@ -30,7 +30,7 @@ var (
 )
 
 func TestSerialQueue(t *testing.T) {
-	q := taskqueue.New(taskqueue.Depth(100), taskqueue.Workers(1))
+	q := xos.NewTaskQueue(&xos.TaskQueueConfig{Depth: 100, Workers: 1})
 	prev = -1
 	counter = 0
 	for i := range 200 {
@@ -42,7 +42,7 @@ func TestSerialQueue(t *testing.T) {
 	c.Equal(200, counter)
 }
 
-func submitSerial(q *taskqueue.Queue, i int) {
+func submitSerial(q *xos.TaskQueue, i int) {
 	q.Submit(func() {
 		if i-1 == prev {
 			prev = i
@@ -52,7 +52,7 @@ func submitSerial(q *taskqueue.Queue, i int) {
 }
 
 func TestParallelQueue(t *testing.T) {
-	q := taskqueue.New(taskqueue.Workers(5))
+	q := xos.NewTaskQueue(&xos.TaskQueueConfig{Workers: 5})
 	total = 0
 	count = 0
 	for i := range parallelWorkSubmissions {
@@ -64,7 +64,7 @@ func TestParallelQueue(t *testing.T) {
 	c.Equal(workTotal, int(total))
 }
 
-func submitParallel(q *taskqueue.Queue, i int) {
+func submitParallel(q *xos.TaskQueue, i int) {
 	q.Submit(func() {
 		atomic.AddInt32(&total, int32(i))
 		atomic.AddInt32(&count, 1)
@@ -76,7 +76,7 @@ func TestRecovery(t *testing.T) {
 	c.Panics(boom)
 	logged := false
 	c.NotPanics(func() {
-		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { logged = true }))
+		q := xos.NewTaskQueue(&xos.TaskQueueConfig{RecoveryHandler: func(_ error) { logged = true }})
 		q.Submit(boom)
 		q.Shutdown()
 	})
@@ -87,7 +87,7 @@ func TestRecoveryWithBadLogger(t *testing.T) {
 	c := check.New(t)
 	c.Panics(boom)
 	c.NotPanics(func() {
-		q := taskqueue.New(taskqueue.RecoveryHandler(func(_ error) { boom() }))
+		q := xos.NewTaskQueue(&xos.TaskQueueConfig{RecoveryHandler: func(_ error) { boom() }})
 		q.Submit(boom)
 		q.Shutdown()
 	})
