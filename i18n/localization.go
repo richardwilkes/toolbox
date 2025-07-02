@@ -90,11 +90,11 @@ func Text(text string) string {
 			return
 		}
 		for _, one := range dirEntry {
-			if !one.IsDir() {
-				name := one.Name()
-				if filepath.Ext(name) == Extension {
-					load(name)
-				}
+			if one.IsDir() {
+				continue
+			}
+			if name := one.Name(); filepath.Ext(name) == Extension {
+				load(name)
 			}
 		}
 	})

@@ -11,7 +11,9 @@ package errs
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 )
@@ -100,19 +102,21 @@ func LogAttrsWithLevel(ctx context.Context, level slog.Level, logger *slog.Logge
 	logAttrs(ctx, level, logger, WrapTyped(err), attrs...)
 }
 
-func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, err *Error, attrs ...slog.Attr) {
+func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, e *Error, attrs ...slog.Attr) {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	if !logger.Enabled(ctx, level) {
 		return
 	}
-	r := createRecord(level, err)
+	r := createRecord(level, e)
 	r.AddAttrs(attrs...)
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	_ = logger.Handler().Handle(ctx, r) //nolint:errcheck // Since we are in the logger, nothing we can reasonably do to log this
+	if err := logger.Handler().Handle(ctx, r); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
 
 type stackValue struct {
