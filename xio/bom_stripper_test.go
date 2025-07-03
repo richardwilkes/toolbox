@@ -66,6 +66,6 @@ func TestNewBOMStripper_ErrorOnRead(t *testing.T) {
 
 type errReader struct{ err error }
 
-func (e *errReader) Read(p []byte) (int, error) {
+func (e *errReader) Read(_ []byte) (int, error) {
 	return 0, e.err
 }

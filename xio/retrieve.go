@@ -20,8 +20,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// HasHttpOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
-func HasHttpOrFileURLPrefix(urlStr string) bool {
+// HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
+func HasHTTPOrFileURLPrefix(urlStr string) bool {
 	return strings.HasPrefix(urlStr, "http://") ||
 		strings.HasPrefix(urlStr, "https://") ||
 		strings.HasPrefix(urlStr, "file://")
@@ -48,7 +48,7 @@ func RetrieveData(ctx context.Context, client *http.Client, filePathOrURL string
 // responsible for closing the returned ReadCloser. Note that for network requests, the entire stream should be read to
 // allow reuse of the underlying connection.
 func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) (io.ReadCloser, error) {
-	if HasHttpOrFileURLPrefix(filePathOrURL) {
+	if HasHTTPOrFileURLPrefix(filePathOrURL) {
 		u, err := url.Parse(filePathOrURL)
 		if err != nil {
 			return nil, errs.NewWithCause(filePathOrURL, err)

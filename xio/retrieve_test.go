@@ -25,13 +25,13 @@ import (
 
 func TestHasHttpOrFileURLPrefix(t *testing.T) {
 	c := check.New(t)
-	c.True(xio.HasHttpOrFileURLPrefix("http://example.com"))
-	c.True(xio.HasHttpOrFileURLPrefix("https://example.com"))
-	c.True(xio.HasHttpOrFileURLPrefix("file:///tmp/foo"))
-	c.False(xio.HasHttpOrFileURLPrefix("ftp://example.com"))
-	c.False(xio.HasHttpOrFileURLPrefix("/tmp/foo"))
-	c.False(xio.HasHttpOrFileURLPrefix("c:/tmp/foo"))
-	c.False(xio.HasHttpOrFileURLPrefix("c:\\tmp\\foo"))
+	c.True(xio.HasHTTPOrFileURLPrefix("http://example.com"))
+	c.True(xio.HasHTTPOrFileURLPrefix("https://example.com"))
+	c.True(xio.HasHTTPOrFileURLPrefix("file:///tmp/foo"))
+	c.False(xio.HasHTTPOrFileURLPrefix("ftp://example.com"))
+	c.False(xio.HasHTTPOrFileURLPrefix("/tmp/foo"))
+	c.False(xio.HasHTTPOrFileURLPrefix("c:/tmp/foo"))
+	c.False(xio.HasHTTPOrFileURLPrefix("c:\\tmp\\foo"))
 }
 
 func TestRetrieveData_File(t *testing.T) {
@@ -60,8 +60,8 @@ func TestRetrieveData_FileURL(t *testing.T) {
 
 func TestRetrieveData_HTTP(t *testing.T) {
 	c := check.New(t)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello http"))
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("hello http")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
 	data, err := xio.RetrieveData(context.Background(), nil, server.URL)
@@ -72,8 +72,8 @@ func TestRetrieveData_HTTP(t *testing.T) {
 func TestRetrieveData_HTTPS(t *testing.T) {
 	c := check.New(t)
 	// Use httptest.Server (http, not https), but test the code path
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello https"))
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("hello https")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
 	client := server.Client()
@@ -84,9 +84,9 @@ func TestRetrieveData_HTTPS(t *testing.T) {
 
 func TestRetrieveData_HTTPErrorStatus(t *testing.T) {
 	c := check.New(t)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(404)
-		w.Write([]byte("not found"))
+		w.Write([]byte("not found")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
 	_, err := xio.RetrieveData(context.Background(), nil, server.URL)
@@ -118,31 +118,31 @@ func TestStreamData_File(t *testing.T) {
 	c.NoError(os.WriteFile(file, content, 0o600))
 	r, err := xio.StreamData(context.Background(), nil, file)
 	c.NoError(err)
+	defer xio.CloseIgnoringErrors(r)
 	data, err := io.ReadAll(r)
 	c.NoError(err)
 	c.Equal(content, data)
-	r.Close()
 }
 
 func TestStreamData_HTTP(t *testing.T) {
 	c := check.New(t)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("stream http"))
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("stream http")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
 	r, err := xio.StreamData(context.Background(), nil, server.URL)
 	c.NoError(err)
+	defer xio.CloseIgnoringErrors(r)
 	data, err := io.ReadAll(r)
 	c.NoError(err)
 	c.Equal([]byte("stream http"), data)
-	r.Close()
 }
 
 func TestStreamData_HTTPErrorStatus(t *testing.T) {
 	c := check.New(t)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(500)
-		w.Write([]byte("fail"))
+		w.Write([]byte("fail")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
 	_, err := xio.StreamData(context.Background(), nil, server.URL)
