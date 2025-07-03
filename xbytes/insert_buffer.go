@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xio
+package xbytes
 
 import (
 	"io"
@@ -16,19 +16,19 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// ByteBuffer is a variable-sized buffer of bytes with Write and Insert methods. The zero value for ByteBuffer is an
+// InsertBuffer is a variable-sized buffer of bytes with Write and Insert methods. The zero value for InsertBuffer is an
 // empty buffer ready to use.
-type ByteBuffer struct {
+type InsertBuffer struct {
 	data []byte
 }
 
 // Bytes returns the underlying buffer of bytes.
-func (b *ByteBuffer) Bytes() []byte {
+func (b *InsertBuffer) Bytes() []byte {
 	return b.data
 }
 
-// String returns the underlying buffer of bytes as a string. If the ByteBuffer is a nil pointer, it returns "<nil>".
-func (b *ByteBuffer) String() string {
+// String returns the underlying buffer of bytes as a string. If the InsertBuffer is a nil pointer, it returns "<nil>".
+func (b *InsertBuffer) String() string {
 	if b == nil {
 		return "<nil>"
 	}
@@ -36,27 +36,32 @@ func (b *ByteBuffer) String() string {
 }
 
 // Len returns the number of bytes contained by the buffer.
-func (b *ByteBuffer) Len() int {
+func (b *InsertBuffer) Len() int {
 	return len(b.data)
 }
 
 // Cap returns the capacity of the buffer.
-func (b *ByteBuffer) Cap() int {
+func (b *InsertBuffer) Cap() int {
 	return cap(b.data)
 }
 
+// Available returns how many bytes are unused in the buffer.
+func (b *InsertBuffer) Available() int {
+	return cap(b.data) - len(b.data)
+}
+
 // Truncate discards all but the first n bytes from the buffer.
-func (b *ByteBuffer) Truncate(n int) {
+func (b *InsertBuffer) Truncate(n int) {
 	b.data = b.data[:n]
 }
 
 // Reset resets the buffer to be empty.
-func (b *ByteBuffer) Reset() {
+func (b *InsertBuffer) Reset() {
 	b.data = b.data[:0]
 }
 
 // Insert data at the given offset.
-func (b *ByteBuffer) Insert(index int, data []byte) error {
+func (b *InsertBuffer) Insert(index int, data []byte) error {
 	if index < 0 || index > len(b.data) {
 		return errs.New("invalid index")
 	}
@@ -69,7 +74,7 @@ func (b *ByteBuffer) Insert(index int, data []byte) error {
 }
 
 // InsertByte inserts a byte at the given offset.
-func (b *ByteBuffer) InsertByte(index int, ch byte) error {
+func (b *InsertBuffer) InsertByte(index int, ch byte) error {
 	if index < 0 || index > len(b.data) {
 		return errs.New("invalid index")
 	}
@@ -80,7 +85,7 @@ func (b *ByteBuffer) InsertByte(index int, ch byte) error {
 }
 
 // InsertRune inserts the UTF-8 encoding of the rune at the given offset.
-func (b *ByteBuffer) InsertRune(index int, r rune) error {
+func (b *InsertBuffer) InsertRune(index int, r rune) error {
 	if uint32(r) < utf8.RuneSelf {
 		return b.InsertByte(index, byte(r))
 	}
@@ -90,24 +95,24 @@ func (b *ByteBuffer) InsertRune(index int, r rune) error {
 }
 
 // InsertString inserts the string at the given offset.
-func (b *ByteBuffer) InsertString(index int, s string) error {
+func (b *InsertBuffer) InsertString(index int, s string) error {
 	return b.Insert(index, []byte(s))
 }
 
 // Write appends the contents of data to the buffer.
-func (b *ByteBuffer) Write(data []byte) (int, error) {
+func (b *InsertBuffer) Write(data []byte) (int, error) {
 	b.data = append(b.data, data...)
 	return len(data), nil
 }
 
 // WriteByte appends the byte to the buffer.
-func (b *ByteBuffer) WriteByte(ch byte) error {
+func (b *InsertBuffer) WriteByte(ch byte) error {
 	b.data = append(b.data, ch)
 	return nil
 }
 
 // WriteRune appends the UTF-8 encoding of the rune to the buffer.
-func (b *ByteBuffer) WriteRune(r rune) (int, error) {
+func (b *InsertBuffer) WriteRune(r rune) (int, error) {
 	if uint32(r) < utf8.RuneSelf {
 		b.data = append(b.data, byte(r))
 		return 1, nil
@@ -120,13 +125,13 @@ func (b *ByteBuffer) WriteRune(r rune) (int, error) {
 }
 
 // WriteString appends the string to the buffer.
-func (b *ByteBuffer) WriteString(s string) (int, error) {
+func (b *InsertBuffer) WriteString(s string) (int, error) {
 	b.data = append(b.data, []byte(s)...)
 	return len(s), nil
 }
 
 // WriteTo writes data to w until the buffer is drained or an error occurs.
-func (b *ByteBuffer) WriteTo(w io.Writer) (int64, error) {
+func (b *InsertBuffer) WriteTo(w io.Writer) (int64, error) {
 	var n int64
 	if nBytes := b.Len(); nBytes > 0 {
 		m, err := w.Write(b.data)
