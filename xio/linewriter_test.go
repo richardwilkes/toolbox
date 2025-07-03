@@ -120,4 +120,8 @@ func TestLineWriter(t *testing.T) {
 	c.Equal("a", lines[0])
 	c.Equal("", lines[1])
 	c.Equal("b", lines[2])
+
+	n, err = w.Write([]byte{'c'})
+	c.HasError(err)
+	c.Equal(0, n)
 }

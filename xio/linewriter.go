@@ -11,6 +11,7 @@ package xio
 
 import (
 	"bytes"
+	"io/fs"
 )
 
 // LineWriter buffers its input into lines before sending each line to an output function without the trailing line
@@ -27,6 +28,9 @@ func NewLineWriter(out func([]byte)) *LineWriter {
 
 // Write implements the io.Writer interface.
 func (w *LineWriter) Write(data []byte) (n int, err error) {
+	if w.buffer == nil {
+		return 0, fs.ErrClosed
+	}
 	n = len(data)
 	for len(data) > 0 {
 		i := bytes.IndexByte(data, '\n')
@@ -48,9 +52,10 @@ func (w *LineWriter) Write(data []byte) (n int, err error) {
 
 // Close implements the io.Closer interface.
 func (w *LineWriter) Close() error {
-	if w.buffer.Len() > 0 {
+	if w.buffer != nil && w.buffer.Len() > 0 {
 		w.out(w.buffer.Bytes())
-		w.buffer.Reset()
+		w.buffer = nil
+		w.out = nil
 	}
 	return nil
 }

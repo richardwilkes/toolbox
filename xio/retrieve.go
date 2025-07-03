@@ -20,63 +20,67 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// RetrieveData loads the bytes from the given file path or URL of type file, http, or https.
-func RetrieveData(filePathOrURL string) ([]byte, error) {
-	return RetrieveDataWithContext(context.Background(), filePathOrURL)
+// HasHttpOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
+func HasHttpOrFileURLPrefix(urlStr string) bool {
+	return strings.HasPrefix(urlStr, "http://") ||
+		strings.HasPrefix(urlStr, "https://") ||
+		strings.HasPrefix(urlStr, "file://")
 }
 
-// RetrieveDataWithContext loads the bytes from the given file path or URL of type file, http, or https.
-func RetrieveDataWithContext(ctx context.Context, filePathOrURL string) ([]byte, error) {
-	if strings.HasPrefix(filePathOrURL, "http://") ||
-		strings.HasPrefix(filePathOrURL, "https://") ||
-		strings.HasPrefix(filePathOrURL, "file://") {
-		return RetrieveDataFromURLWithContext(ctx, filePathOrURL)
+// RetrieveData loads the bytes from the given file path or URL with scheme file, http, or https. If client is nil and a
+// network request is necessary, the http.DefaultClient will be used.
+func RetrieveData(ctx context.Context, client *http.Client, filePathOrURL string) ([]byte, error) {
+	r, err := StreamData(ctx, client, filePathOrURL)
+	if err != nil {
+		return nil, err
 	}
-	data, err := os.ReadFile(filePathOrURL)
+	defer CloseIgnoringErrors(r)
+	var data []byte
+	data, err = io.ReadAll(r)
 	if err != nil {
 		return nil, errs.NewWithCause(filePathOrURL, err)
 	}
 	return data, nil
 }
 
-// RetrieveDataFromURL loads the bytes from the given URL of type file, http, or https.
-func RetrieveDataFromURL(urlStr string) ([]byte, error) {
-	return RetrieveDataFromURLWithContext(context.Background(), urlStr)
-}
-
-// RetrieveDataFromURLWithContext loads the bytes from the given URL of type file, http, or https.
-func RetrieveDataFromURLWithContext(ctx context.Context, urlStr string) ([]byte, error) {
-	u, err := url.Parse(urlStr)
+// StreamData returns an io.ReadCloser that streams the data from the given file path or URL with scheme file, http, or
+// https. If client is nil and a network request is necessary, the http.DefaultClient will be used. The caller is
+// responsible for closing the returned ReadCloser. Note that for network requests, the entire stream should be read to
+// allow reuse of the underlying connection.
+func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) (io.ReadCloser, error) {
+	if HasHttpOrFileURLPrefix(filePathOrURL) {
+		u, err := url.Parse(filePathOrURL)
+		if err != nil {
+			return nil, errs.NewWithCause(filePathOrURL, err)
+		}
+		switch u.Scheme {
+		case "file":
+			filePathOrURL = u.Path
+		case "http", "https":
+			var req *http.Request
+			req, err = http.NewRequestWithContext(ctx, http.MethodGet, filePathOrURL, http.NoBody)
+			if err != nil {
+				return nil, errs.NewWithCause("unable to create request", err)
+			}
+			var rsp *http.Response
+			if client == nil {
+				client = http.DefaultClient
+			}
+			if rsp, err = client.Do(req); err != nil {
+				return nil, errs.NewWithCause(filePathOrURL, err)
+			}
+			if rsp.StatusCode < 200 || rsp.StatusCode > 299 {
+				return nil, errs.NewWithCause(filePathOrURL, errs.Newf("received status %d (%s)", rsp.StatusCode, rsp.Status))
+			}
+			return rsp.Body, nil
+		default:
+			// Shouldn't be possible to reach this
+			return nil, errs.Newf("invalid url: %s", filePathOrURL)
+		}
+	}
+	r, err := os.Open(filePathOrURL)
 	if err != nil {
-		return nil, errs.NewWithCause(urlStr, err)
+		return nil, errs.NewWithCause(filePathOrURL, err)
 	}
-	var data []byte
-	switch u.Scheme {
-	case "file":
-		if data, err = os.ReadFile(u.Path); err != nil {
-			return nil, errs.NewWithCause(urlStr, err)
-		}
-		return data, nil
-	case "http", "https":
-		var req *http.Request
-		req, err = http.NewRequestWithContext(ctx, http.MethodGet, urlStr, http.NoBody)
-		if err != nil {
-			return nil, errs.NewWithCause("unable to create request", err)
-		}
-		var rsp *http.Response
-		if rsp, err = http.DefaultClient.Do(req); err != nil {
-			return nil, errs.NewWithCause(urlStr, err)
-		}
-		defer DiscardAndCloseIgnoringErrors(rsp.Body)
-		if rsp.StatusCode < 200 || rsp.StatusCode > 299 {
-			return nil, errs.NewWithCause(urlStr, errs.Newf("received status %d (%s)", rsp.StatusCode, rsp.Status))
-		}
-		data, err = io.ReadAll(rsp.Body)
-		if err != nil {
-			return nil, errs.NewWithCause(urlStr, err)
-		}
-		return data, nil
-	default:
-		return nil, errs.Newf("invalid url: %s", urlStr)
-	}
+	return r, nil
 }
