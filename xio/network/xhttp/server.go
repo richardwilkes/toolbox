@@ -17,11 +17,9 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
-	"github.com/richardwilkes/toolbox/v2/xio/network"
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
@@ -50,7 +48,7 @@ type Server struct {
 	ShutdownCallback    func(*slog.Logger)
 	CertFile            string
 	KeyFile             string
-	addresses           []string
+	address             string
 	ShutdownGracePeriod time.Duration
 	port                int
 	shutdownID          int
@@ -64,9 +62,9 @@ func (s *Server) Protocol() string {
 	return ProtocolHTTP
 }
 
-// Addresses returns the host addresses being listened to.
-func (s *Server) Addresses() []string {
-	return s.addresses
+// Address returns the host address being listened to.
+func (s *Server) Address() string {
+	return s.address
 }
 
 // Port returns the port being listened to.
@@ -76,20 +74,11 @@ func (s *Server) Port() int {
 
 // LocalBaseURL returns the local base URL that will reach the server.
 func (s *Server) LocalBaseURL() string {
-	return fmt.Sprintf("%s://%s:%d", s.Protocol(), network.IPv4LoopbackAddress, s.port)
+	return fmt.Sprintf("%s://127.0.0.1:%d", s.Protocol(), s.port)
 }
 
 func (s *Server) String() string {
-	var buffer strings.Builder
-	buffer.WriteString(s.Protocol())
-	buffer.WriteString(" on ")
-	for i, addr := range s.addresses {
-		if i != 0 {
-			buffer.WriteString(", ")
-		}
-		fmt.Fprintf(&buffer, "%s:%d", addr, s.port)
-	}
-	return buffer.String()
+	return fmt.Sprintf("%s on %s:%d", s.Protocol(), s.address, s.port)
 }
 
 // Run the server. Does not return until the server is shutdown.
@@ -110,15 +99,14 @@ func (s *Server) Run() error {
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	var host, portStr string
-	if host, portStr, err = net.SplitHostPort(listener.Addr().String()); err != nil {
+	var portStr string
+	if s.address, portStr, err = net.SplitHostPort(listener.Addr().String()); err != nil {
 		return errs.Wrap(err)
 	}
 	if s.port, err = strconv.Atoi(portStr); err != nil {
 		return errs.Wrap(err)
 	}
-	s.addresses = network.AddressesForHost(host)
-	s.Logger.Info("listening", "protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
+	s.Logger.Info("listening", "protocol", s.Protocol(), "address", s.address, "port", s.port)
 	if s.StartedChan != nil {
 		go func() { close(s.StartedChan) }()
 	}
@@ -165,7 +153,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Shutdown() {
 	xos.CancelRunAtExit(s.shutdownID)
 	startedAt := time.Now()
-	logger := s.Logger.With("protocol", s.Protocol(), "addresses", s.addresses, "port", s.port)
+	logger := s.Logger.With("protocol", s.Protocol(), "address", s.address, "port", s.port)
 	logger.Info("starting shutdown")
 	defer func() { logger.Info("finished shutdown", "elapsed", time.Since(startedAt)) }()
 	gracePeriod := s.ShutdownGracePeriod
