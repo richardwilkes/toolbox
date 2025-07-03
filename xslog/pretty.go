@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
-	"github.com/richardwilkes/toolbox/v2/xio/term"
 	"github.com/richardwilkes/toolbox/v2/xruntime"
 	"github.com/richardwilkes/toolbox/v2/xsync"
+	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
 var _ slog.Handler = &PrettyHandler{}
@@ -31,7 +31,7 @@ var _ slog.Handler = &PrettyHandler{}
 // PrettyOptions is used to configure the PrettyHandler.
 type PrettyOptions struct {
 	slog.HandlerOptions
-	ColorSupportOverride term.Kind
+	ColorSupportOverride xterm.Kind
 }
 
 // PrettyHandler is an slog.Handler that outputs a "pretty" format: colorful and supporting formatted stack traces.
@@ -42,7 +42,7 @@ type PrettyHandler struct {
 	sharedWriterLock *sync.Mutex
 	w                io.Writer // Protected by sharedWriterLock
 	stack            []string  // Protected by sharedBufferLock
-	kind             term.Kind
+	kind             xterm.Kind
 	addSource        bool
 }
 
@@ -62,8 +62,8 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 		h.kind = opts.ColorSupportOverride
 	}
 	h.addSource = jsonHandlerOpts.AddSource
-	if h.kind == term.InvalidKind {
-		h.kind = term.DetectKind(w)
+	if h.kind == xterm.InvalidKind {
+		h.kind = xterm.DetectKind(w)
 	}
 	next := jsonHandlerOpts.ReplaceAttr
 	jsonHandlerOpts.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {

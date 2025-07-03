@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package term
+package xterm
 
 import (
 	"math"
@@ -20,7 +20,7 @@ type Kind int
 // Possible terminal kinds.
 const (
 	InvalidKind Kind = iota // Invalid terminal kind
-	Dumb                    // No color support
+	Dumb                    // No color support nor ANSI codes
 	Mono                    // Monochrome, but supports some ANSI codes
 	Color4                  // 4-bit (16 colors)
 	Color8                  // 8-bit (256 colors)

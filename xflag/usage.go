@@ -16,8 +16,8 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/i18n"
-	"github.com/richardwilkes/toolbox/v2/xio/term"
 	"github.com/richardwilkes/toolbox/v2/xos"
+	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
 // SetUsage replaces any existing Usage function on the flag.CommandLine with one that provides more information.
@@ -28,12 +28,12 @@ func SetUsage(description, argsUsage string) {
 // SetUsageFor replaces any existing Usage function on the given flagSet with one that provides more information.
 func SetUsageFor(flagSet *flag.FlagSet, description, argsUsage string) {
 	flagSet.Usage = func() {
-		var w *term.AnsiWriter
+		var w *xterm.AnsiWriter
 		switch out := flagSet.Output().(type) {
-		case *term.AnsiWriter:
+		case *xterm.AnsiWriter:
 			w = out
 		default:
-			w = term.NewAnsiWriter(out)
+			w = xterm.NewAnsiWriter(out)
 		}
 		kind := w.Kind()
 		w.WriteString(kind.Reset() + "\n")

@@ -17,7 +17,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/i18n"
 	"github.com/richardwilkes/toolbox/v2/xflag"
-	"github.com/richardwilkes/toolbox/v2/xio/term"
+	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
 // SetupStd adds command-line options for controlling logging (including one to also send logs to the console), parses
@@ -45,7 +45,7 @@ func SetupStd(description, argsUsage string) string {
 			AddSource: true,
 			Level:     logLevel,
 		},
-		ColorSupportOverride: term.DetectKind(os.Stdout),
+		ColorSupportOverride: xterm.DetectKind(os.Stdout),
 	})))
 
 	return rotatorCfg.Path
@@ -79,7 +79,7 @@ func SetupStdToConsole(description, argsUsage string) string {
 			AddSource: true,
 			Level:     logLevel,
 		},
-		ColorSupportOverride: term.DetectKind(os.Stdout),
+		ColorSupportOverride: xterm.DetectKind(os.Stdout),
 	})))
 
 	return rotatorCfg.Path

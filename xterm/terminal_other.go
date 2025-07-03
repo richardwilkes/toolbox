@@ -9,7 +9,7 @@
 
 //go:build !windows
 
-package term
+package xterm
 
 import (
 	"os"

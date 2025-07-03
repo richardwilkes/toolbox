@@ -8,7 +8,7 @@
 // defined by the Mozilla Public License, version 2.0.
 
 // Package term provides terminal utilities.
-package term
+package xterm
 
 import (
 	"io"

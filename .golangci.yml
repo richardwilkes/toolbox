@@ -37,9 +37,9 @@ linters:
         - fmt.Fprintf
         - fmt.Fprintln
         - (fmt.State).Write
-        - (*github.com/richardwilkes/toolbox/v2/xio/term.AnsiWriter).Write
-        - (*github.com/richardwilkes/toolbox/v2/xio/term.AnsiWriter).WriteByte
-        - (*github.com/richardwilkes/toolbox/v2/xio/term.AnsiWriter).WriteString
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).Write
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteByte
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteString
     goconst:
       min-len: 3
       min-occurrences: 3
