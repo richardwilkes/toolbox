@@ -16,6 +16,13 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
+var (
+	_ io.Writer       = &InsertBuffer{}
+	_ io.StringWriter = &InsertBuffer{}
+	_ io.ByteWriter   = &InsertBuffer{}
+	_ io.WriterTo     = &InsertBuffer{}
+)
+
 // InsertBuffer is a variable-sized buffer of bytes with Write and Insert methods. The zero value for InsertBuffer is an
 // empty buffer ready to use.
 type InsertBuffer struct {

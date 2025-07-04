@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/richardwilkes/toolbox/v2/xio/fs/internal"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // File provides safe, atomic saving of files. Instead of truncating and overwriting the destination file, it creates a
@@ -24,6 +24,7 @@ import (
 type File struct {
 	*os.File
 	originalName string
+	originalMode os.FileMode
 	committed    bool
 	closed       bool
 }
@@ -41,13 +42,14 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
 	}
-	f, err := internal.CreateTemp(filepath.Dir(filename), "safe", mode)
+	f, err := os.CreateTemp(filepath.Dir(filename), "safe")
 	if err != nil {
 		return nil, err
 	}
 	return &File{
 		File:         f,
 		originalName: filename,
+		originalMode: mode,
 	}, nil
 }
 
@@ -77,7 +79,12 @@ func (f *File) Commit() error {
 	if err = f.File.Close(); err != nil {
 		return err
 	}
-	err = os.Rename(name, f.originalName)
+	if err = os.Rename(name, f.originalName); err != nil {
+		return errs.Wrap(err)
+	}
+	if err = os.Chmod(f.originalName, f.originalMode); err != nil {
+		return errs.Wrap(err)
+	}
 	return err
 }
 
