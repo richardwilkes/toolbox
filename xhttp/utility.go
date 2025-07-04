@@ -45,17 +45,6 @@ func DisableCaching(w http.ResponseWriter) {
 	header.Set("Pragma", "no-cache")
 }
 
-// LoggerForRequest returns a logger for use with the request.
-func LoggerForRequest(r *http.Request) *slog.Logger {
-	var logger *slog.Logger
-	if md := MetadataFromRequest(r); md != nil {
-		logger = md.Logger
-	} else {
-		logger = slog.Default()
-	}
-	return logger
-}
-
 // JSONResponse writes a JSON response with a status code.
 func JSONResponse(w http.ResponseWriter, req *http.Request, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

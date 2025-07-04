@@ -48,3 +48,14 @@ func SetMetadataLogMsg(req *http.Request, msg string) {
 		md.LogMsg = msg
 	}
 }
+
+// LoggerForRequest returns a logger for use with the request.
+func LoggerForRequest(r *http.Request) *slog.Logger {
+	var logger *slog.Logger
+	if md := MetadataFromRequest(r); md != nil {
+		logger = md.Logger
+	} else {
+		logger = slog.Default()
+	}
+	return logger
+}
