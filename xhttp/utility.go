@@ -73,23 +73,37 @@ func ExtractJSONBody(req *http.Request, data any) error {
 	return decoder.Decode(data)
 }
 
-// ClientIP implements a best effort algorithm to return the real client IP address from the
-// request. It parses True-Client-Ip, X-Forwarded-For, and X-Real-IP in order to work properly with
-// reverse proxies such as akamai, nginx, or haproxy.
-func ClientIP(req *http.Request) string {
-	ip := strings.TrimSpace(req.Header.Get("True-Client-Ip"))
-	if ip != "" && net.ParseIP(ip) != nil {
-		return ip
+// ClientIP looks at the X-Forwarded-For, Forwarded, and RemoteAddr headers (in that order) to determine the client's
+// actual IP address.
+func ClientIP(req *http.Request) net.IP {
+	if xForwardedFor := req.Header.Get("X-Forwarded-For"); xForwardedFor != "" {
+		// X-Forwarded-For can contain multiple values, we take the first one.
+		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For for more information.
+		if ip := net.ParseIP(strings.TrimSpace(strings.SplitN(xForwardedFor, ",", 2)[0])); ip != nil {
+			return ip
+		}
 	}
-	ip = req.Header.Get("X-Forwarded-For")
-	if index := strings.IndexByte(ip, ','); index >= 0 {
-		ip = ip[0:index]
+	if forwarded := req.Header.Get("Forwarded"); forwarded != "" {
+		// Forwarded can contain multiple values, we take the first one.
+		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded for more information.
+		for _, forwarded = range strings.Split(strings.SplitN(forwarded, ",", 2)[0], ";") {
+			if strings.HasPrefix(forwarded, "for=") {
+				forwarded = strings.TrimPrefix(forwarded, "for=")
+				forwarded = strings.TrimPrefix(forwarded, `"`)
+				forwarded = strings.TrimSuffix(forwarded, `"`)
+				if ip := net.ParseIP(forwarded); ip != nil {
+					return ip
+				}
+			}
+		}
 	}
-	if ip = strings.TrimSpace(ip); ip != "" && net.ParseIP(ip) != nil {
-		return ip
+	if req.RemoteAddr != "" {
+		// RemoteAddr is in the form "IP:port", we take the IP part.
+		if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+			if ip := net.ParseIP(host); ip != nil {
+				return ip
+			}
+		}
 	}
-	if ip = strings.TrimSpace(req.Header.Get("X-Real-Ip")); ip != "" && net.ParseIP(ip) != nil {
-		return ip
-	}
-	return req.RemoteAddr
+	return nil
 }

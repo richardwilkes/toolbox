@@ -229,13 +229,9 @@ func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
 	}
-	return &PrettyHandler{
-		handler:          h.handler.WithAttrs(attrs),
-		sharedBufferLock: h.sharedBufferLock,
-		buffer:           h.buffer,
-		sharedWriterLock: h.sharedWriterLock,
-		w:                h.w,
-	}
+	clone := *h
+	clone.handler = h.handler.WithAttrs(attrs)
+	return &clone
 }
 
 // WithGroup implements slog.Handler interface.
@@ -243,11 +239,7 @@ func (h *PrettyHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return h
 	}
-	return &PrettyHandler{
-		handler:          h.handler.WithGroup(name),
-		sharedBufferLock: h.sharedBufferLock,
-		buffer:           h.buffer,
-		sharedWriterLock: h.sharedWriterLock,
-		w:                h.w,
-	}
+	clone := *h
+	clone.handler = h.handler.WithGroup(name)
+	return &clone
 }

@@ -40,3 +40,11 @@ func MetadataFromRequest(req *http.Request) *Metadata {
 	}
 	return nil
 }
+
+// SetMetadataLogMsg sets the LogMsg field of the Metadata in the request context.
+// If there is no Metadata in the request, it does nothing.
+func SetMetadataLogMsg(req *http.Request, msg string) {
+	if md := MetadataFromRequest(req); md != nil {
+		md.LogMsg = msg
+	}
+}

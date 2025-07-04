@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package gzip
+package xhttp
 
 import (
 	"compress/gzip"
@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/xio"
-	"github.com/richardwilkes/toolbox/v2/xnet/xhttp"
 )
 
 var _ http.ResponseWriter = &gzipResponseWriter{}
@@ -25,14 +24,14 @@ type gzipResponseWriter struct {
 	gw *gzip.Writer
 }
 
-// Wrap the given handler and provide automatic gzip compression when requests advertise that they accept the gzip
-// encoding.
-func Wrap(next http.Handler) http.Handler {
+// GZipWrap wraps the given handler, providing automatic gzip compression when requests advertise that they accept the
+// gzip encoding.
+func GZipWrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 			w.Header().Set("Content-Encoding", "gzip")
 			gw := gzip.NewWriter(w)
-			defer func() { xio.CloseLoggingAnyErrorTo(xhttp.LoggerForRequest(req), gw) }()
+			defer func() { xio.CloseLoggingAnyErrorTo(LoggerForRequest(req), gw) }()
 			w = &gzipResponseWriter{
 				w:  w,
 				gw: gw,

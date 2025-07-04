@@ -129,8 +129,8 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 	} else {
 		s.protocol = "http"
 	}
-	if cfg.Logger == nil {
-		cfg.Logger = slog.Default()
+	if s.logger == nil {
+		s.logger = slog.Default()
 	}
 	if xreflect.IsNil(s.originalHandler) {
 		s.originalHandler = http.NewServeMux()
@@ -248,10 +248,10 @@ func (s *Server) Stop() {
 
 // ServeHTTP implements the http.Handler interface.
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	logger := slog.Default().With(
+	logger := s.logger.With(
 		"method", req.Method,
 		"url", req.URL.String(),
-		"client_ip", ClientIP(req),
+		"client-ip", ClientIP(req),
 	)
 	md := &Metadata{Logger: logger}
 	sw := NewStatusWriter(w, req)

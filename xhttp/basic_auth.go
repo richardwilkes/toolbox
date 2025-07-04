@@ -13,19 +13,17 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
-
-	"github.com/richardwilkes/toolbox/v2/xnet/xhttp"
 )
 
-// Wrap the given handler and provide basic HTTP authentication prior to calling the 'next' handler. Populates the User
-// field of Metadata and adjusts the logger within the Metadata to add a user attribute.
-func Wrap(next http.Handler, lookup func(user, realm string) ([]byte, bool), hasher func(input string) []byte, realm string) http.Handler {
+// BasicAuthWrap wraps the given handler, providing basic HTTP authentication. Populates the User field of Metadata and
+// adjusts the logger within the Metadata to add a user attribute.
+func BasicAuthWrap(next http.Handler, lookup func(user, realm string) ([]byte, bool), hasher func(input string) []byte, realm string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if user, pw, ok := r.BasicAuth(); ok {
 			stored, found := lookup(user, realm)
 			passwordMatch := subtle.ConstantTimeCompare(hasher(pw), stored) == 1
 			if found && passwordMatch {
-				if md := xhttp.MetadataFromRequest(r); md != nil {
+				if md := MetadataFromRequest(r); md != nil {
 					md.User = user
 					md.Logger = md.Logger.With("user", user)
 				}
@@ -34,6 +32,6 @@ func Wrap(next http.Handler, lookup func(user, realm string) ([]byte, bool), has
 			}
 		}
 		w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm=%q, charset="UTF-8"`, realm))
-		xhttp.ErrorStatus(w, http.StatusUnauthorized)
+		ErrorStatus(w, http.StatusUnauthorized)
 	})
 }
