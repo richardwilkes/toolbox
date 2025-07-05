@@ -12,7 +12,7 @@ package eval
 import (
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // VariableResolver is used to resolve variables in expressions into their values.

@@ -13,10 +13,10 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/richardwilkes/toolbox/collection/quadtree"
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
-	"github.com/richardwilkes/toolbox/xmath/geom/poly"
+	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
 )
 
 const epsilon = 0.01

@@ -21,9 +21,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xfilepath"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 const (
@@ -79,7 +79,7 @@ func Text(text string) string {
 			if err != nil {
 				return
 			}
-			path, err = filepath.Abs(fs.TrimExtension(path) + "_i18n")
+			path, err = filepath.Abs(xfilepath.TrimExtension(path) + "_i18n")
 			if err != nil {
 				return
 			}
@@ -90,11 +90,11 @@ func Text(text string) string {
 			return
 		}
 		for _, one := range dirEntry {
-			if !one.IsDir() {
-				name := one.Name()
-				if filepath.Ext(name) == Extension {
-					load(name)
-				}
+			if one.IsDir() {
+				continue
+			}
+			if name := one.Name(); filepath.Ext(name) == Extension {
+				load(name)
 			}
 		}
 	})

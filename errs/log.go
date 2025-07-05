@@ -11,13 +11,15 @@ package errs
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 )
 
 // StackTraceKey is the key used for logging the stack trace.
-const StackTraceKey = "stack_trace"
+const StackTraceKey = "stack"
 
 // Log an error with a stack trace.
 func Log(err error, args ...any) {
@@ -100,33 +102,27 @@ func LogAttrsWithLevel(ctx context.Context, level slog.Level, logger *slog.Logge
 	logAttrs(ctx, level, logger, WrapTyped(err), attrs...)
 }
 
-func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, err *Error, attrs ...slog.Attr) {
+func logAttrs(ctx context.Context, level slog.Level, logger *slog.Logger, e *Error, attrs ...slog.Attr) {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	if !logger.Enabled(ctx, level) {
 		return
 	}
-	r := createRecord(level, err)
+	r := createRecord(level, e)
 	r.AddAttrs(attrs...)
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	_ = logger.Handler().Handle(ctx, r) //nolint:errcheck // Since we are in the logger, nothing we can reasonably do to log this
+	if err := logger.Handler().Handle(ctx, r); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
 
 type stackValue struct {
 	err StackError
 }
 
-func (v *stackValue) StackError() StackError {
-	return v.err
-}
-
 func (v *stackValue) LogValue() slog.Value {
-	stack := strings.Split(v.err.StackTrace(true), "\n")
-	for i, s := range stack {
-		stack[i] = strings.TrimSpace(s)
-	}
-	return slog.AnyValue(stack)
+	return slog.AnyValue(strings.Split(v.err.StackTrace(), "\n"))
 }

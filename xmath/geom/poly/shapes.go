@@ -12,8 +12,8 @@ package poly
 import (
 	"math"
 
-	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 // FromRect returns a Polygon in the shape of the specified rectangle.

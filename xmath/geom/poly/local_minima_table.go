@@ -10,7 +10,7 @@
 package poly
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 type localMinimaNode[T ~float32 | ~float64] struct {

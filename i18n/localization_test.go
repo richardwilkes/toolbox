@@ -12,10 +12,11 @@ package i18n
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
+	"github.com/richardwilkes/toolbox/v2/check"
 )
 
 func TestLocalization(t *testing.T) {
+	c := check.New(t)
 	de := make(map[string]string)
 	de["a"] = "1"
 	langMap["de"] = de
@@ -23,22 +24,23 @@ func TestLocalization(t *testing.T) {
 	deDE["a"] = "2"
 	langMap["de_dn"] = deDE
 	Language = "de_dn.UTF-8"
-	check.Equal(t, "2", Text("a"))
+	c.Equal("2", Text("a"))
 	Language = "de_dn"
-	check.Equal(t, "2", Text("a"))
+	c.Equal("2", Text("a"))
 	Language = "de"
-	check.Equal(t, "1", Text("a"))
+	c.Equal("1", Text("a"))
 	Language = "xx"
-	check.Equal(t, "a", Text("a"))
+	c.Equal("a", Text("a"))
 	delete(langMap, "de_dn")
 	Language = "de"
-	check.Equal(t, "1", Text("a"))
+	c.Equal("1", Text("a"))
 }
 
 func TestAltLocalization(t *testing.T) {
-	check.Equal(t, "Hello!", Text("Hello!"))
+	c := check.New(t)
+	c.Equal("Hello!", Text("Hello!"))
 	SetLocalizer(func(_ string) string { return "Bonjour!" })
-	check.Equal(t, "Bonjour!", Text("Hello!"))
+	c.Equal("Bonjour!", Text("Hello!"))
 	SetLocalizer(nil)
-	check.Equal(t, "Hello!", Text("Hello!"))
+	c.Equal("Hello!", Text("Hello!"))
 }

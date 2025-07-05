@@ -37,6 +37,9 @@ linters:
         - fmt.Fprintf
         - fmt.Fprintln
         - (fmt.State).Write
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).Write
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteByte
+        - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteString
     goconst:
       min-len: 3
       min-occurrences: 3
@@ -52,6 +55,7 @@ linters:
     gosec:
       excludes:
         - G103
+        - G104
         - G115
         - G204
         - G301

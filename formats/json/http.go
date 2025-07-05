@@ -14,8 +14,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // GetRequest calls http.Get with the URL and returns the response body as a new Data object.

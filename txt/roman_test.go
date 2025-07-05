@@ -12,11 +12,12 @@ package txt_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 func TestToRoman(t *testing.T) {
+	c := check.New(t)
 	type data struct {
 		e string
 		v int
@@ -53,6 +54,6 @@ func TestToRoman(t *testing.T) {
 		{v: 1967, e: "MCMLXVII"},
 		{v: 2021, e: "MMXXI"},
 	} {
-		check.Equal(t, one.e, txt.RomanNumerals(one.v), "input: %d", one.v)
+		c.Equal(one.e, txt.RomanNumerals(one.v), "input: %d", one.v)
 	}
 }

@@ -10,6 +10,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -21,27 +22,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/i18n"
+	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xflag"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func main() {
-	cmdline.CopyrightStartYear = "2016"
-	cmdline.CopyrightHolder = "Richard A. Wilkes"
-	cmdline.License = "Mozilla Public License 2.0"
-	cl := cmdline.New(true)
-	cl.UsageSuffix = "<path> [path...]"
-	cl.Description = i18n.Text("Generates a template for a localization file from source code.")
-	outPath := "language.i18n"
-	cl.NewGeneralOption(&outPath).SetSingle('o').SetName("output").SetArg("path").SetUsage("The output file")
-	args := cl.Parse(os.Args[1:])
-	if outPath == "" {
-		cl.FatalMsg(i18n.Text("The output file may not be an empty path."))
+	xos.AppIdentifier = "com.trollworks.i18n"
+	xos.CopyrightStartYear = "2016"
+	xos.CopyrightHolder = "Richard A. Wilkes"
+	xos.License = "Mozilla Public License 2.0"
+	xflag.SetUsage(i18n.Text("Generates a template for a localization file from source code."), "<path> [path...]")
+	outPath := flag.String("output", "language.i18n", "The output `path`")
+	flag.Parse()
+	if *outPath == "" {
+		xos.ExitWithMsg(i18n.Text("The output file may not be an empty path."))
 	}
+	args := flag.Args()
 	if len(args) == 0 {
-		cl.FatalMsg(i18n.Text("At least one path must be specified."))
+		xos.ExitWithMsg(i18n.Text("At least one path must be specified."))
 	}
 	kv := make(map[string]string)
 	fileSet := token.NewFileSet()
@@ -57,7 +57,7 @@ func main() {
 					var file *ast.File
 					if file, err = parser.ParseFile(fileSet, path, nil, 0); err != nil {
 						fmt.Fprintln(os.Stderr, err)
-						atexit.Exit(1)
+						xos.Exit(1)
 					}
 					const (
 						LookForPackageState = iota
@@ -118,10 +118,10 @@ func main() {
 	sort.Slice(keys, func(i, j int) bool {
 		return txt.NaturalLess(keys[i], keys[j], true)
 	})
-	out, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	out, err := os.OpenFile(*outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", outPath)
-		atexit.Exit(1)
+		fmt.Fprintf(os.Stderr, "Unable to create '%s'.\n", *outPath)
+		xos.Exit(1)
 	}
 	fmt.Fprintf(out, `# Generated on %v
 #
@@ -140,19 +140,19 @@ func main() {
 		for _, p := range strings.Split(key, "\n") {
 			if _, err = fmt.Fprintf(out, "k:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				atexit.Exit(1)
+				xos.Exit(1)
 			}
 		}
 		for _, p := range strings.Split(key, "\n") {
 			if _, err = fmt.Fprintf(out, "v:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				atexit.Exit(1)
+				xos.Exit(1)
 			}
 		}
 	}
 	if err = out.Close(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		atexit.Exit(1)
+		xos.Exit(1)
 	}
-	atexit.Exit(0)
+	xos.Exit(0)
 }

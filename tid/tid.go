@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // TID is a unique identifier. These are similar to v4 UUIDs, but are shorter and have a different format that includes

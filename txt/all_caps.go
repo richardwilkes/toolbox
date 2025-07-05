@@ -16,8 +16,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/fatal"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 //go:embed all_caps.txt
@@ -52,6 +52,6 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 // create the AllCaps object causes the program to exit.
 func MustNewAllCaps(in ...string) *AllCaps {
 	result, err := NewAllCaps(in...)
-	fatal.IfErr(err)
+	xos.ExitIfErr(err)
 	return result
 }

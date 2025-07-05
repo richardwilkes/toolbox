@@ -10,7 +10,7 @@
 package visibility
 
 import (
-	"github.com/richardwilkes/toolbox/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 // Segment holds the start and end points of a line.

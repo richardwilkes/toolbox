@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
 // ParseDuration parses the duration string, as produced by FormatDuration().

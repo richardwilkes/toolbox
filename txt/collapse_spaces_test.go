@@ -12,11 +12,12 @@ package txt_test
 import (
 	"testing"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 func TestCollapseSpaces(t *testing.T) {
+	c := check.New(t)
 	data := []string{
 		"123", "123",
 		" 123", "123",
@@ -27,6 +28,6 @@ func TestCollapseSpaces(t *testing.T) {
 		" ", "",
 	}
 	for i := 0; i < len(data); i += 2 {
-		check.Equal(t, data[i+1], txt.CollapseSpaces(data[i]))
+		c.Equal(data[i+1], txt.CollapseSpaces(data[i]))
 	}
 }

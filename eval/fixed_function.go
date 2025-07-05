@@ -13,8 +13,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/xmath/fixed"
-	"github.com/richardwilkes/toolbox/xmath/fixed/f64"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f64"
 )
 
 // FixedFunctions returns standard functions that work with 64-bit fixed-point values.

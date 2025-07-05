@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/atexit"
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 var benchSet []string
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	if f := flag.Lookup("test.bench"); f != nil && f.Value.String() != "" {
 		initBenchSet()
 	}
-	atexit.Exit(m.Run())
+	xos.Exit(m.Run())
 }
 
 func TestNaturalLess(t *testing.T) {
@@ -69,8 +69,9 @@ func TestNaturalLess(t *testing.T) {
 		{"1.12.34", "1.2", false, false},
 		{"1.2.34", "1.11.11", false, true},
 	}
+	c := check.New(t)
 	for _, v := range testset {
-		check.Equal(t, v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
+		c.Equal(v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
 	}
 }
 
