@@ -22,8 +22,8 @@ import (
 	"sync/atomic"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xfilepath"
 	"github.com/richardwilkes/toolbox/v2/xio"
-	"github.com/richardwilkes/toolbox/v2/xio/fs"
 )
 
 const (
@@ -79,7 +79,7 @@ func Text(text string) string {
 			if err != nil {
 				return
 			}
-			path, err = filepath.Abs(fs.TrimExtension(path) + "_i18n")
+			path, err = filepath.Abs(xfilepath.TrimExtension(path) + "_i18n")
 			if err != nil {
 				return
 			}

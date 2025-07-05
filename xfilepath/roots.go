@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package fs
+package xfilepath
 
 import (
 	"path/filepath"
@@ -18,7 +18,7 @@ import (
 
 // UniquePaths returns a list of unique paths from the given paths, pruning out paths that are a subset of another.
 func UniquePaths(paths ...string) ([]string, error) {
-	set := make(map[string]bool, len(paths))
+	set := make(map[string]struct{}, len(paths))
 	for _, path := range paths {
 		actual, err := filepath.Abs(path)
 		if err != nil {
@@ -48,7 +48,7 @@ func UniquePaths(paths ...string) ([]string, error) {
 				}
 			}
 			if add {
-				set[actual] = true
+				set[actual] = struct{}{}
 			}
 		}
 	}

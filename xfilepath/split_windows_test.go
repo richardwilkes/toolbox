@@ -7,13 +7,13 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package fs_test
+package xfilepath_test
 
 import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/xio/fs"
+	"github.com/richardwilkes/toolbox/v2/xfilepath"
 )
 
 func TestWindowsSplit(t *testing.T) {
@@ -29,6 +29,6 @@ func TestWindowsSplit(t *testing.T) {
 	}
 	c := check.New(t)
 	for i, one := range data {
-		c.Equal(one.out, fs.Split(one.in), "%d", i)
+		c.Equal(one.out, xfilepath.Split(one.in), "%d", i)
 	}
 }
