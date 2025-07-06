@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package num
+package num128
 
 import (
 	"errors"
@@ -27,17 +27,17 @@ const (
 	bit32                   = uint64(1) << 32
 )
 
-// MaxUint128 is the maximum value representable by a Uint128.
-var MaxUint128 = Uint128{hi: math.MaxUint64, lo: math.MaxUint64}
+// MaxUint is the maximum value representable by a Uint.
+var MaxUint = Uint{hi: math.MaxUint64, lo: math.MaxUint64}
 
 var (
-	intSize                      = 32 << (^uint(0) >> 63)
-	maxUint64Float               = float64(math.MaxUint64)
-	maxRepresentableUint64Float  = math.Nextafter(maxUint64Float, 0)
-	maxRepresentableUint128Float = math.Nextafter(float64(340282366920938463463374607431768211455), 0)
-	wrapUint64Float              = float64(math.MaxUint64) + 1
-	errNoFloat64                 = errors.New("no float64 conversion for json/yaml")
-	errDoesNotFitInInt64         = errors.New("does not fit in int64")
+	intSize                     = 32 << (^uint(0) >> 63)
+	maxUint64Float              = float64(math.MaxUint64)
+	maxRepresentableUint64Float = math.Nextafter(maxUint64Float, 0)
+	maxRepresentableUintFloat   = math.Nextafter(float64(340282366920938463463374607431768211455), 0)
+	wrapUint64Float             = float64(math.MaxUint64) + 1
+	errNoFloat64                = errors.New("no float64 conversion for json/yaml")
+	errDoesNotFitInInt64        = errors.New("does not fit in int64")
 )
 
 // RandomSource defines the method required of a source of random bits. This is a subset of the rand.Source64 interface.
@@ -45,81 +45,81 @@ type RandomSource interface {
 	Uint64() uint64
 }
 
-// Uint128 represents an unsigned 128-bit integer.
-type Uint128 struct {
+// Uint represents an unsigned 128-bit integer.
+type Uint struct {
 	hi uint64
 	lo uint64
 }
 
-// Uint128From64 creates a Uint128 from a uint64 value.
-func Uint128From64(v uint64) Uint128 {
-	return Uint128{lo: v}
+// UintFrom64 creates a Uint from a uint64 value.
+func UintFrom64(v uint64) Uint {
+	return Uint{lo: v}
 }
 
-// Uint128FromFloat64 creates a Uint128 from a float64 value.
-func Uint128FromFloat64(f float64) Uint128 {
+// UintFromFloat64 creates a Uint from a float64 value.
+func UintFromFloat64(f float64) Uint {
 	switch {
 	case f <= 0 || f != f: // <= 0 or NaN
-		return Uint128{}
+		return Uint{}
 	case f <= maxRepresentableUint64Float:
-		return Uint128{lo: uint64(f)}
-	case f <= maxRepresentableUint128Float:
-		return Uint128{
+		return Uint{lo: uint64(f)}
+	case f <= maxRepresentableUintFloat:
+		return Uint{
 			hi: uint64(f / wrapUint64Float),
 			lo: uint64(math.Mod(f, wrapUint64Float)),
 		}
 	default:
-		return MaxUint128
+		return MaxUint
 	}
 }
 
-// Uint128FromBigInt creates a Uint128 from a big.Int.
-func Uint128FromBigInt(v *big.Int) Uint128 {
+// UintFromBigInt creates a Uint from a big.Int.
+func UintFromBigInt(v *big.Int) Uint {
 	if v.Sign() < 0 {
-		return Uint128{}
+		return Uint{}
 	}
 	words := v.Bits()
 	switch len(words) {
 	case 0:
-		return Uint128{}
+		return Uint{}
 	case 1:
-		return Uint128{lo: uint64(words[0])}
+		return Uint{lo: uint64(words[0])}
 	case 2:
 		if intSize == 64 {
-			return Uint128{
+			return Uint{
 				hi: uint64(words[1]),
 				lo: uint64(words[0]),
 			}
 		}
-		return Uint128{lo: (uint64(words[1]) << 32) | (uint64(words[0]))}
+		return Uint{lo: (uint64(words[1]) << 32) | (uint64(words[0]))}
 	case 3:
 		if intSize == 64 {
-			return MaxUint128
+			return MaxUint
 		}
-		return Uint128{
+		return Uint{
 			hi: uint64(words[2]),
 			lo: (uint64(words[1]) << 32) | (uint64(words[0])),
 		}
 	case 4:
 		if intSize == 64 {
-			return MaxUint128
+			return MaxUint
 		}
-		return Uint128{
+		return Uint{
 			hi: (uint64(words[3]) << 32) | (uint64(words[2])),
 			lo: (uint64(words[1]) << 32) | (uint64(words[0])),
 		}
 	default:
-		return MaxUint128
+		return MaxUint
 	}
 }
 
-// Uint128FromString creates a Uint128 from a string.
-func Uint128FromString(s string) (Uint128, error) {
+// UintFromString creates a Uint from a string.
+func UintFromString(s string) (Uint, error) {
 	b, err := parseToBigInt(s)
 	if err != nil {
-		return Uint128{}, err
+		return Uint{}, err
 	}
-	return Uint128FromBigInt(b), nil
+	return UintFromBigInt(b), nil
 }
 
 func parseToBigInt(s string) (*big.Int, error) {
@@ -145,34 +145,34 @@ func parseToBigInt(s string) (*big.Int, error) {
 	return b, nil
 }
 
-// Uint128FromStringNoCheck creates a Uint128 from a string. Unlike Uint128FromString, this allows any string as input.
-func Uint128FromStringNoCheck(s string) Uint128 {
-	out, _ := Uint128FromString(s) //nolint:errcheck // Failure results in 0
+// UintFromStringNoCheck creates a Uint from a string. Unlike UintFromString, this allows any string as input.
+func UintFromStringNoCheck(s string) Uint {
+	out, _ := UintFromString(s) //nolint:errcheck // Failure results in 0
 	return out
 }
 
-// Uint128FromComponents creates a Uint128 from two uint64 values representing the high and low bits.
-func Uint128FromComponents(high, low uint64) Uint128 {
-	return Uint128{hi: high, lo: low}
+// UintFromComponents creates a Uint from two uint64 values representing the high and low bits.
+func UintFromComponents(high, low uint64) Uint {
+	return Uint{hi: high, lo: low}
 }
 
-// Uint128FromRand generates an unsigned 128-bit random integer.
-func Uint128FromRand(source RandomSource) Uint128 {
-	return Uint128{hi: source.Uint64(), lo: source.Uint64()}
+// UintFromRand generates an unsigned 128-bit random integer.
+func UintFromRand(source RandomSource) Uint {
+	return Uint{hi: source.Uint64(), lo: source.Uint64()}
 }
 
 // Components returns the two uint64 values representing the high and low bits.
-func (u Uint128) Components() (high, low uint64) {
+func (u Uint) Components() (high, low uint64) {
 	return u.hi, u.lo
 }
 
 // IsZero returns true if the value is 0.
-func (u Uint128) IsZero() bool {
+func (u Uint) IsZero() bool {
 	return u.hi|u.lo == 0
 }
 
-// ToBigInt stores the Uint128's value into the specified big.Int.
-func (u Uint128) ToBigInt(b *big.Int) {
+// ToBigInt stores the Uint's value into the specified big.Int.
+func (u Uint) ToBigInt(b *big.Int) {
 	words := b.Bits()
 	if intSize == 64 {
 		if len(words) < 2 {
@@ -194,20 +194,20 @@ func (u Uint128) ToBigInt(b *big.Int) {
 	b.SetBits(words)
 }
 
-// AsBigInt returns the Uint128 as a big.Int.
-func (u Uint128) AsBigInt() *big.Int {
+// AsBigInt returns the Uint as a big.Int.
+func (u Uint) AsBigInt() *big.Int {
 	var b big.Int
 	u.ToBigInt(&b)
 	return &b
 }
 
-// AsBigFloat returns the Uint128 as a big.Float.
-func (u Uint128) AsBigFloat() *big.Float {
+// AsBigFloat returns the Uint as a big.Float.
+func (u Uint) AsBigFloat() *big.Float {
 	return new(big.Float).SetInt(u.AsBigInt())
 }
 
-// AsFloat64 returns the Uint128 as a float64.
-func (u Uint128) AsFloat64() float64 {
+// AsFloat64 returns the Uint as a float64.
+func (u Uint) AsFloat64() float64 {
 	if u.hi == 0 {
 		if u.lo == 0 {
 			return 0
@@ -217,84 +217,84 @@ func (u Uint128) AsFloat64() float64 {
 	return (float64(u.hi) * wrapUint64Float) + float64(u.lo)
 }
 
-// IsInt128 returns true if this value can be represented as an Int128 without any loss.
-func (u Uint128) IsInt128() bool {
+// IsInt returns true if this value can be represented as an Int without any loss.
+func (u Uint) IsInt() bool {
 	return u.hi&signBit == 0
 }
 
-// AsInt128 returns the Uint128 as an Int128.
-func (u Uint128) AsInt128() Int128 {
-	return Int128(u)
+// AsInt returns the Uint as an Int.
+func (u Uint) AsInt() Int {
+	return Int(u)
 }
 
 // IsUint64 returns true if this value can be represented as a uint64 without any loss.
-func (u Uint128) IsUint64() bool {
+func (u Uint) IsUint64() bool {
 	return u.hi == 0
 }
 
-// AsUint64 returns the Uint128 as a uint64.
-func (u Uint128) AsUint64() uint64 {
+// AsUint64 returns the Uint as a uint64.
+func (u Uint) AsUint64() uint64 {
 	return u.lo
 }
 
 // Add returns u + n.
-func (u Uint128) Add(n Uint128) Uint128 {
+func (u Uint) Add(n Uint) Uint {
 	lo, carry := bits.Add64(u.lo, n.lo, 0)
 	hi, _ := bits.Add64(u.hi, n.hi, carry)
-	return Uint128{
+	return Uint{
 		hi: hi,
 		lo: lo,
 	}
 }
 
 // Add64 returns u + n.
-func (u Uint128) Add64(n uint64) Uint128 {
+func (u Uint) Add64(n uint64) Uint {
 	lo, carry := bits.Add64(u.lo, n, 0)
-	return Uint128{
+	return Uint{
 		hi: u.hi + carry,
 		lo: lo,
 	}
 }
 
 // Sub returns u - n.
-func (u Uint128) Sub(n Uint128) Uint128 {
+func (u Uint) Sub(n Uint) Uint {
 	lo, borrow := bits.Sub64(u.lo, n.lo, 0)
 	hi, _ := bits.Sub64(u.hi, n.hi, borrow)
-	return Uint128{
+	return Uint{
 		hi: hi,
 		lo: lo,
 	}
 }
 
 // Sub64 returns u - n.
-func (u Uint128) Sub64(n uint64) Uint128 {
+func (u Uint) Sub64(n uint64) Uint {
 	lo, borrow := bits.Sub64(u.lo, n, 0)
-	return Uint128{
+	return Uint{
 		hi: u.hi - borrow,
 		lo: lo,
 	}
 }
 
 // Inc returns u + 1.
-func (u Uint128) Inc() Uint128 {
+func (u Uint) Inc() Uint {
 	lo, carry := bits.Add64(u.lo, 1, 0)
-	return Uint128{
+	return Uint{
 		hi: u.hi + carry,
 		lo: lo,
 	}
 }
 
 // Dec returns u - 1.
-func (u Uint128) Dec() Uint128 {
+func (u Uint) Dec() Uint {
 	lo, borrow := bits.Sub64(u.lo, 1, 0)
-	return Uint128{
+	return Uint{
 		hi: u.hi - borrow,
 		lo: lo,
 	}
 }
 
 // Cmp returns 1 if u > n, 0 if u == n, and -1 if u < n.
-func (u Uint128) Cmp(n Uint128) int {
+func (u Uint) Cmp(n Uint) int {
 	switch {
 	case u.hi == n.hi:
 		if u.lo > n.lo {
@@ -311,7 +311,7 @@ func (u Uint128) Cmp(n Uint128) int {
 }
 
 // Cmp64 returns 1 if u > n, 0 if u == n, and -1 if u < n.
-func (u Uint128) Cmp64(n uint64) int {
+func (u Uint) Cmp64(n uint64) int {
 	switch {
 	case u.hi > 0 || u.lo > n:
 		return 1
@@ -323,57 +323,57 @@ func (u Uint128) Cmp64(n uint64) int {
 }
 
 // GreaterThan returns true if u > n.
-func (u Uint128) GreaterThan(n Uint128) bool {
+func (u Uint) GreaterThan(n Uint) bool {
 	return u.hi > n.hi || (u.hi == n.hi && u.lo > n.lo)
 }
 
 // GreaterThan64 returns true if u > n.
-func (u Uint128) GreaterThan64(n uint64) bool {
+func (u Uint) GreaterThan64(n uint64) bool {
 	return u.hi > 0 || u.lo > n
 }
 
 // GreaterThanOrEqual returns true if u >= n.
-func (u Uint128) GreaterThanOrEqual(n Uint128) bool {
+func (u Uint) GreaterThanOrEqual(n Uint) bool {
 	return u.hi > n.hi || (u.hi == n.hi && u.lo >= n.lo)
 }
 
 // GreaterThanOrEqual64 returns true if u >= n.
-func (u Uint128) GreaterThanOrEqual64(n uint64) bool {
+func (u Uint) GreaterThanOrEqual64(n uint64) bool {
 	return u.hi > 0 || u.lo >= n
 }
 
 // Equal returns true if u == n.
-func (u Uint128) Equal(n Uint128) bool {
+func (u Uint) Equal(n Uint) bool {
 	return u.hi == n.hi && u.lo == n.lo
 }
 
 // Equal64 returns true if u == n.
-func (u Uint128) Equal64(n uint64) bool {
+func (u Uint) Equal64(n uint64) bool {
 	return u.hi == 0 && u.lo == n
 }
 
 // LessThan returns true if u < n.
-func (u Uint128) LessThan(n Uint128) bool {
+func (u Uint) LessThan(n Uint) bool {
 	return u.hi < n.hi || (u.hi == n.hi && u.lo < n.lo)
 }
 
 // LessThan64 returns true if u < n.
-func (u Uint128) LessThan64(n uint64) bool {
+func (u Uint) LessThan64(n uint64) bool {
 	return u.hi == 0 && u.lo < n
 }
 
 // LessThanOrEqual returns true if u <= n.
-func (u Uint128) LessThanOrEqual(n Uint128) bool {
+func (u Uint) LessThanOrEqual(n Uint) bool {
 	return u.hi < n.hi || (u.hi == n.hi && u.lo <= n.lo)
 }
 
 // LessThanOrEqual64 returns true if u <= n.
-func (u Uint128) LessThanOrEqual64(n uint64) bool {
+func (u Uint) LessThanOrEqual64(n uint64) bool {
 	return u.hi == 0 && u.lo <= n
 }
 
 // BitLen returns the length of the absolute value of u in bits. The bit length of 0 is 0.
-func (u Uint128) BitLen() int {
+func (u Uint) BitLen() int {
 	if u.hi != 0 {
 		return bits.Len64(u.hi) + 64
 	}
@@ -381,7 +381,7 @@ func (u Uint128) BitLen() int {
 }
 
 // OnesCount returns the number of one bits ("population count") in u.
-func (u Uint128) OnesCount() int {
+func (u Uint) OnesCount() int {
 	if u.hi != 0 {
 		return bits.OnesCount64(u.hi) + 64
 	}
@@ -390,7 +390,7 @@ func (u Uint128) OnesCount() int {
 
 // Bit returns the value of the i'th bit of x. That is, it returns (x>>i)&1. If the bit index is less than 0 or greater
 // than 127, zero will be returned.
-func (u Uint128) Bit(i int) uint {
+func (u Uint) Bit(i int) uint {
 	switch {
 	case i < 0 || i > 127:
 		return 0
@@ -401,9 +401,9 @@ func (u Uint128) Bit(i int) uint {
 	}
 }
 
-// SetBit returns a Uint128 with u's i'th bit set to b (0 or 1). Values of b that are not 0 will be treated as 1. If the
+// SetBit returns a Uint with u's i'th bit set to b (0 or 1). Values of b that are not 0 will be treated as 1. If the
 // bit index is less than 0 or greater than 127, nothing will happen.
-func (u Uint128) SetBit(i int, b uint) Uint128 {
+func (u Uint) SetBit(i int, b uint) Uint {
 	if i < 0 || i > 127 {
 		return u
 	}
@@ -424,76 +424,76 @@ func (u Uint128) SetBit(i int, b uint) Uint128 {
 }
 
 // Not returns ^u.
-func (u Uint128) Not() Uint128 {
-	return Uint128{
+func (u Uint) Not() Uint {
+	return Uint{
 		hi: ^u.hi,
 		lo: ^u.lo,
 	}
 }
 
 // And returns u & n.
-func (u Uint128) And(n Uint128) Uint128 {
-	return Uint128{
+func (u Uint) And(n Uint) Uint {
+	return Uint{
 		hi: u.hi & n.hi,
 		lo: u.lo & n.lo,
 	}
 }
 
 // And64 returns u & n.
-func (u Uint128) And64(n uint64) Uint128 {
-	return Uint128{lo: u.lo & n}
+func (u Uint) And64(n uint64) Uint {
+	return Uint{lo: u.lo & n}
 }
 
 // AndNot returns u &^ n.
-func (u Uint128) AndNot(n Uint128) Uint128 {
-	return Uint128{
+func (u Uint) AndNot(n Uint) Uint {
+	return Uint{
 		hi: u.hi &^ n.hi,
 		lo: u.lo &^ n.lo,
 	}
 }
 
 // AndNot64 returns u &^ n.
-func (u Uint128) AndNot64(n Uint128) Uint128 {
-	return Uint128{
+func (u Uint) AndNot64(n Uint) Uint {
+	return Uint{
 		hi: u.hi,
 		lo: u.lo &^ n.lo,
 	}
 }
 
 // Or returns u | n.
-func (u Uint128) Or(n Uint128) Uint128 {
-	return Uint128{
+func (u Uint) Or(n Uint) Uint {
+	return Uint{
 		hi: u.hi | n.hi,
 		lo: u.lo | n.lo,
 	}
 }
 
 // Or64 returns u | n.
-func (u Uint128) Or64(n uint64) Uint128 {
-	return Uint128{
+func (u Uint) Or64(n uint64) Uint {
+	return Uint{
 		hi: u.hi,
 		lo: u.lo | n,
 	}
 }
 
 // Xor returns u ^ n.
-func (u Uint128) Xor(n Uint128) Uint128 {
-	return Uint128{
+func (u Uint) Xor(n Uint) Uint {
+	return Uint{
 		hi: u.hi ^ n.hi,
 		lo: u.lo ^ n.lo,
 	}
 }
 
 // Xor64 returns u ^ n.
-func (u Uint128) Xor64(n uint64) Uint128 {
-	return Uint128{
+func (u Uint) Xor64(n uint64) Uint {
+	return Uint{
 		hi: u.hi,
 		lo: u.lo ^ n,
 	}
 }
 
 // LeadingZeros returns the number of leading bits set to 0.
-func (u Uint128) LeadingZeros() uint {
+func (u Uint) LeadingZeros() uint {
 	if u.hi == 0 {
 		return uint(bits.LeadingZeros64(u.lo)) + 64
 	}
@@ -501,7 +501,7 @@ func (u Uint128) LeadingZeros() uint {
 }
 
 // TrailingZeros returns the number of trailing bits set to 0.
-func (u Uint128) TrailingZeros() uint {
+func (u Uint) TrailingZeros() uint {
 	if u.lo == 0 {
 		return uint(bits.TrailingZeros64(u.hi)) + 64
 	}
@@ -509,7 +509,7 @@ func (u Uint128) TrailingZeros() uint {
 }
 
 // LeftShift returns u << n.
-func (u Uint128) LeftShift(n uint) Uint128 {
+func (u Uint) LeftShift(n uint) Uint {
 	switch {
 	case n == 0:
 	case n > 64:
@@ -526,7 +526,7 @@ func (u Uint128) LeftShift(n uint) Uint128 {
 }
 
 // RightShift returns u >> n.
-func (u Uint128) RightShift(n uint) Uint128 {
+func (u Uint) RightShift(n uint) Uint {
 	switch {
 	case n == 0:
 	case n > 64:
@@ -543,29 +543,29 @@ func (u Uint128) RightShift(n uint) Uint128 {
 }
 
 // Mul returns u * n.
-func (u Uint128) Mul(n Uint128) Uint128 {
+func (u Uint) Mul(n Uint) Uint {
 	hi, lo := bits.Mul64(u.lo, n.lo)
-	return Uint128{
+	return Uint{
 		hi: hi + u.hi*n.lo + u.lo*n.hi,
 		lo: lo,
 	}
 }
 
 // Mul64 returns u * n.
-func (u Uint128) Mul64(n uint64) (dest Uint128) {
+func (u Uint) Mul64(n uint64) (dest Uint) {
 	x0 := u.lo & 0xFFFFFFFF
 	x1 := u.lo >> 32
 	y0 := n & 0xFFFFFFFF
 	y1 := n >> 32
 	t := x1*y0 + (x0*y0)>>32
-	return Uint128{
+	return Uint{
 		hi: (x1 * y1) + (t >> 32) + (((t & 0xFFFFFFFF) + (x0 * y1)) >> 32) + u.hi*n,
 		lo: u.lo * n,
 	}
 }
 
 // Div returns u / n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) Div(n Uint128) Uint128 {
+func (u Uint) Div(n Uint) Uint {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
@@ -590,9 +590,9 @@ func (u Uint128) Div(n Uint128) Uint128 {
 		return u.RightShift(nTrailing0)
 	}
 	if cmp := u.Cmp(n); cmp < 0 {
-		return Uint128{} // nothing but remainder
+		return Uint{} // nothing but remainder
 	} else if cmp == 0 { // division by same value
-		return Uint128{lo: 1}
+		return Uint{lo: 1}
 	}
 	uLeading0 := u.LeadingZeros()
 	if nLeading0-uLeading0 > divBinaryShiftThreshold {
@@ -604,7 +604,7 @@ func (u Uint128) Div(n Uint128) Uint128 {
 }
 
 // Div64 returns u / n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) Div64(n uint64) Uint128 {
+func (u Uint) Div64(n uint64) Uint {
 	if n == 0 {
 		panic(divByZero)
 	}
@@ -622,9 +622,9 @@ func (u Uint128) Div64(n uint64) Uint128 {
 		return u.RightShift(nTrailing0)
 	}
 	if cmp := u.Cmp64(n); cmp < 0 {
-		return Uint128{} // nothing but remainder
+		return Uint{} // nothing but remainder
 	} else if cmp == 0 { // division by same value
-		return Uint128{lo: 1}
+		return Uint{lo: 1}
 	}
 	uLeading0 := u.LeadingZeros()
 	if nLeading0-uLeading0 > divBinaryShiftThreshold {
@@ -639,12 +639,12 @@ func (u Uint128) Div64(n uint64) Uint128 {
 		}
 		return u
 	}
-	q, _ := u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
+	q, _ := u.divmod128bin(Uint{lo: n}, uLeading0, nLeading0)
 	return q
 }
 
 // DivMod returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
+func (u Uint) DivMod(n Uint) (q, r Uint) {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
@@ -685,7 +685,7 @@ func (u Uint128) DivMod(n Uint128) (q, r Uint128) {
 }
 
 // DivMod64 returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) DivMod64(n uint64) (q, r Uint128) {
+func (u Uint) DivMod64(n uint64) (q, r Uint) {
 	if n == 0 {
 		panic(divByZero)
 	}
@@ -722,18 +722,18 @@ func (u Uint128) DivMod64(n uint64) (q, r Uint128) {
 		}
 		return q, r
 	}
-	return u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
+	return u.divmod128bin(Uint{lo: n}, uLeading0, nLeading0)
 }
 
 // Mod returns u % n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) Mod(n Uint128) Uint128 {
+func (u Uint) Mod(n Uint) Uint {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
 		if n.lo == 0 {
 			panic(divByZero)
 		}
 		if n.lo == 1 { // divide by 1
-			return Uint128{}
+			return Uint{}
 		}
 		if u.hi == 0 { // 64-bit division only
 			u.lo %= n.lo
@@ -753,7 +753,7 @@ func (u Uint128) Mod(n Uint128) Uint128 {
 	if cmp := u.Cmp(n); cmp < 0 {
 		return u // nothing but remainder
 	} else if cmp == 0 { // division by same value
-		return Uint128{}
+		return Uint{}
 	}
 	uLeading0 := u.LeadingZeros()
 	if nLeading0-uLeading0 > divBinaryShiftThreshold {
@@ -765,12 +765,12 @@ func (u Uint128) Mod(n Uint128) Uint128 {
 }
 
 // Mod64 returns u % n. If n == 0, a divide by zero panic will occur.
-func (u Uint128) Mod64(n uint64) Uint128 {
+func (u Uint) Mod64(n uint64) Uint {
 	if n == 0 {
 		panic(divByZero)
 	}
 	if n == 1 {
-		return Uint128{}
+		return Uint{}
 	}
 	if u.hi == 0 { // 64-bit division only
 		u.lo %= n
@@ -785,7 +785,7 @@ func (u Uint128) Mod64(n uint64) Uint128 {
 	if cmp := u.Cmp64(n); cmp < 0 {
 		return u // nothing but remainder
 	} else if cmp == 0 { // division by same value
-		return Uint128{}
+		return Uint{}
 	}
 	uLeading0 := u.LeadingZeros()
 	if nLeading0-uLeading0 > divBinaryShiftThreshold {
@@ -793,14 +793,14 @@ func (u Uint128) Mod64(n uint64) Uint128 {
 			u.hi %= n
 		}
 		_, r := u.divmod128by64(n, nLoLeading0)
-		return Uint128{lo: r}
+		return Uint{lo: r}
 	}
-	_, r := u.divmod128bin(Uint128{lo: n}, uLeading0, nLeading0)
+	_, r := u.divmod128bin(Uint{lo: n}, uLeading0, nLeading0)
 	return r
 }
 
 // divmod128by64 was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func (u Uint128) divmod128by64(n uint64, nLeading0 uint) (q, r uint64) {
+func (u Uint) divmod128by64(n uint64, nLeading0 uint) (q, r uint64) {
 	n <<= nLeading0
 	vn1 := n >> 32
 	vn0 := n & 0xffffffff
@@ -843,7 +843,7 @@ loop2:
 }
 
 // divmod128by128 was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func (u Uint128) divmod128by128(n Uint128, nHiLeading0, nLoLeading0 uint) (q, r Uint128) {
+func (u Uint) divmod128by128(n Uint, nHiLeading0, nLoLeading0 uint) (q, r Uint) {
 	if n.hi == 0 {
 		if u.hi < n.lo {
 			q.lo, r.lo = u.divmod128by64(n.lo, nLoLeading0)
@@ -869,7 +869,7 @@ func (u Uint128) divmod128by128(n Uint128, nHiLeading0, nLoLeading0 uint) (q, r 
 }
 
 // divmod128bin was adapted from https://www.codeproject.com/Tips/785014/UInt-Division-Modulus
-func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint128) {
+func (u Uint) divmod128bin(n Uint, uLeading0, byLeading0 uint) (q, r Uint) {
 	shift := int(byLeading0 - uLeading0)
 	n = n.LeftShift(uint(shift))
 	for {
@@ -889,7 +889,7 @@ func (u Uint128) divmod128bin(n Uint128, uLeading0, byLeading0 uint) (q, r Uint1
 }
 
 // String implements fmt.Stringer.
-func (u Uint128) String() string {
+func (u Uint) String() string {
 	if u.hi == 0 {
 		if u.lo == 0 {
 			return "0"
@@ -900,18 +900,18 @@ func (u Uint128) String() string {
 }
 
 // Format implements fmt.Formatter.
-func (u Uint128) Format(s fmt.State, c rune) {
+func (u Uint) Format(s fmt.State, c rune) {
 	u.AsBigInt().Format(s, c)
 }
 
 // Scan implements fmt.Scanner.
-func (u *Uint128) Scan(state fmt.ScanState, _ rune) error {
+func (u *Uint) Scan(state fmt.ScanState, _ rune) error {
 	t, err := state.Token(true, nil)
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	var v Uint128
-	if v, err = Uint128FromString(string(t)); err != nil {
+	var v Uint
+	if v, err = UintFromString(string(t)); err != nil {
 		return errs.Wrap(err)
 	}
 	*u = v
@@ -919,13 +919,13 @@ func (u *Uint128) Scan(state fmt.ScanState, _ rune) error {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (u Uint128) MarshalText() ([]byte, error) {
+func (u Uint) MarshalText() ([]byte, error) {
 	return []byte(u.String()), nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (u *Uint128) UnmarshalText(text []byte) error {
-	v, err := Uint128FromString(string(text))
+func (u *Uint) UnmarshalText(text []byte) error {
+	v, err := UintFromString(string(text))
 	if err != nil {
 		return err
 	}
@@ -934,15 +934,15 @@ func (u *Uint128) UnmarshalText(text []byte) error {
 }
 
 // Float64 implements json.Number. Intentionally always returns an error, as we never want to emit floating point values
-// into json for Uint128.
-func (u Uint128) Float64() (float64, error) {
+// into json for Uint.
+func (u Uint) Float64() (float64, error) {
 	return 0, errNoFloat64
 }
 
 // Int64 implements json.Number.
-func (u Uint128) Int64() (int64, error) {
-	if u.IsInt128() {
-		i128 := Int128(u)
+func (u Uint) Int64() (int64, error) {
+	if u.IsInt() {
+		i128 := Int(u)
 		if i128.IsInt64() {
 			return i128.AsInt64(), nil
 		}
@@ -951,13 +951,13 @@ func (u Uint128) Int64() (int64, error) {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (u Uint128) MarshalJSON() ([]byte, error) {
+func (u Uint) MarshalJSON() ([]byte, error) {
 	return []byte(u.String()), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (u *Uint128) UnmarshalJSON(in []byte) error {
-	v, err := Uint128FromString(string(in))
+func (u *Uint) UnmarshalJSON(in []byte) error {
+	v, err := UintFromString(string(in))
 	if err != nil {
 		return err
 	}
@@ -966,17 +966,17 @@ func (u *Uint128) UnmarshalJSON(in []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (u Uint128) MarshalYAML() (any, error) {
+func (u Uint) MarshalYAML() (any, error) {
 	return u.String(), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (u *Uint128) UnmarshalYAML(unmarshal func(any) error) error {
+func (u *Uint) UnmarshalYAML(unmarshal func(any) error) error {
 	var str string
 	if err := unmarshal(&str); err != nil {
 		return err
 	}
-	v, err := Uint128FromString(str)
+	v, err := UintFromString(str)
 	if err != nil {
 		return err
 	}

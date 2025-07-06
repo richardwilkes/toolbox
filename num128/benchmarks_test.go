@@ -7,13 +7,13 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package num_test
+package num128_test
 
 import (
 	"math/big"
 	"testing"
 
-	"github.com/richardwilkes/toolbox/v2/xmath/num"
+	"github.com/richardwilkes/toolbox/v2/num128"
 )
 
 const (
@@ -23,15 +23,15 @@ const (
 )
 
 var (
-	benchInt128  num.Int128
-	benchUint128 num.Uint128
+	benchInt128  num128.Int
+	benchUint128 num128.Uint
 	benchBigInt  *big.Int
 )
 
 func BenchmarkInt128Add(b *testing.B) {
-	left := num.Int128FromStringNoCheck(leftStr)
-	right := num.Int128FromStringNoCheck(rightStr)
-	var dest num.Int128
+	left := num128.IntFromStringNoCheck(leftStr)
+	right := num128.IntFromStringNoCheck(rightStr)
+	var dest num128.Int
 	for b.Loop() {
 		dest = left.Add(right)
 	}
@@ -39,9 +39,9 @@ func BenchmarkInt128Add(b *testing.B) {
 }
 
 func BenchmarkUint128Add(b *testing.B) {
-	left := num.Uint128FromStringNoCheck(leftStr)
-	right := num.Uint128FromStringNoCheck(rightStr)
-	var dest num.Uint128
+	left := num128.UintFromStringNoCheck(leftStr)
+	right := num128.UintFromStringNoCheck(rightStr)
+	var dest num128.Uint
 	for b.Loop() {
 		dest = left.Add(right)
 	}
@@ -59,9 +59,9 @@ func BenchmarkBigIntAdd(b *testing.B) {
 }
 
 func BenchmarkInt128Sub(b *testing.B) {
-	left := num.Int128FromStringNoCheck(leftStr)
-	right := num.Int128FromStringNoCheck(rightStr)
-	var dest num.Int128
+	left := num128.IntFromStringNoCheck(leftStr)
+	right := num128.IntFromStringNoCheck(rightStr)
+	var dest num128.Int
 	for b.Loop() {
 		dest = left.Sub(right)
 	}
@@ -69,9 +69,9 @@ func BenchmarkInt128Sub(b *testing.B) {
 }
 
 func BenchmarkUint128Sub(b *testing.B) {
-	left := num.Uint128FromStringNoCheck(leftStr)
-	right := num.Uint128FromStringNoCheck(rightStr)
-	var dest num.Uint128
+	left := num128.UintFromStringNoCheck(leftStr)
+	right := num128.UintFromStringNoCheck(rightStr)
+	var dest num128.Uint
 	for b.Loop() {
 		dest = left.Sub(right)
 	}
@@ -89,9 +89,9 @@ func BenchmarkBigIntSub(b *testing.B) {
 }
 
 func BenchmarkInt128Mul(b *testing.B) {
-	left := num.Int128FromStringNoCheck(leftStr)
-	right := num.Int128FromStringNoCheck(shortRightStr)
-	var dest num.Int128
+	left := num128.IntFromStringNoCheck(leftStr)
+	right := num128.IntFromStringNoCheck(shortRightStr)
+	var dest num128.Int
 	for b.Loop() {
 		dest = left.Mul(right)
 	}
@@ -99,9 +99,9 @@ func BenchmarkInt128Mul(b *testing.B) {
 }
 
 func BenchmarkUint128Mul(b *testing.B) {
-	left := num.Uint128FromStringNoCheck(leftStr)
-	right := num.Uint128FromStringNoCheck(shortRightStr)
-	var dest num.Uint128
+	left := num128.UintFromStringNoCheck(leftStr)
+	right := num128.UintFromStringNoCheck(shortRightStr)
+	var dest num128.Uint
 	for b.Loop() {
 		dest = left.Mul(right)
 	}
@@ -119,9 +119,9 @@ func BenchmarkBigIntMul(b *testing.B) {
 }
 
 func BenchmarkInt128Div(b *testing.B) {
-	left := num.Int128FromStringNoCheck(leftStr)
-	right := num.Int128FromStringNoCheck(shortRightStr)
-	var dest num.Int128
+	left := num128.IntFromStringNoCheck(leftStr)
+	right := num128.IntFromStringNoCheck(shortRightStr)
+	var dest num128.Int
 	for b.Loop() {
 		dest = left.Div(right)
 	}
@@ -129,9 +129,9 @@ func BenchmarkInt128Div(b *testing.B) {
 }
 
 func BenchmarkUint128Div(b *testing.B) {
-	left := num.Uint128FromStringNoCheck(leftStr)
-	right := num.Uint128FromStringNoCheck(shortRightStr)
-	var dest num.Uint128
+	left := num128.UintFromStringNoCheck(leftStr)
+	right := num128.UintFromStringNoCheck(shortRightStr)
+	var dest num128.Uint
 	for b.Loop() {
 		dest = left.Div(right)
 	}

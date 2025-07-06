@@ -18,25 +18,25 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/num128"
 	"github.com/richardwilkes/toolbox/v2/txt"
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"github.com/richardwilkes/toolbox/v2/xmath/num"
 	"gopkg.in/yaml.v3"
 )
 
 // Int holds a fixed-point value. Values are truncated, not rounded.
 type Int[T fixed.Dx] struct {
-	data num.Int128
+	data num128.Int
 }
 
 // Maximum returns the maximum possible value the type can hold.
 func Maximum[T fixed.Dx]() Int[T] {
-	return Int[T]{data: num.MaxInt128}
+	return Int[T]{data: num128.MaxInt}
 }
 
 // Minimum returns the minimum possible value the type can hold.
 func Minimum[T fixed.Dx]() Int[T] {
-	return Int[T]{data: num.MinInt128}
+	return Int[T]{data: num128.MinInt}
 }
 
 // MaxSafeMultiply returns the maximum value that can be safely multiplied without overflow.
@@ -55,9 +55,9 @@ func Multiplier[T fixed.Dx]() Int[T] {
 	return Int[T]{data: multiplier[T]()}
 }
 
-func multiplier[T fixed.Dx]() num.Int128 {
+func multiplier[T fixed.Dx]() num128.Int {
 	var t T
-	return num.Int128From64(t.Multiplier())
+	return num128.IntFrom64(t.Multiplier())
 }
 
 // From creates a new value.
@@ -68,7 +68,7 @@ func From[T fixed.Dx, FROM xmath.Numeric](value FROM) Int[T] {
 		return f
 	default:
 		var t T
-		return Int[T]{data: num.Int128From64(int64(value)).Mul(num.Int128From64(t.Multiplier()))}
+		return Int[T]{data: num128.IntFrom64(int64(value)).Mul(num128.IntFrom64(t.Multiplier()))}
 	}
 }
 
@@ -126,7 +126,7 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if neg {
 		value.Neg(value)
 	}
-	return Int[T]{data: num.Int128FromBigInt(value)}, nil
+	return Int[T]{data: num128.IntFromBigInt(value)}, nil
 }
 
 // FromStringForced creates a new value from a string.
@@ -218,7 +218,7 @@ func (f Int[T]) Ceil() Int[T] {
 // Round returns the nearest integer, rounding half away from zero.
 func (f Int[T]) Round() Int[T] {
 	one := Multiplier[T]()
-	half := Int[T]{data: one.data.Div(num.Int128From64(2))}
+	half := Int[T]{data: one.data.Div(num128.IntFrom64(2))}
 	negHalf := half.Neg()
 	value := f.Trunc()
 	rem := f.Sub(value)
