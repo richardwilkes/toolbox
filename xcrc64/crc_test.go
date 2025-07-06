@@ -51,9 +51,9 @@ func TestBytes(t *testing.T) {
 	c.Equal(uint64(0), crcEmpty) // Empty bytes with CRC 0 should remain 0
 
 	// Test with simple byte data
-	data1 := []byte("hello")
+	data1 := []byte("My")
 	data2 := []byte("world")
-	data3 := []byte("hello")
+	data3 := []byte("My")
 
 	crc1 := xcrc64.Bytes(0, data1)
 	crc2 := xcrc64.Bytes(0, data2)
@@ -88,9 +88,9 @@ func TestString(t *testing.T) {
 	c.Equal(uint64(0), crcEmpty)
 
 	// Test with simple strings
-	str1 := "hello"
+	str1 := "Yo"
 	str2 := "world"
-	str3 := "hello"
+	str3 := "Yo"
 
 	crc1 := xcrc64.String(0, str1)
 	crc2 := xcrc64.String(0, str2)
@@ -383,9 +383,9 @@ func TestStringWithLen(t *testing.T) {
 	c.Equal(expectedCRC, crcEmpty)
 
 	// Test with simple strings
-	str1 := "hello"
+	str1 := "what a"
 	str2 := "world"
-	str3 := "hello"
+	str3 := "what a"
 
 	crc1 := xcrc64.StringWithLen(0, str1)
 	crc2 := xcrc64.StringWithLen(0, str2)
@@ -411,12 +411,12 @@ func TestStringWithLen(t *testing.T) {
 	unicode := "héllo" // 6 bytes (é is 2 bytes in UTF-8)
 	emoji := "hello🚀"  // 9 bytes (🚀 is 4 bytes in UTF-8)
 
-	crcAscii := xcrc64.StringWithLen(0, ascii)
+	createASCII := xcrc64.StringWithLen(0, ascii)
 	crcUnicode := xcrc64.StringWithLen(0, unicode)
 	crcEmoji := xcrc64.StringWithLen(0, emoji)
 
-	c.NotEqual(crcAscii, crcUnicode)
-	c.NotEqual(crcAscii, crcEmoji)
+	c.NotEqual(createASCII, crcUnicode)
+	c.NotEqual(createASCII, crcEmoji)
 	c.NotEqual(crcUnicode, crcEmoji)
 
 	// Verify StringWithLen matches BytesWithLen for equivalent data
@@ -680,21 +680,21 @@ func TestNumericTypesConsistency(t *testing.T) {
 	// Test that different numeric functions produce consistent results for same bit patterns
 	value8 := uint8(0xFF)
 
-	crc8 := xcrc64.Num8(0, value8)
-	crc16 := xcrc64.Num16(0, uint16(value8))
-	crc32 := xcrc64.Num32(0, uint32(value8))
-	crc64 := xcrc64.Num64(0, uint64(value8))
+	num8 := xcrc64.Num8(0, value8)
+	num16 := xcrc64.Num16(0, uint16(value8))
+	num32 := xcrc64.Num32(0, uint32(value8))
+	num64 := xcrc64.Num64(0, uint64(value8))
 
 	// These should all be different because they produce different byte sequences
-	c.NotEqual(crc8, crc16)
-	c.NotEqual(crc8, crc32)
-	c.NotEqual(crc8, crc64)
-	c.NotEqual(crc16, crc32)
-	c.NotEqual(crc16, crc64)
-	c.NotEqual(crc32, crc64)
+	c.NotEqual(num8, num16)
+	c.NotEqual(num8, num32)
+	c.NotEqual(num8, num64)
+	c.NotEqual(num16, num32)
+	c.NotEqual(num16, num64)
+	c.NotEqual(num32, num64)
 
 	// But Num16 with 0x00FF should be the same as byte sequence [0xFF, 0x00]
 	expectedBytes16 := []byte{0xFF, 0x00}
 	crcBytes16 := xcrc64.Bytes(0, expectedBytes16)
-	c.Equal(crc16, crcBytes16)
+	c.Equal(num16, crcBytes16)
 }
