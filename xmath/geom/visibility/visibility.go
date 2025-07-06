@@ -11,6 +11,7 @@ package visibility
 
 import (
 	"cmp"
+	"math"
 	"slices"
 
 	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
@@ -379,7 +380,7 @@ func angle2[T ~float32 | ~float64](a, b, c geom.Point[T]) T {
 }
 
 func angle[T ~float32 | ~float64](a, b geom.Point[T]) T {
-	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / xmath.Pi
+	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
 }
 
 func distance[T ~float32 | ~float64](a, b geom.Point[T]) T {

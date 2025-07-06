@@ -7,12 +7,12 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xmath
+package bitset
 
 import (
-	"fmt"
 	"math"
 
+	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
@@ -358,7 +358,6 @@ func (b *BitSet) Trim() {
 			}
 			return
 		}
-		i--
 	}
 	b.data = nil
 }
@@ -421,14 +420,12 @@ func bitIndexForMask(mask uint64) int {
 			return i
 		}
 	}
-	fmt.Printf("Unable to determine bit index for mask %064b\n", mask)
-	xos.Exit(1)
+	xos.ExitWithErr(errs.Newf("Unable to determine bit index for mask %064b\n", mask))
 	return 0
 }
 
 func validateBitSetIndex(index int) {
 	if index < 0 {
-		fmt.Printf("Index must be positive (was %d)\n", index)
-		xos.Exit(1)
+		xos.ExitWithErr(errs.Newf("Index must be positive (was %d)\n", index))
 	}
 }
