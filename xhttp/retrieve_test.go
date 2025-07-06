@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xio_test
+package xhttp_test
 
 import (
 	"context"
@@ -20,18 +20,19 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xhttp"
 	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 func TestHasHttpOrFileURLPrefix(t *testing.T) {
 	c := check.New(t)
-	c.True(xio.HasHTTPOrFileURLPrefix("http://example.com"))
-	c.True(xio.HasHTTPOrFileURLPrefix("https://example.com"))
-	c.True(xio.HasHTTPOrFileURLPrefix("file:///tmp/foo"))
-	c.False(xio.HasHTTPOrFileURLPrefix("ftp://example.com"))
-	c.False(xio.HasHTTPOrFileURLPrefix("/tmp/foo"))
-	c.False(xio.HasHTTPOrFileURLPrefix("c:/tmp/foo"))
-	c.False(xio.HasHTTPOrFileURLPrefix("c:\\tmp\\foo"))
+	c.True(xhttp.HasHTTPOrFileURLPrefix("http://example.com"))
+	c.True(xhttp.HasHTTPOrFileURLPrefix("https://example.com"))
+	c.True(xhttp.HasHTTPOrFileURLPrefix("file:///tmp/foo"))
+	c.False(xhttp.HasHTTPOrFileURLPrefix("ftp://example.com"))
+	c.False(xhttp.HasHTTPOrFileURLPrefix("/tmp/foo"))
+	c.False(xhttp.HasHTTPOrFileURLPrefix("c:/tmp/foo"))
+	c.False(xhttp.HasHTTPOrFileURLPrefix("c:\\tmp\\foo"))
 }
 
 func TestRetrieveData_File(t *testing.T) {
@@ -39,7 +40,7 @@ func TestRetrieveData_File(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "retrieve_test_1.txt")
 	content := []byte("hello file")
 	c.NoError(os.WriteFile(file, content, 0o600))
-	data, err := xio.RetrieveData(context.Background(), nil, file)
+	data, err := xhttp.RetrieveData(context.Background(), nil, file)
 	c.NoError(err)
 	c.Equal(content, data)
 }
@@ -53,7 +54,7 @@ func TestRetrieveData_FileURL(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		fileURL = "file:///" + filepath.ToSlash(file)
 	}
-	data, err := xio.RetrieveData(context.Background(), nil, fileURL)
+	data, err := xhttp.RetrieveData(context.Background(), nil, fileURL)
 	c.NoError(err)
 	c.Equal(content, data)
 }
@@ -64,7 +65,7 @@ func TestRetrieveData_HTTP(t *testing.T) {
 		w.Write([]byte("hello http")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
-	data, err := xio.RetrieveData(context.Background(), nil, server.URL)
+	data, err := xhttp.RetrieveData(context.Background(), nil, server.URL)
 	c.NoError(err)
 	c.Equal([]byte("hello http"), data)
 }
@@ -77,7 +78,7 @@ func TestRetrieveData_HTTPS(t *testing.T) {
 	}))
 	defer server.Close()
 	client := server.Client()
-	data, err := xio.RetrieveData(context.Background(), client, server.URL)
+	data, err := xhttp.RetrieveData(context.Background(), client, server.URL)
 	c.NoError(err)
 	c.Equal([]byte("hello https"), data)
 }
@@ -89,25 +90,25 @@ func TestRetrieveData_HTTPErrorStatus(t *testing.T) {
 		w.Write([]byte("not found")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
-	_, err := xio.RetrieveData(context.Background(), nil, server.URL)
+	_, err := xhttp.RetrieveData(context.Background(), nil, server.URL)
 	c.HasError(err)
 }
 
 func TestRetrieveData_FileNotFound(t *testing.T) {
 	c := check.New(t)
-	_, err := xio.RetrieveData(context.Background(), nil, "nonexistent_file_123456789.txt")
+	_, err := xhttp.RetrieveData(context.Background(), nil, "nonexistent_file_123456789.txt")
 	c.HasError(err)
 }
 
 func TestStreamData_InvalidURL(t *testing.T) {
 	c := check.New(t)
-	_, err := xio.StreamData(context.Background(), nil, "http://%41:8080/")
+	_, err := xhttp.StreamData(context.Background(), nil, "http://%41:8080/")
 	c.HasError(err)
 }
 
 func TestStreamData_UnsupportedScheme(t *testing.T) {
 	c := check.New(t)
-	_, err := xio.StreamData(context.Background(), nil, "ftp://example.com")
+	_, err := xhttp.StreamData(context.Background(), nil, "ftp://example.com")
 	c.HasError(err)
 }
 
@@ -116,7 +117,7 @@ func TestStreamData_File(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "retrieve_test_3.txt")
 	content := []byte("stream file")
 	c.NoError(os.WriteFile(file, content, 0o600))
-	r, err := xio.StreamData(context.Background(), nil, file)
+	r, err := xhttp.StreamData(context.Background(), nil, file)
 	c.NoError(err)
 	defer xio.CloseIgnoringErrors(r)
 	data, err := io.ReadAll(r)
@@ -130,7 +131,7 @@ func TestStreamData_HTTP(t *testing.T) {
 		w.Write([]byte("stream http")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
-	r, err := xio.StreamData(context.Background(), nil, server.URL)
+	r, err := xhttp.StreamData(context.Background(), nil, server.URL)
 	c.NoError(err)
 	defer xio.CloseIgnoringErrors(r)
 	data, err := io.ReadAll(r)
@@ -145,12 +146,12 @@ func TestStreamData_HTTPErrorStatus(t *testing.T) {
 		w.Write([]byte("fail")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))
 	defer server.Close()
-	_, err := xio.StreamData(context.Background(), nil, server.URL)
+	_, err := xhttp.StreamData(context.Background(), nil, server.URL)
 	c.HasError(err)
 }
 
 func TestStreamData_FileNotFound(t *testing.T) {
 	c := check.New(t)
-	_, err := xio.StreamData(context.Background(), nil, "nonexistent_file_987654321.txt")
+	_, err := xhttp.StreamData(context.Background(), nil, "nonexistent_file_987654321.txt")
 	c.HasError(err)
 }

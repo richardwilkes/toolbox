@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xio
+package xhttp
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 // HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
@@ -34,7 +35,7 @@ func RetrieveData(ctx context.Context, client *http.Client, filePathOrURL string
 	if err != nil {
 		return nil, err
 	}
-	defer CloseIgnoringErrors(r)
+	defer xio.CloseIgnoringErrors(r)
 	var data []byte
 	data, err = io.ReadAll(r)
 	if err != nil {
@@ -54,9 +55,9 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 			return nil, errs.NewWithCause(filePathOrURL, err)
 		}
 		switch u.Scheme {
-		case "file":
+		case ProtocolFile:
 			filePathOrURL = u.Path
-		case "http", "https":
+		case ProtocolHTTP, ProtocolHTTPS:
 			var req *http.Request
 			req, err = http.NewRequestWithContext(ctx, http.MethodGet, filePathOrURL, http.NoBody)
 			if err != nil {

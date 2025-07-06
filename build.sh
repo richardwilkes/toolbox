@@ -65,4 +65,4 @@ fi
 
 # Install executables
 echo -e "\033[33mInstalling executables...\033[0m"
-go install -v ./i18n/i18n
+go install -v ./cmd/i18n

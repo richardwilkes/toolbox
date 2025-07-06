@@ -25,6 +25,13 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
+// Constants for various protocols.
+const (
+	ProtocolHTTP  = "http"
+	ProtocolHTTPS = "https"
+	ProtocolFile  = "file"
+)
+
 // DefaultStopGracePeriod is the default maximum time to wait for the server to stop when Shutdown is called.
 const DefaultStopGracePeriod = 5 * time.Second
 
@@ -125,9 +132,9 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 			(len(cfg.TLSConfig.Certificates) > 0 ||
 				cfg.TLSConfig.GetCertificate != nil ||
 				cfg.TLSConfig.GetConfigForClient != nil)) {
-		s.protocol = "https"
+		s.protocol = ProtocolHTTPS
 	} else {
-		s.protocol = "http"
+		s.protocol = ProtocolHTTP
 	}
 	if s.logger == nil {
 		s.logger = slog.Default()
@@ -169,7 +176,7 @@ func (s *Server) Run() error {
 	slog.Info(s.protocol + " server is now listening on " + s.ListenerAddress().String())
 	close(s.started)
 	s.lock.Unlock()
-	if s.protocol == "https" {
+	if s.protocol == ProtocolHTTPS {
 		err = s.server.ServeTLS(listener, s.certFile, s.keyFile)
 	} else {
 		err = s.server.Serve(listener)

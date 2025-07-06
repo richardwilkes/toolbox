@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/richardwilkes/toolbox/v2/xio"
+	"github.com/richardwilkes/toolbox/v2/xhttp"
 )
 
 var (
@@ -72,7 +72,7 @@ func externalIPAddress(ctx context.Context, timeout time.Duration, sites []strin
 		if ctx.Err() != nil {
 			return nil
 		}
-		if data, err := xio.RetrieveData(ctx, client, site); err == nil {
+		if data, err := xhttp.RetrieveData(ctx, client, site); err == nil {
 			ip := net.ParseIP(strings.TrimSpace(string(data)))
 			if v4 {
 				ip = ip.To4()
