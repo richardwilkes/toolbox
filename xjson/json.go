@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package fs
+package xjson
 
 import (
 	"bufio"
@@ -18,28 +18,28 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio"
-	"github.com/richardwilkes/toolbox/v2/xio/fs/safe"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-// LoadJSON data from the specified path.
-func LoadJSON(path string, data any) error {
+// Load JSON data from the specified path.
+func Load(path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
 	}
-	return loadJSON(f, path, data)
+	return load(f, path, data)
 }
 
-// LoadJSONFromFS data from the specified filesystem path.
-func LoadJSONFromFS(fsys fs.FS, path string, data any) error {
+// LoadFS loads JSON data from the specified filesystem path.
+func LoadFS(fsys fs.FS, path string, data any) error {
 	f, err := fsys.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
 	}
-	return loadJSON(f, path, data)
+	return load(f, path, data)
 }
 
-func loadJSON(r io.ReadCloser, path string, data any) error {
+func load(r io.ReadCloser, path string, data any) error {
 	defer xio.CloseIgnoringErrors(r)
 	if err := json.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
 		return errs.NewWithCause(path, err)
@@ -47,20 +47,15 @@ func loadJSON(r io.ReadCloser, path string, data any) error {
 	return nil
 }
 
-// SaveJSON data to the specified path.
-func SaveJSON(path string, data any, format bool) error {
-	return SaveJSONWithMode(path, data, format, 0o644)
-}
-
-// SaveJSONWithMode data to the specified path.
-func SaveJSONWithMode(path string, data any, format bool, mode os.FileMode) error {
-	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
+// Save JSON data to the specified path.
+func Save(path string, data any, format bool) error {
+	if err := xos.WriteSafeFile(path, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)
 		if format {
 			encoder.SetIndent("", "  ")
 		}
 		return errs.Wrap(encoder.Encode(data))
-	}, mode); err != nil {
+	}); err != nil {
 		return errs.NewWithCause(path, err)
 	}
 	return nil

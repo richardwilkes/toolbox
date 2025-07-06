@@ -7,37 +7,56 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package safe provides safe, atomic saving of files.
-package safe
+package xos
 
 import (
+	"bufio"
+	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// File provides safe, atomic saving of files. Instead of truncating and overwriting the destination file, it creates a
-// temporary file in the same directory, writes to it, and then renames the temporary file to the original name when
+// SafeFile provides safe overwriting of files. Instead of truncating and overwriting the destination file, it creates a
+// temporary file in the same directory, writes to it, then renames the temporary file to the original name when
 // Commit() is called. If Close() is called without calling Commit(), or the Commit() fails, then the original file is
 // left untouched.
-type File struct {
+type SafeFile struct {
 	*os.File
-	originalName string
-	originalMode os.FileMode
-	committed    bool
-	closed       bool
+	name      string
+	committed bool
+	closed    bool
 }
 
-// Create creates a temporary file in the same directory as filename, which will be renamed to the given filename when
-// calling Commit.
-func Create(filename string) (*File, error) {
-	return CreateWithMode(filename, 0o644)
+// WriteSafeFile creates a SafeFile, calls 'writer' to write data into it, then commits it.
+func WriteSafeFile(filename string, writer func(io.Writer) error) (err error) {
+	var f *SafeFile
+	f, err = CreateSafeFile(filename)
+	if err != nil {
+		return
+	}
+	w := bufio.NewWriterSize(f, 1<<16)
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
+	if err = writer(w); err != nil {
+		return
+	}
+	if err = w.Flush(); err != nil {
+		return
+	}
+	if err = f.Commit(); err != nil {
+		return
+	}
+	return
 }
 
-// CreateWithMode creates a temporary file in the same directory as filename, which will be renamed to the given
+// CreateSafeFile creates a temporary file in the same directory as filename, which will be renamed to the given
 // filename when calling Commit.
-func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
+func CreateSafeFile(filename string) (*SafeFile, error) {
 	filename = filepath.Clean(filename)
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
 		return nil, os.ErrInvalid
@@ -46,21 +65,20 @@ func CreateWithMode(filename string, mode os.FileMode) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &File{
-		File:         f,
-		originalName: filename,
-		originalMode: mode,
+	return &SafeFile{
+		File: f,
+		name: filename,
 	}, nil
 }
 
-// OriginalName returns the original filename passed into Create().
-func (f *File) OriginalName() string {
-	return f.originalName
+// OriginalName returns the original filename passed into CreateSafeFile().
+func (f *SafeFile) OriginalName() string {
+	return f.name
 }
 
 // Commit the data into the original file and remove the temporary file from disk. Close() may still be called, but will
 // do nothing.
-func (f *File) Commit() error {
+func (f *SafeFile) Commit() error {
 	if f.committed {
 		return nil
 	}
@@ -77,20 +95,17 @@ func (f *File) Commit() error {
 		}
 	}()
 	if err = f.File.Close(); err != nil {
-		return err
-	}
-	if err = os.Rename(name, f.originalName); err != nil {
 		return errs.Wrap(err)
 	}
-	if err = os.Chmod(f.originalName, f.originalMode); err != nil {
+	if err = os.Rename(name, f.name); err != nil {
 		return errs.Wrap(err)
 	}
-	return err
+	return nil
 }
 
 // Close the temporary file and remove it, if it hasn't already been committed. If it has been committed, nothing
 // happens.
-func (f *File) Close() error {
+func (f *SafeFile) Close() error {
 	if f.committed {
 		return nil
 	}

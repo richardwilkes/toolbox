@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package fs
+package xyaml
 
 import (
 	"bufio"
@@ -17,30 +17,30 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio"
-	"github.com/richardwilkes/toolbox/v2/xio/fs/safe"
+	"github.com/richardwilkes/toolbox/v2/xos"
 
 	"gopkg.in/yaml.v3"
 )
 
-// LoadYAML data from the specified path.
-func LoadYAML(path string, data any) error {
+// Load YAML data from the specified path.
+func Load(path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
 	}
-	return loadYAML(f, path, data)
+	return load(f, path, data)
 }
 
-// LoadYAMLFromFS data from the specified filesystem path.
-func LoadYAMLFromFS(fsys fs.FS, path string, data any) error {
+// LoadFS YAML data from the specified filesystem path.
+func LoadFS(fsys fs.FS, path string, data any) error {
 	f, err := fsys.Open(path)
 	if err != nil {
 		return errs.NewWithCause(path, err)
 	}
-	return loadYAML(f, path, data)
+	return load(f, path, data)
 }
 
-func loadYAML(r io.ReadCloser, path string, data any) error {
+func load(r io.ReadCloser, path string, data any) error {
 	defer xio.CloseIgnoringErrors(r)
 	if err := yaml.NewDecoder(bufio.NewReader(r)).Decode(data); err != nil {
 		return errs.NewWithCause(path, err)
@@ -48,21 +48,16 @@ func loadYAML(r io.ReadCloser, path string, data any) error {
 	return nil
 }
 
-// SaveYAML data to the specified path.
-func SaveYAML(path string, data any) error {
-	return SaveYAMLWithMode(path, data, 0o644)
-}
-
-// SaveYAMLWithMode data to the specified path.
-func SaveYAMLWithMode(path string, data any, mode os.FileMode) error {
-	if err := safe.WriteFileWithMode(path, func(w io.Writer) error {
+// Save YAML data to the specified path.
+func Save(path string, data any) error {
+	if err := xos.WriteSafeFile(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)
 		encoder.SetIndent(2)
 		if err := encoder.Encode(data); err != nil {
 			return errs.Wrap(err)
 		}
 		return errs.Wrap(encoder.Close())
-	}, mode); err != nil {
+	}); err != nil {
 		return errs.NewWithCause(path, err)
 	}
 	return nil
