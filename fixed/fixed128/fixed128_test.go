@@ -419,15 +419,15 @@ func testBoundaryValues[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
 	// Test Maximum and Minimum
-	max := fixed128.Maximum[T]()
-	min := fixed128.Minimum[T]()
-	c.True(max.GreaterThan(min))
-	c.True(min.LessThan(max))
+	maxValue := fixed128.Maximum[T]()
+	minValue := fixed128.Minimum[T]()
+	c.True(maxValue.GreaterThan(minValue))
+	c.True(minValue.LessThan(maxValue))
 
 	// Test MaxSafeMultiply
 	maxSafe := fixed128.MaxSafeMultiply[T]()
-	c.True(maxSafe.LessThan(max))
-	c.True(maxSafe.GreaterThan(min))
+	c.True(maxSafe.LessThan(maxValue))
+	c.True(maxSafe.GreaterThan(minValue))
 }
 
 func TestMinMax(t *testing.T) {
@@ -795,15 +795,13 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 
 	// Test CheckedAs with float conversion that should fail
 	val := fixed128.FromStringForced[T]("999999999999999999999999999.9")
-	_, err := fixed128.CheckedAs[T, float32](val)
-	// This might succeed or fail depending on precision, but shouldn't panic
-	// We'll just test that it doesn't panic
+	_, _ = fixed128.CheckedAs[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
 	c.NotNil(val)
 
 	// Test YAML unmarshaling with string data
 	var intVal fixed128.Int[T]
-	err = intVal.UnmarshalYAML(func(v any) error {
-		*(v.(*string)) = "42"
+	err := intVal.UnmarshalYAML(func(v any) error {
+		*(v.(*string)) = "42" //nolint:errcheck // This is just a test, we know it will succeed
 		return nil
 	})
 	// This should handle the string value correctly

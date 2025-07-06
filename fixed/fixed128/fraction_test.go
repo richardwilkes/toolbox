@@ -76,6 +76,15 @@ func testFractionFunctions[T fixed.Dx](t *testing.T) {
 	c.Equal(posFrac, unmarshaled)
 }
 
+func TestAdditionalFractionEdgeCases(t *testing.T) {
+	testAdditionalFractionEdgeCases[fixed.D1](t)
+	testAdditionalFractionEdgeCases[fixed.D2](t)
+	testAdditionalFractionEdgeCases[fixed.D3](t)
+	testAdditionalFractionEdgeCases[fixed.D4](t)
+	testAdditionalFractionEdgeCases[fixed.D5](t)
+	testAdditionalFractionEdgeCases[fixed.D6](t)
+}
+
 func testAdditionalFractionEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
