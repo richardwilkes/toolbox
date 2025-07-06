@@ -13,12 +13,12 @@ import (
 	"math"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f64"
+	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
 )
 
-// FixedFunctions returns standard functions that work with 64-bit fixed-point values.
-func FixedFunctions[T fixed.Dx]() map[string]Function {
+// Fixed64Functions returns standard functions that work with 64-bit fixed-point values.
+func Fixed64Functions[T fixed.Dx]() map[string]Function {
 	return map[string]Function{
 		"abs":   fixedAbsolute[T],
 		"cbrt":  fixedCubeRoot[T],
@@ -84,8 +84,8 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var value f64.Int[T]
-	if value, err = FixedFrom[T](evaluated); err != nil {
+	var value fixed64.Int[T]
+	if value, err = Fixed64From[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
 			if s != "" && !strings.EqualFold(s, "false") {
 				value = value.Inc()
@@ -102,7 +102,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 }
 
 func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
-	maximum := f64.Int[T](f64.Min)
+	maximum := fixed64.Int[T](fixed64.Min)
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -116,7 +116,7 @@ func fixedMaximum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 }
 
 func fixedMinimum[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
-	minimum := f64.Int[T](f64.Max)
+	minimum := fixed64.Int[T](fixed64.Max)
 	for arguments != "" {
 		var arg string
 		arg, arguments = NextArg(arguments)
@@ -138,7 +138,7 @@ func fixedNaturalLogSum1[T fixed.Dx](e *Evaluator, arguments string) (any, error
 	if err != nil {
 		return nil, err
 	}
-	return f64.From[T](math.Log(f64.As[T, float64](value.Inc()))), nil
+	return fixed64.From[T](math.Log(fixed64.As[T, float64](value.Inc()))), nil
 }
 
 func fixedRound[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
@@ -153,12 +153,12 @@ func fixedSquareRoot[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	return fixedSingleNumberFunc[T](e, arguments, math.Sqrt)
 }
 
-func evalToFixed[T fixed.Dx](e *Evaluator, arg string) (f64.Int[T], error) {
+func evalToFixed[T fixed.Dx](e *Evaluator, arg string) (fixed64.Int[T], error) {
 	evaluated, err := e.EvaluateNew(arg)
 	if err != nil {
 		return 0, err
 	}
-	return FixedFrom[T](evaluated)
+	return Fixed64From[T](evaluated)
 }
 
 func fixedSingleNumberFunc[T fixed.Dx](e *Evaluator, arguments string, f func(float64) float64) (any, error) {
@@ -166,5 +166,5 @@ func fixedSingleNumberFunc[T fixed.Dx](e *Evaluator, arguments string, f func(fl
 	if err != nil {
 		return nil, err
 	}
-	return f64.From[T](f(f64.As[T, float64](value))), nil
+	return fixed64.From[T](f(fixed64.As[T, float64](value))), nil
 }

@@ -7,36 +7,41 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package f64
+package fixed128
 
 import (
 	"fmt"
-	"math"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/txt"
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath/num"
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	// Max holds the maximum value.
-	Max = math.MaxInt64
-	// Min holds the minimum value.
-	Min = math.MinInt64
-)
+// Int holds a fixed-point value. Values are truncated, not rounded.
+type Int[T fixed.Dx] struct {
+	data num.Int128
+}
 
-// Int holds a fixed-point value. Values are truncated, not rounded. Values can be added and subtracted directly. For
-// multiplication and division, the provided Mul() and Div() methods should be used.
-type Int[T fixed.Dx] int64
+// Maximum returns the maximum possible value the type can hold.
+func Maximum[T fixed.Dx]() Int[T] {
+	return Int[T]{data: num.MaxInt128}
+}
+
+// Minimum returns the minimum possible value the type can hold.
+func Minimum[T fixed.Dx]() Int[T] {
+	return Int[T]{data: num.MinInt128}
+}
 
 // MaxSafeMultiply returns the maximum value that can be safely multiplied without overflow.
 func MaxSafeMultiply[T fixed.Dx]() Int[T] {
-	return Int[T](Max / Multiplier[T]())
+	return Maximum[T]().Div(Multiplier[T]())
 }
 
 // MaxDecimalDigits returns the maximum number of digits after the decimal that will be used.
@@ -46,20 +51,31 @@ func MaxDecimalDigits[T fixed.Dx]() int {
 }
 
 // Multiplier returns the multiplier used.
-func Multiplier[T fixed.Dx]() int64 {
+func Multiplier[T fixed.Dx]() Int[T] {
+	return Int[T]{data: multiplier[T]()}
+}
+
+func multiplier[T fixed.Dx]() num.Int128 {
 	var t T
-	return t.Multiplier()
+	return num.Int128From64(t.Multiplier())
 }
 
 // From creates a new value.
 func From[T fixed.Dx, FROM xmath.Numeric](value FROM) Int[T] {
-	return Int[T](value * FROM(Multiplier[T]()))
+	switch reflect.TypeOf(value).Kind() {
+	case reflect.Float32, reflect.Float64:
+		f, _ := FromString[T](new(big.Float).SetPrec(128).SetFloat64(float64(value)).Text('f', MaxDecimalDigits[T]()+1)) //nolint:errcheck // Failure means 0
+		return f
+	default:
+		var t T
+		return Int[T]{data: num.Int128From64(int64(value)).Mul(num.Int128From64(t.Multiplier()))}
+	}
 }
 
 // FromString creates a new value from a string.
 func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if str == "" {
-		return 0, errs.New("empty string is not valid")
+		return Int[T]{}, errs.New("empty string is not valid")
 	}
 	str = strings.ReplaceAll(str, ",", "")
 	if strings.ContainsAny(str, "Ee") {
@@ -67,28 +83,28 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 		// isn't valid input, but we'll try to convert it anyway.
 		f, err := strconv.ParseFloat(str, 64)
 		if err != nil {
-			return 0, err
+			return Int[T]{}, err
 		}
 		return From[T](f), nil
 	}
-	mult := Multiplier[T]()
 	parts := strings.SplitN(str, ".", 2)
-	var value, fraction int64
 	var neg bool
-	var err error
+	value := new(big.Int)
+	fraction := new(big.Int)
+	var t T
 	switch parts[0] {
 	case "":
 	case "-", "-0":
 		neg = true
 	default:
-		if value, err = strconv.ParseInt(parts[0], 10, 64); err != nil {
-			return 0, errs.Wrap(err)
+		if _, ok := value.SetString(parts[0], 10); !ok {
+			return Int[T]{}, errs.Newf("invalid value: %s", str)
 		}
-		if value < 0 {
+		if value.Sign() < 0 {
 			neg = true
-			value = -value
+			value.Neg(value)
 		}
-		value *= mult
+		value.Mul(value, big.NewInt(t.Multiplier()))
 	}
 	if len(parts) > 1 {
 		cutoff := 1 + MaxDecimalDigits[T]()
@@ -102,15 +118,15 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 		if len(frac) > cutoff {
 			frac = frac[:cutoff]
 		}
-		if fraction, err = strconv.ParseInt(frac, 10, 64); err != nil {
-			return 0, errs.Wrap(err)
+		if _, ok := fraction.SetString(frac, 10); !ok {
+			return Int[T]{}, errs.Newf("invalid value: %s", str)
 		}
-		value += fraction - mult
+		value.Add(value, fraction).Sub(value, big.NewInt(t.Multiplier()))
 	}
 	if neg {
-		value = -value
+		value.Neg(value)
 	}
-	return Int[T](value), nil
+	return Int[T]{data: num.Int128FromBigInt(value)}, nil
 }
 
 // FromStringForced creates a new value from a string.
@@ -119,74 +135,104 @@ func FromStringForced[T fixed.Dx](str string) Int[T] {
 	return f
 }
 
-// Add adds this value to the passed-in value, returning a new value. Note that this method is only provided to make
-// text templates easier to use with these objects, since you can just add two Int[T] values together like they were
-// primitive types.
+// Add adds this value to the passed-in value, returning a new value.
 func (f Int[T]) Add(value Int[T]) Int[T] {
-	return f + value
+	return Int[T]{data: f.data.Add(value.data)}
 }
 
-// Sub subtracts the passed-in value from this value, returning a new value. Note that this method is only provided to
-// make text templates easier to use with these objects, since you can just subtract two Int[T] values together like
-// they were primitive types.
+// Sub subtracts the passed-in value from this value, returning a new value.
 func (f Int[T]) Sub(value Int[T]) Int[T] {
-	return f - value
+	return Int[T]{data: f.data.Sub(value.data)}
 }
 
 // Mul multiplies this value by the passed-in value, returning a new value.
 func (f Int[T]) Mul(value Int[T]) Int[T] {
-	return f * value / Int[T](Multiplier[T]())
+	return Int[T]{data: f.data.Mul(value.data).Div(multiplier[T]())}
 }
 
 // Div divides this value by the passed-in value, returning a new value.
 func (f Int[T]) Div(value Int[T]) Int[T] {
-	return f * Int[T](Multiplier[T]()) / value
+	return Int[T]{data: f.data.Mul(multiplier[T]()).Div(value.data)}
 }
 
 // Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int[T]) Mod(value Int[T]) Int[T] {
-	return f - (value.Mul(f.Div(value).Trunc()))
+	return f.Sub(value.Mul(f.Div(value).Trunc()))
+}
+
+// Neg negates this value, returning a new value.
+func (f Int[T]) Neg() Int[T] {
+	return Int[T]{data: f.data.Neg()}
 }
 
 // Abs returns the absolute value of this value.
 func (f Int[T]) Abs() Int[T] {
-	if f < 0 {
-		return -f
-	}
-	return f
+	return Int[T]{data: f.data.Abs()}
+}
+
+// Cmp returns 1 if i > n, 0 if i == n, and -1 if i < n.
+func (f Int[T]) Cmp(n Int[T]) int {
+	return f.data.Cmp(n.data)
+}
+
+// GreaterThan returns true if i > n.
+func (f Int[T]) GreaterThan(n Int[T]) bool {
+	return f.data.GreaterThan(n.data)
+}
+
+// GreaterThanOrEqual returns true if i >= n.
+func (f Int[T]) GreaterThanOrEqual(n Int[T]) bool {
+	return f.data.GreaterThanOrEqual(n.data)
+}
+
+// Equal returns true if i == n.
+func (f Int[T]) Equal(n Int[T]) bool {
+	return f.data.Equal(n.data)
+}
+
+// LessThan returns true if i < n.
+func (f Int[T]) LessThan(n Int[T]) bool {
+	return f.data.LessThan(n.data)
+}
+
+// LessThanOrEqual returns true if i <= n.
+func (f Int[T]) LessThanOrEqual(n Int[T]) bool {
+	return f.data.LessThanOrEqual(n.data)
 }
 
 // Trunc returns a new value which has everything to the right of the decimal place truncated.
 func (f Int[T]) Trunc() Int[T] {
-	mult := Int[T](Multiplier[T]())
-	return f / mult * mult
+	m := multiplier[T]()
+	return Int[T]{data: f.data.Div(m).Mul(m)}
 }
 
 // Ceil returns the value rounded up to the nearest whole number.
 func (f Int[T]) Ceil() Int[T] {
 	v := f.Trunc()
-	if f > 0 && f != v {
-		v += Int[T](Multiplier[T]())
+	if f.GreaterThan(Int[T]{}) && f != v {
+		v = v.Add(Multiplier[T]())
 	}
 	return v
 }
 
 // Round returns the nearest integer, rounding half away from zero.
 func (f Int[T]) Round() Int[T] {
-	one := Int[T](Multiplier[T]())
+	one := Multiplier[T]()
+	half := Int[T]{data: one.data.Div(num.Int128From64(2))}
+	negHalf := half.Neg()
 	value := f.Trunc()
-	rem := f - value
-	if rem >= one/2 {
-		value += one
-	} else if rem < -one/2 {
-		value -= one
+	rem := f.Sub(value)
+	if rem.GreaterThanOrEqual(half) {
+		value = value.Add(one)
+	} else if rem.LessThan(negHalf) {
+		value = value.Sub(one)
 	}
 	return value
 }
 
 // Min returns the minimum of this value or its argument.
 func (f Int[T]) Min(value Int[T]) Int[T] {
-	if f < value {
+	if f.data.LessThan(value.data) {
 		return f
 	}
 	return value
@@ -194,7 +240,7 @@ func (f Int[T]) Min(value Int[T]) Int[T] {
 
 // Max returns the maximum of this value or its argument.
 func (f Int[T]) Max(value Int[T]) Int[T] {
-	if f > value {
+	if f.data.GreaterThan(value.data) {
 		return f
 	}
 	return value
@@ -202,12 +248,12 @@ func (f Int[T]) Max(value Int[T]) Int[T] {
 
 // Inc returns the value incremented by 1.
 func (f Int[T]) Inc() Int[T] {
-	return f + Int[T](Multiplier[T]())
+	return f.Add(Multiplier[T]())
 }
 
 // Dec returns the value decremented by 1.
 func (f Int[T]) Dec() Int[T] {
-	return f - Int[T](Multiplier[T]())
+	return f.Sub(Multiplier[T]())
 }
 
 // As returns the equivalent value in the destination type.
@@ -215,9 +261,12 @@ func As[T fixed.Dx, TO xmath.Numeric](f Int[T]) TO {
 	var n TO
 	switch reflect.TypeOf(n).Kind() {
 	case reflect.Float32, reflect.Float64:
-		return TO(float64(f) / float64(Multiplier[T]()))
+		var t T
+		fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
+			new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
+		return TO(fixed64)
 	default:
-		return TO(int64(f) / Multiplier[T]())
+		return TO(f.data.Div(multiplier[T]()).AsInt64())
 	}
 }
 
@@ -227,12 +276,15 @@ func CheckedAs[T fixed.Dx, TO xmath.Numeric](f Int[T]) (TO, error) {
 	var n TO
 	switch reflect.TypeOf(n).Kind() {
 	case reflect.Float32, reflect.Float64:
-		n = TO(float64(f) / float64(Multiplier[T]()))
+		var t T
+		fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
+			new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
+		n = TO(fixed64)
 		if strconv.FormatFloat(float64(n), 'g', -1, reflect.TypeOf(n).Bits()) != f.String() {
 			return 0, fixed.ErrDoesNotFitInRequestedType
 		}
 	default:
-		n = TO(int64(f) / Multiplier[T]())
+		n = TO(f.data.Div(multiplier[T]()).AsInt64())
 		if From[T](n) != f {
 			return 0, fixed.ErrDoesNotFitInRequestedType
 		}
@@ -240,9 +292,9 @@ func CheckedAs[T fixed.Dx, TO xmath.Numeric](f Int[T]) (TO, error) {
 	return n, nil
 }
 
-// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive.
 func (f Int[T]) CommaWithSign() string {
-	if f >= 0 {
+	if f.data.Sign() >= 0 {
 		return "+" + f.Comma()
 	}
 	return f.Comma()
@@ -253,26 +305,26 @@ func (f Int[T]) Comma() string {
 	return txt.CommaFromStringNum(f.String())
 }
 
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
 func (f Int[T]) StringWithSign() string {
-	if f >= 0 {
+	if f.data.Sign() >= 0 {
 		return "+" + f.String()
 	}
 	return f.String()
 }
 
 func (f Int[T]) String() string {
-	mult := Int[T](Multiplier[T]())
-	integer := f / mult
-	fraction := f % mult
-	if fraction == 0 {
-		return strconv.FormatInt(int64(integer), 10)
+	mult := multiplier[T]()
+	integer := f.data.Div(mult)
+	iStr := integer.String()
+	fraction := f.data.Sub(integer.Mul(mult))
+	if fraction.IsZero() {
+		return iStr
 	}
-	if fraction < 0 {
-		fraction = -fraction
+	if fraction.Sign() < 0 {
+		fraction = fraction.Neg()
 	}
-	fraction += mult
-	fStr := strconv.FormatInt(int64(fraction), 10)
+	fStr := fraction.Add(mult).String()
 	for i := len(fStr) - 1; i > 0; i-- {
 		if fStr[i] != '0' {
 			fStr = fStr[1 : i+1]
@@ -280,12 +332,12 @@ func (f Int[T]) String() string {
 		}
 	}
 	var neg string
-	if integer == 0 && f < 0 {
+	if integer.IsZero() && f.data.Sign() < 0 {
 		neg = "-"
 	} else {
 		neg = ""
 	}
-	return fmt.Sprintf("%s%d.%s", neg, integer, fStr)
+	return fmt.Sprintf("%s%s.%s", neg, iStr, fStr)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.

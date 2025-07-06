@@ -14,12 +14,12 @@ import (
 	"math"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed/f64"
+	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
 )
 
-// FixedOperators returns standard operators that work with 64-bit fixed-point values.
-func FixedOperators[T fixed.Dx](divideByZeroReturnsZero bool) []*Operator {
+// Fixed64Operators returns standard operators that work with 64-bit fixed-point values.
+func Fixed64Operators[T fixed.Dx](divideByZeroReturnsZero bool) []*Operator {
 	var divide, modulo OpFunc
 	if divideByZeroReturnsZero {
 		divide = fixedDivideAllowDivideByZero[T]
@@ -53,7 +53,7 @@ func fixedNot[T fixed.Dx](arg any) (any, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
-	v, err := FixedFrom[T](arg)
+	v, err := Fixed64From[T](arg)
 	if err != nil {
 		return nil, err
 	}
@@ -64,15 +64,15 @@ func fixedNot[T fixed.Dx](arg any) (any, error) {
 }
 
 func fixedLogicalOr[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
 	if l != 0 {
 		return true, nil
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -80,15 +80,15 @@ func fixedLogicalOr[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedLogicalAnd[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
 	if l == 0 {
 		return false, nil
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +96,10 @@ func fixedLogicalAnd[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedEqual[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) == fmt.Sprintf("%v", right), nil
@@ -108,10 +108,10 @@ func fixedEqual[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedNotEqual[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) != fmt.Sprintf("%v", right), nil
@@ -120,10 +120,10 @@ func fixedNotEqual[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedGreaterThan[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) > fmt.Sprintf("%v", right), nil
@@ -132,10 +132,10 @@ func fixedGreaterThan[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedGreaterThanOrEqual[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) >= fmt.Sprintf("%v", right), nil
@@ -144,10 +144,10 @@ func fixedGreaterThanOrEqual[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedLessThan[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) < fmt.Sprintf("%v", right), nil
@@ -156,10 +156,10 @@ func fixedLessThan[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedLessThanOrEqual[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v", left) <= fmt.Sprintf("%v", right), nil
@@ -168,10 +168,10 @@ func fixedLessThanOrEqual[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedAdd[T fixed.Dx](left, right any) (any, error) {
-	var r f64.Int[T]
-	l, err := FixedFrom[T](left)
+	var r fixed64.Int[T]
+	l, err := Fixed64From[T](left)
 	if err == nil {
-		r, err = FixedFrom[T](right)
+		r, err = Fixed64From[T](right)
 	}
 	if err != nil {
 		return fmt.Sprintf("%v%v", left, right), nil
@@ -180,16 +180,16 @@ func fixedAdd[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedAddUnary[T fixed.Dx](arg any) (any, error) {
-	return FixedFrom[T](arg)
+	return Fixed64From[T](arg)
 }
 
 func fixedSubtract[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func fixedSubtract[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedSubtractUnary[T fixed.Dx](arg any) (any, error) {
-	v, err := FixedFrom[T](arg)
+	v, err := Fixed64From[T](arg)
 	if err != nil {
 		return nil, err
 	}
@@ -205,12 +205,12 @@ func fixedSubtractUnary[T fixed.Dx](arg any) (any, error) {
 }
 
 func fixedMultiply[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -218,12 +218,12 @@ func fixedMultiply[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedDivide[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -234,12 +234,12 @@ func fixedDivide[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedDivideAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -250,12 +250,12 @@ func fixedDivideAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedModulo[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -266,12 +266,12 @@ func fixedModulo[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedModuloAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
@@ -282,30 +282,30 @@ func fixedModuloAllowDivideByZero[T fixed.Dx](left, right any) (any, error) {
 }
 
 func fixedPower[T fixed.Dx](left, right any) (any, error) {
-	l, err := FixedFrom[T](left)
+	l, err := Fixed64From[T](left)
 	if err != nil {
 		return nil, err
 	}
-	var r f64.Int[T]
-	r, err = FixedFrom[T](right)
+	var r fixed64.Int[T]
+	r, err = Fixed64From[T](right)
 	if err != nil {
 		return nil, err
 	}
-	return f64.From[T](math.Pow(f64.As[T, float64](l), f64.As[T, float64](r))), nil
+	return fixed64.From[T](math.Pow(fixed64.As[T, float64](l), fixed64.As[T, float64](r))), nil
 }
 
-// FixedFrom attempts to convert the arg into one of the fixed.F64 types.
-func FixedFrom[T fixed.Dx](arg any) (f64.Int[T], error) {
+// Fixed64From attempts to convert the arg into one of the fixed.F64 types.
+func Fixed64From[T fixed.Dx](arg any) (fixed64.Int[T], error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {
-			return f64.From[T](1), nil
+			return fixed64.From[T](1), nil
 		}
 		return 0, nil
-	case f64.Int[T]:
+	case fixed64.Int[T]:
 		return a, nil
 	case string:
-		return f64.FromString[T](a)
+		return fixed64.FromString[T](a)
 	default:
 		return 0, errs.Newf("not a number: %v", arg)
 	}

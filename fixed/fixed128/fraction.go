@@ -7,13 +7,13 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package f64
+package fixed128
 
 import (
 	"encoding/json"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed"
 )
 
 // Fraction holds a fractional value.
@@ -37,10 +37,11 @@ func NewFraction[T fixed.Dx](s string) Fraction[T] {
 
 // Normalize the fraction, eliminating any division by zero and ensuring a positive denominator.
 func (f *Fraction[T]) Normalize() {
-	if f.Denominator == 0 {
-		f.Numerator = 0
+	var zero Int[T]
+	if f.Denominator == zero {
+		f.Numerator = Int[T]{}
 		f.Denominator = From[T, int](1)
-	} else if f.Denominator < 0 {
+	} else if f.Denominator.LessThan(zero) {
 		negOne := From[T, int](-1)
 		f.Numerator = f.Numerator.Mul(negOne)
 		f.Denominator = f.Denominator.Mul(negOne)

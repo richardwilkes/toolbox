@@ -13,11 +13,11 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox/v2/eval"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed"
 )
 
 func Example() {
-	e := eval.NewFixedEvaluator[fixed.D4](nil, true)
+	e := eval.NewFixed64Evaluator[fixed.D4](nil, true)
 	result, err := e.Evaluate("1 + sqrt(2)")
 	if err != nil {
 		panic(err)

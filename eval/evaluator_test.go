@@ -15,7 +15,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/eval"
-	"github.com/richardwilkes/toolbox/v2/xmath/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed"
 )
 
 var (
@@ -64,7 +64,7 @@ var (
 
 func TestFixedEvaluator(t *testing.T) {
 	c := check.New(t)
-	e := eval.NewFixedEvaluator[fixed.D4](resolver{}, true)
+	e := eval.NewFixed64Evaluator[fixed.D4](resolver{}, true)
 	for i := 0; i < len(numExpr); i += 3 {
 		result, err := e.Evaluate(numExpr[i])
 		c.NoError(err, "%d: %s == %s", i, numExpr[i], numExpr[i+1])
@@ -92,7 +92,7 @@ func TestFixedEvaluator(t *testing.T) {
 	c.NoError(err)
 	c.Equal(true, result)
 
-	e = eval.NewFixedEvaluator[fixed.D4](resolver{}, false)
+	e = eval.NewFixed64Evaluator[fixed.D4](resolver{}, false)
 	_, err = e.Evaluate("1 / 0")
 	c.HasError(err)
 }

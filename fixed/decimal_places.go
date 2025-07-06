@@ -9,6 +9,12 @@
 
 package fixed
 
+import "errors"
+
+// ErrDoesNotFitInRequestedType is returned from the fixed-point CheckedAs() functions if the requested type cannot
+// exactly represent the value.
+var ErrDoesNotFitInRequestedType = errors.New("does not fit in requested type")
+
 // Dx is the constraint for allowed decimal place types. These methods must return a static value and be usable with the
 // zero value of the type.
 type Dx interface {
