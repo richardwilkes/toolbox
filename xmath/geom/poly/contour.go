@@ -14,10 +14,11 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/xmath"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
 // Contour is a sequence of vertices connected by line segments, forming a closed shape.
-type Contour[T ~float32 | ~float64] []geom.Point[T]
+type Contour[T constraints.Float] []geom.Point[T]
 
 // Clone returns a copy of this contour.
 func (c Contour[T]) Clone() Contour[T] {

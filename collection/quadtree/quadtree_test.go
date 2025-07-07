@@ -17,13 +17,14 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
-type node[T ~float32 | ~float64] struct {
+type node[T constraints.Float] struct {
 	geom.Rect[T]
 }
 
-func newNode[T ~float32 | ~float64](x, y, width, height T) *node[T] {
+func newNode[T constraints.Float](x, y, width, height T) *node[T] {
 	return &node[T]{Rect: geom.NewRect(x, y, width, height)}
 }
 

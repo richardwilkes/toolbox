@@ -12,6 +12,7 @@ package poly
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
 const epsilon = 0.00001 // 2.220446e-16
@@ -38,7 +39,7 @@ const (
 	bundleTail
 )
 
-type edgeNode[T ~float32 | ~float64] struct {
+type edgeNode[T constraints.Float] struct {
 	vertex      geom.Point[T]
 	bot         geom.Point[T]
 	top         geom.Point[T]
@@ -61,7 +62,7 @@ type edgeNode[T ~float32 | ~float64] struct {
 	clipSide    bool
 }
 
-type sortedEdge[T ~float32 | ~float64] struct {
+type sortedEdge[T constraints.Float] struct {
 	edge *edgeNode[T]
 	xb   T
 	xt   T
@@ -151,7 +152,7 @@ func (e *edgeNode[T]) addToSortedEdgeTable(se **sortedEdge[T], it **intersection
 	}
 }
 
-func addIntersection[T ~float32 | ~float64](it **intersection[T], edge0, edge1 *edgeNode[T], pt geom.Point[T]) {
+func addIntersection[T constraints.Float](it **intersection[T], edge0, edge1 *edgeNode[T], pt geom.Point[T]) {
 	switch {
 	case *it == nil:
 		*it = &intersection[T]{
@@ -529,7 +530,7 @@ func (e *edgeNode[T]) existsState(which int) (int, bool) {
 	return state, e.bundleAbove[which] || e.bundleBelow[which]
 }
 
-func mostlyEqual[T ~float32 | ~float64](a, b T) bool {
+func mostlyEqual[T constraints.Float](a, b T) bool {
 	return xmath.Abs(a-b) <= epsilon
 }
 

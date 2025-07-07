@@ -9,12 +9,14 @@
 
 package poly
 
-type scanBeamTree[T ~float32 | ~float64] struct {
+import "golang.org/x/exp/constraints"
+
+type scanBeamTree[T constraints.Float] struct {
 	root    *scanBeamNode[T]
 	entries int
 }
 
-type scanBeamNode[T ~float32 | ~float64] struct {
+type scanBeamNode[T constraints.Float] struct {
 	y    T
 	less *scanBeamNode[T]
 	more *scanBeamNode[T]

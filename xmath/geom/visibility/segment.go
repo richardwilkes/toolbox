@@ -11,10 +11,11 @@ package visibility
 
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
 // Segment holds the start and end points of a line.
-type Segment[T ~float32 | ~float64] struct {
+type Segment[T constraints.Float] struct {
 	Start geom.Point[T]
 	End   geom.Point[T]
 }

@@ -16,10 +16,11 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xmath"
+	"golang.org/x/exp/constraints"
 )
 
 // FloatOperators returns standard operators that work with floating point values.
-func FloatOperators[T ~float32 | ~float64](divideByZeroReturnsZero bool) []*Operator {
+func FloatOperators[T constraints.Float](divideByZeroReturnsZero bool) []*Operator {
 	var divide, modulo OpFunc
 	if divideByZeroReturnsZero {
 		divide = floatDivideAllowDivideByZero[T]
@@ -49,7 +50,7 @@ func FloatOperators[T ~float32 | ~float64](divideByZeroReturnsZero bool) []*Oper
 	}
 }
 
-func floatNot[T ~float32 | ~float64](arg any) (any, error) {
+func floatNot[T constraints.Float](arg any) (any, error) {
 	if b, ok := arg.(bool); ok {
 		return !b, nil
 	}
@@ -63,7 +64,7 @@ func floatNot[T ~float32 | ~float64](arg any) (any, error) {
 	return false, nil
 }
 
-func floatLogicalOr[T ~float32 | ~float64](left, right any) (any, error) {
+func floatLogicalOr[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -79,7 +80,7 @@ func floatLogicalOr[T ~float32 | ~float64](left, right any) (any, error) {
 	return r != 0, nil
 }
 
-func floatLogicalAnd[T ~float32 | ~float64](left, right any) (any, error) {
+func floatLogicalAnd[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func floatLogicalAnd[T ~float32 | ~float64](left, right any) (any, error) {
 	return r != 0, nil
 }
 
-func floatEqual[T ~float32 | ~float64](left, right any) (any, error) {
+func floatEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -107,7 +108,7 @@ func floatEqual[T ~float32 | ~float64](left, right any) (any, error) {
 	return l == r, nil
 }
 
-func floatNotEqual[T ~float32 | ~float64](left, right any) (any, error) {
+func floatNotEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -119,7 +120,7 @@ func floatNotEqual[T ~float32 | ~float64](left, right any) (any, error) {
 	return l != r, nil
 }
 
-func floatGreaterThan[T ~float32 | ~float64](left, right any) (any, error) {
+func floatGreaterThan[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -131,7 +132,7 @@ func floatGreaterThan[T ~float32 | ~float64](left, right any) (any, error) {
 	return l > r, nil
 }
 
-func floatGreaterThanOrEqual[T ~float32 | ~float64](left, right any) (any, error) {
+func floatGreaterThanOrEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -143,7 +144,7 @@ func floatGreaterThanOrEqual[T ~float32 | ~float64](left, right any) (any, error
 	return l >= r, nil
 }
 
-func floatLessThan[T ~float32 | ~float64](left, right any) (any, error) {
+func floatLessThan[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -155,7 +156,7 @@ func floatLessThan[T ~float32 | ~float64](left, right any) (any, error) {
 	return l < r, nil
 }
 
-func floatLessThanOrEqual[T ~float32 | ~float64](left, right any) (any, error) {
+func floatLessThanOrEqual[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -167,7 +168,7 @@ func floatLessThanOrEqual[T ~float32 | ~float64](left, right any) (any, error) {
 	return l <= r, nil
 }
 
-func floatAdd[T ~float32 | ~float64](left, right any) (any, error) {
+func floatAdd[T constraints.Float](left, right any) (any, error) {
 	var r T
 	l, err := floatFrom[T](left)
 	if err == nil {
@@ -179,11 +180,11 @@ func floatAdd[T ~float32 | ~float64](left, right any) (any, error) {
 	return l + r, nil
 }
 
-func floatAddUnary[T ~float32 | ~float64](arg any) (any, error) {
+func floatAddUnary[T constraints.Float](arg any) (any, error) {
 	return floatFrom[T](arg)
 }
 
-func floatSubtract[T ~float32 | ~float64](left, right any) (any, error) {
+func floatSubtract[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -196,7 +197,7 @@ func floatSubtract[T ~float32 | ~float64](left, right any) (any, error) {
 	return l - r, nil
 }
 
-func floatSubtractUnary[T ~float32 | ~float64](arg any) (any, error) {
+func floatSubtractUnary[T constraints.Float](arg any) (any, error) {
 	v, err := floatFrom[T](arg)
 	if err != nil {
 		return nil, err
@@ -204,7 +205,7 @@ func floatSubtractUnary[T ~float32 | ~float64](arg any) (any, error) {
 	return -v, nil
 }
 
-func floatMultiply[T ~float32 | ~float64](left, right any) (any, error) {
+func floatMultiply[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -217,7 +218,7 @@ func floatMultiply[T ~float32 | ~float64](left, right any) (any, error) {
 	return l * r, nil
 }
 
-func floatDivide[T ~float32 | ~float64](left, right any) (any, error) {
+func floatDivide[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -233,7 +234,7 @@ func floatDivide[T ~float32 | ~float64](left, right any) (any, error) {
 	return l / r, nil
 }
 
-func floatDivideAllowDivideByZero[T ~float32 | ~float64](left, right any) (any, error) {
+func floatDivideAllowDivideByZero[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -249,7 +250,7 @@ func floatDivideAllowDivideByZero[T ~float32 | ~float64](left, right any) (any, 
 	return l / r, nil
 }
 
-func floatModulo[T ~float32 | ~float64](left, right any) (any, error) {
+func floatModulo[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -265,7 +266,7 @@ func floatModulo[T ~float32 | ~float64](left, right any) (any, error) {
 	return xmath.Mod(l, r), nil
 }
 
-func floatModuloAllowDivideByZero[T ~float32 | ~float64](left, right any) (any, error) {
+func floatModuloAllowDivideByZero[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -281,7 +282,7 @@ func floatModuloAllowDivideByZero[T ~float32 | ~float64](left, right any) (any, 
 	return xmath.Mod(l, r), nil
 }
 
-func floatPower[T ~float32 | ~float64](left, right any) (any, error) {
+func floatPower[T constraints.Float](left, right any) (any, error) {
 	l, err := floatFrom[T](left)
 	if err != nil {
 		return nil, err
@@ -294,7 +295,7 @@ func floatPower[T ~float32 | ~float64](left, right any) (any, error) {
 	return xmath.Pow(l, r), nil
 }
 
-func floatFrom[T ~float32 | ~float64](arg any) (T, error) {
+func floatFrom[T constraints.Float](arg any) (T, error) {
 	switch a := arg.(type) {
 	case bool:
 		if a {

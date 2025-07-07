@@ -11,9 +11,10 @@ package visibility
 
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
-type endPoint[T ~float32 | ~float64] struct {
+type endPoint[T constraints.Float] struct {
 	angle        T
 	segmentIndex int
 	start        bool

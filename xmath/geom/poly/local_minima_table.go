@@ -11,15 +11,16 @@ package poly
 
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
-type localMinimaNode[T ~float32 | ~float64] struct {
+type localMinimaNode[T constraints.Float] struct {
 	y          T
 	firstBound *edgeNode[T]
 	next       *localMinimaNode[T]
 }
 
-func buildLocalMinimaTable[T ~float32 | ~float64](lmt *localMinimaNode[T], sbTree *scanBeamTree[T], p Polygon[T], nc []bool, which int, op clipOp) *localMinimaNode[T] {
+func buildLocalMinimaTable[T constraints.Float](lmt *localMinimaNode[T], sbTree *scanBeamTree[T], p Polygon[T], nc []bool, which int, op clipOp) *localMinimaNode[T] {
 	if len(p) == 0 {
 		return lmt
 	}
@@ -181,7 +182,7 @@ func (n *localMinimaNode[T]) boundList(y T) (lmn *localMinimaNode[T], en **edgeN
 	}
 }
 
-func optimal[T ~float32 | ~float64](v []geom.Point[T], i, n int) bool {
+func optimal[T constraints.Float](v []geom.Point[T], i, n int) bool {
 	return v[previousIndex(i, n)].Y != v[i].Y || v[nextIndex(i, n)].Y != v[i].Y
 }
 

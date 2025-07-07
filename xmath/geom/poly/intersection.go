@@ -11,9 +11,10 @@ package poly
 
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
-type intersection[T ~float32 | ~float64] struct {
+type intersection[T constraints.Float] struct {
 	edge0 *edgeNode[T]
 	edge1 *edgeNode[T]
 	point geom.Point[T]

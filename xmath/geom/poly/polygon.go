@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 )
 
 // Polygon holds one or more contour lines. The polygon may contain holes and may be self-intersecting.
-type Polygon[T ~float32 | ~float64] []Contour[T]
+type Polygon[T constraints.Float] []Contour[T]
 
 // Clone returns a duplicate of this polygon.
 func (p Polygon[T]) Clone() Polygon[T] {

@@ -15,11 +15,12 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
+	"golang.org/x/exp/constraints"
 )
 
 const floatsAreConsistentAcrossPlatforms = false
 
-type containsCase[T ~float32 | ~float64] struct {
+type containsCase[T constraints.Float] struct {
 	geom.Point[T]
 	contains bool
 }
@@ -29,7 +30,7 @@ func TestContains(t *testing.T) {
 	testContains[float64](t)
 }
 
-func testContains[T ~float32 | ~float64](t *testing.T) {
+func testContains[T constraints.Float](t *testing.T) {
 	c := check.New(t)
 	p := poly.Polygon[T]{
 		{{200, 20}, {300, 20}, {300, 120}, {200, 120}},
@@ -67,7 +68,7 @@ func testContains[T ~float32 | ~float64](t *testing.T) {
 	}
 }
 
-type testCase[T ~float32 | ~float64] struct {
+type testCase[T constraints.Float] struct {
 	name     string
 	subject  poly.Polygon[T]
 	clipping poly.Polygon[T]
@@ -81,7 +82,7 @@ func TestUnion(t *testing.T) {
 	}
 }
 
-func testUnion[T ~float32 | ~float64](t *testing.T) {
+func testUnion[T constraints.Float](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:    "union #1",
@@ -261,7 +262,7 @@ func TestIntersect(t *testing.T) {
 	}
 }
 
-func testIntersect[T ~float32 | ~float64](t *testing.T) {
+func testIntersect[T constraints.Float](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "intersect #1",
@@ -365,7 +366,7 @@ func TestSubtract(t *testing.T) {
 	}
 }
 
-func testSubtract[T ~float32 | ~float64](t *testing.T) {
+func testSubtract[T constraints.Float](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "subtract #1",
@@ -449,7 +450,7 @@ func TestXor(t *testing.T) {
 	testXor[float64](t)
 }
 
-func testXor[T ~float32 | ~float64](t *testing.T) {
+func testXor[T constraints.Float](t *testing.T) {
 	tests := []testCase[T]{
 		{
 			name:     "xor #1",
@@ -480,7 +481,7 @@ func testXor[T ~float32 | ~float64](t *testing.T) {
 	}
 }
 
-func matchPolys[T ~float32 | ~float64](left, right poly.Polygon[T]) bool {
+func matchPolys[T constraints.Float](left, right poly.Polygon[T]) bool {
 	left = simplifyPoly(left)
 	right = simplifyPoly(right)
 	if len(left) != len(right) {
@@ -499,7 +500,7 @@ func matchPolys[T ~float32 | ~float64](left, right poly.Polygon[T]) bool {
 	return true
 }
 
-func simplifyPoly[T ~float32 | ~float64](p poly.Polygon[T]) poly.Polygon[T] {
+func simplifyPoly[T constraints.Float](p poly.Polygon[T]) poly.Polygon[T] {
 	var revised poly.Polygon[T]
 	for _, x := range p {
 		var nc poly.Contour[T]

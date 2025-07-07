@@ -18,12 +18,13 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
+	"golang.org/x/exp/constraints"
 )
 
 const epsilon = 0.01
 
 // Visibility holds state for computing a visibility polygon.
-type Visibility[T ~float32 | ~float64] struct {
+type Visibility[T constraints.Float] struct {
 	top      T
 	left     T
 	bottom   T
@@ -33,7 +34,7 @@ type Visibility[T ~float32 | ~float64] struct {
 
 // New creates a Visibility object. If the obstructions do not intersect each other, pass in true for hasNoIntersections
 // to eliminate the costly pass to break the segments up into smaller parts.
-func New[T ~float32 | ~float64](bounds geom.Rect[T], obstructions []Segment[T], hasNoIntersections bool) *Visibility[T] {
+func New[T constraints.Float](bounds geom.Rect[T], obstructions []Segment[T], hasNoIntersections bool) *Visibility[T] {
 	v := &Visibility[T]{
 		top:      bounds.Y,
 		left:     bounds.X,
@@ -220,11 +221,11 @@ func (v *Visibility[T]) collectSegments(s Segment[T], intersections []geom.Point
 	return segments
 }
 
-func mostlyEqual[T ~float32 | ~float64](a, b geom.Point[T]) bool {
+func mostlyEqual[T constraints.Float](a, b geom.Point[T]) bool {
 	return a.EqualWithin(b, epsilon)
 }
 
-func remove[T ~float32 | ~float64](index int, heap, mapper *array, segments []Segment[T], position, destination geom.Point[T]) {
+func remove[T constraints.Float](index int, heap, mapper *array, segments []Segment[T], position, destination geom.Point[T]) {
 	mapper.set(heap.elem(index), -1)
 	if index == heap.size()-1 {
 		heap.pop()
@@ -278,7 +279,7 @@ loop:
 	}
 }
 
-func insert[T ~float32 | ~float64](index int, heap, mapper *array, segments []Segment[T], position, destination geom.Point[T]) {
+func insert[T constraints.Float](index int, heap, mapper *array, segments []Segment[T], position, destination geom.Point[T]) {
 	if _, intersects := intersectLines(segments[index].Start, segments[index].End, position, destination); !intersects {
 		return
 	}
@@ -300,7 +301,7 @@ func insert[T ~float32 | ~float64](index int, heap, mapper *array, segments []Se
 	}
 }
 
-func lessThan[T ~float32 | ~float64](index1, index2 int, segments []Segment[T], position, destination geom.Point[T]) bool {
+func lessThan[T constraints.Float](index1, index2 int, segments []Segment[T], position, destination geom.Point[T]) bool {
 	pt1, intersects1 := intersectLines(segments[index1].Start, segments[index1].End, position, destination)
 	if !intersects1 {
 		return false
@@ -335,7 +336,7 @@ func lessThan[T ~float32 | ~float64](index1, index2 int, segments []Segment[T], 
 	return a1 < a2
 }
 
-func sortPoints[T ~float32 | ~float64](position geom.Point[T], segments []Segment[T]) []endPoint[T] {
+func sortPoints[T constraints.Float](position geom.Point[T], segments []Segment[T]) []endPoint[T] {
 	points := make([]endPoint[T], len(segments)*2)
 	pos := 0
 	for i, s := range segments {
@@ -366,7 +367,7 @@ func sortPoints[T ~float32 | ~float64](position geom.Point[T], segments []Segmen
 	return points
 }
 
-func angle2[T ~float32 | ~float64](a, b, c geom.Point[T]) T {
+func angle2[T constraints.Float](a, b, c geom.Point[T]) T {
 	a1 := angle(a, b)
 	a2 := angle(b, c)
 	a3 := a1 - a2
@@ -379,17 +380,17 @@ func angle2[T ~float32 | ~float64](a, b, c geom.Point[T]) T {
 	return a3
 }
 
-func angle[T ~float32 | ~float64](a, b geom.Point[T]) T {
+func angle[T constraints.Float](a, b geom.Point[T]) T {
 	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
 }
 
-func distance[T ~float32 | ~float64](a, b geom.Point[T]) T {
+func distance[T constraints.Float](a, b geom.Point[T]) T {
 	dx := a.X - b.X
 	dy := a.Y - b.Y
 	return dx*dx + dy*dy
 }
 
-func intersectLines[T ~float32 | ~float64](s1, e1, s2, e2 geom.Point[T]) (geom.Point[T], bool) {
+func intersectLines[T constraints.Float](s1, e1, s2, e2 geom.Point[T]) (geom.Point[T], bool) {
 	dbx := e2.X - s2.X
 	dby := e2.Y - s2.Y
 	dax := e1.X - s1.X
@@ -402,7 +403,7 @@ func intersectLines[T ~float32 | ~float64](s1, e1, s2, e2 geom.Point[T]) (geom.P
 	return geom.Point[T]{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
 }
 
-func hasIntersection[T ~float32 | ~float64](s1, e1, s2, e2 geom.Point[T]) bool {
+func hasIntersection[T constraints.Float](s1, e1, s2, e2 geom.Point[T]) bool {
 	d1 := direction(s2, e2, s1)
 	d2 := direction(s2, e2, e1)
 	d3 := direction(s1, e1, s2)
@@ -415,11 +416,11 @@ func hasIntersection[T ~float32 | ~float64](s1, e1, s2, e2 geom.Point[T]) bool {
 		(d4 == 0 && onSegment(s1, e1, e2))
 }
 
-func direction[T ~float32 | ~float64](a, b, c geom.Point[T]) int {
+func direction[T constraints.Float](a, b, c geom.Point[T]) int {
 	return cmp.Compare((c.X-a.X)*(b.Y-a.Y), (b.X-a.X)*(c.Y-a.Y))
 }
 
-func onSegment[T ~float32 | ~float64](a, b, c geom.Point[T]) bool {
+func onSegment[T constraints.Float](a, b, c geom.Point[T]) bool {
 	return (a.X <= c.X || b.X <= c.X) &&
 		(c.X <= a.X || c.X <= b.X) &&
 		(a.Y <= c.Y || b.Y <= c.Y) &&

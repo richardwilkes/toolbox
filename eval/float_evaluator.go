@@ -9,8 +9,10 @@
 
 package eval
 
+import "golang.org/x/exp/constraints"
+
 // NewFloatEvaluator creates a new evaluator whose number type is one of the float types.
-func NewFloatEvaluator[T ~float32 | ~float64](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
+func NewFloatEvaluator[T constraints.Float](resolver VariableResolver, divideByZeroReturnsZero bool) *Evaluator {
 	return &Evaluator{
 		Resolver:  resolver,
 		Operators: FloatOperators[T](divideByZeroReturnsZero),

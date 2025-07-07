@@ -11,14 +11,15 @@ package poly
 
 import (
 	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"golang.org/x/exp/constraints"
 )
 
-type vertexNode[T ~float32 | ~float64] struct {
+type vertexNode[T constraints.Float] struct {
 	pt   geom.Point[T]
 	next *vertexNode[T]
 }
 
-type polygonNode[T ~float32 | ~float64] struct {
+type polygonNode[T constraints.Float] struct {
 	left   *vertexNode[T]
 	right  *vertexNode[T]
 	next   *polygonNode[T]
