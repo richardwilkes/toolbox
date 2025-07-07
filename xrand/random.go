@@ -8,7 +8,7 @@
 // defined by the Mozilla Public License, version 2.0.
 
 // Package rand provides a Randomizer based upon the crypto/rand package.
-package rand
+package xrand
 
 import (
 	"crypto/rand"
@@ -23,9 +23,9 @@ type Randomizer interface {
 	Intn(n int) int
 }
 
-// NewCryptoRand returns a Randomizer based on the crypto/rand package. This method returns a shared singleton instance
+// New returns a Randomizer based on the crypto/rand package. This method returns a shared singleton instance
 // and does not allocate.
-func NewCryptoRand() Randomizer {
+func New() Randomizer {
 	return cryptoRandInstance
 }
 
