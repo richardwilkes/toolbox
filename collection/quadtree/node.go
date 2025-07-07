@@ -10,8 +10,8 @@
 package quadtree
 
 import (
+	"github.com/richardwilkes/toolbox/v2/geom"
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 )
 
 type node[T xmath.Numeric, N Node[T]] struct {

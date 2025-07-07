@@ -49,7 +49,12 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 			if a >= 0 && a <= 1 {
 				b := ubt / ub
 				if b >= 0 && b <= 1 {
-					return []Point[T]{{X: a1.X + a*adx, Y: a1.Y + a*ady}}
+					return []Point[T]{
+						{
+							X: a1.X + a*adx,
+							Y: a1.Y + a*ady,
+						},
+					}
 				}
 			}
 		} else if uat == 0 || ubt == 0 {
@@ -66,12 +71,21 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 			right := min(1, max(ub1, ub2))
 			if left == right {
 				return []Point[T]{
-					{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
+					{
+						X: a2.X*left + a1.X*(1-left),
+						Y: a2.Y*left + a1.Y*(1-left),
+					},
 				}
 			}
 			return []Point[T]{
-				{X: a2.X*left + a1.X*(1-left), Y: a2.Y*left + a1.Y*(1-left)},
-				{X: a2.X*right + a1.X*(1-right), Y: a2.Y*right + a1.Y*(1-right)},
+				{
+					X: a2.X*left + a1.X*(1-left),
+					Y: a2.Y*left + a1.Y*(1-left),
+				},
+				{
+					X: a2.X*right + a1.X*(1-right),
+					Y: a2.Y*right + a1.Y*(1-right),
+				},
 			}
 		}
 	}

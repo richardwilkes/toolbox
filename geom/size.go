@@ -31,47 +31,74 @@ func NewSize[T xmath.Numeric](width, height T) Size[T] {
 
 // ConvertSize converts a Size of type F into one of type T.
 func ConvertSize[T, F xmath.Numeric](s Size[F]) Size[T] {
-	return NewSize(T(s.Width), T(s.Height))
+	return Size[T]{
+		Width:  T(s.Width),
+		Height: T(s.Height),
+	}
 }
 
 // Add returns a new Size which is the result of adding this Size with the provided Size.
 func (s Size[T]) Add(size Size[T]) Size[T] {
-	return Size[T]{Width: s.Width + size.Width, Height: s.Height + size.Height}
+	return Size[T]{
+		Width:  s.Width + size.Width,
+		Height: s.Height + size.Height,
+	}
 }
 
 // Sub returns a new Size which is the result of subtracting the provided Size from this Size.
 func (s Size[T]) Sub(size Size[T]) Size[T] {
-	return Size[T]{Width: s.Width - size.Width, Height: s.Height - size.Height}
+	return Size[T]{
+		Width:  s.Width - size.Width,
+		Height: s.Height - size.Height,
+	}
 }
 
 // Mul returns a new Size which is the result of multiplying this Size by the value.
 func (s Size[T]) Mul(value T) Size[T] {
-	return Size[T]{Width: s.Width * value, Height: s.Height * value}
+	return Size[T]{
+		Width:  s.Width * value,
+		Height: s.Height * value,
+	}
 }
 
 // Div returns a new Size which is the result of dividing this Size by the value.
 func (s Size[T]) Div(value T) Size[T] {
-	return Size[T]{Width: s.Width / value, Height: s.Height / value}
+	return Size[T]{
+		Width:  s.Width / value,
+		Height: s.Height / value,
+	}
 }
 
 // Floor returns a new Size with its width and height floored.
 func (s Size[T]) Floor() Size[T] {
-	return Size[T]{Width: xmath.Floor(s.Width), Height: xmath.Floor(s.Height)}
+	return Size[T]{
+		Width:  xmath.Floor(s.Width),
+		Height: xmath.Floor(s.Height),
+	}
 }
 
 // Ceil returns a new Size with its width and height ceiled.
 func (s Size[T]) Ceil() Size[T] {
-	return Size[T]{Width: xmath.Ceil(s.Width), Height: xmath.Ceil(s.Height)}
+	return Size[T]{
+		Width:  xmath.Ceil(s.Width),
+		Height: xmath.Ceil(s.Height),
+	}
 }
 
 // Min returns the smallest Size between itself and 'other'.
 func (s Size[T]) Min(other Size[T]) Size[T] {
-	return Size[T]{Width: min(s.Width, other.Width), Height: min(s.Height, other.Height)}
+	return Size[T]{
+		Width:  min(s.Width, other.Width),
+		Height: min(s.Height, other.Height),
+	}
 }
 
 // Max returns the largest Size between itself and 'other'.
 func (s Size[T]) Max(other Size[T]) Size[T] {
-	return Size[T]{Width: max(s.Width, other.Width), Height: max(s.Height, other.Height)}
+	return Size[T]{
+		Width:  max(s.Width, other.Width),
+		Height: max(s.Height, other.Height),
+	}
 }
 
 // ConstrainForHint returns a size no larger than the hint value. Hint values less than one are ignored.
@@ -84,7 +111,10 @@ func (s Size[T]) ConstrainForHint(hint Size[T]) Size[T] {
 	if hint.Height >= 1 && h > hint.Height {
 		h = hint.Height
 	}
-	return Size[T]{Width: w, Height: h}
+	return Size[T]{
+		Width:  w,
+		Height: h,
+	}
 }
 
 // String implements fmt.Stringer.

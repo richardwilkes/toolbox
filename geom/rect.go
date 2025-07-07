@@ -22,7 +22,10 @@ type Rect[T xmath.Numeric] struct {
 
 // NewRect creates a new Rect.
 func NewRect[T xmath.Numeric](x, y, width, height T) Rect[T] {
-	return Rect[T]{Point: NewPoint(x, y), Size: NewSize(width, height)}
+	return Rect[T]{
+		Point: NewPoint(x, y),
+		Size:  NewSize(width, height),
+	}
 }
 
 // ConvertRect converts a Rect of type F into one of type T.

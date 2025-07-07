@@ -25,52 +25,98 @@ type Insets[T xmath.Numeric] struct {
 
 // NewInsets returns an Insets with the given values for its edges.
 func NewInsets[T xmath.Numeric](top, left, bottom, right T) Insets[T] {
-	return Insets[T]{Top: top, Left: left, Bottom: bottom, Right: right}
+	return Insets[T]{
+		Top:    top,
+		Left:   left,
+		Bottom: bottom,
+		Right:  right,
+	}
 }
 
 // NewUniformInsets returns an Insets whose edges all have the same value.
 func NewUniformInsets[T xmath.Numeric](amount T) Insets[T] {
-	return NewInsets(amount, amount, amount, amount)
+	return Insets[T]{
+		Top:    amount,
+		Left:   amount,
+		Bottom: amount,
+		Right:  amount,
+	}
 }
 
 // NewSymmetricInsets returns an Insets whose edges match their opposite edge.
 func NewSymmetricInsets[T xmath.Numeric](h, v T) Insets[T] {
-	return NewInsets(v, h, v, h)
+	return Insets[T]{
+		Top:    v,
+		Left:   h,
+		Bottom: v,
+		Right:  h,
+	}
 }
 
 // NewHorizontalInsets returns an Insets whose left and right edges have the specified value.
 func NewHorizontalInsets[T xmath.Numeric](amount T) Insets[T] {
-	return Insets[T]{Left: amount, Right: amount}
+	return Insets[T]{
+		Left:  amount,
+		Right: amount,
+	}
 }
 
 // NewVerticalInsets returns an Insets whose top and bottom edges have the specified value.
 func NewVerticalInsets[T xmath.Numeric](amount T) Insets[T] {
-	return Insets[T]{Top: amount, Bottom: amount}
+	return Insets[T]{
+		Top:    amount,
+		Bottom: amount,
+	}
 }
 
 // ConvertInsets converts a Insets of type F into one of type T.
 func ConvertInsets[T, F xmath.Numeric](i Insets[F]) Insets[T] {
-	return NewInsets(T(i.Top), T(i.Left), T(i.Bottom), T(i.Right))
+	return Insets[T]{
+		Top:    T(i.Top),
+		Left:   T(i.Left),
+		Bottom: T(i.Bottom),
+		Right:  T(i.Right),
+	}
 }
 
 // Add returns a new Insets which is the result of adding this Insets with the provided Insets.
 func (i Insets[T]) Add(in Insets[T]) Insets[T] {
-	return NewInsets(i.Top+in.Top, i.Left+in.Left, i.Bottom+in.Bottom, i.Right+in.Right)
+	return Insets[T]{
+		Top:    i.Top + in.Top,
+		Left:   i.Left + in.Left,
+		Bottom: i.Bottom + in.Bottom,
+		Right:  i.Right + in.Right,
+	}
 }
 
 // Sub returns a new Insets which is the result of subtracting the provided Insets from this Insets.
 func (i Insets[T]) Sub(in Insets[T]) Insets[T] {
-	return NewInsets(i.Top-in.Top, i.Left-in.Left, i.Bottom-in.Bottom, i.Right-in.Right)
+	return Insets[T]{
+		Top:    i.Top - in.Top,
+		Left:   i.Left - in.Left,
+		Bottom: i.Bottom - in.Bottom,
+		Right:  i.Right - in.Right,
+	}
 }
 
 // Mul returns a new Insets which is the result of multiplying the values of this Insets by the value.
 func (i Insets[T]) Mul(value T) Insets[T] {
-	return NewInsets(i.Top*value, i.Left*value, i.Bottom*value, i.Right*value)
+	return Insets[T]{
+		Top:    i.Top * value,
+		Left:   i.Left * value,
+		Bottom: i.Bottom * value,
+		Right:  i.Right * value,
+	}
 }
 
 // Div returns a new Insets which is the result of dividing the values of this Insets by the value.
 func (i Insets[T]) Div(value T) Insets[T] {
-	return NewInsets(i.Top/value, i.Left/value, i.Bottom/value, i.Right/value)
+	return Insets[T]{
+		Top:    i.Top / value,
+		Left:   i.Left / value,
+		Bottom: i.Bottom / value,
+		Right:  i.Right / value,
+	}
 }
 
 // Size returns the Size of the Insets.

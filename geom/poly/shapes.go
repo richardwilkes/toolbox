@@ -12,8 +12,8 @@ package poly
 import (
 	"math"
 
+	"github.com/richardwilkes/toolbox/v2/geom"
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom"
 	"golang.org/x/exp/constraints"
 )
 
@@ -21,7 +21,12 @@ import (
 func FromRect[T constraints.Float](r geom.Rect[T]) Polygon[T] {
 	right := r.Right() - 1
 	bottom := r.Bottom() - 1
-	return Polygon[T]{Contour[T]{r.Point, geom.NewPoint(r.X, bottom), geom.NewPoint(right, bottom), geom.NewPoint(right, r.Y)}}
+	return Polygon[T]{Contour[T]{
+		r.Point,
+		geom.NewPoint(r.X, bottom),
+		geom.NewPoint(right, bottom),
+		geom.NewPoint(right, r.Y),
+	}}
 }
 
 // FromEllipse returns a Polygon that approximates an ellipse filling the given Rect. 'sections' indicates how many

@@ -28,24 +28,40 @@ type Matrix[T constraints.Float] struct {
 
 // NewIdentityMatrix creates a new identity transformation Matrix.
 func NewIdentityMatrix[T constraints.Float]() Matrix[T] {
-	return Matrix[T]{ScaleX: 1, ScaleY: 1}
+	return Matrix[T]{
+		ScaleX: 1,
+		ScaleY: 1,
+	}
 }
 
 // NewTranslationMatrix creates a new Matrix that translates by 'tx' and 'ty'.
 func NewTranslationMatrix[T constraints.Float](tx, ty T) Matrix[T] {
-	return Matrix[T]{ScaleX: 1, ScaleY: 1, TransX: tx, TransY: ty}
+	return Matrix[T]{
+		ScaleX: 1,
+		ScaleY: 1,
+		TransX: tx,
+		TransY: ty,
+	}
 }
 
 // NewScaleMatrix creates a new Matrix that scales by 'sx' and 'sy'.
 func NewScaleMatrix[T constraints.Float](sx, sy T) Matrix[T] {
-	return Matrix[T]{ScaleX: sx, ScaleY: sy}
+	return Matrix[T]{
+		ScaleX: sx,
+		ScaleY: sy,
+	}
 }
 
 // NewRotationMatrix creates a new Matrix that rotates by 'radians'. Positive values are clockwise.
 func NewRotationMatrix[T constraints.Float](radians T) Matrix[T] {
 	s := xmath.Sin(radians)
 	c := xmath.Cos(radians)
-	return Matrix[T]{ScaleX: c, SkewX: -s, SkewY: s, ScaleY: c}
+	return Matrix[T]{
+		ScaleX: c,
+		SkewX:  -s,
+		SkewY:  s,
+		ScaleY: c,
+	}
 }
 
 // NewRotationByDegreesMatrix creates a new Matrix that rotates by 'degrees'. Positive values are clockwise.
@@ -110,7 +126,10 @@ func (m Matrix[T]) Multiply(other Matrix[T]) Matrix[T] {
 
 // TransformPoint returns the result of transforming the given Point by this Matrix.
 func (m Matrix[T]) TransformPoint(p Point[T]) Point[T] {
-	return Point[T]{X: m.ScaleX*p.X + m.SkewX*p.Y + m.TransX, Y: m.SkewY*p.X + m.ScaleY*p.Y + m.TransY}
+	return Point[T]{
+		X: m.ScaleX*p.X + m.SkewX*p.Y + m.TransX,
+		Y: m.SkewY*p.X + m.ScaleY*p.Y + m.TransY,
+	}
 }
 
 // String implements fmt.Stringer.

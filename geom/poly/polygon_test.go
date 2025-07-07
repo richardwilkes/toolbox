@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
+	"github.com/richardwilkes/toolbox/v2/geom"
+	"github.com/richardwilkes/toolbox/v2/geom/poly"
 	"golang.org/x/exp/constraints"
 )
 
@@ -33,10 +33,10 @@ func TestContains(t *testing.T) {
 func testContains[T constraints.Float](t *testing.T) {
 	c := check.New(t)
 	p := poly.Polygon[T]{
-		{{200, 20}, {300, 20}, {300, 120}, {200, 120}},
-		{{250, 50}, {280, 50}, {280, 80}, {250, 80}},
-		{{260, 60}, {290, 60}, {290, 90}, {260, 90}},
-		{{290, 110}, {320, 110}, {320, 140}, {290, 140}},
+		{{X: 200, Y: 20}, {X: 300, Y: 20}, {X: 300, Y: 120}, {X: 200, Y: 120}},
+		{{X: 250, Y: 50}, {X: 280, Y: 50}, {X: 280, Y: 80}, {X: 250, Y: 80}},
+		{{X: 260, Y: 60}, {X: 290, Y: 60}, {X: 290, Y: 90}, {X: 260, Y: 90}},
+		{{X: 290, Y: 110}, {X: 320, Y: 110}, {X: 320, Y: 140}, {X: 290, Y: 140}},
 	}
 	containsTests := []containsCase[T]{
 		{Point: geom.Point[T]{X: 199, Y: 20}, contains: false},

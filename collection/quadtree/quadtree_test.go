@@ -16,7 +16,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom"
+	"github.com/richardwilkes/toolbox/v2/geom"
 	"golang.org/x/exp/constraints"
 )
 

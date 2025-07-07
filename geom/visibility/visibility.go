@@ -15,9 +15,9 @@ import (
 	"slices"
 
 	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
+	"github.com/richardwilkes/toolbox/v2/geom"
+	"github.com/richardwilkes/toolbox/v2/geom/poly"
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom"
-	"github.com/richardwilkes/toolbox/v2/xmath/geom/poly"
 	"golang.org/x/exp/constraints"
 )
 
