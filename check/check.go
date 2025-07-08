@@ -11,22 +11,47 @@ package check
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
-	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
-// Checker provides some simple helpers for testing.
-type Checker struct {
-	*testing.T
+// TestingT is an interface that defines the methods required for testing. This allows for testing of the check package
+// itself.
+type TestingT interface {
+	Cleanup(func())
+	Error(args ...any)
+	Errorf(format string, args ...any)
+	Fail()
+	FailNow()
+	Failed() bool
+	Fatal(args ...any)
+	Fatalf(format string, args ...any)
+	Helper()
+	Log(args ...any)
+	Logf(format string, args ...any)
+	Name() string
+	Setenv(key, value string)
+	Chdir(dir string)
+	Skip(args ...any)
+	SkipNow()
+	Skipf(format string, args ...any)
+	Skipped() bool
+	TempDir() string
+	Context() context.Context
 }
 
-// New creates a new Checker from the testing.T.
-func New(t *testing.T) Checker {
-	return Checker{T: t}
+// Checker provides some simple helpers for testing.
+type Checker struct {
+	TestingT
+}
+
+// New creates a new Checker. Typically used by calling check.New(t), where t is a *testing.T.
+func New(t TestingT) Checker {
+	return Checker{TestingT: t}
 }
 
 // Equal compares two values for equality.
