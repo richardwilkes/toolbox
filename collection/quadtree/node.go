@@ -82,20 +82,20 @@ func (n *node[T, N]) splitIfNeeded() {
 			n.children[0] = &node[T, N]{
 				rect: geom.Rect[T]{
 					Point: n.rect.Point,
-					Size:  geom.NewSize[T](hw, hw),
+					Size:  geom.NewSize(hw, hw),
 				},
 				threshold: n.threshold,
 			}
 			n.children[1] = &node[T, N]{
-				rect:      geom.NewRect[T](n.rect.X+hw, n.rect.Y, n.rect.Width-hw, hh),
+				rect:      geom.NewRect(n.rect.X+hw, n.rect.Y, n.rect.Width-hw, hh),
 				threshold: n.threshold,
 			}
 			n.children[2] = &node[T, N]{
-				rect:      geom.NewRect[T](n.rect.X, n.rect.Y+hh, hw, n.rect.Height-hh),
+				rect:      geom.NewRect(n.rect.X, n.rect.Y+hh, hw, n.rect.Height-hh),
 				threshold: n.threshold,
 			}
 			n.children[3] = &node[T, N]{
-				rect:      geom.NewRect[T](n.rect.X+hw, n.rect.Y+hh, n.rect.Width-hw, n.rect.Height-hh),
+				rect:      geom.NewRect(n.rect.X+hw, n.rect.Y+hh, n.rect.Width-hw, n.rect.Height-hh),
 				threshold: n.threshold,
 			}
 			contents := n.contents

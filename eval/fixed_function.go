@@ -11,10 +11,10 @@ package eval
 
 import (
 	"math"
-	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
+	"github.com/richardwilkes/toolbox/v2/txt"
 )
 
 // Fixed64Functions returns standard functions that work with 64-bit fixed-point values.
@@ -87,7 +87,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	var value fixed64.Int[T]
 	if value, err = Fixed64From[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
-			if s != "" && !strings.EqualFold(s, "false") {
+			if txt.IsTruthy(txt.StripQuotes(s)) {
 				value = value.Inc()
 			}
 		} else {
