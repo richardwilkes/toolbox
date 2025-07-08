@@ -115,12 +115,12 @@ func (m Matrix[T]) RotateByDegrees(degrees T) Matrix[T] {
 // Multiply returns this Matrix multiplied by the other Matrix.
 func (m Matrix[T]) Multiply(other Matrix[T]) Matrix[T] {
 	return Matrix[T]{
-		ScaleX: m.ScaleX*other.ScaleX + m.SkewY*other.SkewX,
-		SkewX:  m.SkewX*other.ScaleX + m.ScaleY*other.SkewX,
-		TransX: m.TransX*other.ScaleX + m.TransY*other.SkewX + other.TransX,
-		SkewY:  m.ScaleX*other.SkewY + m.SkewY*other.ScaleY,
-		ScaleY: m.SkewX*other.SkewY + m.ScaleY*other.ScaleY,
-		TransY: m.TransX*other.ScaleX + m.TransY*other.SkewX + other.TransX,
+		ScaleX: m.ScaleX*other.ScaleX + m.SkewX*other.SkewY,
+		SkewX:  m.ScaleX*other.SkewX + m.SkewX*other.ScaleY,
+		TransX: m.ScaleX*other.TransX + m.SkewX*other.TransY + m.TransX,
+		SkewY:  m.SkewY*other.ScaleX + m.ScaleY*other.SkewY,
+		ScaleY: m.SkewY*other.SkewX + m.ScaleY*other.ScaleY,
+		TransY: m.SkewY*other.TransX + m.ScaleY*other.TransY + m.TransY,
 	}
 }
 
