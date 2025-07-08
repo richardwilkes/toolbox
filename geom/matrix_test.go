@@ -236,7 +236,7 @@ func TestMatrixString(t *testing.T) {
 	c.Equal("1,0,10,0,1,20", str)
 
 	// Test with decimals
-	m2 := geom.NewScaleMatrix[float64](1.5, 2.5)
+	m2 := geom.NewScaleMatrix(1.5, 2.5)
 	str2 := m2.String()
 	c.Equal("1.5,0,0,0,2.5,0", str2)
 }
