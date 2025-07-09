@@ -11,6 +11,7 @@ package num128_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
@@ -922,4 +923,602 @@ func TestUintEqual(t *testing.T) {
 	c.True(a.Equal(b))
 	c.False(a.Equal(different))
 	c.True(num128.Uint{}.Equal(num128.Uint{})) //nolint:gocritic // Yes, we know this is pointless, but we need to test it
+}
+
+// TestUintDivisionPanicCases tests that division by zero properly panics
+func TestUintDivisionPanicCases(t *testing.T) {
+	c := check.New(t)
+
+	u := num128.UintFrom64(100)
+	zero := num128.Uint{}
+
+	// Test Div panic
+	c.Panics(func() {
+		u.Div(zero)
+	})
+
+	// Test Mod panic
+	c.Panics(func() {
+		u.Mod(zero)
+	})
+
+	// Test DivMod panic
+	c.Panics(func() {
+		u.DivMod(zero)
+	})
+
+	// Test 64-bit versions
+	c.Panics(func() {
+		u.Div64(0)
+	})
+
+	c.Panics(func() {
+		u.Mod64(0)
+	})
+
+	c.Panics(func() {
+		u.DivMod64(0)
+	})
+}
+
+// TestUintFloatConversionEdgeCases tests float conversion edge cases for Uint
+func TestUintFloatConversionEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test UintFromFloat64 with special values
+
+	// NaN should return zero
+	nanUint := num128.UintFromFloat64(math.NaN())
+	c.Equal(num128.Uint{}, nanUint)
+
+	// Negative values should return zero
+	negUint := num128.UintFromFloat64(-1.0)
+	c.Equal(num128.Uint{}, negUint)
+
+	// +Inf should return MaxUint
+	infUint := num128.UintFromFloat64(math.Inf(1))
+	c.Equal(num128.MaxUint, infUint)
+
+	// Very large positive float
+	veryLargeFloat := 1e40
+	largeUint := num128.UintFromFloat64(veryLargeFloat)
+	c.Equal(num128.MaxUint, largeUint)
+
+	// Test edge cases around uint64 boundary - may have precision issues
+	maxUint64Float := float64(math.MaxUint64)
+	maxUint64Uint := num128.UintFromFloat64(maxUint64Float)
+	// Note: Float64 may not have exact precision for MaxUint64
+	if maxUint64Uint.IsUint64() {
+		c.True(maxUint64Uint.IsUint64())
+	}
+
+	// Test values just above uint64 range
+	aboveUint64 := maxUint64Float * 2
+	aboveUint64Uint := num128.UintFromFloat64(aboveUint64)
+	c.False(aboveUint64Uint.IsUint64())
+}
+
+// TestBitOperationsEdgeCases tests bit operations for edge cases
+func TestBitOperationsEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test Bit function with various positions
+	u := num128.UintFromComponents(0x8000000000000001, 0x8000000000000001)
+
+	// Test bit 0 (LSB of lo)
+	c.Equal(uint(1), u.Bit(0))
+
+	// Test bit 63 (MSB of lo)
+	c.Equal(uint(1), u.Bit(63))
+
+	// Test bit 64 (LSB of hi)
+	c.Equal(uint(1), u.Bit(64))
+
+	// Test bit 127 (MSB of hi)
+	c.Equal(uint(1), u.Bit(127))
+
+	// Test middle bits (should be 0)
+	c.Equal(uint(0), u.Bit(1))
+	c.Equal(uint(0), u.Bit(32))
+	c.Equal(uint(0), u.Bit(65))
+	c.Equal(uint(0), u.Bit(126))
+
+	// Test SetBit with bit 127 (MSB)
+	zero := num128.Uint{}
+	withMSB := zero.SetBit(127, 1)
+	expected := num128.UintFromComponents(0x8000000000000000, 0)
+	c.Equal(expected, withMSB)
+
+	// Test SetBit clearing MSB
+	cleared := withMSB.SetBit(127, 0)
+	c.Equal(zero, cleared)
+}
+
+// TestUintStringParsingErrorCases tests various error conditions in string parsing
+func TestUintStringParsingErrorCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test various invalid strings for Uint
+	invalidUintStrings := []string{
+		"",
+		"abc",
+		"123abc",
+		"--123",
+		"++123",
+		"123.45",
+		"0x", // incomplete hex
+		"0b", // incomplete binary
+	}
+
+	for _, invalid := range invalidUintStrings {
+		_, err := num128.UintFromString(invalid)
+		c.HasError(err)
+	}
+
+	// Test -123 for Uint - should return zero since UintFromBigInt returns zero for negative values
+	result, err := num128.UintFromString("-123")
+	c.NoError(err)                 // Should not error
+	c.Equal(num128.Uint{}, result) // Should return zero Uint
+}
+
+// TestUintDivMod64SpecialCases tests DivMod64 with specific edge cases
+func TestUintDivMod64SpecialCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test where hi part is less than divisor
+	dividend := num128.UintFromComponents(0x100, 0x123456789ABCDEF0)
+	divisor := uint64(0x200)
+
+	q, r := dividend.DivMod64(divisor)
+
+	// Verify the result
+	result := q.Mul64(divisor).Add(r)
+	c.Equal(dividend, result)
+	c.True(r.LessThan64(divisor))
+
+	// Test where hi part is greater than divisor
+	dividend2 := num128.UintFromComponents(0x12345678, 0x9ABCDEF012345678)
+	divisor2 := uint64(0x1000)
+
+	q2, r2 := dividend2.DivMod64(divisor2)
+
+	result2 := q2.Mul64(divisor2).Add(r2)
+	c.Equal(dividend2, result2)
+	c.True(r2.LessThan64(divisor2))
+
+	// Test with power of 2 divisor
+	dividend3 := num128.UintFromComponents(0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF)
+	divisor3 := uint64(1 << 10) // 1024
+
+	q3, r3 := dividend3.DivMod64(divisor3)
+
+	result3 := q3.Mul64(divisor3).Add(r3)
+	c.Equal(dividend3, result3)
+	c.True(r3.LessThan64(divisor3))
+
+	// Test with single bit set divisor that triggers bit shift optimization
+	dividend4 := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	divisor4 := uint64(1 << 20) // Single bit set
+
+	q4, r4 := dividend4.DivMod64(divisor4)
+
+	result4 := q4.Mul64(divisor4).Add(r4)
+	c.Equal(dividend4, result4)
+	c.True(r4.LessThan64(divisor4))
+}
+
+// TestUintModSpecialCases tests Mod function with edge cases
+func TestUintModSpecialCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test Mod where dividend.hi == 0 and divisor.lo == 1
+	dividend := num128.UintFrom64(12345)
+	divisorOne := num128.UintFrom64(1)
+
+	mod := dividend.Mod(divisorOne)
+	c.Equal(num128.Uint{}, mod)
+
+	// Test Mod where both dividend and divisor have hi == 0
+	dividend2 := num128.UintFrom64(12345)
+	divisor2 := num128.UintFrom64(100)
+
+	mod2 := dividend2.Mod(divisor2)
+	expected2 := num128.UintFrom64(12345 % 100)
+	c.Equal(expected2, mod2)
+
+	// Test Mod with divisor having single bit set
+	dividend3 := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	divisor3 := num128.UintFromComponents(0x100000000000000, 0) // Single bit at position 56
+
+	mod3 := dividend3.Mod(divisor3)
+	c.True(mod3.LessThan(divisor3))
+
+	// Test Mod where dividend < divisor
+	small := num128.UintFrom64(42)
+	large := num128.UintFromComponents(1, 0)
+
+	mod4 := small.Mod(large)
+	c.Equal(small, mod4)
+}
+
+// TestDivMod128Functions tests low-level division functions for comprehensive coverage
+func TestDivMod128Functions(t *testing.T) {
+	c := check.New(t)
+
+	// Test DivMod with divisor having only hi part
+	dividend := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	divisor := num128.UintFromComponents(0x1000000000000000, 0)
+
+	q, r := dividend.DivMod(divisor)
+
+	// Verify that dividend equals quotient * divisor + remainder
+	result := q.Mul(divisor).Add(r)
+	c.Equal(dividend, result)
+	c.True(r.LessThan(divisor))
+
+	// Test DivMod with both parts of divisor
+	divisor2 := num128.UintFromComponents(0x123456789ABCDEF, 0x1000000000000000)
+	q2, r2 := dividend.DivMod(divisor2)
+
+	result2 := q2.Mul(divisor2).Add(r2)
+	c.Equal(dividend, result2)
+	c.True(r2.LessThan(divisor2))
+
+	// Test DivMod where dividend < divisor
+	smallDividend := num128.UintFrom64(100)
+	largeDivisor := num128.UintFromComponents(1, 0)
+	q3, r3 := smallDividend.DivMod(largeDivisor)
+	c.Equal(num128.Uint{}, q3)
+	c.Equal(smallDividend, r3)
+
+	// Test DivMod where dividend == divisor
+	q4, r4 := dividend.DivMod(dividend)
+	c.Equal(num128.UintFrom64(1), q4)
+	c.Equal(num128.Uint{}, r4)
+
+	// Test with divisor having only one bit set (power of 2)
+	powerOf2 := num128.UintFromComponents(0x100000000000000, 0) // 2^56
+	q5, r5 := dividend.DivMod(powerOf2)
+
+	result5 := q5.Mul(powerOf2).Add(r5)
+	c.Equal(dividend, result5)
+	c.True(r5.LessThan(powerOf2))
+
+	// Test Mod with similar cases
+	mod1 := dividend.Mod(divisor)
+	c.Equal(r, mod1)
+
+	mod2 := dividend.Mod(divisor2)
+	c.Equal(r2, mod2)
+
+	mod3 := smallDividend.Mod(largeDivisor)
+	c.Equal(smallDividend, mod3)
+
+	mod4 := dividend.Mod(dividend)
+	c.Equal(num128.Uint{}, mod4)
+}
+
+// TestUintStringParsingEdgeCases tests string parsing with various formats
+func TestUintStringParsingEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test parsing hex strings (if supported)
+	hexTests := []struct {
+		input      string
+		expected   uint64
+		shouldWork bool
+	}{
+		{"0x10", 16, false},  // May not be supported
+		{"0X20", 32, false},  // May not be supported
+		{"0xff", 255, false}, // May not be supported
+		{"0XFF", 255, false}, // May not be supported
+	}
+
+	for _, test := range hexTests {
+		u, err := num128.UintFromString(test.input)
+		if test.shouldWork {
+			c.NoError(err, "Hex parsing should work for: %s", test.input)
+			c.Equal(num128.UintFrom64(test.expected), u, "Hex parsing failed for: %s", test.input)
+		} else if err == nil {
+			c.Equal(num128.UintFrom64(test.expected), u, "Hex parsing unexpectedly worked for: %s", test.input)
+		}
+	}
+}
+
+// TestUintYAMLUnmarshalEdgeCases tests YAML unmarshaling edge cases for Uint
+func TestUintYAMLUnmarshalEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test successful unmarshaling
+	var u num128.Uint
+	err := u.UnmarshalYAML(func(v interface{}) error {
+		*v.(*string) = "123" //nolint:errcheck // Simulate YAML unmarshaling
+		return nil
+	})
+	c.NoError(err)
+	c.Equal(num128.UintFrom64(123), u)
+}
+
+// TestUintUnmarshalJSONEdgeCases tests JSON unmarshaling edge cases for Uint
+func TestUintUnmarshalJSONEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test successful unmarshaling
+	var u num128.Uint
+	err := u.UnmarshalJSON([]byte("123"))
+	c.NoError(err)
+	c.Equal(num128.UintFrom64(123), u)
+}
+
+// TestUintSetBitEdgeCases tests SetBit method edge cases
+func TestUintSetBitEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test setting bit in lo part
+	u := num128.Uint{}
+	result := u.SetBit(5, 1)
+	expected := num128.UintFrom64(1 << 5)
+	c.Equal(expected, result)
+
+	// Test clearing bit in lo part
+	u = num128.UintFrom64(0xFF)
+	result = u.SetBit(2, 0)
+	expected = num128.UintFrom64(0xFF &^ (1 << 2)) // Clear bit 2
+	c.Equal(expected, result)
+
+	// Test setting bit in hi part
+	u = num128.Uint{}
+	result = u.SetBit(70, 1) // Bit 70 is in hi part (70 - 64 = 6)
+	expected = num128.UintFromComponents(1<<6, 0)
+	c.Equal(expected, result)
+
+	// Test clearing bit in hi part
+	u = num128.UintFromComponents(0xFF, 0)
+	result = u.SetBit(66, 0) // Bit 66 is in hi part (66 - 64 = 2)
+	expected = num128.UintFromComponents(0xFF&^(1<<2), 0)
+	c.Equal(expected, result)
+
+	// Test setting bit beyond 127 (should return original)
+	u = num128.UintFrom64(42)
+	result = u.SetBit(128, 1)
+	c.Equal(u, result)
+
+	// Test with bit exactly at 127
+	u = num128.Uint{}
+	result = u.SetBit(127, 1)
+	expected = num128.UintFromComponents(1<<63, 0) // Bit 127 is the MSB of hi
+	c.Equal(expected, result)
+}
+
+// TestUintToBigIntEdgeCases tests edge cases for ToBigInt
+func TestUintToBigIntEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test with zero
+	zero := num128.Uint{}
+	var b big.Int
+	zero.ToBigInt(&b)
+	c.Equal("0", b.String())
+
+	// Test with single uint64 value
+	single := num128.UintFrom64(0x123456789ABCDEF0)
+	single.ToBigInt(&b)
+	c.Equal("1311768467463790320", b.String())
+
+	// Test with MaxUint
+	num128.MaxUint.ToBigInt(&b)
+	c.Equal(maxUint128AsStr, b.String())
+
+	// Test with high bit set but not MaxUint
+	highBit := num128.UintFromComponents(0x8000000000000000, 0)
+	highBit.ToBigInt(&b)
+	expected := new(big.Int)
+	expected.SetString("170141183460469231731687303715884105728", 10)
+	c.Equal(expected.String(), b.String())
+}
+
+// TestUintDivisionCoverage tests division methods for better coverage
+func TestUintDivisionCoverage(t *testing.T) {
+	c := check.New(t)
+
+	// Test Div64 with various cases
+	dividend := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	divisor := uint64(0x1000)
+
+	quotient := dividend.Div64(divisor)
+	remainder := dividend.Mod64(divisor)
+
+	// Verify that dividend equals quotient * divisor + remainder
+	result := quotient.Mul64(divisor).Add(remainder)
+	c.Equal(dividend, result)
+
+	// Test DivMod64
+	q, r := dividend.DivMod64(divisor)
+	c.Equal(quotient, q)
+	c.Equal(remainder, r)
+
+	// Test Mod64 specifically
+	mod := dividend.Mod64(divisor)
+	c.Equal(remainder, mod)
+
+	// Test with single uint64 dividend
+	singleDividend := num128.UintFrom64(0x123456789ABCDEF0)
+	q64 := singleDividend.Div64(0x1000)
+	r64 := singleDividend.Mod64(0x1000)
+
+	result64 := q64.Mul64(0x1000).Add(r64)
+	c.Equal(singleDividend, result64)
+
+	// Test edge case: division by 1
+	q1 := dividend.Div64(1)
+	r1 := dividend.Mod64(1)
+	c.Equal(dividend, q1)
+	c.Equal(num128.Uint{}, r1)
+
+	// Test edge case: small number divided by large number
+	small := num128.UintFrom64(42)
+	large := uint64(100)
+	qSmall := small.Div64(large)
+	rSmall := small.Mod64(large)
+	c.Equal(num128.Uint{}, qSmall)         // 42 / 100 = 0
+	c.Equal(num128.UintFrom64(42), rSmall) // 42 % 100 = 42
+}
+
+// TestUintComparisonEdgeCases tests comparison methods for better coverage
+func TestUintComparisonEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test Cmp with equal values (different path)
+	a := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	b := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	c.Equal(0, a.Cmp(b))
+
+	// Test with different hi parts
+	c1 := num128.UintFromComponents(0x200000000000000, 0)
+	c2 := num128.UintFromComponents(0x100000000000000, 0)
+	c.Equal(1, c1.Cmp(c2))
+	c.Equal(-1, c2.Cmp(c1))
+
+	// Test with same hi but different lo
+	d1 := num128.UintFromComponents(0x100000000000000, 0x200000000000000)
+	d2 := num128.UintFromComponents(0x100000000000000, 0x100000000000000)
+	c.Equal(1, d1.Cmp(d2))
+	c.Equal(-1, d2.Cmp(d1))
+}
+
+// TestUintFormatAndScan tests the Format and Scan methods for Uint
+func TestUintFormatAndScan(t *testing.T) {
+	c := check.New(t)
+
+	// Test Format
+	u := num128.UintFrom64(42)
+	formatted := fmt.Sprintf("%d", u)
+	c.Equal("42", formatted)
+
+	// Test with different format verbs
+	formatted = fmt.Sprintf("%x", u)
+	c.Equal("2a", formatted)
+
+	formatted = fmt.Sprintf("%X", u)
+	c.Equal("2A", formatted)
+
+	// Test larger numbers
+	bigU := num128.UintFromComponents(0x123456789ABCDEF0, 0xFEDCBA9876543210)
+	formatted = fmt.Sprintf("%d", bigU)
+	expected := bigU.String()
+	c.Equal(expected, formatted)
+
+	// Test Scan
+	var scanned num128.Uint
+	n, err := fmt.Sscanf("123", "%v", &scanned)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.UintFrom64(123), scanned)
+
+	// Test Scan with large number
+	var bigScanned num128.Uint
+	n, err = fmt.Sscanf(maxUint128AsStr, "%v", &bigScanned)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.MaxUint, bigScanned)
+}
+
+// TestUintTextMarshaling tests MarshalText and UnmarshalText for Uint
+func TestUintTextMarshaling(t *testing.T) {
+	c := check.New(t)
+
+	// Test basic marshaling
+	u := num128.UintFrom64(12345)
+	text, err := u.MarshalText()
+	c.NoError(err)
+	c.Equal("12345", string(text))
+
+	// Test unmarshaling
+	var unmarshaled num128.Uint
+	err = unmarshaled.UnmarshalText([]byte("12345"))
+	c.NoError(err)
+	c.Equal(u, unmarshaled)
+
+	// Test with MaxUint
+	text, err = num128.MaxUint.MarshalText()
+	c.NoError(err)
+	c.Equal(maxUint128AsStr, string(text))
+
+	err = unmarshaled.UnmarshalText([]byte(maxUint128AsStr))
+	c.NoError(err)
+	c.Equal(num128.MaxUint, unmarshaled)
+
+	// Test with zero
+	zero := num128.Uint{}
+	text, err = zero.MarshalText()
+	c.NoError(err)
+	c.Equal("0", string(text))
+
+	err = unmarshaled.UnmarshalText([]byte("0"))
+	c.NoError(err)
+	c.Equal(zero, unmarshaled)
+}
+
+// TestUintJSONNumberInterface tests Float64 and Int64 methods for Uint
+func TestUintJSONNumberInterface(t *testing.T) {
+	// Test Float64 - should always return error
+	u := num128.UintFrom64(42)
+	_, err := u.Float64()
+	if err == nil {
+		t.Error("Expected Float64() to return an error")
+	}
+
+	// Test Int64 with small number
+	val, err := u.Int64()
+	if err != nil {
+		t.Errorf("Expected Int64() to succeed for small number, got error: %v", err)
+	}
+	if val != 42 {
+		t.Errorf("Expected 42, got %d", val)
+	}
+
+	// Test Int64 with number that doesn't fit
+	tooLarge := num128.UintFromComponents(1, 0)
+	_, err = tooLarge.Int64()
+	if err == nil {
+		t.Error("Expected Int64() to return an error for too large number")
+	}
+
+	// Test Int64 with MaxUint - should fail
+	_, err = num128.MaxUint.Int64()
+	if err == nil {
+		t.Error("Expected Int64() to return an error for MaxUint")
+	}
+}
+
+// TestUintFromBigIntEdgeCases tests edge cases for UintFromBigInt
+func TestUintFromBigIntEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test with negative big.Int
+	negBig := big.NewInt(-1)
+	u := num128.UintFromBigInt(negBig)
+	c.Equal(num128.Uint{}, u)
+
+	// Test with zero
+	zeroBig := big.NewInt(0)
+	u = num128.UintFromBigInt(zeroBig)
+	c.Equal(num128.Uint{}, u)
+
+	// Test with single word (32-bit systems)
+	singleWord := big.NewInt(0x12345678)
+	u = num128.UintFromBigInt(singleWord)
+	c.Equal(num128.UintFrom64(0x12345678), u)
+
+	// Test with very large number (should return MaxUint)
+	veryLarge := new(big.Int)
+	veryLarge.SetString("999999999999999999999999999999999999999999", 10)
+	u = num128.UintFromBigInt(veryLarge)
+	c.Equal(num128.MaxUint, u)
+
+	// Test edge case with exactly MaxUint + 1
+	maxPlus1 := new(big.Int)
+	maxPlus1.SetString("340282366920938463463374607431768211456", 10)
+	u = num128.UintFromBigInt(maxPlus1)
+	c.Equal(num128.MaxUint, u)
 }

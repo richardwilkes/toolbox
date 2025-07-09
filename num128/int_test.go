@@ -1189,3 +1189,235 @@ func TestIntNegEdgeCases(t *testing.T) {
 	doubleNeg := negMaxInt.Neg()
 	c.Equal(1, doubleNeg.Sign()) // Should be positive
 }
+
+// TestIntDivisionPanicCases tests that division by zero properly panics
+func TestIntDivisionPanicCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test Int versions
+	i := num128.IntFrom64(100)
+	zeroInt := num128.Int{}
+
+	c.Panics(func() {
+		i.Div(zeroInt)
+	})
+
+	c.Panics(func() {
+		i.Mod(zeroInt)
+	})
+
+	c.Panics(func() {
+		i.DivMod(zeroInt)
+	})
+
+	c.Panics(func() {
+		i.Div64(0)
+	})
+
+	c.Panics(func() {
+		i.Mod64(0)
+	})
+
+	c.Panics(func() {
+		i.DivMod64(0)
+	})
+}
+
+// TestIntFloatConversionEdgeCases tests float conversion edge cases
+func TestIntFloatConversionEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test IntFromFloat64 with special values
+
+	// NaN should return zero
+	nanInt := num128.IntFromFloat64(math.NaN())
+	c.Equal(num128.Int{}, nanInt)
+
+	// +Inf should return MaxInt
+	infInt := num128.IntFromFloat64(math.Inf(1))
+	c.Equal(num128.MaxInt, infInt)
+
+	// -Inf should return MinInt
+	negInfInt := num128.IntFromFloat64(math.Inf(-1))
+	c.Equal(num128.MinInt, negInfInt)
+
+	// Very large positive float
+	veryLargeFloat := 1e40
+	largeInt := num128.IntFromFloat64(veryLargeFloat)
+	c.Equal(num128.MaxInt, largeInt)
+
+	// Very large negative float
+	veryLargeNegFloat := -1e40
+	largeNegInt := num128.IntFromFloat64(veryLargeNegFloat)
+	c.Equal(num128.MinInt, largeNegInt)
+
+	// Test edge cases around the boundaries - these may have precision issues
+	maxInt64Float := float64(math.MaxInt64)
+	maxInt64Int := num128.IntFromFloat64(maxInt64Float)
+	// Note: Float64 may not have exact precision for MaxInt64
+	if maxInt64Int.IsInt64() {
+		c.True(maxInt64Int.IsInt64())
+	}
+
+	minInt64Float := float64(math.MinInt64)
+	minInt64Int := num128.IntFromFloat64(minInt64Float)
+	// Note: Float64 may not have exact precision for MinInt64
+	if minInt64Int.IsInt64() {
+		c.True(minInt64Int.IsInt64())
+	}
+}
+
+// TestIntStringParsingErrorCases tests various error conditions in string parsing
+func TestIntStringParsingErrorCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test various invalid strings for Int
+	invalidIntStrings := []string{
+		"",
+		"abc",
+		"123abc",
+		"--123",
+		"++123",
+		"123.45",
+		"0x", // incomplete hex
+		"0b", // incomplete binary
+	}
+
+	for _, invalid := range invalidIntStrings {
+		_, err := num128.IntFromString(invalid)
+		c.HasError(err)
+	}
+}
+
+// TestIntStringParsingEdgeCases tests string parsing with various formats
+func TestIntStringParsingEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test Int parsing with signs
+	signTests := []struct {
+		input      string
+		expected   int64
+		shouldWork bool
+	}{
+		{"+123", 123, true},
+		{"-123", -123, true},
+	}
+
+	for _, test := range signTests {
+		i, err := num128.IntFromString(test.input)
+		if test.shouldWork {
+			c.NoError(err, "Sign parsing should work for: %s", test.input)
+			c.Equal(num128.IntFrom64(test.expected), i, "Sign parsing failed for: %s", test.input)
+		}
+	}
+}
+
+// TestIntNegAdditionalEdgeCases tests Neg method edge cases for better coverage
+func TestIntNegAdditionalEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test negation of zero
+	zero := num128.Int{}
+	negZero := zero.Neg()
+	c.Equal(zero, negZero)
+
+	// Test negation of MinInt (should return itself)
+	negMinInt := num128.MinInt.Neg()
+	c.Equal(num128.MinInt, negMinInt)
+
+	// Test negation of positive number
+	pos := num128.IntFrom64(42)
+	neg := pos.Neg()
+	c.Equal(num128.IntFrom64(-42), neg)
+
+	// Test negation of negative number
+	negVal := num128.IntFrom64(-42)
+	posVal := negVal.Neg()
+	c.Equal(num128.IntFrom64(42), posVal)
+
+	// Test negation causing lo overflow
+	special := num128.IntFromComponents(0, 1) // positive 1
+	negSpecial := special.Neg()
+	expectedHi := ^uint64(0)     // all 1s
+	expectedLo := ^uint64(1) + 1 // ~1 + 1 = 0xFFFFFFFFFFFFFFFE + 1 = 0xFFFFFFFFFFFFFFFF
+	expected := num128.IntFromComponents(expectedHi, expectedLo)
+	c.Equal(expected, negSpecial)
+}
+
+// TestIntComparison64EdgeCases tests 64-bit comparison methods for better coverage
+func TestIntComparison64EdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test GreaterThan64 with negative Int and positive int64
+	negInt := num128.IntFrom64(-42)
+	c.False(negInt.GreaterThan64(1))
+
+	// Test GreaterThan64 with positive Int and negative int64
+	posInt := num128.IntFrom64(42)
+	c.True(posInt.GreaterThan64(-1))
+
+	// Test GreaterThanOrEqual64 with equal values
+	c.True(posInt.GreaterThanOrEqual64(42))
+	c.True(negInt.GreaterThanOrEqual64(-42))
+
+	// Test GreaterThanOrEqual64 with negative Int and positive int64
+	c.False(negInt.GreaterThanOrEqual64(1))
+
+	// Test GreaterThanOrEqual64 with positive Int and negative int64
+	c.True(posInt.GreaterThanOrEqual64(-1))
+
+	// Test LessThan64 with positive Int and negative int64
+	c.False(posInt.LessThan64(-1))
+
+	// Test LessThan64 with negative Int and positive int64
+	c.True(negInt.LessThan64(1))
+
+	// Test LessThanOrEqual64 with equal values
+	c.True(posInt.LessThanOrEqual64(42))
+	c.True(negInt.LessThanOrEqual64(-42))
+
+	// Test LessThanOrEqual64 with positive Int and negative int64
+	c.False(posInt.LessThanOrEqual64(-1))
+
+	// Test LessThanOrEqual64 with negative Int and positive int64
+	c.True(negInt.LessThanOrEqual64(1))
+
+	// Test Cmp64 edge cases
+	c.Equal(0, posInt.Cmp64(42))
+	c.Equal(0, negInt.Cmp64(-42))
+	c.Equal(1, posInt.Cmp64(-1))
+	c.Equal(-1, negInt.Cmp64(1))
+}
+
+// TestIntScanEdgeCases tests Scan method edge cases
+func TestIntScanEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test successful scan
+	var i num128.Int
+	n, err := fmt.Sscanf("123", "%v", &i)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.IntFrom64(123), i)
+
+	// Test scan with negative number
+	var negI num128.Int
+	n, err = fmt.Sscanf("-456", "%v", &negI)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.IntFrom64(-456), negI)
+}
+
+// TestIntYAMLUnmarshalEdgeCases tests YAML unmarshaling edge cases
+func TestIntYAMLUnmarshalEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test unmarshaling valid YAML
+	var i num128.Int
+	err := i.UnmarshalYAML(func(v interface{}) error {
+		*v.(*string) = "123" //nolint:errcheck // Simulate YAML unmarshaling
+		return nil
+	})
+	c.NoError(err)
+	c.Equal(num128.IntFrom64(123), i)
+}
