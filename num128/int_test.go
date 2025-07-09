@@ -11,8 +11,10 @@ package num128_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/big"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -444,4 +446,746 @@ func TestInt128Yaml(t *testing.T) {
 		c.NoError(yaml.Unmarshal(data, &out), indexFmt, i)
 		c.Equal(in, out, indexFmt, i)
 	}
+}
+
+// Test IntFromUint64
+func TestIntFromUint64(t *testing.T) {
+	c := check.New(t)
+
+	// Test various uint64 values
+	testCases := []struct { //nolint:govet // Don't care about optimal pointer bytes in tests
+		input    uint64
+		expected string
+	}{
+		{0, "0"},
+		{1, "1"},
+		{42, "42"},
+		{math.MaxUint64, "18446744073709551615"},
+	}
+
+	for i, tc := range testCases {
+		result := num128.IntFromUint64(tc.input)
+		c.Equal(tc.expected, result.String(), "index %d", i)
+		c.True(result.IsUint64())
+		c.Equal(tc.input, result.AsUint64())
+	}
+}
+
+// Test IntFromFloat64 with various float values
+func TestIntFromFloat64(t *testing.T) {
+	c := check.New(t)
+
+	// Test zero and NaN
+	c.Equal(num128.Int{}, num128.IntFromFloat64(0))
+	c.Equal(num128.Int{}, num128.IntFromFloat64(math.NaN()))
+
+	// Test positive values
+	c.Equal(num128.IntFrom64(1), num128.IntFromFloat64(1.0))
+	c.Equal(num128.IntFrom64(42), num128.IntFromFloat64(42.5)) // truncation
+	c.Equal(num128.IntFromUint64(math.MaxUint64), num128.IntFromFloat64(float64(math.MaxUint64)))
+
+	// Test negative values - these should match the actual implementation behavior
+	negOne := num128.IntFromFloat64(-1.0)
+	negFortyTwo := num128.IntFromFloat64(-42.5)
+
+	// These should be negative numbers according to the Sign method
+	c.Equal(-1, negOne.Sign())
+	c.Equal(-1, negFortyTwo.Sign())
+
+	// Test large positive values
+	largePos := float64(math.MaxUint64) * 2
+	result := num128.IntFromFloat64(largePos)
+	c.True(result.GreaterThan(num128.IntFromUint64(math.MaxUint64)))
+
+	// Test large negative values
+	largeNeg := -float64(math.MaxUint64) * 2
+	result = num128.IntFromFloat64(largeNeg)
+	c.Equal(-1, result.Sign())
+
+	// Test maximum/minimum float values
+	c.Equal(num128.MaxInt, num128.IntFromFloat64(math.MaxFloat64))
+	c.Equal(num128.MinInt, num128.IntFromFloat64(-math.MaxFloat64))
+}
+
+// Test IntFromString with various string formats
+func TestIntFromString(t *testing.T) {
+	c := check.New(t)
+
+	// Test valid strings
+	cases := []struct {
+		input    string
+		expected num128.Int
+	}{
+		{"0", num128.IntFrom64(0)},
+		{"1", num128.IntFrom64(1)},
+		{"-1", num128.IntFrom64(-1)},
+		{"42", num128.IntFrom64(42)},
+		{"-42", num128.IntFrom64(-42)},
+		{"9223372036854775807", num128.IntFrom64(math.MaxInt64)},  // MaxInt64
+		{"-9223372036854775808", num128.IntFrom64(math.MinInt64)}, // MinInt64
+		{"0x10", num128.IntFrom64(16)},                            // hex
+		{"-0x10", num128.IntFrom64(-16)},                          // negative hex
+		{"0b1010", num128.IntFrom64(10)},                          // binary
+		{"-0b1010", num128.IntFrom64(-10)},                        // negative binary
+		{"010", num128.IntFrom64(8)},                              // octal
+		{"-010", num128.IntFrom64(-8)},                            // negative octal
+	}
+
+	for i, tc := range cases {
+		result, err := num128.IntFromString(tc.input)
+		c.NoError(err, "index %d", i)
+		c.Equal(tc.expected, result, "index %d", i)
+	}
+
+	// Test exponential notation (floating point)
+	result, err := num128.IntFromString("1e2")
+	c.NoError(err)
+	c.Equal(num128.IntFrom64(100), result)
+
+	result, err = num128.IntFromString("-1.5e2")
+	c.NoError(err)
+	c.Equal(num128.IntFrom64(-150), result)
+
+	// Test invalid strings that should return errors
+	invalidInputs := []string{
+		"",
+		"abc",
+		"12.5", // non-integer float without exponent
+		"1.5e0.5",
+		"not a number",
+	}
+
+	for i, input := range invalidInputs {
+		_, err = num128.IntFromString(input)
+		c.HasError(err, "index %d", i)
+	}
+}
+
+// Test IntFromStringNoCheck
+func TestIntFromStringNoCheck(t *testing.T) {
+	c := check.New(t)
+
+	// Valid strings should work
+	c.Equal(num128.IntFrom64(42), num128.IntFromStringNoCheck("42"))
+	c.Equal(num128.IntFrom64(-42), num128.IntFromStringNoCheck("-42"))
+
+	// Invalid strings should return zero
+	c.Equal(num128.Int{}, num128.IntFromStringNoCheck("invalid"))
+	c.Equal(num128.Int{}, num128.IntFromStringNoCheck(""))
+}
+
+// Test IntFromComponents
+func TestIntFromComponents(t *testing.T) {
+	c := check.New(t)
+
+	testCases := []struct { //nolint:govet // Don't care about optimal pointer bytes in tests
+		hi, lo   uint64
+		expected string
+	}{
+		{0, 0, "0"},
+		{0, 1, "1"},
+		{math.MaxUint64, math.MaxUint64, "-1"}, // Two's complement representation of -1
+		{0x7FFFFFFFFFFFFFFF, math.MaxUint64, "170141183460469231731687303715884105727"}, // MaxInt
+		{0x8000000000000000, 0, "-170141183460469231731687303715884105728"},             // MinInt
+	}
+
+	for i, tc := range testCases {
+		result := num128.IntFromComponents(tc.hi, tc.lo)
+		high, low := result.Components()
+		c.Equal(tc.hi, high, "index %d", i)
+		c.Equal(tc.lo, low, "index %d", i)
+		c.Equal(tc.expected, result.String(), "index %d", i)
+	}
+}
+
+// Test IntFromRand
+func TestIntFromRand(t *testing.T) {
+	c := check.New(t)
+
+	source := rand.New(rand.NewSource(42)) //nolint:gosec // Fixed seed for reproducibility
+
+	// Generate multiple random values and ensure they're different
+	values := make(map[string]bool)
+	for i := 0; i < 100; i++ {
+		result := num128.IntFromRand(source)
+		str := result.String()
+		c.False(values[str], "Random values should be unique: %s", str)
+		values[str] = true
+	}
+}
+
+// Test IsZero
+func TestIntIsZero(t *testing.T) {
+	c := check.New(t)
+
+	c.True(num128.Int{}.IsZero())
+	c.True(num128.IntFrom64(0).IsZero())
+	c.False(num128.IntFrom64(1).IsZero())
+	c.False(num128.IntFrom64(-1).IsZero())
+	c.False(num128.IntFromComponents(0, 1).IsZero())
+	c.False(num128.IntFromComponents(1, 0).IsZero())
+	c.False(num128.MaxInt.IsZero())
+	c.False(num128.MinInt.IsZero())
+}
+
+// Test ToBigInt and AsBigInt
+func TestIntToBigIntAndAsBigInt(t *testing.T) {
+	c := check.New(t)
+
+	testCases := []num128.Int{
+		num128.IntFrom64(0),
+		num128.IntFrom64(1),
+		num128.IntFrom64(-1),
+		num128.IntFrom64(math.MaxInt64),
+		num128.IntFrom64(math.MinInt64),
+		num128.MaxInt,
+		num128.MinInt,
+	}
+
+	for i, tc := range testCases {
+		// Test ToBigInt
+		var b big.Int
+		tc.ToBigInt(&b)
+		c.Equal(tc.String(), b.String(), "index %d", i)
+
+		// Test AsBigInt
+		b2 := tc.AsBigInt()
+		c.Equal(tc.String(), b2.String(), "index %d", i)
+	}
+}
+
+// Test AsBigFloat
+func TestIntAsBigFloat(t *testing.T) {
+	c := check.New(t)
+
+	testCases := []num128.Int{
+		num128.IntFrom64(0),
+		num128.IntFrom64(42),
+		num128.IntFrom64(-42),
+		num128.MaxInt,
+		num128.MinInt,
+	}
+
+	for i, tc := range testCases {
+		result := tc.AsBigFloat()
+		expected := new(big.Float).SetInt(tc.AsBigInt())
+		c.Equal(expected.String(), result.String(), "index %d", i)
+	}
+}
+
+// Test AsFloat64
+func TestIntAsFloat64(t *testing.T) {
+	c := check.New(t)
+
+	// Test zero
+	c.Equal(0.0, num128.IntFrom64(0).AsFloat64())
+
+	// Test small positive values
+	c.Equal(1.0, num128.IntFrom64(1).AsFloat64())
+	c.Equal(42.0, num128.IntFrom64(42).AsFloat64())
+
+	// Test small negative values
+	c.Equal(-1.0, num128.IntFrom64(-1).AsFloat64())
+	c.Equal(-42.0, num128.IntFrom64(-42).AsFloat64())
+
+	// Test values where hi == MaxUint64 (negative values)
+	negVal := num128.IntFromComponents(math.MaxUint64, math.MaxUint64-1)
+	result := negVal.AsFloat64()
+	c.True(result < 0)
+
+	// Test large positive values with hi component
+	posVal := num128.IntFromComponents(1, 0)
+	result = posVal.AsFloat64()
+	c.True(result > 0)
+
+	// Test large negative values with sign bit set
+	negVal = num128.IntFromComponents(0x8000000000000001, 0)
+	result = negVal.AsFloat64()
+	c.True(result < 0)
+}
+
+// Test IsUint and AsUint
+func TestIntIsUintAndAsUint(t *testing.T) {
+	c := check.New(t)
+
+	// Positive values should be representable as Uint
+	c.True(num128.IntFrom64(0).IsUint())
+	c.True(num128.IntFrom64(1).IsUint())
+	c.True(num128.IntFrom64(math.MaxInt64).IsUint())
+
+	// Negative values should not be representable as Uint
+	c.False(num128.IntFrom64(-1).IsUint())
+	c.False(num128.IntFrom64(math.MinInt64).IsUint())
+	c.False(num128.MinInt.IsUint())
+
+	// Test AsUint conversion
+	val := num128.IntFrom64(42)
+	uintVal := val.AsUint()
+	c.Equal("42", uintVal.String())
+}
+
+// Test IsInt64 and AsInt64
+func TestIntIsInt64AndAsInt64(t *testing.T) {
+	c := check.New(t)
+
+	// Values that fit in int64 range
+	c.True(num128.IntFrom64(0).IsInt64())
+	c.True(num128.IntFrom64(1).IsInt64())
+	c.True(num128.IntFrom64(-1).IsInt64())
+	c.True(num128.IntFrom64(math.MaxInt64).IsInt64())
+	c.True(num128.IntFrom64(math.MinInt64).IsInt64())
+
+	// Values that don't fit in int64 range
+	c.False(num128.MaxInt.IsInt64())
+	c.False(num128.MinInt.IsInt64())
+
+	// Test AsInt64 conversion
+	testCases := []int64{0, 1, -1, 42, -42, math.MaxInt64, math.MinInt64}
+	for i, expected := range testCases {
+		val := num128.IntFrom64(expected)
+		c.Equal(expected, val.AsInt64(), "index %d", i)
+	}
+}
+
+// Test IsUint64 and AsUint64
+func TestIntIsUint64AndAsUint64(t *testing.T) {
+	c := check.New(t)
+
+	// Values that fit in uint64 range (non-negative with hi == 0)
+	c.True(num128.IntFrom64(0).IsUint64())
+	c.True(num128.IntFrom64(1).IsUint64())
+	c.True(num128.IntFrom64(math.MaxInt64).IsUint64())
+
+	// Negative values don't fit in uint64
+	c.False(num128.IntFrom64(-1).IsUint64())
+	c.False(num128.IntFrom64(math.MinInt64).IsUint64())
+
+	// Values with high bits set don't fit
+	c.False(num128.IntFromComponents(1, 0).IsUint64())
+
+	// Test AsUint64 conversion
+	val := num128.IntFrom64(42)
+	c.Equal(uint64(42), val.AsUint64())
+}
+
+// Test Add64
+func TestIntAdd64(t *testing.T) {
+	c := check.New(t)
+
+	// Basic addition
+	c.Equal(num128.IntFrom64(5), num128.IntFrom64(2).Add64(3))
+	c.Equal(num128.IntFrom64(-1), num128.IntFrom64(2).Add64(-3))
+
+	// Addition with positive overflow
+	maxInt64 := num128.IntFrom64(math.MaxInt64)
+	result := maxInt64.Add64(1)
+	c.Equal("9223372036854775808", result.String())
+
+	// Addition with negative numbers
+	result = num128.IntFrom64(5).Add64(-10)
+	c.Equal(num128.IntFrom64(-5), result)
+}
+
+// Test Sub64
+func TestIntSub64(t *testing.T) {
+	c := check.New(t)
+
+	// Basic subtraction
+	c.Equal(num128.IntFrom64(2), num128.IntFrom64(5).Sub64(3))
+	c.Equal(num128.IntFrom64(8), num128.IntFrom64(5).Sub64(-3))
+
+	// Subtraction causing underflow
+	minInt64 := num128.IntFrom64(math.MinInt64)
+	result := minInt64.Sub64(1)
+	c.Equal("-9223372036854775809", result.String())
+}
+
+// Test Cmp64
+func TestIntCmp64(t *testing.T) {
+	c := check.New(t)
+
+	// Equal values
+	c.Equal(0, num128.IntFrom64(42).Cmp64(42))
+	c.Equal(0, num128.IntFrom64(-42).Cmp64(-42))
+
+	// Less than
+	c.Equal(-1, num128.IntFrom64(1).Cmp64(2))
+	c.Equal(-1, num128.IntFrom64(-5).Cmp64(-2))
+
+	// Greater than
+	c.Equal(1, num128.IntFrom64(5).Cmp64(3))
+	c.Equal(1, num128.IntFrom64(-2).Cmp64(-5))
+
+	// Large positive value vs int64
+	large := num128.IntFromComponents(1, 0)
+	c.Equal(1, large.Cmp64(math.MaxInt64))
+
+	// Large negative value vs int64
+	largeNeg := num128.IntFromComponents(0x8000000000000000, 0) // MinInt
+	c.Equal(-1, largeNeg.Cmp64(math.MinInt64))
+}
+
+// Test comparison methods with 64-bit values
+func TestIntComparison64Methods(t *testing.T) {
+	c := check.New(t)
+
+	val42 := num128.IntFrom64(42)
+	valNeg42 := num128.IntFrom64(-42)
+
+	// GreaterThan64
+	c.True(val42.GreaterThan64(41))
+	c.False(val42.GreaterThan64(42))
+	c.False(val42.GreaterThan64(43))
+	c.True(val42.GreaterThan64(-1))
+	c.False(valNeg42.GreaterThan64(-41))
+
+	// GreaterThanOrEqual64
+	c.True(val42.GreaterThanOrEqual64(41))
+	c.True(val42.GreaterThanOrEqual64(42))
+	c.False(val42.GreaterThanOrEqual64(43))
+	c.True(valNeg42.GreaterThanOrEqual64(-42))
+
+	// Equal64
+	c.True(val42.Equal64(42))
+	c.False(val42.Equal64(41))
+	c.True(valNeg42.Equal64(-42))
+
+	// LessThan64
+	c.False(val42.LessThan64(41))
+	c.False(val42.LessThan64(42))
+	c.True(val42.LessThan64(43))
+	c.True(valNeg42.LessThan64(-41))
+
+	// LessThanOrEqual64
+	c.False(val42.LessThanOrEqual64(41))
+	c.True(val42.LessThanOrEqual64(42))
+	c.True(val42.LessThanOrEqual64(43))
+	c.True(valNeg42.LessThanOrEqual64(-42))
+}
+
+// Test Mul64
+func TestIntMul64(t *testing.T) {
+	c := check.New(t)
+
+	// Basic multiplication
+	c.Equal(num128.IntFrom64(15), num128.IntFrom64(3).Mul64(5))
+	c.Equal(num128.IntFrom64(-15), num128.IntFrom64(3).Mul64(-5))
+	c.Equal(num128.IntFrom64(-15), num128.IntFrom64(-3).Mul64(5))
+	c.Equal(num128.IntFrom64(15), num128.IntFrom64(-3).Mul64(-5))
+
+	// Multiplication causing overflow
+	large := num128.IntFrom64(math.MaxInt32)
+	result := large.Mul64(math.MaxInt32)
+	expected := int64(math.MaxInt32) * int64(math.MaxInt32)
+	c.Equal(num128.IntFrom64(expected), result)
+}
+
+// Test division by zero panics for Int
+func TestIntDivisionByZeroPanics(t *testing.T) {
+	c := check.New(t)
+
+	val := num128.IntFrom64(42)
+
+	// Test Div panic
+	c.Panics(func() {
+		val.Div(num128.Int{})
+	})
+
+	// Test Div64 panic
+	c.Panics(func() {
+		val.Div64(0)
+	})
+
+	// Test DivMod panic
+	c.Panics(func() {
+		val.DivMod(num128.Int{})
+	})
+
+	// Test DivMod64 panic
+	c.Panics(func() {
+		val.DivMod64(0)
+	})
+
+	// Test Mod panic
+	c.Panics(func() {
+		val.Mod(num128.Int{})
+	})
+
+	// Test Mod64 panic
+	c.Panics(func() {
+		val.Mod64(0)
+	})
+}
+
+// Test division edge cases for Int
+func TestIntDivisionEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Positive division
+	c.Equal(num128.IntFrom64(8), num128.IntFrom64(42).Div64(5))
+	c.Equal(num128.IntFrom64(2), num128.IntFrom64(42).Mod64(5))
+
+	// Negative dividend
+	c.Equal(num128.IntFrom64(-8), num128.IntFrom64(-42).Div64(5))
+	c.Equal(num128.IntFrom64(-2), num128.IntFrom64(-42).Mod64(5))
+
+	// Negative divisor
+	c.Equal(num128.IntFrom64(-8), num128.IntFrom64(42).Div64(-5))
+	c.Equal(num128.IntFrom64(2), num128.IntFrom64(42).Mod64(-5))
+
+	// Both negative
+	c.Equal(num128.IntFrom64(8), num128.IntFrom64(-42).Div64(-5))
+	c.Equal(num128.IntFrom64(-2), num128.IntFrom64(-42).Mod64(-5))
+
+	// DivMod64
+	q, r := num128.IntFrom64(-42).DivMod64(5)
+	c.Equal(num128.IntFrom64(-8), q)
+	c.Equal(num128.IntFrom64(-2), r)
+}
+
+// Test Neg method
+func TestIntNeg(t *testing.T) {
+	c := check.New(t)
+
+	// Test zero (should remain zero)
+	c.Equal(num128.Int{}, num128.Int{}.Neg())
+
+	// Test positive values
+	c.Equal(num128.IntFrom64(-42), num128.IntFrom64(42).Neg())
+	c.Equal(num128.IntFrom64(-1), num128.IntFrom64(1).Neg())
+
+	// Test negative values
+	c.Equal(num128.IntFrom64(42), num128.IntFrom64(-42).Neg())
+	c.Equal(num128.IntFrom64(1), num128.IntFrom64(-1).Neg())
+
+	// Test MinInt (should remain MinInt due to overflow)
+	c.Equal(num128.MinInt, num128.MinInt.Neg())
+
+	// Test MaxInt
+	c.Equal(num128.MinInt.Inc(), num128.MaxInt.Neg())
+}
+
+// Test Abs method
+func TestIntAbs(t *testing.T) {
+	c := check.New(t)
+
+	// Test positive values (should remain unchanged)
+	c.Equal(num128.IntFrom64(42), num128.IntFrom64(42).Abs())
+	c.Equal(num128.Int{}, num128.Int{}.Abs())
+
+	// Test negative values
+	c.Equal(num128.IntFrom64(42), num128.IntFrom64(-42).Abs())
+	c.Equal(num128.IntFrom64(1), num128.IntFrom64(-1).Abs())
+
+	// Test MinInt (edge case)
+	c.Equal(num128.MinInt, num128.MinInt.Abs()) // Can't represent positive MinInt
+}
+
+// Test AbsUint method
+func TestIntAbsUint(t *testing.T) {
+	c := check.New(t)
+
+	// Test positive values
+	c.Equal(num128.UintFrom64(42), num128.IntFrom64(42).AbsUint())
+	c.Equal(num128.UintFrom64(0), num128.IntFrom64(0).AbsUint())
+
+	// Test negative values
+	c.Equal(num128.UintFrom64(42), num128.IntFrom64(-42).AbsUint())
+	c.Equal(num128.UintFrom64(1), num128.IntFrom64(-1).AbsUint())
+
+	// Test MinInt (special case)
+	c.Equal(num128.Uint(num128.MinInt), num128.MinInt.AbsUint())
+}
+
+// Test Sign method
+func TestIntSign(t *testing.T) {
+	c := check.New(t)
+
+	// Test zero
+	c.Equal(0, num128.Int{}.Sign())
+	c.Equal(0, num128.IntFrom64(0).Sign())
+
+	// Test positive values
+	c.Equal(1, num128.IntFrom64(1).Sign())
+	c.Equal(1, num128.IntFrom64(42).Sign())
+	c.Equal(1, num128.MaxInt.Sign())
+
+	// Test negative values
+	c.Equal(-1, num128.IntFrom64(-1).Sign())
+	c.Equal(-1, num128.IntFrom64(-42).Sign())
+	c.Equal(-1, num128.MinInt.Sign())
+}
+
+// Test String formatting for Int
+func TestIntStringFormatting(t *testing.T) {
+	c := check.New(t)
+
+	// Test String method
+	c.Equal("0", num128.IntFrom64(0).String())
+	c.Equal("42", num128.IntFrom64(42).String())
+	c.Equal("-42", num128.IntFrom64(-42).String())
+	c.Equal("170141183460469231731687303715884105727", num128.MaxInt.String())
+	c.Equal("-170141183460469231731687303715884105728", num128.MinInt.String())
+
+	// Test Format method with different verbs
+	val := num128.IntFrom64(42)
+	c.Equal("42", fmt.Sprintf("%d", val))
+	c.Equal("2a", fmt.Sprintf("%x", val))
+	c.Equal("52", fmt.Sprintf("%o", val))
+
+	valNeg := num128.IntFrom64(-42)
+	c.Equal("-42", fmt.Sprintf("%d", valNeg))
+}
+
+// Test Scan method for Int
+func TestIntScan(t *testing.T) {
+	c := check.New(t)
+
+	var val num128.Int
+	n, err := fmt.Sscanf("42", "%v", &val)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.IntFrom64(42), val)
+
+	// Test scanning negative value
+	n, err = fmt.Sscanf("-42", "%v", &val)
+	c.NoError(err)
+	c.Equal(1, n)
+	c.Equal(num128.IntFrom64(-42), val)
+
+	// Test scanning invalid input
+	_, err = fmt.Sscanf("invalid", "%v", &val)
+	c.HasError(err)
+}
+
+// Test MarshalText and UnmarshalText for Int
+func TestIntTextMarshaling(t *testing.T) {
+	c := check.New(t)
+
+	val := num128.IntFrom64(42)
+	valNeg := num128.IntFrom64(-42)
+
+	// Test MarshalText
+	text, err := val.MarshalText()
+	c.NoError(err)
+	c.Equal("42", string(text))
+
+	textNeg, err := valNeg.MarshalText()
+	c.NoError(err)
+	c.Equal("-42", string(textNeg))
+
+	// Test UnmarshalText
+	var val2 num128.Int
+	err = val2.UnmarshalText([]byte("42"))
+	c.NoError(err)
+	c.Equal(val, val2)
+
+	err = val2.UnmarshalText([]byte("-42"))
+	c.NoError(err)
+	c.Equal(valNeg, val2)
+
+	// Test UnmarshalText with invalid input
+	err = val2.UnmarshalText([]byte("invalid"))
+	c.HasError(err)
+}
+
+// Test JSON Number interface methods for Int
+func TestIntJSONNumberInterface(t *testing.T) {
+	c := check.New(t)
+
+	val := num128.IntFrom64(42)
+
+	// Float64 should always return error
+	_, err := val.Float64()
+	c.HasError(err)
+
+	// Int64 should work for values that fit
+	i64, err := val.Int64()
+	c.NoError(err)
+	c.Equal(int64(42), i64)
+
+	// Int64 should fail for values that don't fit in int64
+	largeVal := num128.MaxInt
+	_, err = largeVal.Int64()
+	c.HasError(err)
+}
+
+// Test JSON marshaling/unmarshaling errors for Int
+func TestIntJSONMarshalingErrors(t *testing.T) {
+	c := check.New(t)
+
+	var val num128.Int
+
+	// Test UnmarshalJSON with invalid input
+	err := val.UnmarshalJSON([]byte(`"invalid"`))
+	c.HasError(err)
+}
+
+// Test YAML marshaling errors for Int
+func TestIntYAMLMarshalingErrors(t *testing.T) {
+	c := check.New(t)
+
+	var val num128.Int
+
+	// Test UnmarshalYAML with invalid input
+	err := val.UnmarshalYAML(func(v any) error {
+		*(v.(*string)) = "invalid" //nolint:errcheck // We are simulating an error
+		return nil
+	})
+	c.HasError(err)
+}
+
+// Test Int Equal method
+func TestIntEqual(t *testing.T) {
+	c := check.New(t)
+
+	a := num128.IntFrom64(42)
+	b := num128.IntFrom64(42)
+	different := num128.IntFrom64(24)
+
+	c.True(a.Equal(b))
+	c.False(a.Equal(different))
+	c.True(num128.Int{}.Equal(num128.Int{})) //nolint:gocritic // Yes, we know this is pointless, but we need to test it
+}
+
+// Test IntFromBigInt edge cases for better coverage
+func TestIntFromBigIntEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test with very large big.Int that exceeds Int range
+	hugeBig := new(big.Int)
+	hugeBig.SetString("999999999999999999999999999999999999999999999999999999999999999999999999999", 10)
+	result := num128.IntFromBigInt(hugeBig)
+	c.Equal(num128.MaxInt, result)
+
+	// Test with very large negative big.Int that exceeds Int range
+	hugeNegBig := new(big.Int)
+	hugeNegBig.SetString("-999999999999999999999999999999999999999999999999999999999999999999999999999", 10)
+	result = num128.IntFromBigInt(hugeNegBig)
+	c.Equal(num128.MinInt, result)
+
+	// Test edge case near MinInt boundary
+	minIntBig := new(big.Int)
+	minIntBig.SetString("-170141183460469231731687303715884105728", 10) // MinInt value
+	result = num128.IntFromBigInt(minIntBig)
+	c.Equal(num128.MinInt, result)
+}
+
+// Test Neg method edge cases
+func TestIntNegEdgeCases(t *testing.T) {
+	c := check.New(t)
+
+	// Test negation of MinInt (should return itself)
+	c.Equal(num128.MinInt, num128.MinInt.Neg())
+
+	// Test negation of zero
+	c.Equal(num128.Int{}, num128.Int{}.Neg())
+
+	// Test negation of MaxInt - should be negative and specific value
+	negMaxInt := num128.MaxInt.Neg()
+	c.Equal(-1, negMaxInt.Sign()) // Should be negative
+
+	// Test that negating again gives us back close to original (accounting for asymmetry)
+	doubleNeg := negMaxInt.Neg()
+	c.Equal(1, doubleNeg.Sign()) // Should be positive
 }
