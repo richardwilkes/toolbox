@@ -7,24 +7,25 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xsync
+package xsync_test
 
 import (
 	"runtime/debug"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xsync"
 )
 
 func TestPoolWithNil(t *testing.T) {
 	c := check.New(t)
 	defer func() { c.NotNil(recover()) }()
-	NewPool[any](nil)
+	xsync.NewPool[any](nil)
 }
 
 func TestEmptyPoolCallsNew(t *testing.T) {
 	var i int
-	p := NewPool(func() int {
+	p := xsync.NewPool(func() int {
 		i++
 		return i
 	})
@@ -44,7 +45,7 @@ func TestPoolPutGet(t *testing.T) {
 		}
 	}
 	var i int
-	p := NewPool(func() int {
+	p := xsync.NewPool(func() int {
 		i++
 		return i
 	})

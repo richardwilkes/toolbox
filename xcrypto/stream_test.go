@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xcrypto
+package xcrypto_test
 
 import (
 	bytes "bytes"
@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xcrypto"
 )
 
 func TestEncryptDecryptStreamWithKeyPair(t *testing.T) {
@@ -26,9 +27,9 @@ func TestEncryptDecryptStreamWithKeyPair(t *testing.T) {
 	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
 	in := bytes.NewReader(plaintext)
 	var encrypted bytes.Buffer
-	c.NoError(EncryptStreamWithPublicKey(in, &encrypted, publicKey))
+	c.NoError(xcrypto.EncryptStreamWithPublicKey(in, &encrypted, publicKey))
 	c.True(encrypted.Len() > len(plaintext))
 	var decrypted bytes.Buffer
-	c.NoError(DecryptStreamWithPrivateKey(bytes.NewReader(encrypted.Bytes()), &decrypted, privateKey))
+	c.NoError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(encrypted.Bytes()), &decrypted, privateKey))
 	c.Equal(plaintext, decrypted.Bytes())
 }

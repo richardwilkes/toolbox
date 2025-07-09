@@ -7,21 +7,24 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xtime
+package xstrings
 
-import (
-	"context"
-	"time"
-)
+import "io"
 
-// Sleep for the specified Duration or until the context is done.
-func Sleep(ctx context.Context, d time.Duration) error {
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
+var _ io.RuneReader = &RuneReader{}
+
+// RuneReader implements io.RuneReader
+type RuneReader struct {
+	Src []rune
+	Pos int
+}
+
+// ReadRune returns the next rune and its size in bytes.
+func (rr *RuneReader) ReadRune() (r rune, size int, err error) {
+	if rr.Pos >= len(rr.Src) {
+		return -1, 0, io.EOF
 	}
+	nextRune := rr.Src[rr.Pos]
+	rr.Pos++
+	return nextRune, 1, nil
 }

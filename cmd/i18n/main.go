@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/v2/i18n"
-	"github.com/richardwilkes/toolbox/v2/txt"
 	"github.com/richardwilkes/toolbox/v2/xflag"
 	"github.com/richardwilkes/toolbox/v2/xos"
+	"github.com/richardwilkes/toolbox/v2/xstrings"
 )
 
 func main() {
@@ -116,7 +116,7 @@ func main() {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool {
-		return txt.NaturalLess(keys[i], keys[j], true)
+		return xstrings.NaturalLess(keys[i], keys[j], true)
 	})
 	out, err := os.OpenFile(*outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {

@@ -10,8 +10,8 @@
 package eval
 
 import (
-	"github.com/richardwilkes/toolbox/v2/txt"
 	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xstrings"
 	"golang.org/x/exp/constraints"
 )
 
@@ -73,7 +73,7 @@ func floatIf[T constraints.Float](e *Evaluator, arguments string) (any, error) {
 	var value T
 	if value, err = floatFrom[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
-			if txt.IsTruthy(txt.Unquote(s)) {
+			if xstrings.IsTruthy(xstrings.Unquote(s)) {
 				value = 1
 			}
 		} else {

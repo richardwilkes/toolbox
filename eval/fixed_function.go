@@ -14,7 +14,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
-	"github.com/richardwilkes/toolbox/v2/txt"
+	"github.com/richardwilkes/toolbox/v2/xstrings"
 )
 
 // Fixed64Functions returns standard functions that work with 64-bit fixed-point values.
@@ -87,7 +87,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	var value fixed64.Int[T]
 	if value, err = Fixed64From[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
-			if txt.IsTruthy(txt.Unquote(s)) {
+			if xstrings.IsTruthy(xstrings.Unquote(s)) {
 				value = value.Inc()
 			}
 		} else {

@@ -18,8 +18,8 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/fixed"
-	"github.com/richardwilkes/toolbox/v2/txt"
 	"github.com/richardwilkes/toolbox/v2/xmath"
+	"github.com/richardwilkes/toolbox/v2/xstrings"
 	"gopkg.in/yaml.v3"
 )
 
@@ -250,7 +250,7 @@ func (f Int[T]) CommaWithSign() string {
 
 // Comma returns the same as String(), but with commas for values of 1000 and greater.
 func (f Int[T]) Comma() string {
-	return txt.CommaFromStringNum(f.String())
+	return xstrings.CommaFromStringNum(f.String())
 }
 
 // StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
@@ -295,7 +295,7 @@ func (f Int[T]) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (f *Int[T]) UnmarshalText(text []byte) error {
-	f1, err := FromString[T](txt.Unquote(string(text)))
+	f1, err := FromString[T](xstrings.Unquote(string(text)))
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (f Int[T]) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (f *Int[T]) UnmarshalJSON(in []byte) error {
-	v, err := FromString[T](txt.Unquote(string(in)))
+	v, err := FromString[T](xstrings.Unquote(string(in)))
 	if err != nil {
 		return err
 	}

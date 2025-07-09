@@ -7,21 +7,18 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xtime
+package xstrings
 
 import (
-	"context"
-	"time"
+	"strings"
 )
 
-// Sleep for the specified Duration or until the context is done.
-func Sleep(ctx context.Context, d time.Duration) error {
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
+// CapitalizeWords capitalizes the first letter of each word in a string, and lowercases the rest. This also trims
+// leading and trailing whitespace, and replaces multiple spaces with a single space.
+func CapitalizeWords(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		words[i] = FirstToUpper(strings.ToLower(word))
 	}
+	return strings.Join(words, " ")
 }

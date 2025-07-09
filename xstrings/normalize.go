@@ -7,21 +7,11 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xtime
+package xstrings
 
-import (
-	"context"
-	"time"
-)
+import "strings"
 
-// Sleep for the specified Duration or until the context is done.
-func Sleep(ctx context.Context, d time.Duration) error {
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
+// NormalizeLineEndings converts CRLF and CR into LF.
+func NormalizeLineEndings(input string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(input, "\r\n", "\n"), "\r", "\n")
 }

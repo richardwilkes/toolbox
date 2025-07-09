@@ -7,21 +7,12 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-package xtime
+package xstrings
 
-import (
-	"context"
-	"time"
-)
+import "strings"
 
-// Sleep for the specified Duration or until the context is done.
-func Sleep(ctx context.Context, d time.Duration) error {
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
+// IsTruthy returns true for "truthy" values, i.e. ones that should be interpreted as true.
+func IsTruthy(in string) bool {
+	in = strings.ToLower(in)
+	return in == "1" || in == "true" || in == "yes" || in == "on"
 }
