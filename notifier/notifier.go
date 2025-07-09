@@ -136,16 +136,14 @@ func (n *Notifier) RegisterFromNotifier(other *Notifier) {
 	maps.Copy(n.batchTargets, batchTargets)
 	for k, v := range productionMap {
 		if pm, ok := n.productionMap[k]; ok {
-			maps.Copy(pm, pm)
-			n.productionMap[k] = pm
+			maps.Copy(pm, v)
 		} else {
 			n.productionMap[k] = v
 		}
 	}
 	for k, v := range nameMap {
 		if nm, ok := n.nameMap[k]; ok {
-			maps.Copy(nm, nm)
-			n.nameMap[k] = nm
+			maps.Copy(nm, v)
 		} else {
 			n.nameMap[k] = v
 		}
