@@ -11,25 +11,35 @@ package txt
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/v2/xmath"
+	"golang.org/x/exp/constraints"
 )
 
-// Comma returns text version of the value that uses commas for every 3 orders of magnitude.
-func Comma[T xmath.Numeric](value T) string {
-	return CommaFromStringNum(fmt.Sprintf("%v", value))
+// CommaInt returns text version of the value that uses commas for every 3 orders of magnitude.
+func CommaInt[T constraints.Integer](value T) string {
+	return CommaFromStringNum(fmt.Sprintf("%d", value))
+}
+
+// CommaFloat returns text version of the value that uses commas for every 3 orders of magnitude.
+func CommaFloat[T constraints.Float](value T) string {
+	return CommaFromStringNum(strconv.FormatFloat(float64(value), 'f', -1, 64))
 }
 
 // CommaFromStringNum returns a revised version of the numeric input string that uses commas for every 3 orders of
-// magnitude.
+// magnitude. Note that this function assumes the input is nothing more than an optional leading sign followed by
+// digits.
 func CommaFromStringNum(s string) string {
+	if s == "" {
+		return ""
+	}
 	var buffer strings.Builder
-	if strings.HasPrefix(s, "-") {
-		buffer.WriteByte('-')
+	if s[0] == '-' || s[0] == '+' {
+		buffer.WriteByte(s[0])
 		s = s[1:]
 	}
-	parts := strings.Split(s, ".")
+	parts := strings.SplitN(s, ".", 2)
 	i := 0
 	needComma := false
 	if len(parts[0])%3 != 0 {
@@ -46,7 +56,7 @@ func CommaFromStringNum(s string) string {
 		buffer.WriteString(parts[0][i : i+3])
 	}
 	if len(parts) > 1 {
-		buffer.Write([]byte{'.'})
+		buffer.WriteByte('.')
 		buffer.WriteString(parts[1])
 	}
 	return buffer.String()

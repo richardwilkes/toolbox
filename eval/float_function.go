@@ -73,7 +73,7 @@ func floatIf[T constraints.Float](e *Evaluator, arguments string) (any, error) {
 	var value T
 	if value, err = floatFrom[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
-			if txt.IsTruthy(txt.StripQuotes(s)) {
+			if txt.IsTruthy(txt.Unquote(s)) {
 				value = 1
 			}
 		} else {

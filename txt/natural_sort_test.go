@@ -10,72 +10,236 @@
 package txt_test
 
 import (
-	"flag"
-	"fmt"
 	"math/rand/v2"
 	"strconv"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/txt"
-	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-var benchSet []string
+func TestNaturalLess(t *testing.T) {
+	c := check.New(t)
 
-func TestMain(m *testing.M) {
-	flag.Parse()
-	if f := flag.Lookup("test.bench"); f != nil && f.Value.String() != "" {
-		initBenchSet()
-	}
-	xos.Exit(m.Run())
+	// Test numeric strings with different lengths
+	c.Equal(true, txt.NaturalLess("0", "00", false))
+	c.Equal(false, txt.NaturalLess("00", "0", false))
+
+	// Test basic alphabetical comparison
+	c.Equal(true, txt.NaturalLess("aa", "ab", false))
+	c.Equal(true, txt.NaturalLess("ab", "abc", false))
+	c.Equal(true, txt.NaturalLess("abc", "ad", false))
+
+	// Test strings with numbers - natural ordering
+	c.Equal(true, txt.NaturalLess("ab1", "ab2", false))
+	c.Equal(false, txt.NaturalLess("ab1c", "ab1c", false))
+	c.Equal(true, txt.NaturalLess("ab12", "abc", false))
+	c.Equal(true, txt.NaturalLess("ab2a", "ab10", false))
+
+	// Test numeric strings with leading zeros
+	c.Equal(true, txt.NaturalLess("a0001", "a0000001", false))
+
+	// Test mixed alphanumeric comparison
+	c.Equal(true, txt.NaturalLess("a10", "abcdefgh2", false))
+
+	// Test unicode characters with numbers
+	c.Equal(true, txt.NaturalLess("🚀2🚀", "🚀10🚀", false))
+	c.Equal(true, txt.NaturalLess("2🚀", "3🚀", false))
+
+	// Test leading zero handling
+	c.Equal(true, txt.NaturalLess("a1b", "a01b", false))
+	c.Equal(false, txt.NaturalLess("a01b", "a1b", false))
+	c.Equal(true, txt.NaturalLess("ab01b", "ab010b", false))
+	c.Equal(false, txt.NaturalLess("ab010b", "ab01b", false))
+
+	// Test complex leading zero scenarios
+	c.Equal(true, txt.NaturalLess("a01b001", "a001b01", false))
+	c.Equal(false, txt.NaturalLess("a001b01", "a01b001", false))
+
+	// Test string length differences
+	c.Equal(true, txt.NaturalLess("a1", "a1x", false))
+	c.Equal(true, txt.NaturalLess("a1t", "a1tx", false))
+	c.Equal(true, txt.NaturalLess("1ax", "1b", false))
+	c.Equal(false, txt.NaturalLess("1b", "1ax", false))
+
+	// Test numeric comparison with leading zeros
+	c.Equal(true, txt.NaturalLess("082", "83", false))
+	c.Equal(false, txt.NaturalLess("083a", "9a", false))
+	c.Equal(true, txt.NaturalLess("9a", "083a", false))
+
+	// Test case insensitive comparison
+	c.Equal(true, txt.NaturalLess("a123", "A0123", true))
+	c.Equal(true, txt.NaturalLess("A123", "a0123", true))
+	c.Equal(false, txt.NaturalLess("ab010b", "ab01B", true))
+
+	// Test version-like strings
+	c.Equal(false, txt.NaturalLess("1.12.34", "1.2", false))
+	c.Equal(true, txt.NaturalLess("1.2.34", "1.11.11", false))
 }
 
-func TestNaturalLess(t *testing.T) {
-	testset := []struct {
-		s1              string
-		s2              string
-		caseInsensitive bool
-		less            bool
-	}{
-		{"0", "00", false, true},
-		{"00", "0", false, false},
-		{"aa", "ab", false, true},
-		{"ab", "abc", false, true},
-		{"abc", "ad", false, true},
-		{"ab1", "ab2", false, true},
-		{"ab1c", "ab1c", false, false},
-		{"ab12", "abc", false, true},
-		{"ab2a", "ab10", false, true},
-		{"a0001", "a0000001", false, true},
-		{"a10", "abcdefgh2", false, true},
-		{"аб2аб", "аб10аб", false, true},
-		{"2аб", "3аб", false, true},
-		{"a1b", "a01b", false, true},
-		{"a01b", "a1b", false, false},
-		{"ab01b", "ab010b", false, true},
-		{"ab010b", "ab01b", false, false},
-		{"a01b001", "a001b01", false, true},
-		{"a001b01", "a01b001", false, false},
-		{"a1", "a1x", false, true},
-		{"1ax", "1b", false, true},
-		{"1b", "1ax", false, false},
-		{"082", "83", false, true},
-		{"083a", "9a", false, false},
-		{"9a", "083a", false, true},
-		{"a123", "A0123", true, true},
-		{"A123", "a0123", true, true},
-		{"ab010b", "ab01B", true, false},
-		{"1.12.34", "1.2", false, false},
-		{"1.2.34", "1.11.11", false, true},
-	}
+func TestNaturalCmp(t *testing.T) {
 	c := check.New(t)
-	for _, v := range testset {
-		c.Equal(v.less, txt.NaturalLess(v.s1, v.s2, v.caseInsensitive), fmt.Sprintf("%q < %q", v.s1, v.s2))
-	}
+
+	// Test equal strings
+	c.Equal(0, txt.NaturalCmp("abc", "abc", false))
+	c.Equal(0, txt.NaturalCmp("123", "123", false))
+	c.Equal(0, txt.NaturalCmp("", "", false))
+
+	// Test less than cases (should return -1)
+	c.Equal(-1, txt.NaturalCmp("a", "b", false))
+	c.Equal(-1, txt.NaturalCmp("1", "2", false))
+	c.Equal(-1, txt.NaturalCmp("a1", "a2", false))
+	c.Equal(-1, txt.NaturalCmp("a2", "a10", false))
+	c.Equal(-1, txt.NaturalCmp("0", "00", false))
+
+	// Test greater than cases (should return 1)
+	c.Equal(1, txt.NaturalCmp("b", "a", false))
+	c.Equal(1, txt.NaturalCmp("2", "1", false))
+	c.Equal(1, txt.NaturalCmp("a2", "a1", false))
+	c.Equal(1, txt.NaturalCmp("a10", "a2", false))
+	c.Equal(1, txt.NaturalCmp("00", "0", false))
+
+	// Test case sensitivity
+	c.Equal(1, txt.NaturalCmp("a", "A", false))
+	c.Equal(-1, txt.NaturalCmp("A", "a", false))
+
+	// Test case insensitive comparison (this actually falls back to case sensitive if they would otherwise be equal)
+	c.Equal(1, txt.NaturalCmp("a", "A", true))
+	c.Equal(-1, txt.NaturalCmp("ABC", "abc", true))
+	c.Equal(-1, txt.NaturalCmp("a", "B", true))
+	c.Equal(1, txt.NaturalCmp("B", "a", true))
+
+	// Test mixed case with numbers
+	c.Equal(-1, txt.NaturalCmp("a1", "A2", true))
+	c.Equal(1, txt.NaturalCmp("A2", "a1", true))
+
+	// Test leading zeros
+	c.Equal(1, txt.NaturalCmp("a001", "a01", false))
+	c.Equal(-1, txt.NaturalCmp("a01", "a001", false))
+
+	// Test version-like strings
+	c.Equal(1, txt.NaturalCmp("1.12.34", "1.2", false))
+	c.Equal(-1, txt.NaturalCmp("1.2.34", "1.11.11", false))
+
+	// Test empty strings
+	c.Equal(-1, txt.NaturalCmp("", "a", false))
+	c.Equal(1, txt.NaturalCmp("a", "", false))
+
+	// Test strings with different lengths
+	c.Equal(-1, txt.NaturalCmp("a", "ab", false))
+	c.Equal(1, txt.NaturalCmp("ab", "a", false))
+}
+
+func TestSortStringsNaturalAscending(t *testing.T) {
+	c := check.New(t)
+
+	// Test empty slice
+	empty := []string{}
+	txt.SortStringsNaturalAscending(empty)
+	c.Equal(0, len(empty))
+
+	// Test single element
+	single := []string{"hello"}
+	txt.SortStringsNaturalAscending(single)
+	c.Equal([]string{"hello"}, single)
+
+	// Test basic alphabetical sorting
+	basic := []string{"c", "a", "b"}
+	txt.SortStringsNaturalAscending(basic)
+	c.Equal([]string{"a", "b", "c"}, basic)
+
+	// Test natural number sorting
+	numbers := []string{"item10", "item2", "item1", "item20"}
+	txt.SortStringsNaturalAscending(numbers)
+	c.Equal([]string{"item1", "item2", "item10", "item20"}, numbers)
+
+	// Test version-like strings
+	versions := []string{"v1.12.0", "v1.2.0", "v1.11.0", "v1.1.0"}
+	txt.SortStringsNaturalAscending(versions)
+	c.Equal([]string{"v1.1.0", "v1.2.0", "v1.11.0", "v1.12.0"}, versions)
+
+	// Test with leading zeros
+	zeros := []string{"file001", "file01", "file1", "file10"}
+	txt.SortStringsNaturalAscending(zeros)
+	c.Equal([]string{"file1", "file01", "file001", "file10"}, zeros)
+
+	// Test mixed case (case insensitive)
+	mixed := []string{"File2", "file1", "FILE10", "file3"}
+	txt.SortStringsNaturalAscending(mixed)
+	c.Equal([]string{"file1", "File2", "file3", "FILE10"}, mixed)
+
+	// Test comp mixed content
+	comp := []string{"a10b", "a2b", "a1b", "ab", "a", "b10", "b2"}
+	txt.SortStringsNaturalAscending(comp)
+	c.Equal([]string{"a", "a1b", "a2b", "a10b", "ab", "b2", "b10"}, comp)
+
+	// Test identical strings
+	identical := []string{"same", "same", "same"}
+	txt.SortStringsNaturalAscending(identical)
+	c.Equal([]string{"same", "same", "same"}, identical)
+
+	// Test unicode characters
+	unicode := []string{"📝10", "📝2", "📝1"}
+	txt.SortStringsNaturalAscending(unicode)
+	c.Equal([]string{"📝1", "📝2", "📝10"}, unicode)
+}
+
+func TestSortStringsNaturalDescending(t *testing.T) {
+	c := check.New(t)
+
+	// Test empty slice
+	empty := []string{}
+	txt.SortStringsNaturalDescending(empty)
+	c.Equal(0, len(empty))
+
+	// Test single element
+	single := []string{"hello"}
+	txt.SortStringsNaturalDescending(single)
+	c.Equal([]string{"hello"}, single)
+
+	// Test basic alphabetical sorting (reverse)
+	basic := []string{"a", "b", "c"}
+	txt.SortStringsNaturalDescending(basic)
+	c.Equal([]string{"c", "b", "a"}, basic)
+
+	// Test natural number sorting (reverse)
+	numbers := []string{"item1", "item2", "item10", "item20"}
+	txt.SortStringsNaturalDescending(numbers)
+	c.Equal([]string{"item20", "item10", "item2", "item1"}, numbers)
+
+	// Test version-like strings (reverse)
+	versions := []string{"v1.1.0", "v1.2.0", "v1.11.0", "v1.12.0"}
+	txt.SortStringsNaturalDescending(versions)
+	c.Equal([]string{"v1.12.0", "v1.11.0", "v1.2.0", "v1.1.0"}, versions)
+
+	// Test with leading zeros (reverse)
+	zeros := []string{"file1", "file01", "file001", "file10"}
+	txt.SortStringsNaturalDescending(zeros)
+	c.Equal([]string{"file10", "file001", "file01", "file1"}, zeros)
+
+	// Test mixed case (case insensitive, reverse)
+	mixed := []string{"file1", "File2", "file3", "FILE10"}
+	txt.SortStringsNaturalDescending(mixed)
+	c.Equal([]string{"FILE10", "file3", "File2", "file1"}, mixed)
+
+	// Test comp mixed content (reverse)
+	comp := []string{"a", "a1b", "a2b", "a10b", "ab", "b2", "b10"}
+	txt.SortStringsNaturalDescending(comp)
+	c.Equal([]string{"b10", "b2", "ab", "a10b", "a2b", "a1b", "a"}, comp)
+
+	// Test identical strings
+	identical := []string{"same", "same", "same"}
+	txt.SortStringsNaturalDescending(identical)
+	c.Equal([]string{"same", "same", "same"}, identical)
+
+	// Test unicode characters (reverse)
+	unicode := []string{"📝1", "📝2", "📝10"}
+	txt.SortStringsNaturalDescending(unicode)
+	c.Equal([]string{"📝10", "📝2", "📝1"}, unicode)
 }
 
 func BenchmarkStdStringLess(b *testing.B) {
+	benchSet := createBenchSet()
 	for b.Loop() {
 		for j := range benchSet {
 			_ = benchSet[j] < benchSet[(j+1)%len(benchSet)]
@@ -84,6 +248,7 @@ func BenchmarkStdStringLess(b *testing.B) {
 }
 
 func BenchmarkNaturalLess(b *testing.B) {
+	benchSet := createBenchSet()
 	for b.Loop() {
 		for j := range benchSet {
 			_ = txt.NaturalLess(benchSet[j], benchSet[(j+1)%len(benchSet)], false)
@@ -92,6 +257,7 @@ func BenchmarkNaturalLess(b *testing.B) {
 }
 
 func BenchmarkNaturalLessCaseInsensitive(b *testing.B) {
+	benchSet := createBenchSet()
 	for b.Loop() {
 		for j := range benchSet {
 			_ = txt.NaturalLess(benchSet[j], benchSet[(j+1)%len(benchSet)], true)
@@ -99,9 +265,9 @@ func BenchmarkNaturalLessCaseInsensitive(b *testing.B) {
 	}
 }
 
-func initBenchSet() {
+func createBenchSet() []string {
 	rnd := rand.New(rand.NewPCG(22, 1967)) //nolint:gosec // Use of weak prng is fine here
-	benchSet = make([]string, 20000)
+	benchSet := make([]string, 20000)
 	for i := range benchSet {
 		strlen := rnd.IntN(6) + 3
 		numlen := rnd.IntN(3) + 1
@@ -120,4 +286,5 @@ func initBenchSet() {
 		}
 		benchSet[i] = str
 	}
+	return benchSet
 }

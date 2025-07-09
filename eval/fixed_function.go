@@ -87,7 +87,7 @@ func fixedIf[T fixed.Dx](e *Evaluator, arguments string) (any, error) {
 	var value fixed64.Int[T]
 	if value, err = Fixed64From[T](evaluated); err != nil {
 		if s, ok := evaluated.(string); ok {
-			if txt.IsTruthy(txt.StripQuotes(s)) {
+			if txt.IsTruthy(txt.Unquote(s)) {
 				value = value.Inc()
 			}
 		} else {

@@ -17,22 +17,137 @@ import (
 )
 
 func TestWrap(t *testing.T) {
-	table := []struct {
-		Prefix string
-		Text   string
-		Out    string
-		Max    int
-	}{
-		{Prefix: "// ", Text: "short", Max: 78, Out: "// short"},
-		{Prefix: "// ", Text: "some text that is longer", Max: 12, Out: "// some text\n// that is\n// longer"},
-		{Prefix: "// ", Text: "some text\nwith embedded line feeds", Max: 16, Out: "// some text\n// with embedded\n// line feeds"},
-		{Prefix: "", Text: "some text that is longer", Max: 12, Out: "some text\nthat is\nlonger"},
-		{Prefix: "", Text: "some text that is longer", Max: 4, Out: "some\ntext\nthat\nis\nlonger"},
-		{Prefix: "", Text: "some text that is longer, yep", Max: 4, Out: "some\ntext\nthat\nis\nlonger,\nyep"},
-		{Prefix: "", Text: "some text\nwith embedded line feeds", Max: 16, Out: "some text\nwith embedded\nline feeds"},
-	}
 	c := check.New(t)
-	for i, one := range table {
-		c.Equal(one.Out, txt.Wrap(one.Prefix, one.Text, one.Max), "#%d", i)
-	}
+
+	// Test short text with prefix - should fit on one line
+	c.Equal("// short", txt.Wrap("// ", "short", 78))
+
+	// Test longer text with prefix that needs wrapping
+	c.Equal("// some text\n// that is\n// longer", txt.Wrap("// ", "some text that is longer", 12))
+
+	// Test text with embedded line feeds and prefix
+	c.Equal("// some text\n// with embedded\n// line feeds", txt.Wrap("// ", "some text\nwith embedded line feeds", 16))
+
+	// Test longer text without prefix that needs wrapping
+	c.Equal("some text\nthat is\nlonger", txt.Wrap("", "some text that is longer", 12))
+
+	// Test text without prefix with very short max columns
+	c.Equal("some\ntext\nthat\nis\nlonger", txt.Wrap("", "some text that is longer", 4))
+
+	// Test text without prefix with punctuation and very short max columns
+	c.Equal("some\ntext\nthat\nis\nlonger,\nyep", txt.Wrap("", "some text that is longer, yep", 4))
+
+	// Test text with embedded line feeds and no prefix
+	c.Equal("some text\nwith embedded\nline feeds", txt.Wrap("", "some text\nwith embedded line feeds", 16))
+
+	// Test empty text
+	c.Equal("", txt.Wrap("", "", 10))
+
+	// Test empty text with prefix
+	c.Equal("// ", txt.Wrap("// ", "", 10))
+
+	// Test single word that exceeds max columns (should not break)
+	c.Equal("verylongwordthatexceedsmaxcolumns", txt.Wrap("", "verylongwordthatexceedsmaxcolumns", 10))
+
+	// Test single word with prefix that exceeds max columns
+	c.Equal("// verylongwordthatexceedsmaxcolumns", txt.Wrap("// ", "verylongwordthatexceedsmaxcolumns", 10))
+
+	// Test single character
+	c.Equal("a", txt.Wrap("", "a", 10))
+
+	// Test single character with prefix
+	c.Equal("// a", txt.Wrap("// ", "a", 10))
+
+	// Test text with only spaces
+	c.Equal("", txt.Wrap("", "   ", 10))
+
+	// Test text with only spaces and prefix
+	c.Equal("// ", txt.Wrap("// ", "   ", 10))
+
+	// Test max columns equal to prefix length
+	c.Equal("// word", txt.Wrap("// ", "word", 2))
+
+	// Test max columns less than prefix length
+	c.Equal("// word", txt.Wrap("// ", "word", 1))
+
+	// Test multiple consecutive spaces (extra spaces are collapsed by strings.Fields)
+	c.Equal("word1 word2", txt.Wrap("", "word1    word2", 15))
+
+	// Test text with punctuation
+	c.Equal("Hello,\nworld!", txt.Wrap("", "Hello, world!", 8))
+
+	// Test text with numbers
+	c.Equal("# Test 123\n# and 456", txt.Wrap("# ", "Test 123 and 456", 12))
+
+	// Test text with Unicode characters (emotion doesn't have accent)
+	c.Equal("Café\nemotion\n🚀", txt.Wrap("", "Café emotion 🚀", 8))
+
+	// Test text with Unicode and prefix (emotion doesn't have accent)
+	c.Equal("// Café\n// emotion\n// 🚀", txt.Wrap("// ", "Café emotion 🚀", 10))
+
+	// Test text with tabs (tabs are treated as whitespace and collapsed)
+	c.Equal("word1 word2", txt.Wrap("", "word1\tword2", 20))
+
+	// Test text with special symbols
+	c.Equal("@user\n#hashtag\n$money", txt.Wrap("", "@user #hashtag $money", 8))
+
+	// Test multiple empty lines
+	c.Equal("\n", txt.Wrap("", "\n", 10))
+
+	// Test multiple empty lines with prefix
+	c.Equal("// \n// ", txt.Wrap("// ", "\n", 10))
+
+	// Test text with multiple line breaks
+	c.Equal("line1\n\nline3", txt.Wrap("", "line1\n\nline3", 10))
+
+	// Test text with multiple line breaks and prefix
+	c.Equal("// line1\n// \n// line3", txt.Wrap("// ", "line1\n\nline3", 15))
+
+	// Test text starting with newline
+	c.Equal("\nfirst line", txt.Wrap("", "\nfirst line", 15))
+
+	// Test text ending with newline
+	c.Equal("last line\n", txt.Wrap("", "last line\n", 15))
+
+	// Test text with only newlines
+	c.Equal("\n\n", txt.Wrap("", "\n\n", 10))
+
+	// Test with indentation prefix
+	c.Equal("    word1\n    word2", txt.Wrap("    ", "word1 word2", 10))
+
+	// Test with bullet point prefix
+	c.Equal("* item\n* one", txt.Wrap("* ", "item one", 8))
+
+	// Test with numbered prefix
+	c.Equal("1. first\n1. item", txt.Wrap("1. ", "first item", 10))
+
+	// Test with long prefix
+	c.Equal("PREFIX: word\nPREFIX: two", txt.Wrap("PREFIX: ", "word two", 15))
+
+	// Test with Unicode prefix
+	c.Equal("🔸 hello\n🔸 world", txt.Wrap("🔸 ", "hello world", 10))
+
+	// Test with empty prefix (equivalent to no prefix)
+	c.Equal("hello world", txt.Wrap("", "hello world", 15))
+
+	// Test with max columns = 1 (each word gets its own line)
+	c.Equal("a\nb\nc", txt.Wrap("", "a b c", 1))
+
+	// Test with max columns = 0 (edge case - each word gets its own line)
+	c.Equal("a\nb\nc", txt.Wrap("", "a b c", 0))
+
+	// Test with negative max columns (edge case - each word gets its own line)
+	c.Equal("a\nb\nc", txt.Wrap("", "a b c", -5))
+
+	// Test word exactly fitting the line
+	c.Equal("hello", txt.Wrap("", "hello", 5))
+
+	// Test word exactly fitting with prefix
+	c.Equal("> hello", txt.Wrap("> ", "hello", 7))
+
+	// Test multiple words exactly fitting
+	c.Equal("hi\nbye", txt.Wrap("", "hi bye", 3))
+
+	// Test very large max columns
+	c.Equal("short text here", txt.Wrap("", "short text here", 1000))
 }

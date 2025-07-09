@@ -22,6 +22,9 @@ import (
 //   - only ASCII digits (0-9) are considered.
 //
 // Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
+//
+// Note that the caseInsensitive flag causes an initial case-insensitive comparison, but if the strings are equal
+// after that, the comparison falls back to case-sensitive.
 func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 	return NaturalCmp(s1, s2, caseInsensitive) < 0
 }
@@ -35,6 +38,9 @@ func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 //   - only ASCII digits (0-9) are considered.
 //
 // Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
+//
+// Note that the caseInsensitive flag causes an initial case-insensitive comparison, but if the strings are equal
+// after that, the comparison falls back to case-sensitive.
 func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 	i1 := 0
 	i2 := 0
@@ -69,9 +75,6 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 			i2++
 		default: // Digits
 			// Eat zeros.
-			for i1 < len(s1) && s1[i1] == '0' {
-				i1++
-			}
 			for i1 < len(s1) && s1[i1] == '0' {
 				i1++
 			}
@@ -111,7 +114,7 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 		}
 		// They're identical so far, so continue comparing.
 	}
-	// So far they are identical. At least one is ended. If the other continues, it sorts last. If the are the same
+	// So far they are identical. At least one is ended. If the other continues, it sorts last. If they are the same
 	// length and the caseInsensitive flag was set, compare again, but without the flag.
 	switch {
 	case len(s1) == len(s2):

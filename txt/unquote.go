@@ -13,12 +13,12 @@ import (
 	"unicode/utf8"
 )
 
-// UnquoteBytes strips up to one set of surrounding double quotes from the bytes and returns them as a string. For a
-// more capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
+// UnquoteBytes strips up to one set of surrounding single or double quotes from the bytes and returns them as a string.
+// For a more capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
 func UnquoteBytes(text []byte) []byte {
 	if len(text) > 1 {
-		if ch, _ := utf8.DecodeRune(text); ch == '"' {
-			if ch, _ = utf8.DecodeLastRune(text); ch == '"' {
+		if ch1, _ := utf8.DecodeRune(text); ch1 == '"' || ch1 == '\'' {
+			if ch2, _ := utf8.DecodeLastRune(text); ch1 == ch2 {
 				text = text[1 : len(text)-1]
 			}
 		}
@@ -26,12 +26,12 @@ func UnquoteBytes(text []byte) []byte {
 	return text
 }
 
-// Unquote strips up to one set of surrounding double quotes from the bytes and returns them as a string. For a more
-// capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
+// Unquote strips up to one set of surrounding single or double quotes from the bytes and returns them as a string. For
+// a more capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
 func Unquote(text string) string {
 	if len(text) > 1 {
-		if ch, _ := utf8.DecodeRuneInString(text); ch == '"' {
-			if ch, _ = utf8.DecodeLastRuneInString(text); ch == '"' {
+		if ch1, _ := utf8.DecodeRuneInString(text); ch1 == '"' || ch1 == '\'' {
+			if ch2, _ := utf8.DecodeLastRuneInString(text); ch1 == ch2 {
 				text = text[1 : len(text)-1]
 			}
 		}

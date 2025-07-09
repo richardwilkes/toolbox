@@ -11,6 +11,8 @@ package txt
 
 import "io"
 
+var _ io.RuneReader = &RuneReader{}
+
 // RuneReader implements io.RuneReader
 type RuneReader struct {
 	Src []rune

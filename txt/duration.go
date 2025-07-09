@@ -72,43 +72,27 @@ func FormatDuration(duration time.Duration, includeMillis bool) string {
 // nanoseconds.
 func DurationToCode(duration time.Duration) string {
 	var buffer strings.Builder
-	if duration >= time.Hour {
-		fmt.Fprintf(&buffer, "%d * time.Hour", duration/time.Hour)
-		duration -= (duration / time.Hour) * time.Hour
-	}
-	if duration >= time.Minute {
-		if buffer.Len() > 0 {
-			buffer.WriteString(" + ")
-		}
-		fmt.Fprintf(&buffer, "%d * time.Minute", duration/time.Minute)
-		duration -= (duration / time.Minute) * time.Minute
-	}
-	if duration >= time.Second {
-		if buffer.Len() > 0 {
-			buffer.WriteString(" + ")
-		}
-		fmt.Fprintf(&buffer, "%d * time.Second", duration/time.Second)
-		duration -= (duration / time.Second) * time.Second
-	}
-	if duration >= time.Millisecond {
-		if buffer.Len() > 0 {
-			buffer.WriteString(" + ")
-		}
-		fmt.Fprintf(&buffer, "%d * time.Millisecond", duration/time.Millisecond)
-		duration -= (duration / time.Millisecond) * time.Millisecond
-	}
-	if duration >= time.Microsecond {
-		if buffer.Len() > 0 {
-			buffer.WriteString(" + ")
-		}
-		fmt.Fprintf(&buffer, "%d * time.Microsecond", duration/time.Microsecond)
-		duration -= (duration / time.Microsecond) * time.Microsecond
-	}
-	if duration != 0 {
-		if buffer.Len() > 0 {
-			buffer.WriteString(" + ")
-		}
-		fmt.Fprintf(&buffer, "%d", duration)
-	}
+	duration = durationToCodePart(&buffer, duration, time.Hour, "Hour")
+	duration = durationToCodePart(&buffer, duration, time.Minute, "Minute")
+	duration = durationToCodePart(&buffer, duration, time.Second, "Second")
+	duration = durationToCodePart(&buffer, duration, time.Millisecond, "Millisecond")
+	duration = durationToCodePart(&buffer, duration, time.Microsecond, "Microsecond")
+	durationToCodePart(&buffer, duration, time.Nanosecond, "Nanosecond")
 	return buffer.String()
+}
+
+func durationToCodePart(buffer *strings.Builder, duration, unit time.Duration, unitName string) time.Duration {
+	if duration < unit {
+		return duration
+	}
+	if buffer.Len() > 0 {
+		buffer.WriteString(" + ")
+	}
+	value := duration / unit
+	if value != 1 {
+		fmt.Fprintf(buffer, "%d * ", value)
+	}
+	buffer.WriteString("time.")
+	buffer.WriteString(unitName)
+	return duration - (duration/unit)*unit
 }

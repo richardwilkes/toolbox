@@ -18,16 +18,25 @@ import (
 
 func TestCollapseSpaces(t *testing.T) {
 	c := check.New(t)
-	data := []string{
-		"123", "123",
-		" 123", "123",
-		" 123 ", "123",
-		"    abc  ", "abc",
-		"  a b c   d", "a b c d",
-		"", "",
-		" ", "",
-	}
-	for i := 0; i < len(data); i += 2 {
-		c.Equal(data[i+1], txt.CollapseSpaces(data[i]))
-	}
+
+	// Test string with no spaces
+	c.Equal("123", txt.CollapseSpaces("123"))
+
+	// Test string with leading space
+	c.Equal("123", txt.CollapseSpaces(" 123"))
+
+	// Test string with leading and trailing spaces
+	c.Equal("123", txt.CollapseSpaces(" 123 "))
+
+	// Test string with multiple leading and trailing spaces
+	c.Equal("abc", txt.CollapseSpaces("    abc  "))
+
+	// Test string with multiple spaces between words
+	c.Equal("a b c d", txt.CollapseSpaces("  a b c   d"))
+
+	// Test empty string
+	c.Equal("", txt.CollapseSpaces(""))
+
+	// Test string with only spaces
+	c.Equal("", txt.CollapseSpaces(" "))
 }
