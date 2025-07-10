@@ -20,7 +20,8 @@ import (
 )
 
 // TestingT is an interface that defines the methods required for testing. This allows for testing of the check package
-// itself.
+// itself. This would just be testing.TB, but the Go developers added a private method to prevent the exact thing we
+// want to do.
 type TestingT interface {
 	Cleanup(func())
 	Error(args ...any)
