@@ -15,7 +15,9 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-const epsilon = 0.00001 // 2.220446e-16
+// Might want to consider making this much smaller and maybe even dependent upon the float type.
+// Perhaps 1.192092896e-07 for float32 and 2.220446049250313e-16 for float64?
+const epsilon = 0.00001
 
 type horizontalEdgeStates int
 

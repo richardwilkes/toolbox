@@ -13,7 +13,7 @@ use standard library code, the package has been named the same as the standard l
 
 ### Core Utilities
 
-- **`check`** - Enhanced testing utilities with a fluent API that provides more informative error messages and better test assertions than the standard testing package.
+- **`check`** - Enhanced testing utilities that wrap Go's standard testing interface with more informative error messages and convenient assertion methods.
 
 - **`errs`** - Structured error handling with stack traces, error chaining, and detailed error objects that provide source locations and nested causes for better debugging.
 
@@ -30,8 +30,6 @@ use standard library code, the package has been named the same as the standard l
 - **`num128`** - 128-bit integer arithmetic with signed (`Int`) and unsigned (`UInt`) types for high-precision calculations that exceed native Go integer limits.
 
 - **`fixed`** - Fixed-point decimal arithmetic for precise financial and monetary calculations, with separate packages for 64-bit (`fixed64`) and 128-bit (`fixed128`) precision.
-
-- **`eval`** - Expression evaluator that can parse and evaluate mathematical expressions with variables, supporting both fixed-point and floating-point arithmetic.
 
 ### Geometry and Graphics
 
