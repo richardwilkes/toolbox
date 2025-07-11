@@ -13,6 +13,10 @@ import "strings"
 
 // IsTruthy returns true for "truthy" values, i.e. ones that should be interpreted as true.
 func IsTruthy(in string) bool {
-	in = strings.ToLower(in)
-	return in == "1" || in == "true" || in == "yes" || in == "on"
+	switch strings.ToLower(in) {
+	case "1", "t", "y", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }

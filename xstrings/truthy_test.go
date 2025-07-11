@@ -12,12 +12,16 @@ func TestIsTruthy(t *testing.T) {
 
 	// Test truthy values - lowercase
 	c.True(xstrings.IsTruthy("1"))
+	c.True(xstrings.IsTruthy("t"))
 	c.True(xstrings.IsTruthy("true"))
+	c.True(xstrings.IsTruthy("y"))
 	c.True(xstrings.IsTruthy("yes"))
 	c.True(xstrings.IsTruthy("on"))
 
 	// Test truthy values - uppercase
+	c.True(xstrings.IsTruthy("T"))
 	c.True(xstrings.IsTruthy("TRUE"))
+	c.True(xstrings.IsTruthy("Y"))
 	c.True(xstrings.IsTruthy("YES"))
 	c.True(xstrings.IsTruthy("ON"))
 
@@ -76,12 +80,12 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("1.1"))
 
 	// Test partial matches
-	c.False(xstrings.IsTruthy("t"))
+	c.True(xstrings.IsTruthy("t"))
 	c.False(xstrings.IsTruthy("tr"))
 	c.False(xstrings.IsTruthy("tru"))
 	c.False(xstrings.IsTruthy("truee"))
 	c.False(xstrings.IsTruthy("trues"))
-	c.False(xstrings.IsTruthy("y"))
+	c.True(xstrings.IsTruthy("y"))
 	c.False(xstrings.IsTruthy("ye"))
 	c.False(xstrings.IsTruthy("yess"))
 	c.False(xstrings.IsTruthy("o"))
@@ -230,14 +234,4 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("\n"))
 	c.False(xstrings.IsTruthy("\r"))
 	c.False(xstrings.IsTruthy("\r\n"))
-
-	// Test strings that might look like boolean values but aren't supported
-	c.False(xstrings.IsTruthy("T"))
-	c.False(xstrings.IsTruthy("F"))
-	c.False(xstrings.IsTruthy("Y"))
-	c.False(xstrings.IsTruthy("N"))
-	c.False(xstrings.IsTruthy("t"))
-	c.False(xstrings.IsTruthy("f"))
-	c.False(xstrings.IsTruthy("y"))
-	c.False(xstrings.IsTruthy("n"))
 }
