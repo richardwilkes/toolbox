@@ -11,10 +11,12 @@ package xfilepath_test
 
 import (
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xfilepath"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func TestSanitizeName(t *testing.T) {
@@ -103,7 +105,9 @@ func TestBaseName(t *testing.T) {
 	c.Equal("file", xfilepath.BaseName("file"))
 	c.Equal("file", xfilepath.BaseName("file.txt"))
 	c.Equal("file", xfilepath.BaseName("/path/to/file.txt"))
-	c.Equal("file", xfilepath.BaseName("C:\\path\\to\\file.txt"))
+	if runtime.GOOS == xos.WindowsOS {
+		c.Equal("file", xfilepath.BaseName("C:\\path\\to\\file.txt"))
+	}
 
 	// Test with multiple extensions
 	c.Equal("file.backup", xfilepath.BaseName("file.backup.txt"))
@@ -123,7 +127,9 @@ func TestBaseName(t *testing.T) {
 	// Test empty and root paths
 	c.Equal("", xfilepath.BaseName(""))
 	c.Equal(string(filepath.Separator), xfilepath.BaseName("/"))
-	c.Equal(string(filepath.Separator), xfilepath.BaseName("\\"))
+	if runtime.GOOS == xos.WindowsOS {
+		c.Equal(string(filepath.Separator), xfilepath.BaseName("\\"))
+	}
 }
 
 func TestTrimExtension(t *testing.T) {
@@ -132,7 +138,9 @@ func TestTrimExtension(t *testing.T) {
 	// Test basic extension trimming
 	c.Equal("file", xfilepath.TrimExtension("file.txt"))
 	c.Equal("/path/to/file", xfilepath.TrimExtension("/path/to/file.txt"))
-	c.Equal("C:\\path\\to\\file", xfilepath.TrimExtension("C:\\path\\to\\file.txt"))
+	if runtime.GOOS == xos.WindowsOS {
+		c.Equal("C:\\path\\to\\file", xfilepath.TrimExtension("C:\\path\\to\\file.txt"))
+	}
 
 	// Test with multiple extensions (only last one should be trimmed)
 	c.Equal("file.backup", xfilepath.TrimExtension("file.backup.txt"))
