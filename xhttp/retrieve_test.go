@@ -16,7 +16,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -50,10 +49,7 @@ func TestRetrieveData_FileURL(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "retrieve_test_2.txt")
 	content := []byte("hello fileurl")
 	c.NoError(os.WriteFile(file, content, 0o600))
-	fileURL := "file://" + file
-	if runtime.GOOS == "windows" {
-		fileURL = "file:///" + filepath.ToSlash(file)
-	}
+	fileURL := "file://" + filepath.ToSlash(file) // ToSlash is necessary for Windows compatibility
 	data, err := xhttp.RetrieveData(context.Background(), nil, fileURL)
 	c.NoError(err)
 	c.Equal(content, data)
