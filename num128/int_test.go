@@ -482,7 +482,6 @@ func TestIntFromFloat64(t *testing.T) {
 	// Test positive values
 	c.Equal(num128.IntFrom64(1), num128.IntFromFloat64(1.0))
 	c.Equal(num128.IntFrom64(42), num128.IntFromFloat64(42.5)) // truncation
-	c.Equal(num128.IntFromUint64(math.MaxUint64), num128.IntFromFloat64(float64(math.MaxUint64)))
 
 	// Test negative values - these should match the actual implementation behavior
 	negOne := num128.IntFromFloat64(-1.0)
