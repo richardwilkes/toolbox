@@ -35,10 +35,6 @@ use standard library code, the package has been named the same as the standard l
 
 - **`geom`** - Generic geometric primitives including `Point[T]`, `Rect[T]`, `Size[T]`, `Line[T]`, `Matrix[T]`, and `Insets[T]` with type conversion utilities.
 
-- **`geom/poly`** - Polygon boolean operations (⚠️ experimental - not recommended for production use).
-
-- **`geom/visibility`** - Visibility calculations for geometric objects (⚠️ experimental - not recommended for production use).
-
 ### Data Structures and Collections
 
 - **`collection/bitset`** - Efficient bitset implementation for working with sets of bits.
