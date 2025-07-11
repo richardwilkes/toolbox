@@ -33,9 +33,9 @@ func main() {
 	xos.CopyrightStartYear = "2016"
 	xos.CopyrightHolder = "Richard A. Wilkes"
 	xos.License = "Mozilla Public License 2.0"
-	xflag.SetUsage(i18n.Text("Generates a template for a localization file from source code."), "<path> [path...]")
+	xflag.SetUsage(nil, i18n.Text("Generates a template for a localization file from source code."), "<path> [path...]")
 	outPath := flag.String("output", "language.i18n", "The output `path`")
-	flag.Parse()
+	xflag.Parse()
 	if *outPath == "" {
 		xos.ExitWithMsg(i18n.Text("The output file may not be an empty path."))
 	}

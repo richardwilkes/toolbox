@@ -20,13 +20,12 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
-// SetUsage replaces any existing Usage function on the flag.CommandLine with one that provides more information.
-func SetUsage(description, argsUsage string) {
-	SetUsageFor(flag.CommandLine, description, argsUsage)
-}
-
-// SetUsageFor replaces any existing Usage function on the given flagSet with one that provides more information.
-func SetUsageFor(flagSet *flag.FlagSet, description, argsUsage string) {
+// SetUsage replaces any existing Usage function on the given flagSet with one that provides more information. You may
+// pass in nil for the flagSet to use the default flag set (flag.CommandLine).
+func SetUsage(flagSet *flag.FlagSet, description, argsUsage string) {
+	if flagSet == nil {
+		flagSet = flag.CommandLine
+	}
 	flagSet.Usage = func() {
 		var w *xterm.AnsiWriter
 		switch out := flagSet.Output().(type) {
@@ -126,24 +125,5 @@ func SetUsageFor(flagSet *flag.FlagSet, description, argsUsage string) {
 			}
 		}
 		w.WriteByte('\n')
-	}
-}
-
-// AddVersionFlags adds flags for showing the short or long version information to flag.CommandLine.
-func AddVersionFlags() (shortVersion, longVersion *bool) {
-	return flag.Bool("v", false, i18n.Text("Show the short version and exit")),
-		flag.Bool("version", false, i18n.Text("Show the full version and exit"))
-}
-
-// HandleVersionFlags will handle the version flags, if set. If one or both are set, this function will call xos.Exit(0)
-// after displaying the version.
-func HandleVersionFlags(shortVersion, longVersion *bool) {
-	if *longVersion {
-		fmt.Println(xos.LongAppVersion())
-		xos.Exit(0)
-	}
-	if *shortVersion {
-		fmt.Println(xos.ShortAppVersion())
-		xos.Exit(0)
 	}
 }
