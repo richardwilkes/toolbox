@@ -87,7 +87,7 @@ func UnsanitizeName(name string) string {
 
 // BaseName returns the file name without the directory or extension.
 func BaseName(path string) string {
-	return TrimExtension(filepath.Base(path))
+	return TrimExtension(filepath.Base(filepath.Clean(path)))
 }
 
 // TrimExtension trims any extension from the path.

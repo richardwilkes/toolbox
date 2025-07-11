@@ -10,6 +10,7 @@
 package xfilepath_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -102,7 +103,7 @@ func TestBaseName(t *testing.T) {
 	c.Equal("file", xfilepath.BaseName("file"))
 	c.Equal("file", xfilepath.BaseName("file.txt"))
 	c.Equal("file", xfilepath.BaseName("/path/to/file.txt"))
-	c.Equal("C:\\path\\to\\file", xfilepath.BaseName("C:\\path\\to\\file.txt"))
+	c.Equal("file", xfilepath.BaseName("C:\\path\\to\\file.txt"))
 
 	// Test with multiple extensions
 	c.Equal("file.backup", xfilepath.BaseName("file.backup.txt"))
@@ -121,8 +122,8 @@ func TestBaseName(t *testing.T) {
 
 	// Test empty and root paths
 	c.Equal("", xfilepath.BaseName(""))
-	c.Equal("/", xfilepath.BaseName("/"))
-	c.Equal("\\", xfilepath.BaseName("\\"))
+	c.Equal(string(filepath.Separator), xfilepath.BaseName("/"))
+	c.Equal(string(filepath.Separator), xfilepath.BaseName("\\"))
 }
 
 func TestTrimExtension(t *testing.T) {

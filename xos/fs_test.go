@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -58,9 +59,11 @@ func TestFileIsReadable(t *testing.T) {
 	c.True(xos.FileIsReadable(file))
 
 	// file exists but not readable
-	noReadFile := filepath.Join(tmpDir, "not-readable.txt")
-	c.NoError(os.WriteFile(noReadFile, []byte("test content"), 0o200))
-	c.False(xos.FileIsReadable(noReadFile))
+	if runtime.GOOS != xos.WindowsOS { // Windows seems to ignore the write-only permission and give it read access too
+		noReadFile := filepath.Join(tmpDir, "not-readable.txt")
+		c.NoError(os.WriteFile(noReadFile, []byte("test content"), 0o200))
+		c.False(xos.FileIsReadable(noReadFile))
+	}
 }
 
 func TestMoveFile(t *testing.T) {
@@ -122,15 +125,18 @@ func TestCopy(t *testing.T) {
 	c.Equal(string(content), string(copiedContent))
 
 	// Test copying symlink
-	srcLink := filepath.Join(tmpDir, "link.txt")
-	dstLink := filepath.Join(tmpDir, "copylink.txt")
-	c.NoError(os.Symlink(srcFile, srcLink))
-	c.NoError(xos.Copy(srcLink, dstLink))
-	linkTarget, err := os.Readlink(dstLink)
-	c.NoError(err)
-	origTarget, err := os.Readlink(srcLink)
-	c.NoError(err)
-	c.Equal(origTarget, linkTarget)
+	if runtime.GOOS != xos.WindowsOS { // Windows doesn't support symlinks without special permissions enabled first
+		srcLink := filepath.Join(tmpDir, "link.txt")
+		dstLink := filepath.Join(tmpDir, "copylink.txt")
+		c.NoError(os.Symlink(srcFile, srcLink))
+		c.NoError(xos.Copy(srcLink, dstLink))
+		var linkTarget, origTarget string
+		linkTarget, err = os.Readlink(dstLink)
+		c.NoError(err)
+		origTarget, err = os.Readlink(srcLink)
+		c.NoError(err)
+		c.Equal(origTarget, linkTarget)
+	}
 
 	// Test copying non-existent file
 	c.HasError(xos.Copy(filepath.Join(tmpDir, "nonexistent"), dstFile))

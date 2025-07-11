@@ -12,10 +12,13 @@ package xfilepath_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xfilepath"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func TestUniquePaths_Empty(t *testing.T) {
@@ -173,6 +176,9 @@ func TestUniquePaths_MixedNestedAndSeparate(t *testing.T) {
 }
 
 func TestUniquePaths_WithSymlinks(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("This test requires permissions that aren't available by default on Windows")
+	}
 	c := check.New(t)
 	tempDir := t.TempDir()
 
@@ -212,7 +218,8 @@ func TestUniquePaths_CurrentDirectory(t *testing.T) {
 	// Should resolve to absolute path of current directory
 	cwd, err := os.Getwd()
 	c.NoError(err)
-	c.Equal(cwd, result[0])
+	// Case-insensitive comparison for Windows
+	c.True(strings.EqualFold(cwd, result[0]), "Expected current directory (%q) to match result, got: %q", cwd, result[0])
 }
 
 func TestUniquePaths_ParentDirectory(t *testing.T) {

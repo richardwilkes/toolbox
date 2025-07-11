@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -141,6 +142,9 @@ func TestRecursiveExit(t *testing.T) {
 }
 
 func TestSIGINT(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("This test requires permissions that aren't available by default on Windows")
+	}
 	if os.Getenv("SIGINT_EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.ExitCodeForSIGINT = 99
@@ -164,6 +168,9 @@ func TestSIGINT(t *testing.T) {
 }
 
 func TestSIGTERM(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("This test requires permissions that aren't available by default on Windows")
+	}
 	if os.Getenv("SIGTERM_EXIT_TEST") == "1" {
 		// This is the subprocess
 		xos.ExitCodeForSIGTERM = 123
