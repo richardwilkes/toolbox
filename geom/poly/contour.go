@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/geom"
-	"github.com/richardwilkes/toolbox/v2/xmath"
 	"golang.org/x/exp/constraints"
 )
 
@@ -35,11 +34,11 @@ func (c Contour[T]) Bounds() geom.Rect[T] {
 	if len(c) == 0 {
 		return geom.Rect[T]{}
 	}
-	minX := xmath.MaxValue[T]()
-	minY := minX
-	maxX := xmath.MinValue[T]()
-	maxY := maxX
-	for _, p := range c {
+	minX := c[0].X
+	minY := c[0].Y
+	maxX := minX
+	maxY := minY
+	for _, p := range c[1:] {
 		if p.X > maxX {
 			maxX = p.X
 		}
@@ -58,6 +57,9 @@ func (c Contour[T]) Bounds() geom.Rect[T] {
 
 // Contains returns true if the point is contained by the contour.
 func (c Contour[T]) Contains(pt geom.Point[T]) bool {
+	if len(c) < 3 {
+		return false // A contour needs at least 3 points to contain anything
+	}
 	var count int
 	for i := range c {
 		cur := c[i]
