@@ -12,12 +12,14 @@ package fixed64_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
+	"github.com/richardwilkes/toolbox/v2/num128"
 	"gopkg.in/yaml.v3"
 )
 
@@ -281,24 +283,6 @@ func testYAMLActual[T fixed.Dx](t *testing.T, v fixed64.Int[T]) {
 	err = yaml.Unmarshal(data, &e2)
 	c.NoError(err)
 	c.Equal(e1, e2)
-}
-
-func TestMaxSafeMultiply(t *testing.T) {
-	testMaxSafeMultiply[fixed.D1](t)
-	testMaxSafeMultiply[fixed.D2](t)
-	testMaxSafeMultiply[fixed.D3](t)
-	testMaxSafeMultiply[fixed.D4](t)
-	testMaxSafeMultiply[fixed.D5](t)
-	testMaxSafeMultiply[fixed.D6](t)
-}
-
-func testMaxSafeMultiply[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	// Test MaxSafeMultiply
-	maxSafe := fixed64.MaxSafeMultiply[T]()
-	c.True(maxSafe > 0)
-	c.True(int64(maxSafe) < fixed64.Max)
 }
 
 func TestMinMax(t *testing.T) {
@@ -686,4 +670,18 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 		return fmt.Errorf("unmarshal error")
 	})
 	c.HasError(err)
+}
+
+func TestMulOverflow(t *testing.T) {
+	c := check.New(t)
+	v1 := int64(math.MaxInt64 / 10000)
+	v1 -= v1 / 10
+	m1 := int64(110)
+	d1 := int64(100)
+	expected := num128.IntFrom64(v1).Mul(num128.IntFrom64(m1)).Div(num128.IntFrom64(d1)).AsInt64()
+	v2 := fixed64.FromInteger[fixed.D4](v1)
+	m2 := fixed64.FromInteger[fixed.D4](m1)
+	d2 := fixed64.FromInteger[fixed.D4](d1)
+	result := fixed64.AsInteger[fixed.D4, int64](v2.Mul(m2.Div(d2)))
+	c.Equal(expected, result)
 }

@@ -18,25 +18,24 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/num128"
 	"github.com/richardwilkes/toolbox/v2/xstrings"
 	"golang.org/x/exp/constraints"
 	"gopkg.in/yaml.v3"
-)
-
-const (
-	// Max holds the maximum value.
-	Max = math.MaxInt64
-	// Min holds the minimum value.
-	Min = math.MinInt64
 )
 
 // Int holds a fixed-point value. Values are truncated, not rounded. Values can be added and subtracted directly. For
 // multiplication and division, the provided Mul() and Div() methods should be used.
 type Int[T fixed.Dx] int64
 
-// MaxSafeMultiply returns the maximum value that can be safely multiplied without overflow.
-func MaxSafeMultiply[T fixed.Dx]() Int[T] {
-	return Int[T](Max / Multiplier[T]())
+// Maximum returns the maximum possible value the type can hold.
+func Maximum[T fixed.Dx]() Int[T] {
+	return Int[T](math.MaxInt64)
+}
+
+// Minimum returns the minimum possible value the type can hold.
+func Minimum[T fixed.Dx]() Int[T] {
+	return Int[T](math.MinInt64)
 }
 
 // MaxDecimalDigits returns the maximum number of digits after the decimal that will be used.
@@ -156,12 +155,32 @@ func AsFloatChecked[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
 
 // Mul multiplies this value by the passed-in value, returning a new value.
 func (f Int[T]) Mul(value Int[T]) Int[T] {
-	return f * value / Int[T](Multiplier[T]())
+	return f.mul64(value, Int[T](Multiplier[T]()))
+}
+
+func (f Int[T]) mul64(value, div Int[T]) Int[T] {
+	if f == 0 || value == 0 {
+		return 0
+	}
+	if f == 1 {
+		return value
+	}
+	if value == 1 {
+		return f
+	}
+	result := f * value
+	if f != math.MinInt64 && value != math.MinInt64 && result/value == f {
+		return result / div
+	}
+	return Int[T](num128.IntFrom64(int64(f)).
+		Mul(num128.IntFrom64(int64(value))).
+		Div(num128.IntFrom64(int64(div))).
+		AsInt64())
 }
 
 // Div divides this value by the passed-in value, returning a new value.
 func (f Int[T]) Div(value Int[T]) Int[T] {
-	return f * Int[T](Multiplier[T]()) / value
+	return f.mul64(Int[T](Multiplier[T]()), value)
 }
 
 // Mod returns the remainder after subtracting all full multiples of the passed-in value.

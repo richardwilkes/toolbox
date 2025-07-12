@@ -422,11 +422,6 @@ func testBoundaryValues[T fixed.Dx](t *testing.T) {
 	minValue := fixed128.Minimum[T]()
 	c.True(maxValue.GreaterThan(minValue))
 	c.True(minValue.LessThan(maxValue))
-
-	// Test MaxSafeMultiply
-	maxSafe := fixed128.MaxSafeMultiply[T]()
-	c.True(maxSafe.LessThan(maxValue))
-	c.True(maxSafe.GreaterThan(minValue))
 }
 
 func TestMinMax(t *testing.T) {

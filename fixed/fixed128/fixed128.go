@@ -39,11 +39,6 @@ func Minimum[T fixed.Dx]() Int[T] {
 	return Int[T]{data: num128.MinInt}
 }
 
-// MaxSafeMultiply returns the maximum value that can be safely multiplied without overflow.
-func MaxSafeMultiply[T fixed.Dx]() Int[T] {
-	return Maximum[T]().Div(Multiplier[T]())
-}
-
 // MaxDecimalDigits returns the maximum number of digits after the decimal that will be used.
 func MaxDecimalDigits[T fixed.Dx]() int {
 	var t T
