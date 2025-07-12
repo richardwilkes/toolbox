@@ -47,7 +47,8 @@ func load(r io.ReadCloser, path string, data any) error {
 	return nil
 }
 
-// Save JSON data to the specified path.
+// Save JSON data to the specified path. This will use xos.WriteSafeFile so that a failure does not overwrite any
+// original file that may have been present.
 func Save(path string, data any, format bool) error {
 	if err := xos.WriteSafeFile(path, func(w io.Writer) error {
 		encoder := json.NewEncoder(w)

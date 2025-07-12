@@ -48,7 +48,8 @@ func load(r io.ReadCloser, path string, data any) error {
 	return nil
 }
 
-// Save YAML data to the specified path.
+// Save YAML data to the specified path. This will use xos.WriteSafeFile so that a failure does not overwrite any
+// original file that may have been present.
 func Save(path string, data any) error {
 	if err := xos.WriteSafeFile(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)
