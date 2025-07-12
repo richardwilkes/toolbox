@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
+// Point holds a fixed-point 2D coordinate.
 type Point struct {
 	X Num
 	Y Num

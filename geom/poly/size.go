@@ -15,6 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
+// Size holds a fixed-point size.
 type Size struct {
 	Width  Num
 	Height Num

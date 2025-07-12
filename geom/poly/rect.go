@@ -13,6 +13,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
+// Rect holds a fixed-point rectangle.
 type Rect struct {
 	Point
 	Size
