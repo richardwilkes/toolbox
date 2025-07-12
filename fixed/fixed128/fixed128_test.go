@@ -138,23 +138,23 @@ func testMod[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed128.FromStringForced[T]("0.1"), fixed128.FromStringForced[T]("3.1").Mod(fixed128.FromStringForced[T]("0.2")))
 }
 
-func TestTrunc(t *testing.T) {
-	testTrunc[fixed.D1](t)
-	testTrunc[fixed.D2](t)
-	testTrunc[fixed.D3](t)
-	testTrunc[fixed.D4](t)
-	testTrunc[fixed.D5](t)
-	testTrunc[fixed.D6](t)
+func TestFloor(t *testing.T) {
+	testFloor[fixed.D1](t)
+	testFloor[fixed.D2](t)
+	testFloor[fixed.D3](t)
+	testFloor[fixed.D4](t)
+	testFloor[fixed.D5](t)
+	testFloor[fixed.D6](t)
 }
 
-func testTrunc[T fixed.Dx](t *testing.T) {
+func testFloor[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
-	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("0.3333").Trunc())
-	c.Equal(fixed128.FromInteger[T](2), fixed128.FromStringForced[T]("2.6789").Trunc())
-	c.Equal(fixed128.FromInteger[T](3), fixed128.FromInteger[T](3).Trunc())
-	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Trunc())
-	c.Equal(fixed128.FromInteger[T](-2), fixed128.FromStringForced[T]("-2.6789").Trunc())
-	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Trunc())
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("0.3333").Floor())
+	c.Equal(fixed128.FromInteger[T](2), fixed128.FromStringForced[T]("2.6789").Floor())
+	c.Equal(fixed128.FromInteger[T](3), fixed128.FromInteger[T](3).Floor())
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Floor())
+	c.Equal(fixed128.FromInteger[T](-2), fixed128.FromStringForced[T]("-2.6789").Floor())
+	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Floor())
 }
 
 func TestCeil(t *testing.T) {

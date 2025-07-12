@@ -188,7 +188,7 @@ func (f Int[T]) Div(value Int[T]) Int[T] {
 
 // Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int[T]) Mod(value Int[T]) Int[T] {
-	return f.Sub(value.Mul(f.Div(value).Trunc()))
+	return f.Sub(value.Mul(f.Div(value).Floor()))
 }
 
 // Neg negates this value, returning a new value.
@@ -231,15 +231,15 @@ func (f Int[T]) LessThanOrEqual(n Int[T]) bool {
 	return f.data.LessThanOrEqual(n.data)
 }
 
-// Trunc returns a new value which has everything to the right of the decimal place truncated.
-func (f Int[T]) Trunc() Int[T] {
+// Floor returns the value rounded down to the nearest whole number.
+func (f Int[T]) Floor() Int[T] {
 	m := multiplier[T]()
 	return Int[T]{data: f.data.Div(m).Mul(m)}
 }
 
 // Ceil returns the value rounded up to the nearest whole number.
 func (f Int[T]) Ceil() Int[T] {
-	v := f.Trunc()
+	v := f.Floor()
 	if f.GreaterThan(Int[T]{}) && f != v {
 		v = v.Add(Multiplier[T]())
 	}
@@ -251,7 +251,7 @@ func (f Int[T]) Round() Int[T] {
 	one := Multiplier[T]()
 	half := Int[T]{data: one.data.Div(num128.IntFrom64(2))}
 	negHalf := half.Neg()
-	value := f.Trunc()
+	value := f.Floor()
 	rem := f.Sub(value)
 	if rem.GreaterThanOrEqual(half) {
 		value = value.Add(one)

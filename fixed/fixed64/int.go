@@ -185,7 +185,7 @@ func (f Int[T]) Div(value Int[T]) Int[T] {
 
 // Mod returns the remainder after subtracting all full multiples of the passed-in value.
 func (f Int[T]) Mod(value Int[T]) Int[T] {
-	return f - (value.Mul(f.Div(value).Trunc()))
+	return f - (value.Mul(f.Div(value).Floor()))
 }
 
 // Abs returns the absolute value of this value.
@@ -196,15 +196,15 @@ func (f Int[T]) Abs() Int[T] {
 	return f
 }
 
-// Trunc returns a new value which has everything to the right of the decimal place truncated.
-func (f Int[T]) Trunc() Int[T] {
+// Floor returns the value rounded down to the nearest whole number.
+func (f Int[T]) Floor() Int[T] {
 	mult := Int[T](Multiplier[T]())
 	return f / mult * mult
 }
 
 // Ceil returns the value rounded up to the nearest whole number.
 func (f Int[T]) Ceil() Int[T] {
-	v := f.Trunc()
+	v := f.Floor()
 	if f > 0 && f != v {
 		v += Int[T](Multiplier[T]())
 	}
@@ -214,7 +214,7 @@ func (f Int[T]) Ceil() Int[T] {
 // Round returns the nearest integer, rounding half away from zero.
 func (f Int[T]) Round() Int[T] {
 	one := Int[T](Multiplier[T]())
-	value := f.Trunc()
+	value := f.Floor()
 	rem := f - value
 	if rem >= one/2 {
 		value += one
