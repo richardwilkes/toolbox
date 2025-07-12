@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/toolbox/softref"
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/softref"
 )
 
 type res struct {
@@ -39,53 +39,54 @@ func (r *res) Release() {
 }
 
 func TestSoftRef(t *testing.T) {
+	c := check.New(t)
 	p := softref.NewPool()
 	ch := make(chan string, 128)
 	sr1, existed := p.NewSoftRef(newRes("1", ch))
-	check.False(t, existed)
+	c.False(existed)
 	_, existed = p.NewSoftRef(newRes("2", ch))
-	check.False(t, existed)
+	c.False(existed)
 	sr3, existed := p.NewSoftRef(newRes("3", ch))
-	check.False(t, existed)
+	c.False(existed)
 	r4 := newRes("4", ch)
 	sr4a, existed := p.NewSoftRef(r4)
-	check.False(t, existed)
+	c.False(existed)
 	sr4b, existed := p.NewSoftRef(r4)
-	check.True(t, existed)
-	lookFor(t, "2", ch)
+	c.True(existed)
+	lookFor(c, "2", ch)
 	get, existed := sr3.Resource.(*res)
-	check.True(t, existed)
-	lookFor(t, get.key, ch)
+	c.True(existed)
+	lookFor(c, get.key, ch)
 	get, existed = sr1.Resource.(*res)
-	check.True(t, existed)
-	lookFor(t, get.key, ch)
+	c.True(existed)
+	lookFor(c, get.key, ch)
 	get, existed = sr4a.Resource.(*res)
-	check.True(t, existed)
+	c.True(existed)
 	get2, existed2 := sr4b.Resource.(*res)
-	check.True(t, existed2)
-	check.Equal(t, get.key, get2.key)
-	lookForExpectingTimeout(t, ch)
-	check.Equal(t, "4", sr4b.Key) // Keeps refs to r4 alive for the above call
-	lookFor(t, get.key, ch)
+	c.True(existed2)
+	c.Equal(get.key, get2.key)
+	lookForExpectingTimeout(c, ch)
+	c.Equal("4", sr4b.Key) // Keeps refs to r4 alive for the above call
+	lookFor(c, get.key, ch)
 }
 
-func lookFor(t *testing.T, key string, ch <-chan string) {
-	t.Helper()
+func lookFor(c check.Checker, key string, ch <-chan string) {
+	c.Helper()
 	runtime.GC()
 	select {
 	case <-time.After(time.Second):
-		t.Errorf("timed out waiting for %s", key)
+		c.Errorf("timed out waiting for %s", key)
 	case k := <-ch:
-		check.Equal(t, key, k)
+		c.Equal(key, k)
 	}
 }
 
-func lookForExpectingTimeout(t *testing.T, ch <-chan string) {
-	t.Helper()
+func lookForExpectingTimeout(c check.Checker, ch <-chan string) {
+	c.Helper()
 	runtime.GC()
 	select {
 	case <-time.After(time.Second):
 	case k := <-ch:
-		t.Errorf("received key '%s' when none expected", k)
+		c.Errorf("received key '%s' when none expected", k)
 	}
 }

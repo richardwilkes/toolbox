@@ -21,9 +21,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xio/fs"
+	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xfilepath"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 const (
@@ -79,7 +79,7 @@ func Text(text string) string {
 			if err != nil {
 				return
 			}
-			path, err = filepath.Abs(fs.TrimExtension(path) + "_i18n")
+			path, err = filepath.Abs(xfilepath.TrimExtension(path) + "_i18n")
 			if err != nil {
 				return
 			}
@@ -90,11 +90,11 @@ func Text(text string) string {
 			return
 		}
 		for _, one := range dirEntry {
-			if !one.IsDir() {
-				name := one.Name()
-				if filepath.Ext(name) == Extension {
-					load(name)
-				}
+			if one.IsDir() {
+				continue
+			}
+			if name := one.Name(); filepath.Ext(name) == Extension {
+				load(name)
 			}
 		}
 	})
@@ -160,6 +160,8 @@ func load(name string) {
 	var key, value string
 	var hasKey, hasValue bool
 	s := bufio.NewScanner(f)
+	const lineLogKey = "line"
+	const fileLogKey = "file"
 	for s.Scan() {
 		line := s.Text()
 		if strings.HasPrefix(line, "k:") {
@@ -167,14 +169,14 @@ func load(name string) {
 				if _, exists := translations[key]; !exists {
 					translations[key] = value
 				} else {
-					slog.Warn("i18n: ignoring duplicate key", "line", lastKeyLineStart, "file", path)
+					slog.Warn("i18n: ignoring duplicate key", lineLogKey, lastKeyLineStart, fileLogKey, path)
 				}
 				hasKey = false
 				hasValue = false
 			}
 			var buffer string
 			if _, err = fmt.Sscanf(line, "k:%q", &buffer); err != nil {
-				slog.Warn("i18n: ignoring invalid key", "line", lineNum, "file", path)
+				slog.Warn("i18n: ignoring invalid key", lineLogKey, lineNum, fileLogKey, path)
 			} else {
 				if hasKey {
 					key += "\n" + buffer
@@ -188,7 +190,7 @@ func load(name string) {
 			if hasKey {
 				var buffer string
 				if _, err = fmt.Sscanf(line, "v:%q", &buffer); err != nil {
-					slog.Warn("i18n: ignoring invalid value", "line", lineNum, "file", path)
+					slog.Warn("i18n: ignoring invalid value", lineLogKey, lineNum, fileLogKey, path)
 				} else {
 					if hasValue {
 						value += "\n" + buffer
@@ -198,7 +200,7 @@ func load(name string) {
 					}
 				}
 			} else {
-				slog.Warn("i18n: ignoring value with no previous key", "line", lineNum, "file", path)
+				slog.Warn("i18n: ignoring value with no previous key", lineLogKey, lineNum, fileLogKey, path)
 			}
 		}
 		lineNum++
@@ -208,10 +210,10 @@ func load(name string) {
 			if _, exists := translations[key]; !exists {
 				translations[key] = value
 			} else {
-				slog.Warn("i18n: ignoring duplicate key", "line", lastKeyLineStart, "file", path)
+				slog.Warn("i18n: ignoring duplicate key", lineLogKey, lastKeyLineStart, fileLogKey, path)
 			}
 		} else {
-			slog.Warn("i18n: ignoring key with missing value", "line", lastKeyLineStart, "file", path)
+			slog.Warn("i18n: ignoring key with missing value", lineLogKey, lastKeyLineStart, fileLogKey, path)
 		}
 	}
 	key = strings.ToLower(name[:len(name)-len(Extension)])

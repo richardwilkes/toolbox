@@ -11,32 +11,67 @@ package check
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
-	"testing"
 
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
+// TestingT is an interface that defines the methods required for testing. This allows for testing of the check package
+// itself. This would just be testing.TB, but the Go developers added a private method to prevent the exact thing we
+// want to do.
+type TestingT interface {
+	Cleanup(func())
+	Error(args ...any)
+	Errorf(format string, args ...any)
+	Fail()
+	FailNow()
+	Failed() bool
+	Fatal(args ...any)
+	Fatalf(format string, args ...any)
+	Helper()
+	Log(args ...any)
+	Logf(format string, args ...any)
+	Name() string
+	Setenv(key, value string)
+	Chdir(dir string)
+	Skip(args ...any)
+	SkipNow()
+	Skipf(format string, args ...any)
+	Skipped() bool
+	TempDir() string
+	Context() context.Context
+}
+
+// Checker provides some simple helpers for testing.
+type Checker struct {
+	TestingT
+}
+
+// New creates a new Checker. Typically used by calling check.New(t), where t is a *testing.T.
+func New(t TestingT) Checker {
+	return Checker{TestingT: t}
+}
+
 // Equal compares two values for equality.
-func Equal(t *testing.T, expected, actual any, msgAndArgs ...any) {
-	t.Helper()
-	if !equal(expected, actual) {
-		errMsg(t, fmt.Sprintf("Expected %v, got %v", expected, actual), msgAndArgs...)
+func (c Checker) Equal(expected, actual any, msgAndArgs ...any) {
+	c.Helper()
+	if !c.equal(expected, actual) {
+		c.errMsg(fmt.Sprintf("Expected %v, got %v", expected, actual), msgAndArgs...)
 	}
 }
 
 // NotEqual compares two values for inequality.
-func NotEqual(t *testing.T, expected, actual any, msgAndArgs ...any) {
-	t.Helper()
-	if equal(expected, actual) {
-		errMsg(t, fmt.Sprintf("Expected %v to not be %v", expected, actual), msgAndArgs...)
+func (c Checker) NotEqual(expected, actual any, msgAndArgs ...any) {
+	c.Helper()
+	if c.equal(expected, actual) {
+		c.errMsg(fmt.Sprintf("Expected %v to not be %v", expected, actual), msgAndArgs...)
 	}
 }
 
-func equal(expected, actual any) bool {
+func (c Checker) equal(expected, actual any) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
@@ -55,93 +90,118 @@ func equal(expected, actual any) bool {
 }
 
 // Nil expects value to be nil.
-func Nil(t *testing.T, value any, msgAndArgs ...any) {
-	t.Helper()
-	if !toolbox.IsNil(value) {
-		errMsg(t, fmt.Sprintf("Expected nil, instead got %v", value), msgAndArgs...)
+func (c Checker) Nil(value any, msgAndArgs ...any) {
+	c.Helper()
+	if !xreflect.IsNil(value) {
+		c.errMsg(fmt.Sprintf("Expected nil, instead got %v", value), msgAndArgs...)
 	}
 }
 
 // NotNil expects value to not be nil.
-func NotNil(t *testing.T, value any, msgAndArgs ...any) {
-	t.Helper()
-	if toolbox.IsNil(value) {
-		errMsg(t, "Expected a non-nil value", msgAndArgs...)
+func (c Checker) NotNil(value any, msgAndArgs ...any) {
+	c.Helper()
+	if xreflect.IsNil(value) {
+		c.errMsg("Expected a non-nil value", msgAndArgs...)
 	}
 }
 
 // True expects value to be true.
-func True(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) True(value bool, msgAndArgs ...any) {
+	c.Helper()
 	if !value {
-		errMsg(t, "Expected true", msgAndArgs...)
+		c.errMsg("Expected true", msgAndArgs...)
 	}
 }
 
 // False expects value to be false.
-func False(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) False(value bool, msgAndArgs ...any) {
+	c.Helper()
 	if value {
-		errMsg(t, "Expected false", msgAndArgs...)
+		c.errMsg("Expected false", msgAndArgs...)
 	}
 }
 
 // Contains expects s to contain substr.
-func Contains(t *testing.T, s, substr string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) Contains(s, substr string, msgAndArgs ...any) {
+	c.Helper()
 	if !strings.Contains(s, substr) {
-		errMsg(t, fmt.Sprintf("Expected string %q to contain %q", s, substr), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected string %q to contain %q", s, substr), msgAndArgs...)
 	}
 }
 
 // NotContains expects s not to contain substr.
-func NotContains(t *testing.T, s, substr string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) NotContains(s, substr string, msgAndArgs ...any) {
+	c.Helper()
 	if strings.Contains(s, substr) {
-		errMsg(t, fmt.Sprintf("Expected string %q not to contain %q", s, substr), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected string %q not to contain %q", s, substr), msgAndArgs...)
+	}
+}
+
+// HasPrefix expects s to have the prefix substr.
+func (c Checker) HasPrefix(s, prefix string, msgAndArgs ...any) {
+	c.Helper()
+	if !strings.HasPrefix(s, prefix) {
+		c.errMsg(fmt.Sprintf("Expected string %q to have prefix %q", s, prefix), msgAndArgs...)
+	}
+}
+
+// NoPrefix expects s not to have the prefix substr.
+func (c Checker) NoPrefix(s, prefix string, msgAndArgs ...any) {
+	c.Helper()
+	if strings.HasPrefix(s, prefix) {
+		c.errMsg(fmt.Sprintf("Expected string %q not to have prefix %q", s, prefix), msgAndArgs...)
 	}
 }
 
 // NoError expects err to be nil.
-func NoError(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) NoError(err error, msgAndArgs ...any) {
+	c.Helper()
 	if err != nil {
-		errMsg(t, fmt.Sprintf("Expected no error, got %v", err), msgAndArgs...)
+		c.errMsg(fmt.Sprintf("Expected no error, got %v", err), msgAndArgs...)
 	}
 }
 
-// Error expects err to not be nil.
-func Error(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+// HasError expects err to not be nil.
+func (c Checker) HasError(err error, msgAndArgs ...any) {
+	c.Helper()
 	if err == nil {
-		errMsg(t, "Expected an error", msgAndArgs...)
+		c.errMsg("Expected an error", msgAndArgs...)
 	}
 }
 
 // Panics expects f to panic when called.
-func Panics(t *testing.T, f func(), msgAndArgs ...any) {
-	t.Helper()
-	if err := doesPanic(f); err == nil {
-		errMsg(t, "Expected panic, but got none", msgAndArgs...)
+func (c Checker) Panics(f func(), msgAndArgs ...any) {
+	c.Helper()
+	if err := c.doesPanic(f); err == nil {
+		c.errMsg("Expected panic, but got none", msgAndArgs...)
 	}
 }
 
 // NotPanics expects no panic when f is called.
-func NotPanics(t *testing.T, f func(), msgAndArgs ...any) {
-	t.Helper()
-	if err := doesPanic(f); err != nil {
-		errMsg(t, fmt.Sprintf("Expected no panic, but does: %v", err), msgAndArgs...)
+func (c Checker) NotPanics(f func(), msgAndArgs ...any) {
+	c.Helper()
+	if err := c.doesPanic(f); err != nil {
+		c.errMsg(fmt.Sprintf("Expected no panic, but does: %v", err), msgAndArgs...)
 	}
 }
 
-func doesPanic(f func()) (panicErr error) {
-	defer errs.Recovery(func(err error) { panicErr = err })
+func (c Checker) doesPanic(f func()) (panicErr error) {
+	// Can't use xos.PanicRecovery because that would cause an import cycle in some places
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			err, ok := recovered.(error)
+			if !ok {
+				err = fmt.Errorf("%+v", recovered)
+			}
+			panicErr = err
+		}
+	}()
 	f()
 	return
 }
 
-func errMsg(t *testing.T, prefix string, msgAndArgs ...any) {
-	t.Helper()
+func (c Checker) errMsg(prefix string, msgAndArgs ...any) {
+	c.Helper()
 	var buffer strings.Builder
 	buffer.WriteString(prefix)
 	switch len(msgAndArgs) {
@@ -158,5 +218,5 @@ func errMsg(t *testing.T, prefix string, msgAndArgs ...any) {
 			}
 		}
 	}
-	t.Error(buffer.String())
+	c.Error(buffer.String())
 }
