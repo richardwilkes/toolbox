@@ -20,30 +20,10 @@ func TestNewRect(t *testing.T) {
 	c := check.New(t)
 
 	r := geom.NewRect(10, 20, 30, 40)
-	c.Equal(10, r.X)
-	c.Equal(20, r.Y)
-	c.Equal(30, r.Width)
-	c.Equal(40, r.Height)
-}
-
-func TestConvertRect(t *testing.T) {
-	c := check.New(t)
-
-	// Convert from int to float
-	intRect := geom.NewRect(10, 20, 30, 40)
-	floatRect := geom.ConvertRect[float64](intRect)
-	c.Equal(10.0, floatRect.X)
-	c.Equal(20.0, floatRect.Y)
-	c.Equal(30.0, floatRect.Width)
-	c.Equal(40.0, floatRect.Height)
-
-	// Convert from float to int
-	floatRect2 := geom.NewRect(10.7, 20.9, 30.3, 40.8)
-	intRect2 := geom.ConvertRect[int](floatRect2)
-	c.Equal(10, intRect2.X)
-	c.Equal(20, intRect2.Y)
-	c.Equal(30, intRect2.Width)
-	c.Equal(40, intRect2.Height)
+	c.Equal(float32(10), r.X)
+	c.Equal(float32(20), r.Y)
+	c.Equal(float32(30), r.Width)
+	c.Equal(float32(40), r.Height)
 }
 
 func TestRectEmpty(t *testing.T) {
@@ -78,8 +58,8 @@ func TestRectCenter(t *testing.T) {
 
 	// Center X: 10 + 30/2 = 25
 	// Center Y: 20 + 40/2 = 40
-	c.Equal(25, center.X)
-	c.Equal(40, center.Y)
+	c.Equal(float32(25), center.X)
+	c.Equal(float32(40), center.Y)
 }
 
 func TestRectCenterX(t *testing.T) {
@@ -89,7 +69,7 @@ func TestRectCenterX(t *testing.T) {
 	centerX := r.CenterX()
 
 	// Center X: 10 + 30/2 = 25
-	c.Equal(25, centerX)
+	c.Equal(float32(25), centerX)
 }
 
 func TestRectCenterY(t *testing.T) {
@@ -99,7 +79,7 @@ func TestRectCenterY(t *testing.T) {
 	centerY := r.CenterY()
 
 	// Center Y: 20 + 40/2 = 40
-	c.Equal(40, centerY)
+	c.Equal(float32(40), centerY)
 }
 
 //nolint:gocritic // The "commented out code" is actually explanation
@@ -110,7 +90,7 @@ func TestRectRight(t *testing.T) {
 	right := r.Right()
 
 	// Right: 10 + 30 = 40
-	c.Equal(40, right)
+	c.Equal(float32(40), right)
 }
 
 //nolint:gocritic // The "commented out code" is actually explanation
@@ -121,7 +101,7 @@ func TestRectBottom(t *testing.T) {
 	bottom := r.Bottom()
 
 	// Bottom: 20 + 40 = 60
-	c.Equal(60, bottom)
+	c.Equal(float32(60), bottom)
 }
 
 func TestRectCornerPoints(t *testing.T) {
@@ -131,23 +111,23 @@ func TestRectCornerPoints(t *testing.T) {
 
 	// TopLeft should be (10, 20)
 	topLeft := r.TopLeft()
-	c.Equal(10, topLeft.X)
-	c.Equal(20, topLeft.Y)
+	c.Equal(float32(10), topLeft.X)
+	c.Equal(float32(20), topLeft.Y)
 
 	// TopRight should be (40, 20)
 	topRight := r.TopRight()
-	c.Equal(40, topRight.X)
-	c.Equal(20, topRight.Y)
+	c.Equal(float32(40), topRight.X)
+	c.Equal(float32(20), topRight.Y)
 
 	// BottomRight should be (40, 60)
 	bottomRight := r.BottomRight()
-	c.Equal(40, bottomRight.X)
-	c.Equal(60, bottomRight.Y)
+	c.Equal(float32(40), bottomRight.X)
+	c.Equal(float32(60), bottomRight.Y)
 
 	// BottomLeft should be (10, 60)
 	bottomLeft := r.BottomLeft()
-	c.Equal(10, bottomLeft.X)
-	c.Equal(60, bottomLeft.Y)
+	c.Equal(float32(10), bottomLeft.X)
+	c.Equal(float32(60), bottomLeft.Y)
 }
 
 func TestRectContains(t *testing.T) {
@@ -219,10 +199,10 @@ func TestRectIntersect(t *testing.T) {
 	intersection := r1.Intersect(r2)
 
 	// Intersection should be (25, 35, 15, 25)
-	c.Equal(25, intersection.X)
-	c.Equal(35, intersection.Y)
-	c.Equal(15, intersection.Width)
-	c.Equal(25, intersection.Height)
+	c.Equal(float32(25), intersection.X)
+	c.Equal(float32(35), intersection.Y)
+	c.Equal(float32(15), intersection.Width)
+	c.Equal(float32(25), intersection.Height)
 
 	// Non-intersecting rectangles
 	r3 := geom.NewRect(50, 70, 10, 20)
@@ -249,10 +229,10 @@ func TestRectUnion(t *testing.T) {
 	// Right: max(40, 55) = 55
 	// Bottom: max(60, 75) = 75
 	// So: (10, 20, 45, 55)
-	c.Equal(10, union.X)
-	c.Equal(20, union.Y)
-	c.Equal(45, union.Width)
-	c.Equal(55, union.Height)
+	c.Equal(float32(10), union.X)
+	c.Equal(float32(20), union.Y)
+	c.Equal(float32(45), union.Width)
+	c.Equal(float32(55), union.Height)
 
 	// Union with empty rectangle
 	emptyR := geom.NewRect(10, 20, 0, 40)
@@ -276,10 +256,10 @@ func TestRectAlign(t *testing.T) {
 	aligned := r.Align()
 
 	// Point should be floored, size should be ceiled
-	c.Equal(10.0, aligned.X)
-	c.Equal(20.0, aligned.Y)
-	c.Equal(31.0, aligned.Width)
-	c.Equal(41.0, aligned.Height)
+	c.Equal(float32(10), aligned.X)
+	c.Equal(float32(20), aligned.Y)
+	c.Equal(float32(31), aligned.Width)
+	c.Equal(float32(41), aligned.Height)
 }
 
 func TestRectExpand(t *testing.T) {
@@ -298,27 +278,27 @@ func TestRectExpand(t *testing.T) {
 	// Point outside rectangle (to the left and up)
 	pt2 := geom.NewPoint(5, 15)
 	expanded2 := r.Expand(pt2)
-	c.Equal(5, expanded2.X)
-	c.Equal(15, expanded2.Y)
-	c.Equal(35, expanded2.Width)  // 40 - 5 = 35
-	c.Equal(45, expanded2.Height) // 60 - 15 = 45
+	c.Equal(float32(5), expanded2.X)
+	c.Equal(float32(15), expanded2.Y)
+	c.Equal(float32(35), expanded2.Width)  // 40 - 5 = 35
+	c.Equal(float32(45), expanded2.Height) // 60 - 15 = 45
 
 	// Point outside rectangle (to the right and down)
 	pt3 := geom.NewPoint(50, 70)
 	expanded3 := r.Expand(pt3)
-	c.Equal(10, expanded3.X)
-	c.Equal(20, expanded3.Y)
-	c.Equal(40, expanded3.Width)  // 50 - 10 = 40
-	c.Equal(50, expanded3.Height) // 70 - 20 = 50
+	c.Equal(float32(10), expanded3.X)
+	c.Equal(float32(20), expanded3.Y)
+	c.Equal(float32(40), expanded3.Width)  // 50 - 10 = 40
+	c.Equal(float32(50), expanded3.Height) // 70 - 20 = 50
 
 	// Rectangle with negative width
 	negativeR := geom.NewRect(10, 20, -30, 40)
 	pt4 := geom.NewPoint(5, 15)
 	expanded4 := negativeR.Expand(pt4)
-	c.Equal(5, expanded4.X)
-	c.Equal(15, expanded4.Y)
-	c.Equal(0, expanded4.Width)
-	c.Equal(0, expanded4.Height)
+	c.Equal(float32(5), expanded4.X)
+	c.Equal(float32(15), expanded4.Y)
+	c.Equal(float32(0), expanded4.Width)
+	c.Equal(float32(0), expanded4.Height)
 }
 
 //nolint:gocritic // The "commented out code" is actually explanation
@@ -334,19 +314,19 @@ func TestRectInset(t *testing.T) {
 	// Y should be moved down by top inset: 20 + 5 = 25
 	// Width should be reduced by left + right: 30 - 3 - 2 = 25
 	// Height should be reduced by top + bottom: 40 - 5 - 7 = 28
-	c.Equal(13, insetRect.X)
-	c.Equal(25, insetRect.Y)
-	c.Equal(25, insetRect.Width)
-	c.Equal(28, insetRect.Height)
+	c.Equal(float32(13), insetRect.X)
+	c.Equal(float32(25), insetRect.Y)
+	c.Equal(float32(25), insetRect.Width)
+	c.Equal(float32(28), insetRect.Height)
 
 	// Test with insets larger than rectangle dimensions
 	largeInsets := geom.NewInsets(50, 40, 50, 40)
 	insetRect2 := r.Inset(largeInsets)
 
-	c.Equal(50, insetRect2.X)     // 10 + 40
-	c.Equal(70, insetRect2.Y)     // 20 + 50
-	c.Equal(0, insetRect2.Width)  // max(30 - 80, 0) = 0
-	c.Equal(0, insetRect2.Height) // max(40 - 100, 0) = 0
+	c.Equal(float32(50), insetRect2.X)     // 10 + 40
+	c.Equal(float32(70), insetRect2.Y)     // 20 + 50
+	c.Equal(float32(0), insetRect2.Width)  // max(30 - 80, 0) = 0
+	c.Equal(float32(0), insetRect2.Height) // max(40 - 100, 0) = 0
 }
 
 func TestRectString(t *testing.T) {

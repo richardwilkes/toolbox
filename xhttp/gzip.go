@@ -31,7 +31,7 @@ func GZipWrap(next http.Handler) http.Handler {
 		if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 			w.Header().Set("Content-Encoding", "gzip")
 			gw := gzip.NewWriter(w)
-			defer func() { xio.CloseLoggingAnyErrorTo(LoggerForRequest(req), gw) }()
+			defer func() { xio.CloseLoggingErrorsTo(LoggerForRequest(req), gw) }()
 			w = &gzipResponseWriter{
 				w:  w,
 				gw: gw,

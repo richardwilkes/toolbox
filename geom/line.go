@@ -10,28 +10,26 @@
 package geom
 
 import (
-	"math"
-
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.
 // One point indicates intersection at a single point. Two points indicates an overlapping line segment.
-func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
+func LineIntersection(a1, a2, b1, b2 Point) []Point {
 	aIsPt := a1.X == a2.X && a1.Y == a2.Y
 	bIsPt := b1.X == b2.X && b1.Y == b2.Y
 	switch {
 	case aIsPt && bIsPt:
 		if a1.X == b1.X && a1.Y == b1.Y {
-			return []Point[T]{a1}
+			return []Point{a1}
 		}
 	case aIsPt:
 		if PointSegmentDistance(b1, b2, a1) == 0 {
-			return []Point[T]{a1}
+			return []Point{a1}
 		}
 	case bIsPt:
 		if PointSegmentDistance(a1, a2, b1) == 0 {
-			return []Point[T]{b1}
+			return []Point{b1}
 		}
 	default:
 		abdx := a1.X - b1.X
@@ -49,7 +47,7 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 			if a >= 0 && a <= 1 {
 				b := ubt / ub
 				if b >= 0 && b <= 1 {
-					return []Point[T]{
+					return []Point{
 						{
 							X: a1.X + a*adx,
 							Y: a1.Y + a*ady,
@@ -59,7 +57,7 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 			}
 		} else if uat == 0 || ubt == 0 {
 			// Parallel, so check for overlap
-			var ub1, ub2 T
+			var ub1, ub2 float32
 			if xmath.Abs(adx) > xmath.Abs(ady) {
 				ub1 = (b1.X - a1.X) / adx
 				ub2 = (b2.X - a1.X) / adx
@@ -70,14 +68,14 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 			left := max(0, min(ub1, ub2))
 			right := min(1, max(ub1, ub2))
 			if left == right {
-				return []Point[T]{
+				return []Point{
 					{
 						X: a2.X*left + a1.X*(1-left),
 						Y: a2.Y*left + a1.Y*(1-left),
 					},
 				}
 			}
-			return []Point[T]{
+			return []Point{
 				{
 					X: a2.X*left + a1.X*(1-left),
 					Y: a2.Y*left + a1.Y*(1-left),
@@ -95,20 +93,20 @@ func LineIntersection[T xmath.Numeric](a1, a2, b1, b2 Point[T]) []Point[T] {
 // PointSegmentDistance returns the distance from a point to a line segment. The distance measured is the distance
 // between the specified point and the closest point between the specified end points. If the specified point intersects
 // the line segment in between the end points, this function returns 0.
-func PointSegmentDistance[T xmath.Numeric](s1, s2, p Point[T]) T {
-	return T(math.Sqrt(float64(PointSegmentDistanceSquared(s1, s2, p))))
+func PointSegmentDistance(s1, s2, p Point) float32 {
+	return xmath.Sqrt(PointSegmentDistanceSquared(s1, s2, p))
 }
 
 // PointSegmentDistanceSquared returns the square of the distance from a point to a line segment. The distance measured
 // is the distance between the specified point and the closest point between the specified end points. If the specified
 // point intersects the line segment in between the end points, this function returns 0.
-func PointSegmentDistanceSquared[T xmath.Numeric](s1, s2, p Point[T]) T {
+func PointSegmentDistanceSquared(s1, s2, p Point) float32 {
 	vx := s2.X - s1.X
 	vy := s2.Y - s1.Y
 	px := p.X - s1.X
 	py := p.Y - s1.Y
 	dp := px*vx + py*vy
-	var projected T
+	var projected float32
 	if dp > 0 {
 		px = vx - px
 		py = vy - py

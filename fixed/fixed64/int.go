@@ -18,8 +18,8 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/fixed"
-	"github.com/richardwilkes/toolbox/v2/xmath"
 	"github.com/richardwilkes/toolbox/v2/xstrings"
+	"golang.org/x/exp/constraints"
 	"gopkg.in/yaml.v3"
 )
 
@@ -51,8 +51,13 @@ func Multiplier[T fixed.Dx]() int64 {
 	return t.Multiplier()
 }
 
-// From creates a new value.
-func From[T fixed.Dx, FROM xmath.Numeric](value FROM) Int[T] {
+// FromInteger creates a new value.
+func FromInteger[T fixed.Dx, FROM constraints.Integer](value FROM) Int[T] {
+	return Int[T](value * FROM(Multiplier[T]()))
+}
+
+// FromFloat creates a new value.
+func FromFloat[T fixed.Dx, FROM constraints.Float](value FROM) Int[T] {
 	return Int[T](value * FROM(Multiplier[T]()))
 }
 
@@ -69,7 +74,7 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 		if err != nil {
 			return 0, err
 		}
-		return From[T](f), nil
+		return FromFloat[T](f), nil
 	}
 	mult := Multiplier[T]()
 	parts := strings.SplitN(str, ".", 2)
@@ -117,6 +122,36 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 func FromStringForced[T fixed.Dx](str string) Int[T] {
 	f, _ := FromString[T](str) //nolint:errcheck // failure results in 0, which is acceptable here
 	return f
+}
+
+// AsInteger returns the equivalent value in the destination type.
+func AsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) TO {
+	return TO(int64(f) / Multiplier[T]())
+}
+
+// AsFloat returns the equivalent value in the destination type.
+func AsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) TO {
+	return TO(float64(f) / float64(Multiplier[T]()))
+}
+
+// CheckedAsInteger is the same as AsInteger(), except that it returns an error if the value cannot be represented
+// exactly in the requested destination type.
+func CheckedAsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
+	n := TO(int64(f) / Multiplier[T]())
+	if FromInteger[T](n) != f {
+		return 0, fixed.ErrDoesNotFitInRequestedType
+	}
+	return n, nil
+}
+
+// CheckedAsFloat is the same as AsFloat(), except that it returns an error if the value cannot be represented exactly
+// in the requested destination type.
+func CheckedAsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
+	n := TO(float64(f) / float64(Multiplier[T]()))
+	if strconv.FormatFloat(float64(n), 'g', -1, reflect.TypeOf(n).Bits()) != f.String() {
+		return 0, fixed.ErrDoesNotFitInRequestedType
+	}
+	return n, nil
 }
 
 // Add adds this value to the passed-in value, returning a new value. Note that this method is only provided to make
@@ -208,36 +243,6 @@ func (f Int[T]) Inc() Int[T] {
 // Dec returns the value decremented by 1.
 func (f Int[T]) Dec() Int[T] {
 	return f - Int[T](Multiplier[T]())
-}
-
-// As returns the equivalent value in the destination type.
-func As[T fixed.Dx, TO xmath.Numeric](f Int[T]) TO {
-	var n TO
-	switch reflect.TypeOf(n).Kind() {
-	case reflect.Float32, reflect.Float64:
-		return TO(float64(f) / float64(Multiplier[T]()))
-	default:
-		return TO(int64(f) / Multiplier[T]())
-	}
-}
-
-// CheckedAs is the same as As(), except that it returns an error if the value cannot be represented exactly in the
-// requested destination type.
-func CheckedAs[T fixed.Dx, TO xmath.Numeric](f Int[T]) (TO, error) {
-	var n TO
-	switch reflect.TypeOf(n).Kind() {
-	case reflect.Float32, reflect.Float64:
-		n = TO(float64(f) / float64(Multiplier[T]()))
-		if strconv.FormatFloat(float64(n), 'g', -1, reflect.TypeOf(n).Bits()) != f.String() {
-			return 0, fixed.ErrDoesNotFitInRequestedType
-		}
-	default:
-		n = TO(int64(f) / Multiplier[T]())
-		if From[T](n) != f {
-			return 0, fixed.ErrDoesNotFitInRequestedType
-		}
-	}
-	return n, nil
 }
 
 // CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive

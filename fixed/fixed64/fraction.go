@@ -27,7 +27,7 @@ func NewFraction[T fixed.Dx](s string) Fraction[T] {
 	parts := strings.SplitN(s, "/", 2)
 	f := Fraction[T]{
 		Numerator:   FromStringForced[T](strings.TrimSpace(parts[0])),
-		Denominator: From[T, int](1),
+		Denominator: FromInteger[T](1),
 	}
 	if len(parts) > 1 {
 		f.Denominator = FromStringForced[T](strings.TrimSpace(parts[1]))
@@ -39,9 +39,9 @@ func NewFraction[T fixed.Dx](s string) Fraction[T] {
 func (f *Fraction[T]) Normalize() {
 	if f.Denominator == 0 {
 		f.Numerator = 0
-		f.Denominator = From[T, int](1)
+		f.Denominator = FromInteger[T](1)
 	} else if f.Denominator < 0 {
-		negOne := From[T, int](-1)
+		negOne := FromInteger[T](-1)
 		f.Numerator = f.Numerator.Mul(negOne)
 		f.Denominator = f.Denominator.Mul(negOne)
 	}
@@ -59,7 +59,7 @@ func (f Fraction[T]) StringWithSign() string {
 	n := f
 	n.Normalize()
 	s := n.Numerator.StringWithSign()
-	if n.Denominator == From[T, int](1) {
+	if n.Denominator == FromInteger[T, int](1) {
 		return s
 	}
 	return s + "/" + n.Denominator.String()
@@ -69,7 +69,7 @@ func (f Fraction[T]) String() string {
 	n := f
 	n.Normalize()
 	s := n.Numerator.String()
-	if n.Denominator == From[T, int](1) {
+	if n.Denominator == FromInteger[T, int](1) {
 		return s
 	}
 	return s + "/" + n.Denominator.String()

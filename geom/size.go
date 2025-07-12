@@ -16,93 +16,85 @@ import (
 )
 
 // Size defines a width and height.
-type Size[T xmath.Numeric] struct {
-	Width  T `json:"w"`
-	Height T `json:"h"`
+type Size struct {
+	Width  float32 `json:"w"`
+	Height float32 `json:"h"`
 }
 
 // NewSize creates a new Size.
-func NewSize[T xmath.Numeric](width, height T) Size[T] {
-	return Size[T]{
+func NewSize(width, height float32) Size {
+	return Size{
 		Width:  width,
 		Height: height,
 	}
 }
 
-// ConvertSize converts a Size of type F into one of type T.
-func ConvertSize[T, F xmath.Numeric](s Size[F]) Size[T] {
-	return Size[T]{
-		Width:  T(s.Width),
-		Height: T(s.Height),
-	}
-}
-
 // Add returns a new Size which is the result of adding this Size with the provided Size.
-func (s Size[T]) Add(size Size[T]) Size[T] {
-	return Size[T]{
+func (s Size) Add(size Size) Size {
+	return Size{
 		Width:  s.Width + size.Width,
 		Height: s.Height + size.Height,
 	}
 }
 
 // Sub returns a new Size which is the result of subtracting the provided Size from this Size.
-func (s Size[T]) Sub(size Size[T]) Size[T] {
-	return Size[T]{
+func (s Size) Sub(size Size) Size {
+	return Size{
 		Width:  s.Width - size.Width,
 		Height: s.Height - size.Height,
 	}
 }
 
 // Mul returns a new Size which is the result of multiplying this Size by the value.
-func (s Size[T]) Mul(value T) Size[T] {
-	return Size[T]{
+func (s Size) Mul(value float32) Size {
+	return Size{
 		Width:  s.Width * value,
 		Height: s.Height * value,
 	}
 }
 
 // Div returns a new Size which is the result of dividing this Size by the value.
-func (s Size[T]) Div(value T) Size[T] {
-	return Size[T]{
+func (s Size) Div(value float32) Size {
+	return Size{
 		Width:  s.Width / value,
 		Height: s.Height / value,
 	}
 }
 
 // Floor returns a new Size with its width and height floored.
-func (s Size[T]) Floor() Size[T] {
-	return Size[T]{
+func (s Size) Floor() Size {
+	return Size{
 		Width:  xmath.Floor(s.Width),
 		Height: xmath.Floor(s.Height),
 	}
 }
 
 // Ceil returns a new Size with its width and height ceiled.
-func (s Size[T]) Ceil() Size[T] {
-	return Size[T]{
+func (s Size) Ceil() Size {
+	return Size{
 		Width:  xmath.Ceil(s.Width),
 		Height: xmath.Ceil(s.Height),
 	}
 }
 
 // Min returns the smallest Size between itself and 'other'.
-func (s Size[T]) Min(other Size[T]) Size[T] {
-	return Size[T]{
+func (s Size) Min(other Size) Size {
+	return Size{
 		Width:  min(s.Width, other.Width),
 		Height: min(s.Height, other.Height),
 	}
 }
 
 // Max returns the largest Size between itself and 'other'.
-func (s Size[T]) Max(other Size[T]) Size[T] {
-	return Size[T]{
+func (s Size) Max(other Size) Size {
+	return Size{
 		Width:  max(s.Width, other.Width),
 		Height: max(s.Height, other.Height),
 	}
 }
 
 // ConstrainForHint returns a size no larger than the hint value. Hint values less than one are ignored.
-func (s Size[T]) ConstrainForHint(hint Size[T]) Size[T] {
+func (s Size) ConstrainForHint(hint Size) Size {
 	w := s.Width
 	if hint.Width >= 1 && w > hint.Width {
 		w = hint.Width
@@ -111,13 +103,13 @@ func (s Size[T]) ConstrainForHint(hint Size[T]) Size[T] {
 	if hint.Height >= 1 && h > hint.Height {
 		h = hint.Height
 	}
-	return Size[T]{
+	return Size{
 		Width:  w,
 		Height: h,
 	}
 }
 
 // String implements fmt.Stringer.
-func (s Size[T]) String() string {
+func (s Size) String() string {
 	return fmt.Sprintf("%#v,%#v", s.Width, s.Height)
 }

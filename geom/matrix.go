@@ -13,30 +13,29 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox/v2/xmath"
-	"golang.org/x/exp/constraints"
 )
 
 // Matrix provides a 2D matrix.
-type Matrix[T constraints.Float] struct {
-	ScaleX T `json:"scale_x"`
-	SkewX  T `json:"skew_x"`
-	TransX T `json:"trans_x"`
-	SkewY  T `json:"skew_y"`
-	ScaleY T `json:"scale_y"`
-	TransY T `json:"trans_y"`
+type Matrix struct {
+	ScaleX float32 `json:"scale_x"`
+	SkewX  float32 `json:"skew_x"`
+	TransX float32 `json:"trans_x"`
+	SkewY  float32 `json:"skew_y"`
+	ScaleY float32 `json:"scale_y"`
+	TransY float32 `json:"trans_y"`
 }
 
 // NewIdentityMatrix creates a new identity transformation Matrix.
-func NewIdentityMatrix[T constraints.Float]() Matrix[T] {
-	return Matrix[T]{
+func NewIdentityMatrix() Matrix {
+	return Matrix{
 		ScaleX: 1,
 		ScaleY: 1,
 	}
 }
 
 // NewTranslationMatrix creates a new Matrix that translates by 'tx' and 'ty'.
-func NewTranslationMatrix[T constraints.Float](tx, ty T) Matrix[T] {
-	return Matrix[T]{
+func NewTranslationMatrix(tx, ty float32) Matrix {
+	return Matrix{
 		ScaleX: 1,
 		ScaleY: 1,
 		TransX: tx,
@@ -45,18 +44,18 @@ func NewTranslationMatrix[T constraints.Float](tx, ty T) Matrix[T] {
 }
 
 // NewScaleMatrix creates a new Matrix that scales by 'sx' and 'sy'.
-func NewScaleMatrix[T constraints.Float](sx, sy T) Matrix[T] {
-	return Matrix[T]{
+func NewScaleMatrix(sx, sy float32) Matrix {
+	return Matrix{
 		ScaleX: sx,
 		ScaleY: sy,
 	}
 }
 
 // NewRotationMatrix creates a new Matrix that rotates by 'radians'. Positive values are clockwise.
-func NewRotationMatrix[T constraints.Float](radians T) Matrix[T] {
+func NewRotationMatrix(radians float32) Matrix {
 	s := xmath.Sin(radians)
 	c := xmath.Cos(radians)
-	return Matrix[T]{
+	return Matrix{
 		ScaleX: c,
 		SkewX:  -s,
 		SkewY:  s,
@@ -65,13 +64,13 @@ func NewRotationMatrix[T constraints.Float](radians T) Matrix[T] {
 }
 
 // NewRotationByDegreesMatrix creates a new Matrix that rotates by 'degrees'. Positive values are clockwise.
-func NewRotationByDegreesMatrix[T constraints.Float](degrees T) Matrix[T] {
+func NewRotationByDegreesMatrix(degrees float32) Matrix {
 	return NewRotationMatrix(degrees * xmath.DegreesToRadians)
 }
 
 // Translate returns a new Matrix which is a copy of this Matrix translated by 'tx' and 'ty'.
-func (m Matrix[T]) Translate(tx, ty T) Matrix[T] {
-	return Matrix[T]{
+func (m Matrix) Translate(tx, ty float32) Matrix {
+	return Matrix{
 		ScaleX: m.ScaleX,
 		SkewX:  m.SkewX,
 		TransX: m.TransX + tx,
@@ -82,8 +81,8 @@ func (m Matrix[T]) Translate(tx, ty T) Matrix[T] {
 }
 
 // Scale returns a new Matrix which is a copy of this Matrix scaled by 'sx' and 'sy'.
-func (m Matrix[T]) Scale(sx, sy T) Matrix[T] {
-	return Matrix[T]{
+func (m Matrix) Scale(sx, sy float32) Matrix {
+	return Matrix{
 		ScaleX: m.ScaleX * sx,
 		SkewX:  m.SkewX * sx,
 		TransX: m.TransX * sx,
@@ -94,10 +93,10 @@ func (m Matrix[T]) Scale(sx, sy T) Matrix[T] {
 }
 
 // Rotate returns a new Matrix which is a copy of this Matrix rotated by 'radians'. Positive values are clockwise.
-func (m Matrix[T]) Rotate(radians T) Matrix[T] {
+func (m Matrix) Rotate(radians float32) Matrix {
 	s := xmath.Sin(radians)
 	c := xmath.Cos(radians)
-	return Matrix[T]{
+	return Matrix{
 		ScaleX: m.ScaleX*c - s*m.SkewY,
 		SkewX:  m.SkewX*c - s*m.ScaleY,
 		TransX: m.TransX*c - s*m.TransY,
@@ -108,13 +107,13 @@ func (m Matrix[T]) Rotate(radians T) Matrix[T] {
 }
 
 // RotateByDegrees returns a new Matrix which is a copy of this Matrix rotated by 'degrees'. Positive values are clockwise.
-func (m Matrix[T]) RotateByDegrees(degrees T) Matrix[T] {
+func (m Matrix) RotateByDegrees(degrees float32) Matrix {
 	return m.Rotate(degrees * xmath.DegreesToRadians)
 }
 
 // Multiply returns this Matrix multiplied by the other Matrix.
-func (m Matrix[T]) Multiply(other Matrix[T]) Matrix[T] {
-	return Matrix[T]{
+func (m Matrix) Multiply(other Matrix) Matrix {
+	return Matrix{
 		ScaleX: m.ScaleX*other.ScaleX + m.SkewX*other.SkewY,
 		SkewX:  m.ScaleX*other.SkewX + m.SkewX*other.ScaleY,
 		TransX: m.ScaleX*other.TransX + m.SkewX*other.TransY + m.TransX,
@@ -125,14 +124,14 @@ func (m Matrix[T]) Multiply(other Matrix[T]) Matrix[T] {
 }
 
 // TransformPoint returns the result of transforming the given Point by this Matrix.
-func (m Matrix[T]) TransformPoint(p Point[T]) Point[T] {
-	return Point[T]{
+func (m Matrix) TransformPoint(p Point) Point {
+	return Point{
 		X: m.ScaleX*p.X + m.SkewX*p.Y + m.TransX,
 		Y: m.SkewY*p.X + m.ScaleY*p.Y + m.TransY,
 	}
 }
 
 // String implements fmt.Stringer.
-func (m Matrix[T]) String() string {
+func (m Matrix) String() string {
 	return fmt.Sprintf("%#v,%#v,%#v,%#v,%#v,%#v", m.ScaleX, m.SkewX, m.TransX, m.SkewY, m.ScaleY, m.TransY)
 }

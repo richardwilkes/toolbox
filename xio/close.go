@@ -29,13 +29,13 @@ func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
 	CloseIgnoringErrors(rc)
 }
 
-// CloseLoggingAnyError closes the closer and logs any error that occurs at an error level to the default logger.
-func CloseLoggingAnyError(closer io.Closer) {
-	CloseLoggingAnyErrorTo(slog.Default(), closer)
+// CloseLoggingErrors closes the closer and logs any errors that occur to the default logger.
+func CloseLoggingErrors(closer io.Closer) {
+	CloseLoggingErrorsTo(slog.Default(), closer)
 }
 
-// CloseLoggingAnyErrorTo closes the closer and logs any error that occurs to the provided logger.
-func CloseLoggingAnyErrorTo(logger *slog.Logger, closer io.Closer) {
+// CloseLoggingErrorsTo closes the closer and logs any errors that occur to the provided logger.
+func CloseLoggingErrorsTo(logger *slog.Logger, closer io.Closer) {
 	if err := closer.Close(); err != nil {
 		errs.LogTo(logger, err)
 	}

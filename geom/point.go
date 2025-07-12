@@ -16,95 +16,87 @@ import (
 )
 
 // Point defines a location.
-type Point[T xmath.Numeric] struct {
-	X T `json:"x"`
-	Y T `json:"y"`
+type Point struct {
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
 }
 
 // NewPoint returns a new Point.
-func NewPoint[T xmath.Numeric](x, y T) Point[T] {
-	return Point[T]{
+func NewPoint(x, y float32) Point {
+	return Point{
 		X: x,
 		Y: y,
 	}
 }
 
-// ConvertPoint converts a Point of type F into one of type T.
-func ConvertPoint[T, F xmath.Numeric](pt Point[F]) Point[T] {
-	return Point[T]{
-		X: T(pt.X),
-		Y: T(pt.Y),
-	}
-}
-
 // Add returns a new Point which is the result of adding this Point with the provided Point.
-func (p Point[T]) Add(pt Point[T]) Point[T] {
-	return Point[T]{
+func (p Point) Add(pt Point) Point {
+	return Point{
 		X: p.X + pt.X,
 		Y: p.Y + pt.Y,
 	}
 }
 
 // Sub returns a new Point which is the result of subtracting the provided Point from this Point.
-func (p Point[T]) Sub(pt Point[T]) Point[T] {
-	return Point[T]{
+func (p Point) Sub(pt Point) Point {
+	return Point{
 		X: p.X - pt.X,
 		Y: p.Y - pt.Y,
 	}
 }
 
 // Mul returns a new Point which is the result of multiplying the coordinates of this point by the value.
-func (p Point[T]) Mul(value T) Point[T] {
-	return Point[T]{
+func (p Point) Mul(value float32) Point {
+	return Point{
 		X: p.X * value,
 		Y: p.Y * value,
 	}
 }
 
 // Div returns a new Point which is the result of dividing the coordinates of this point by the value.
-func (p Point[T]) Div(value T) Point[T] {
-	return Point[T]{
+func (p Point) Div(value float32) Point {
+	return Point{
 		X: p.X / value,
 		Y: p.Y / value,
 	}
 }
 
 // Neg returns a new Point that holds the negated coordinates of this Point.
-func (p Point[T]) Neg() Point[T] {
-	return Point[T]{
+func (p Point) Neg() Point {
+	return Point{
 		X: -p.X,
 		Y: -p.Y,
 	}
 }
 
 // Floor returns a new Point which is aligned to integer coordinates by using Floor on them.
-func (p Point[T]) Floor() Point[T] {
-	return Point[T]{
+func (p Point) Floor() Point {
+	return Point{
 		X: xmath.Floor(p.X),
 		Y: xmath.Floor(p.Y),
 	}
 }
 
 // Ceil returns a new Point which is aligned to integer coordinates by using Ceil() on them.
-func (p Point[T]) Ceil() Point[T] {
-	return Point[T]{
+func (p Point) Ceil() Point {
+	return Point{
 		X: xmath.Ceil(p.X),
 		Y: xmath.Ceil(p.Y),
 	}
 }
 
 // Dot returns the dot product of the two Points.
-func (p Point[T]) Dot(pt Point[T]) T {
+func (p Point) Dot(pt Point) float32 {
 	return p.X*pt.X + p.Y*pt.Y
 }
 
 // Cross returns the cross product of the two Points.
-func (p Point[T]) Cross(pt Point[T]) T {
+func (p Point) Cross(pt Point) float32 {
 	return p.X*pt.Y - p.Y*pt.X
 }
 
 // In returns true if this Point is within the Rect.
-func (p Point[T]) In(r Rect[T]) bool {
+func (p Point) In(r Rect) bool {
 	if r.Empty() {
 		return false
 	}
@@ -112,11 +104,11 @@ func (p Point[T]) In(r Rect[T]) bool {
 }
 
 // EqualWithin returns true if the two points are within the given tolerance of each other.
-func (p Point[T]) EqualWithin(pt Point[T], tolerance T) bool {
+func (p Point) EqualWithin(pt Point, tolerance float32) bool {
 	return xmath.EqualWithin(p.X, pt.X, tolerance) && xmath.EqualWithin(p.Y, pt.Y, tolerance)
 }
 
 // String implements the fmt.Stringer interface.
-func (p Point[T]) String() string {
+func (p Point) String() string {
 	return fmt.Sprintf("%#v,%#v", p.X, p.Y)
 }

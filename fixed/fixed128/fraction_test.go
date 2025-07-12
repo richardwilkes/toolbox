@@ -24,10 +24,10 @@ func TestFraction(t *testing.T) {
 	c.Equal(fixed128.FromStringForced[fixed.D4]("0.3333"), fixed128.NewFraction[fixed.D4]("1/3").Value())
 	c.Equal(fixed128.FromStringForced[fixed.D4]("0.3333"), fixed128.NewFraction[fixed.D4]("1 / 3").Value())
 	c.Equal(fixed128.FromStringForced[fixed.D4]("0.3333"), fixed128.NewFraction[fixed.D4]("-1/-3").Value())
-	c.Equal(fixed128.From[fixed.D4](0), fixed128.NewFraction[fixed.D4]("5/0").Value())
-	c.Equal(fixed128.From[fixed.D4](5), fixed128.NewFraction[fixed.D4]("5/1").Value())
-	c.Equal(fixed128.From[fixed.D4](-5), fixed128.NewFraction[fixed.D4]("-5/1").Value())
-	c.Equal(fixed128.From[fixed.D4](-5), fixed128.NewFraction[fixed.D4]("5/-1").Value())
+	c.Equal(fixed128.FromInteger[fixed.D4](0), fixed128.NewFraction[fixed.D4]("5/0").Value())
+	c.Equal(fixed128.FromInteger[fixed.D4](5), fixed128.NewFraction[fixed.D4]("5/1").Value())
+	c.Equal(fixed128.FromInteger[fixed.D4](-5), fixed128.NewFraction[fixed.D4]("-5/1").Value())
+	c.Equal(fixed128.FromInteger[fixed.D4](-5), fixed128.NewFraction[fixed.D4]("5/-1").Value())
 }
 
 func TestFractionFunctions(t *testing.T) {

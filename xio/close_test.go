@@ -94,7 +94,7 @@ func TestCloseLoggingAnyError(t *testing.T) {
 
 	// Test successful close (no logging)
 	closer := &mockCloser{shouldError: false}
-	xio.CloseLoggingAnyError(closer)
+	xio.CloseLoggingErrors(closer)
 	c.True(closer.closed)
 
 	// Create a buffer to capture log output
@@ -105,7 +105,7 @@ func TestCloseLoggingAnyError(t *testing.T) {
 
 	// Test close with error
 	closerWithError := &mockCloser{shouldError: true}
-	xio.CloseLoggingAnyError(closerWithError)
+	xio.CloseLoggingErrors(closerWithError)
 	c.True(closerWithError.closed)
 	c.Contains(buf.String(), "mock close error")
 }
@@ -119,14 +119,14 @@ func TestCloseLoggingAnyErrorTo(t *testing.T) {
 
 	// Test successful close (no logging)
 	closer := &mockCloser{shouldError: false}
-	xio.CloseLoggingAnyErrorTo(logger, closer)
+	xio.CloseLoggingErrorsTo(logger, closer)
 	c.True(closer.closed)
 	c.Equal("", buf.String())
 
 	// Test close with error (should log)
 	buf.Reset()
 	closerWithError := &mockCloser{shouldError: true}
-	xio.CloseLoggingAnyErrorTo(logger, closerWithError)
+	xio.CloseLoggingErrorsTo(logger, closerWithError)
 	c.True(closerWithError.closed)
 	logOutput := buf.String()
 	c.True(strings.Contains(logOutput, "mock close error"))
