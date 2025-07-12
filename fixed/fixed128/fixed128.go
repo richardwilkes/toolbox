@@ -148,9 +148,9 @@ func AsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) TO {
 	return TO(fixed64)
 }
 
-// CheckedAsInteger is the same as As(), except that it returns an error if the value cannot be represented exactly in
+// AsIntegerChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in
 // the requested destination type.
-func CheckedAsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
+func AsIntegerChecked[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
 	n := TO(f.data.Div(multiplier[T]()).AsInt64())
 	if FromInteger[T](n) != f {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -158,9 +158,9 @@ func CheckedAsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) 
 	return n, nil
 }
 
-// CheckedAsFloat is the same as As(), except that it returns an error if the value cannot be represented exactly in the
+// AsFloatChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in the
 // requested destination type.
-func CheckedAsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
+func AsFloatChecked[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
 	var t T
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()

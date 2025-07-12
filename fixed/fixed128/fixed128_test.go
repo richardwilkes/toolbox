@@ -537,20 +537,20 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 
 	// Test successful conversions
 	intVal := fixed128.FromInteger[T](42)
-	result, err := fixed128.CheckedAsInteger[T, int](intVal)
+	result, err := fixed128.AsIntegerChecked[T, int](intVal)
 	c.NoError(err)
 	c.Equal(int(42), result)
 
-	floatResult, err := fixed128.CheckedAsFloat[T, float64](intVal)
+	floatResult, err := fixed128.AsFloatChecked[T, float64](intVal)
 	c.NoError(err)
 	c.Equal(float64(42.0), floatResult)
 	// Test conversion that should fail (fractional part)
 	fracVal := fixed128.FromStringForced[T]("42.5")
-	_, err = fixed128.CheckedAsInteger[T, int](fracVal)
+	_, err = fixed128.AsIntegerChecked[T, int](fracVal)
 	c.HasError(err)
 
 	// Float conversion should succeed for fractional values
-	floatResult, err = fixed128.CheckedAsFloat[T, float64](fracVal)
+	floatResult, err = fixed128.AsFloatChecked[T, float64](fracVal)
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
 }
@@ -794,7 +794,7 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 
 	// Test CheckedAs with float conversion that should fail
 	val := fixed128.FromStringForced[T]("999999999999999999999999999.9")
-	_, _ = fixed128.CheckedAsFloat[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
+	_, _ = fixed128.AsFloatChecked[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
 	c.NotNil(val)
 
 	// Test YAML unmarshaling with string data

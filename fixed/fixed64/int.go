@@ -134,9 +134,9 @@ func AsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) TO {
 	return TO(float64(f) / float64(Multiplier[T]()))
 }
 
-// CheckedAsInteger is the same as AsInteger(), except that it returns an error if the value cannot be represented
+// AsIntegerChecked is the same as AsInteger(), except that it returns an error if the value cannot be represented
 // exactly in the requested destination type.
-func CheckedAsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
+func AsIntegerChecked[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
 	n := TO(int64(f) / Multiplier[T]())
 	if FromInteger[T](n) != f {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -144,28 +144,14 @@ func CheckedAsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) 
 	return n, nil
 }
 
-// CheckedAsFloat is the same as AsFloat(), except that it returns an error if the value cannot be represented exactly
+// AsFloatChecked is the same as AsFloat(), except that it returns an error if the value cannot be represented exactly
 // in the requested destination type.
-func CheckedAsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
+func AsFloatChecked[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
 	n := TO(float64(f) / float64(Multiplier[T]()))
 	if strconv.FormatFloat(float64(n), 'g', -1, reflect.TypeOf(n).Bits()) != f.String() {
 		return 0, fixed.ErrDoesNotFitInRequestedType
 	}
 	return n, nil
-}
-
-// Add adds this value to the passed-in value, returning a new value. Note that this method is only provided to make
-// text templates easier to use with these objects, since you can just add two Int[T] values together like they were
-// primitive types.
-func (f Int[T]) Add(value Int[T]) Int[T] {
-	return f + value
-}
-
-// Sub subtracts the passed-in value from this value, returning a new value. Note that this method is only provided to
-// make text templates easier to use with these objects, since you can just subtract two Int[T] values together like
-// they were primitive types.
-func (f Int[T]) Sub(value Int[T]) Int[T] {
-	return f - value
 }
 
 // Mul multiplies this value by the passed-in value, returning a new value.

@@ -357,48 +357,6 @@ func testIncDec[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed64.FromInteger[T](-2), negativeOne.Dec())
 }
 
-func TestAdd(t *testing.T) {
-	testAdd[fixed.D1](t)
-	testAdd[fixed.D2](t)
-	testAdd[fixed.D3](t)
-	testAdd[fixed.D4](t)
-	testAdd[fixed.D5](t)
-	testAdd[fixed.D6](t)
-}
-
-func testAdd[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	a := fixed64.FromInteger[T](5)
-	b := fixed64.FromInteger[T](10)
-
-	// Test Add method (in addition to the + operator already tested)
-	c.Equal(fixed64.FromInteger[T](15), a.Add(b))
-	c.Equal(fixed64.FromInteger[T](15), b.Add(a))
-	c.Equal(a, a.Add(fixed64.FromInteger[T](0)))
-}
-
-func TestSub(t *testing.T) {
-	testSub[fixed.D1](t)
-	testSub[fixed.D2](t)
-	testSub[fixed.D3](t)
-	testSub[fixed.D4](t)
-	testSub[fixed.D5](t)
-	testSub[fixed.D6](t)
-}
-
-func testSub[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	a := fixed64.FromInteger[T](10)
-	b := fixed64.FromInteger[T](5)
-
-	// Test Sub method (in addition to the - operator already tested)
-	c.Equal(b, a.Sub(b))
-	c.Equal(fixed64.FromInteger[T](-5), b.Sub(a))
-	c.Equal(a, a.Sub(fixed64.FromInteger[T](0)))
-}
-
 func TestAs(t *testing.T) {
 	testAs[fixed.D1](t)
 	testAs[fixed.D2](t)
@@ -451,21 +409,21 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 
 	// Test successful conversions
 	intVal := fixed64.FromInteger[T](42)
-	result, err := fixed64.CheckedAsInteger[T, int](intVal)
+	result, err := fixed64.AsIntegerChecked[T, int](intVal)
 	c.NoError(err)
 	c.Equal(int(42), result)
 
-	floatResult, err := fixed64.CheckedAsFloat[T, float64](intVal)
+	floatResult, err := fixed64.AsFloatChecked[T, float64](intVal)
 	c.NoError(err)
 	c.Equal(float64(42.0), floatResult)
 
 	// Test conversion that should fail (fractional part)
 	fracVal := fixed64.FromStringForced[T]("42.5")
-	_, err = fixed64.CheckedAsInteger[T, int](fracVal)
+	_, err = fixed64.AsIntegerChecked[T, int](fracVal)
 	c.HasError(err)
 
 	// Float conversion should succeed for fractional values
-	floatResult, err = fixed64.CheckedAsFloat[T, float64](fracVal)
+	floatResult, err = fixed64.AsFloatChecked[T, float64](fracVal)
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
 }
@@ -711,7 +669,7 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 
 	// Test CheckedAs with float conversion that should fail
 	val := fixed64.FromStringForced[T]("999999999999999999.9")
-	_, _ = fixed64.CheckedAsFloat[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
+	_, _ = fixed64.AsFloatChecked[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
 	c.NotNil(val)
 
 	// Test YAML unmarshaling with string data
