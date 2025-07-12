@@ -100,7 +100,10 @@ func (p Point) In(r Rect) bool {
 	if r.Empty() {
 		return false
 	}
-	return r.X <= p.X && r.Y <= p.Y && p.X < r.Right() && p.Y < r.Bottom()
+	return p.X >= r.X &&
+		p.Y >= r.Y &&
+		p.X < r.Right() &&
+		p.Y < r.Bottom()
 }
 
 // EqualWithin returns true if the two points are within the given tolerance of each other.

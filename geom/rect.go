@@ -81,10 +81,16 @@ func (r Rect) Contains(in Rect) bool {
 	}
 	right := r.Right()
 	bottom := r.Bottom()
-	inRight := in.Right() - 1
-	inBottom := in.Bottom() - 1
-	return r.X <= in.X && r.Y <= in.Y && in.X < right && in.Y < bottom && r.X <= inRight &&
-		r.Y <= inBottom && inRight < right && inBottom < bottom
+	inRight := in.Right()
+	inBottom := in.Bottom()
+	return in.X >= r.X &&
+		in.Y >= r.Y &&
+		in.X < right &&
+		in.Y < bottom &&
+		inRight > r.X &&
+		inBottom > r.Y &&
+		inRight <= right &&
+		inBottom <= bottom
 }
 
 // IntersectsLine returns true if this rect and the line described by start and end intersect.

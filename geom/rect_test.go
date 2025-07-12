@@ -139,9 +139,14 @@ func TestRectContains(t *testing.T) {
 	inner := geom.NewRect(15, 25, 10, 15)
 	c.True(r.Contains(inner))
 
-	// Rectangle touching edges from inside (should be contained)
-	edge := geom.NewRect(10, 20, 15, 20)
-	c.True(r.Contains(edge))
+	// Rectangle touching edges from inside on far left (should be contained)
+	leftEdge := geom.NewRect(10, 20, 15, 20)
+	c.True(r.Contains(leftEdge))
+
+	// Rectangle touching edges from inside on far right (should be contained)
+	rightEdge := geom.NewRect(30, 20, 10, 20)
+	c.Equal(r.Right(), rightEdge.Right())
+	c.True(r.Contains(rightEdge))
 
 	// Rectangle extending outside
 	outside := geom.NewRect(5, 15, 50, 60)
