@@ -9,7 +9,11 @@
 
 package xmath
 
-import "math"
+import (
+	"math"
+
+	"golang.org/x/exp/constraints"
+)
 
 const (
 	// DegreesToRadians converts a value in degrees to radians when multiplied with the value.
@@ -26,6 +30,14 @@ const (
 //	Abs(NaN) = NaN
 func Abs(x float32) float32 {
 	return math.Float32frombits(math.Float32bits(float32(x)) &^ (1 << 31))
+}
+
+// AbsInt returns the absolute value of x.
+func AbsInt[T constraints.Signed](x T) T {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 // Acos returns the arccosine of x.
