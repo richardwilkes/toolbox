@@ -153,6 +153,20 @@ func AsFloatChecked[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
 	return n, nil
 }
 
+// Add adds this value to the passed-in value, returning a new value. Note that this method is only provided to make
+// text templates easier to use with these objects, since you can just add two Int[T] values together like they were
+// primitive types.
+func (f Int[T]) Add(value Int[T]) Int[T] {
+	return f + value
+}
+
+// Sub subtracts the passed-in value from this value, returning a new value. Note that this method is only provided to
+// make text templates easier to use with these objects, since you can just subtract two Int[T] values together like
+// they were primitive types.
+func (f Int[T]) Sub(value Int[T]) Int[T] {
+	return f - value
+}
+
 // Mul multiplies this value by the passed-in value, returning a new value.
 func (f Int[T]) Mul(value Int[T]) Int[T] {
 	return f.mul64(value, Int[T](Multiplier[T]()))
