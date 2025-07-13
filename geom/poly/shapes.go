@@ -25,15 +25,15 @@ func FromRect(r Rect) Polygon {
 // segments to break the ellipse contour into. Passing a value less than 4 for 'sections' will result in an automatic
 // choice based on a call to EllipseSegmentCount, using half of the longest dimension for the 'r' parameter and 0.2 for
 // the 'e' parameter.
-func FromEllipse(r Rect, sections Num) Polygon {
-	if sections < Four {
+func FromEllipse(r Rect, sections int) Polygon {
+	if sections < 4 {
 		sections = EllipseSegmentCount(max(r.Width, r.Height).Div(Two), PointTwo)
 	}
 	halfWidth := r.Width.Div(Two)
 	halfHeight := r.Height.Div(Two)
-	inc := Pi.Mul(Two).Div(sections)
+	inc := Pi.Mul(Two).Div(NumFromInteger(sections))
 	center := r.Center()
-	contour := make(Contour, NumAsInteger[int](sections))
+	contour := make(Contour, sections)
 	var angle Num
 	for i := range sections {
 		contour[i] = NewPoint(center.X+Cos(angle).Mul(halfWidth), center.Y+Sin(angle).Mul(halfHeight))
@@ -44,7 +44,7 @@ func FromEllipse(r Rect, sections Num) Polygon {
 
 // EllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
 // radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
-func EllipseSegmentCount(r, e Num) Num {
+func EllipseSegmentCount(r, e Num) int {
 	d := One - e.Div(r)
-	return max(((Two.Mul(Pi).Div(Acos(Two.Mul(d).Mul(d) - One))).Ceil()), Four)
+	return max(NumAsInteger[int]((Two.Mul(Pi).Div(Acos(Two.Mul(d).Mul(d) - One))).Ceil()), 4)
 }
