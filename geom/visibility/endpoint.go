@@ -9,15 +9,17 @@
 
 package visibility
 
-import "github.com/richardwilkes/toolbox/v2/geom/poly"
+import (
+	"github.com/richardwilkes/toolbox/v2/geom"
+)
 
 type endPoint struct {
-	angle        poly.Num
 	segmentIndex int
+	angle        float32
 	start        bool
 }
 
-func (ep *endPoint) pt(segments []Segment) poly.Point {
+func (ep *endPoint) pt(segments []Segment) geom.Point {
 	if ep.start {
 		return segments[ep.segmentIndex].Start
 	}

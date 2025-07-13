@@ -9,9 +9,13 @@
 
 package poly
 
+import (
+	"github.com/richardwilkes/toolbox/v2/geom"
+)
+
 type vertexNode struct {
 	next *vertexNode
-	pt   Point
+	pt   geom.Point
 }
 
 type polygonNode struct {
@@ -22,14 +26,14 @@ type polygonNode struct {
 	active bool
 }
 
-func (p *polygonNode) addLeft(pt Point) {
+func (p *polygonNode) addLeft(pt geom.Point) {
 	p.proxy.left = &vertexNode{
 		pt:   pt,
 		next: p.proxy.left,
 	}
 }
 
-func (p *polygonNode) addRight(pt Point) {
+func (p *polygonNode) addRight(pt geom.Point) {
 	v := &vertexNode{pt: pt}
 	if p.proxy == nil {
 		p.proxy = p
@@ -101,7 +105,7 @@ func (p *polygonNode) generate() Polygon {
 			continue
 		}
 		var prev *vertexNode
-		result[ci] = make([]Point, ptCounts[ci])
+		result[ci] = make([]geom.Point, ptCounts[ci])
 		v := len(result[ci]) - 1
 		for vtx := poly.proxy.left; vtx != nil; vtx = vtx.next {
 			if prev == nil || prev.pt != vtx.pt {

@@ -10,22 +10,14 @@
 package poly
 
 import (
+	"math"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
 // Contour is a sequence of vertices connected by line segments, forming a closed shape.
-type Contour []Point
-
-// Points converts this Contour into a slice of geom.Point.
-func (c Contour) Points() []geom.Point {
-	points := make([]geom.Point, len(c))
-	for i, p := range c {
-		points[i] = p.Point()
-	}
-	return points
-}
+type Contour []geom.Point
 
 // Clone returns a copy of this contour.
 func (c Contour) Clone() Contour {
@@ -38,15 +30,15 @@ func (c Contour) Clone() Contour {
 }
 
 // Bounds returns the bounding rectangle of the contour.
-func (c Contour) Bounds() Rect {
+func (c Contour) Bounds() geom.Rect {
 	if len(c) == 0 {
-		return Rect{}
+		return geom.Rect{}
 	}
-	minX := c[0].X
-	minY := c[0].Y
-	maxX := minX
-	maxY := minY
-	for _, p := range c[1:] {
+	minX := float32(math.MaxFloat32)
+	minY := minX
+	maxX := float32(-math.MaxFloat32)
+	maxY := maxX
+	for _, p := range c {
 		if p.X > maxX {
 			maxX = p.X
 		}
@@ -60,14 +52,11 @@ func (c Contour) Bounds() Rect {
 			minY = p.Y
 		}
 	}
-	return NewRect(minX, minY, maxX-minX, maxY-minY)
+	return geom.NewRect(minX, minY, 1+maxX-minX, 1+maxY-minY)
 }
 
 // Contains returns true if the point is contained by the contour.
-func (c Contour) Contains(pt Point) bool {
-	if len(c) < 3 {
-		return false // A contour needs at least 3 points to contain anything
-	}
+func (c Contour) Contains(pt geom.Point) bool {
 	var count int
 	for i := range c {
 		cur := c[i]
@@ -77,12 +66,8 @@ func (c Contour) Contains(pt Point) bool {
 		if bottom.Y > top.Y {
 			bottom, top = top, bottom
 		}
-		if pt.Y >= bottom.Y &&
-			pt.Y < top.Y &&
-			pt.X < max(cur.X, next.X) &&
-			next.Y != cur.Y &&
-			(cur.X == next.X ||
-				pt.X <= (pt.Y-cur.Y).Mul(next.X-cur.X).Div(next.Y-cur.Y)+cur.X) {
+		if pt.Y >= bottom.Y && pt.Y < top.Y && pt.X < max(cur.X, next.X) && next.Y != cur.Y &&
+			(cur.X == next.X || pt.X <= (pt.Y-cur.Y)*(next.X-cur.X)/(next.Y-cur.Y)+cur.X) {
 			count++
 		}
 	}

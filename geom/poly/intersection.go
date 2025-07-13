@@ -9,14 +9,18 @@
 
 package poly
 
+import (
+	"github.com/richardwilkes/toolbox/v2/geom"
+)
+
 type intersection struct {
 	edge0 *edgeNode
 	edge1 *edgeNode
 	next  *intersection
-	point Point
+	point geom.Point
 }
 
-func (i *intersection) process(op clipOp, pt Point, outPoly *polygonNode) *polygonNode {
+func (i *intersection) process(op clipOp, pt geom.Point, outPoly *polygonNode) *polygonNode {
 	e0 := i.edge0
 	e1 := i.edge1
 

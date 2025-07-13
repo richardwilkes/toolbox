@@ -11,35 +11,34 @@ package visibility
 
 import (
 	"cmp"
+	"math"
 	"slices"
 
 	"github.com/richardwilkes/toolbox/v2/collection/quadtree"
+	"github.com/richardwilkes/toolbox/v2/geom"
 	"github.com/richardwilkes/toolbox/v2/geom/poly"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
-var (
-	epsilon    = poly.NumFromFloat(0.01)
-	twoEpsilon = epsilon.Mul(poly.Two)
-	tenEpsilon = epsilon.Mul(poly.Ten)
-)
+const epsilon = 0.01
 
 // Visibility holds state for computing a visibility polygon.
 type Visibility struct {
 	segments []Segment
-	top      poly.Num
-	left     poly.Num
-	bottom   poly.Num
-	right    poly.Num
+	top      float32
+	left     float32
+	bottom   float32
+	right    float32
 }
 
 // New creates a Visibility object. If the obstructions do not intersect each other, pass in true for hasNoIntersections
 // to eliminate the costly pass to break the segments up into smaller parts.
-func New(bounds poly.Rect, obstructions []Segment, hasNoIntersections bool) *Visibility {
+func New(bounds geom.Rect, obstructions []Segment, hasNoIntersections bool) *Visibility {
 	v := &Visibility{
 		top:      bounds.Y,
 		left:     bounds.X,
-		bottom:   bounds.Bottom(),
-		right:    bounds.Right(),
+		bottom:   bounds.Bottom() - 1,
+		right:    bounds.Right() - 1,
 		segments: make([]Segment, len(obstructions)),
 	}
 	copy(v.segments, obstructions)
@@ -50,7 +49,7 @@ func New(bounds poly.Rect, obstructions []Segment, hasNoIntersections bool) *Vis
 }
 
 // SetViewPoint sets a view point and generates a polygon with the unobstructed visible area.
-func (v *Visibility) SetViewPoint(viewPt poly.Point) poly.Polygon {
+func (v *Visibility) SetViewPoint(viewPt geom.Point) poly.Polygon {
 	// If the view point is not within the bounding area, there is no visible area
 	if !v.inViewport(viewPt) {
 		return nil
@@ -59,11 +58,11 @@ func (v *Visibility) SetViewPoint(viewPt poly.Point) poly.Polygon {
 	// Generate a revised segment list by clipping the segments against the viewport and throwing out any that aren't
 	// within the viewport.
 	segments := make([]Segment, 0, len(v.segments)*2)
-	viewport := []poly.Point{
-		poly.NewPoint(v.left, v.top),
-		poly.NewPoint(v.right, v.top),
-		poly.NewPoint(v.right, v.bottom),
-		poly.NewPoint(v.left, v.bottom),
+	viewport := []geom.Point{
+		geom.NewPoint(v.left, v.top),
+		geom.NewPoint(v.right, v.top),
+		geom.NewPoint(v.right, v.bottom),
+		geom.NewPoint(v.left, v.bottom),
 	}
 	for _, si := range v.segments {
 		if (si.Start.X < v.left && si.End.X < v.left) ||
@@ -72,12 +71,12 @@ func (v *Visibility) SetViewPoint(viewPt poly.Point) poly.Polygon {
 			(si.Start.Y > v.bottom && si.End.Y > v.bottom) {
 			continue
 		}
-		intersections := make([]poly.Point, 0, len(viewport))
+		intersections := make([]geom.Point, 0, len(viewport))
 		for j := range viewport {
 			k := (j + 1) % len(viewport)
 			if hasIntersection(si.Start, si.End, viewport[j], viewport[k]) {
 				pt, intersects := intersectLines(si.Start, si.End, viewport[j], viewport[k])
-				if intersects && pt != si.Start && pt != si.End {
+				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
 					intersections = append(intersections, pt)
 				}
 			}
@@ -86,10 +85,11 @@ func (v *Visibility) SetViewPoint(viewPt poly.Point) poly.Polygon {
 	}
 
 	// Add the viewport bounds to the segment list
-	topLeft := poly.Point{X: v.left - tenEpsilon, Y: v.top - tenEpsilon}
-	topRight := poly.Point{X: v.right + tenEpsilon, Y: v.top - tenEpsilon}
-	bottomLeft := poly.Point{X: v.left - tenEpsilon, Y: v.bottom + tenEpsilon}
-	bottomRight := poly.Point{X: v.right + tenEpsilon, Y: v.bottom + tenEpsilon}
+	const eps = 10 * epsilon
+	topLeft := geom.Point{X: v.left - eps, Y: v.top - eps}
+	topRight := geom.Point{X: v.right + eps, Y: v.top - eps}
+	bottomLeft := geom.Point{X: v.left - eps, Y: v.bottom + eps}
+	bottomRight := geom.Point{X: v.right + eps, Y: v.bottom + eps}
 	segments = append(segments,
 		Segment{Start: topLeft, End: topRight},
 		Segment{Start: topRight, End: bottomRight},
@@ -100,7 +100,7 @@ func (v *Visibility) SetViewPoint(viewPt poly.Point) poly.Polygon {
 	return v.computePolygon(viewPt, segments)
 }
 
-func (v *Visibility) computePolygon(viewPt poly.Point, segments []Segment) poly.Polygon {
+func (v *Visibility) computePolygon(viewPt geom.Point, segments []Segment) poly.Polygon {
 	// Sweep through the points to generate the visibility contour
 	sorted := sortPoints(viewPt, segments)
 	mapper := &array{data: make([]int, len(segments))}
@@ -108,14 +108,12 @@ func (v *Visibility) computePolygon(viewPt poly.Point, segments []Segment) poly.
 		mapper.data[i] = -1
 	}
 	heap := &array{}
-	start := poly.Point{X: viewPt.X + poly.One, Y: viewPt.Y}
+	start := geom.Point{X: viewPt.X + 1, Y: viewPt.Y}
 	for i := range segments {
 		a1 := angle(segments[i].Start, viewPt)
 		a2 := angle(segments[i].End, viewPt)
-		if (a1 >= -poly.OneHundredEighty && a1 <= 0 && a2 <= poly.OneHundredEighty &&
-			a2 >= 0 && a2-a1 > poly.OneHundredEighty) ||
-			(a2 >= -poly.OneHundredEighty && a2 <= 0 && a1 <= poly.OneHundredEighty &&
-				a1 >= 0 && a1-a2 > poly.OneHundredEighty) {
+		if (a1 >= -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
+			(a2 >= -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
 			insert(i, heap, mapper, segments, viewPt, start)
 		}
 	}
@@ -146,19 +144,19 @@ func (v *Visibility) computePolygon(viewPt poly.Point, segments []Segment) poly.
 			}
 		}
 		if extend {
-			contour = append(contour, poly.Point{X: vertex.X, Y: vertex.Y})
+			contour = append(contour, geom.Point{X: vertex.X, Y: vertex.Y})
 			s := segments[heap.elem(0)]
-			if cur, intersects := intersectLines(s.Start, s.End, viewPt, vertex); intersects && cur != vertex {
-				contour = append(contour, poly.Point{X: cur.X, Y: cur.Y})
+			if cur, intersects := intersectLines(s.Start, s.End, viewPt, vertex); intersects && !mostlyEqual(cur, vertex) {
+				contour = append(contour, geom.Point{X: cur.X, Y: cur.Y})
 			}
 		} else if shorten {
 			s := segments[oldSeg]
 			if cur, intersects := intersectLines(s.Start, s.End, viewPt, vertex); intersects {
-				contour = append(contour, poly.Point{X: cur.X, Y: cur.Y})
+				contour = append(contour, geom.Point{X: cur.X, Y: cur.Y})
 			}
 			s = segments[heap.elem(0)]
 			if cur, intersects := intersectLines(s.Start, s.End, viewPt, vertex); intersects {
-				contour = append(contour, poly.Point{X: cur.X, Y: cur.Y})
+				contour = append(contour, geom.Point{X: cur.X, Y: cur.Y})
 			}
 		}
 	}
@@ -168,7 +166,7 @@ func (v *Visibility) computePolygon(viewPt poly.Point, segments []Segment) poly.
 	return poly.Polygon{contour}
 }
 
-func (v *Visibility) inViewport(pt poly.Point) bool {
+func (v *Visibility) inViewport(pt geom.Point) bool {
 	return pt.X >= v.left-epsilon &&
 		pt.Y >= v.top-epsilon &&
 		pt.X <= v.right+epsilon &&
@@ -182,14 +180,14 @@ func (v *Visibility) breakIntersections() {
 	}
 	segments := make([]Segment, 0, len(v.segments)*2)
 	for _, si := range v.segments {
-		var intersections []poly.Point
+		var intersections []geom.Point
 		for _, sj := range qt.FindIntersects(si.Bounds()) {
 			if si == sj {
 				continue
 			}
 			if hasIntersection(si.Start, si.End, sj.Start, sj.End) {
 				pt, intersects := intersectLines(si.Start, si.End, sj.Start, sj.End)
-				if intersects && pt != si.Start && pt != si.End {
+				if intersects && !mostlyEqual(pt, si.Start) && !mostlyEqual(pt, si.End) {
 					intersections = append(intersections, pt)
 				}
 			}
@@ -199,7 +197,7 @@ func (v *Visibility) breakIntersections() {
 	v.segments = slices.Clip(segments)
 }
 
-func (v *Visibility) collectSegments(s Segment, intersections []poly.Point, segments []Segment, onlyInViewPort bool) []Segment {
+func (v *Visibility) collectSegments(s Segment, intersections []geom.Point, segments []Segment, onlyInViewPort bool) []Segment {
 	start := s.Start
 	for len(intersections) > 0 {
 		endIndex := 0
@@ -222,7 +220,11 @@ func (v *Visibility) collectSegments(s Segment, intersections []poly.Point, segm
 	return segments
 }
 
-func remove(index int, heap, mapper *array, segments []Segment, position, destination poly.Point) {
+func mostlyEqual(a, b geom.Point) bool {
+	return a.EqualWithin(b, epsilon)
+}
+
+func remove(index int, heap, mapper *array, segments []Segment, position, destination geom.Point) {
 	mapper.set(heap.elem(index), -1)
 	if index == heap.size()-1 {
 		heap.pop()
@@ -276,7 +278,7 @@ loop:
 	}
 }
 
-func insert(index int, heap, mapper *array, segments []Segment, position, destination poly.Point) {
+func insert(index int, heap, mapper *array, segments []Segment, position, destination geom.Point) {
 	if _, intersects := intersectLines(segments[index].Start, segments[index].End, position, destination); !intersects {
 		return
 	}
@@ -298,7 +300,7 @@ func insert(index int, heap, mapper *array, segments []Segment, position, destin
 	}
 }
 
-func lessThan(index1, index2 int, segments []Segment, position, destination poly.Point) bool {
+func lessThan(index1, index2 int, segments []Segment, position, destination geom.Point) bool {
 	pt1, intersects1 := intersectLines(segments[index1].Start, segments[index1].End, position, destination)
 	if !intersects1 {
 		return false
@@ -307,25 +309,25 @@ func lessThan(index1, index2 int, segments []Segment, position, destination poly
 	if !intersects2 {
 		return false
 	}
-	if pt1 != pt2 {
+	if !mostlyEqual(pt1, pt2) {
 		d1 := distance(pt1, position)
 		d2 := distance(pt2, position)
 		return d1 < d2
 	}
-	var a1 poly.Num
-	if pt1 == segments[index1].Start {
+	var a1 float32
+	if mostlyEqual(pt1, segments[index1].Start) {
 		a1 = angle2(segments[index1].End, pt1, position)
 	} else {
 		a1 = angle2(segments[index1].Start, pt1, position)
 	}
-	var a2 poly.Num
-	if pt2 == segments[index2].Start {
+	var a2 float32
+	if mostlyEqual(pt2, segments[index2].Start) {
 		a2 = angle2(segments[index2].End, pt2, position)
 	} else {
 		a2 = angle2(segments[index2].Start, pt2, position)
 	}
-	if a1 < poly.OneHundredEighty {
-		if a2 > poly.OneHundredEighty {
+	if a1 < 180 {
+		if a2 > 180 {
 			return true
 		}
 		return a2 < a1
@@ -333,7 +335,7 @@ func lessThan(index1, index2 int, segments []Segment, position, destination poly
 	return a1 < a2
 }
 
-func sortPoints(position poly.Point, segments []Segment) []endPoint {
+func sortPoints(position geom.Point, segments []Segment) []endPoint {
 	points := make([]endPoint, len(segments)*2)
 	pos := 0
 	for i, s := range segments {
@@ -364,43 +366,43 @@ func sortPoints(position poly.Point, segments []Segment) []endPoint {
 	return points
 }
 
-func angle2(a, b, c poly.Point) poly.Num {
+func angle2(a, b, c geom.Point) float32 {
 	a1 := angle(a, b)
 	a2 := angle(b, c)
 	a3 := a1 - a2
 	if a3 < 0 {
-		a3 += poly.ThreeHundredSixty
+		a3 += 360
 	}
-	if a3 > poly.ThreeHundredSixty {
-		a3 -= poly.ThreeHundredSixty
+	if a3 > 360 {
+		a3 -= 360
 	}
 	return a3
 }
 
-func angle(a, b poly.Point) poly.Num {
-	return poly.Atan2(b.Y-a.Y, b.X-a.X).Mul(poly.OneHundredEighty).Div(poly.Pi)
+func angle(a, b geom.Point) float32 {
+	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
 }
 
-func distance(a, b poly.Point) poly.Num {
+func distance(a, b geom.Point) float32 {
 	dx := a.X - b.X
 	dy := a.Y - b.Y
-	return dx.Mul(dx) + dy.Mul(dy)
+	return dx*dx + dy*dy
 }
 
-func intersectLines(s1, e1, s2, e2 poly.Point) (poly.Point, bool) {
+func intersectLines(s1, e1, s2, e2 geom.Point) (geom.Point, bool) {
 	dbx := e2.X - s2.X
 	dby := e2.Y - s2.Y
 	dax := e1.X - s1.X
 	day := e1.Y - s1.Y
-	ub := dby.Mul(dax) - dbx.Mul(day)
+	ub := dby*dax - dbx*day
 	if ub == 0 {
-		return poly.Point{}, false
+		return geom.Point{}, false
 	}
-	ua := (dbx.Mul(s1.Y-s2.Y) - dby.Mul(s1.X-s2.X)).Div(ub)
-	return poly.Point{X: s1.X + ua.Mul(dax), Y: s1.Y + ua.Mul(day)}, true
+	ua := (dbx*(s1.Y-s2.Y) - dby*(s1.X-s2.X)) / ub
+	return geom.Point{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
 }
 
-func hasIntersection(s1, e1, s2, e2 poly.Point) bool {
+func hasIntersection(s1, e1, s2, e2 geom.Point) bool {
 	d1 := direction(s2, e2, s1)
 	d2 := direction(s2, e2, e1)
 	d3 := direction(s1, e1, s2)
@@ -413,11 +415,11 @@ func hasIntersection(s1, e1, s2, e2 poly.Point) bool {
 		(d4 == 0 && onSegment(s1, e1, e2))
 }
 
-func direction(a, b, c poly.Point) int {
-	return cmp.Compare((c.X - a.X).Mul(b.Y-a.Y), (b.X - a.X).Mul(c.Y-a.Y))
+func direction(a, b, c geom.Point) int {
+	return cmp.Compare((c.X-a.X)*(b.Y-a.Y), (b.X-a.X)*(c.Y-a.Y))
 }
 
-func onSegment(a, b, c poly.Point) bool {
+func onSegment(a, b, c geom.Point) bool {
 	return (a.X <= c.X || b.X <= c.X) &&
 		(c.X <= a.X || c.X <= b.X) &&
 		(a.Y <= c.Y || b.Y <= c.Y) &&

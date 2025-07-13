@@ -11,24 +11,19 @@ package visibility
 
 import (
 	"github.com/richardwilkes/toolbox/v2/geom"
-	"github.com/richardwilkes/toolbox/v2/geom/poly"
 )
 
 // Segment holds the start and end points of a line.
 type Segment struct {
-	Start poly.Point
-	End   poly.Point
+	Start geom.Point
+	End   geom.Point
 }
 
-// Bounds returns the bounding geom.Rect of this Segment for use in a quadtree. This includes a slight bit of expansion
-// to compensate for floating-point imprecision.
+// Bounds returns the bounding rectangle of this Segment. This includes a slight bit of expansion to compensate for
+// floating-point imprecision.
 func (s Segment) Bounds() geom.Rect {
 	minX := min(s.Start.X, s.End.X)
 	minY := min(s.Start.Y, s.End.Y)
-	return poly.NewRect(
-		minX-epsilon,
-		minY-epsilon,
-		max(s.Start.X, s.End.X)-minX+twoEpsilon,
-		max(s.Start.Y, s.End.Y)-minY+twoEpsilon,
-	).Rect()
+	return geom.NewRect(minX-epsilon, minY-epsilon, max(s.Start.X, s.End.X)-minX+epsilon*2,
+		max(s.Start.Y, s.End.Y)-minY+epsilon*2)
 }

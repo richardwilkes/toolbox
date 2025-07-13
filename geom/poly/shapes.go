@@ -9,34 +9,36 @@
 
 package poly
 
+import (
+	"math"
+
+	"github.com/richardwilkes/toolbox/v2/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
+)
+
 // FromRect returns a Polygon in the shape of the specified rectangle.
-func FromRect(r Rect) Polygon {
-	right := r.Right()
-	bottom := r.Bottom()
-	return Polygon{Contour{
-		r.Point,
-		NewPoint(r.X, bottom),
-		NewPoint(right, bottom),
-		NewPoint(right, r.Y),
-	}}
+func FromRect(r geom.Rect) Polygon {
+	right := r.Right() - 1
+	bottom := r.Bottom() - 1
+	return Polygon{Contour{r.Point, geom.NewPoint(r.X, bottom), geom.NewPoint(right, bottom), geom.NewPoint(right, r.Y)}}
 }
 
 // FromEllipse returns a Polygon that approximates an ellipse filling the given Rect. 'sections' indicates how many
 // segments to break the ellipse contour into. Passing a value less than 4 for 'sections' will result in an automatic
 // choice based on a call to EllipseSegmentCount, using half of the longest dimension for the 'r' parameter and 0.2 for
 // the 'e' parameter.
-func FromEllipse(r Rect, sections int) Polygon {
+func FromEllipse(r geom.Rect, sections int) Polygon {
 	if sections < 4 {
-		sections = EllipseSegmentCount(max(r.Width, r.Height).Div(Two), PointTwo)
+		sections = EllipseSegmentCount(max(r.Width, r.Height)/2, 0.2)
 	}
-	halfWidth := r.Width.Div(Two)
-	halfHeight := r.Height.Div(Two)
-	inc := Pi.Mul(Two).Div(NumFromInteger(sections))
+	halfWidth := r.Width / 2
+	halfHeight := r.Height / 2
+	inc := math.Pi * 2 / float32(sections)
 	center := r.Center()
 	contour := make(Contour, sections)
-	var angle Num
+	var angle float32
 	for i := range sections {
-		contour[i] = NewPoint(center.X+Cos(angle).Mul(halfWidth), center.Y+Sin(angle).Mul(halfHeight))
+		contour[i] = geom.NewPoint(center.X+xmath.Cos(angle)*halfWidth, center.Y+xmath.Sin(angle)*halfHeight)
 		angle += inc
 	}
 	return Polygon{contour}
@@ -44,7 +46,7 @@ func FromEllipse(r Rect, sections int) Polygon {
 
 // EllipseSegmentCount returns a suggested number of segments to use when generating an ellipse. 'r' is the largest
 // radius of the ellipse. 'e' is the acceptable error, typically 1 or less.
-func EllipseSegmentCount(r, e Num) int {
-	d := One - e.Div(r)
-	return max(NumAsInteger[int]((Two.Mul(Pi).Div(Acos(Two.Mul(d).Mul(d) - One))).Ceil()), 4)
+func EllipseSegmentCount(r, e float32) int {
+	d := 1 - e/r
+	return max(int(xmath.Ceil(2*math.Pi/xmath.Acos(2*d*d-1))), 4)
 }

@@ -9,10 +9,14 @@
 
 package poly
 
+import (
+	"github.com/richardwilkes/toolbox/v2/geom"
+)
+
 type localMinimaNode struct {
 	firstBound *edgeNode
 	next       *localMinimaNode
-	y          Num
+	y          float32
 }
 
 func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon, nc []bool, which int, op clipOp) *localMinimaNode {
@@ -72,7 +76,7 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 					vi = nextIndex(vi, count)
 					v = &edges[vi]
 					e.top = v.vertex
-					e.dx = (v.vertex.X - e.bot.X).Div(e.top.Y - e.bot.Y)
+					e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
 					e.which = which
 					e.outAbove = nil
 					e.outBelow = nil
@@ -124,7 +128,7 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 					vi = previousIndex(vi, count)
 					v = &edges[vi]
 					e.top = v.vertex
-					e.dx = (v.vertex.X - e.bot.X).Div(e.top.Y - e.bot.Y)
+					e.dx = (v.vertex.X - e.bot.X) / (e.top.Y - e.bot.Y)
 					e.which = which
 					e.outAbove = nil
 					e.outBelow = nil
@@ -152,13 +156,13 @@ func buildLocalMinimaTable(lmt *localMinimaNode, sbTree *scanBeamTree, p Polygon
 	return lmt
 }
 
-func (n *localMinimaNode) insertBound(y Num, e *edgeNode) *localMinimaNode {
+func (n *localMinimaNode) insertBound(y float32, e *edgeNode) *localMinimaNode {
 	lmn, en := n.boundList(y)
 	e.insertInto(en)
 	return lmn
 }
 
-func (n *localMinimaNode) boundList(y Num) (lmn *localMinimaNode, en **edgeNode) {
+func (n *localMinimaNode) boundList(y float32) (lmn *localMinimaNode, en **edgeNode) {
 	switch {
 	case n == nil:
 		lmn = &localMinimaNode{y: y}
@@ -177,7 +181,7 @@ func (n *localMinimaNode) boundList(y Num) (lmn *localMinimaNode, en **edgeNode)
 	}
 }
 
-func optimal(v []Point, i, n int) bool {
+func optimal(v []geom.Point, i, n int) bool {
 	return v[previousIndex(i, n)].Y != v[i].Y || v[nextIndex(i, n)].Y != v[i].Y
 }
 

@@ -17,14 +17,14 @@ type scanBeamTree struct {
 type scanBeamNode struct {
 	less *scanBeamNode
 	more *scanBeamNode
-	y    Num
+	y    float32
 }
 
-func (s *scanBeamTree) add(y Num) {
+func (s *scanBeamTree) add(y float32) {
 	s.addToScanBeamTreeAt(&s.root, y)
 }
 
-func (s *scanBeamTree) addToScanBeamTreeAt(node **scanBeamNode, y Num) {
+func (s *scanBeamTree) addToScanBeamTreeAt(node **scanBeamNode, y float32) {
 	switch {
 	case *node == nil:
 		*node = &scanBeamNode{y: y}
@@ -37,15 +37,15 @@ func (s *scanBeamTree) addToScanBeamTreeAt(node **scanBeamNode, y Num) {
 	}
 }
 
-func (s *scanBeamTree) buildScanBeamTable() []Num {
-	table := make([]Num, s.entries)
+func (s *scanBeamTree) buildScanBeamTable() []float32 {
+	table := make([]float32, s.entries)
 	if s.root != nil {
 		s.root.buildScanBeamTableEntries(0, table)
 	}
 	return table
 }
 
-func (sbt *scanBeamNode) buildScanBeamTableEntries(index int, table []Num) int {
+func (sbt *scanBeamNode) buildScanBeamTableEntries(index int, table []float32) int {
 	if sbt.less != nil {
 		index = sbt.less.buildScanBeamTableEntries(index, table)
 	}

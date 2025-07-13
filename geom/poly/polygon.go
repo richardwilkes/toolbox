@@ -11,6 +11,8 @@ package poly
 
 import (
 	"strings"
+
+	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
 const (
@@ -70,9 +72,9 @@ func (p Polygon) Empty() bool {
 }
 
 // Bounds returns the bounding rectangle of this polygon.
-func (p Polygon) Bounds() Rect {
+func (p Polygon) Bounds() geom.Rect {
 	if len(p) == 0 {
-		return Rect{}
+		return geom.Rect{}
 	}
 	b := p[0].Bounds()
 	for _, c := range p[1:] {
@@ -82,7 +84,7 @@ func (p Polygon) Bounds() Rect {
 }
 
 // Contains returns true if the point is contained by this polygon.
-func (p Polygon) Contains(pt Point) bool {
+func (p Polygon) Contains(pt geom.Point) bool {
 	for i := range p {
 		if p[i].Contains(pt) {
 			return true
@@ -93,7 +95,7 @@ func (p Polygon) Contains(pt Point) bool {
 
 // ContainsEvenOdd returns true if the point is contained by the polygon using the even-odd rule.
 // https://en.wikipedia.org/wiki/Even-odd_rule
-func (p Polygon) ContainsEvenOdd(pt Point) bool {
+func (p Polygon) ContainsEvenOdd(pt geom.Point) bool {
 	var count int
 	for i := range p {
 		if p[i].Contains(pt) {
@@ -104,7 +106,7 @@ func (p Polygon) ContainsEvenOdd(pt Point) bool {
 }
 
 // Transform returns the result of transforming this Polygon by the Matrix.
-func (p Polygon) Transform(m Matrix) Polygon {
+func (p Polygon) Transform(m geom.Matrix) Polygon {
 	clone := p.Clone()
 	for _, c := range clone {
 		for i := range c {
@@ -159,8 +161,8 @@ func (p Polygon) construct(op clipOp, other Polygon) Polygon {
 	for i < len(sbt) {
 
 		// Set yb and yt to the bottom and top of the scanbeam
-		var yt, dy Num
-		var bPt Point
+		var yt, dy float32
+		var bPt geom.Point
 		bPt.Y = sbt[i]
 		i++
 		if i < len(sbt) {
@@ -208,7 +210,7 @@ func (p Polygon) identifyNonContributingContours(op clipOp, clip Polygon) (subjN
 
 		// Check all subject contour bounding boxes against clip boxes
 		overlaps := make([]bool, len(p)*len(clip))
-		boxes := make([]Rect, len(clip))
+		boxes := make([]geom.Rect, len(clip))
 		for i, c := range clip {
 			boxes[i] = c.Bounds()
 		}
