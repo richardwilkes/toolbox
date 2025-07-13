@@ -33,7 +33,7 @@ use standard library code, the package has been named the same as the standard l
 
 ### Geometry and Graphics
 
-- **`geom`** - Generic geometric primitives including `Point[T]`, `Rect[T]`, `Size[T]`, `Line[T]`, `Matrix[T]`, and `Insets[T]` with type conversion utilities.
+- **`geom`** - Generic geometric primitives including `Point`, `Rect`, `Size`, `Matrix`, and `Insets`.
 
 - **`geom/poly`** - Provides polygon operations.
 
