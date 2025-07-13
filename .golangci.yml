@@ -40,6 +40,14 @@ linters:
         - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).Write
         - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteByte
         - (*github.com/richardwilkes/toolbox/v2/xterm.AnsiWriter).WriteString
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).Insert
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).InsertByte
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).InsertRune
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).InsertString
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).Write
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).WriteByte
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).WriteRune
+        - (*github.com/richardwilkes/toolbox/v2/xbytes.InsertBuffer).WriteString
     goconst:
       min-len: 3
       min-occurrences: 3
