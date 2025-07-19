@@ -29,6 +29,14 @@ func NewPoint(x, y float32) Point {
 	}
 }
 
+// PointFromSize creates a new Point from a Size.
+func PointFromSize(size Size) Point {
+	return Point{
+		X: size.Width,
+		Y: size.Height,
+	}
+}
+
 // Add returns a new Point which is the result of adding this Point with the provided Point.
 func (p Point) Add(pt Point) Point {
 	return Point{
