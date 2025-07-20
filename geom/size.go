@@ -61,11 +61,27 @@ func (s Size) Mul(value float32) Size {
 	}
 }
 
+// MulPt returns a new Size which is the result of multiplying this Size by the provided Point.
+func (s Size) MulPt(pt Point) Size {
+	return Size{
+		Width:  s.Width * pt.X,
+		Height: s.Height * pt.Y,
+	}
+}
+
 // Div returns a new Size which is the result of dividing this Size by the value.
 func (s Size) Div(value float32) Size {
 	return Size{
 		Width:  s.Width / value,
 		Height: s.Height / value,
+	}
+}
+
+// DivPt returns a new Size which is the result of dividing this Size by the provided Point.
+func (s Size) DivPt(pt Point) Size {
+	return Size{
+		Width:  s.Width / pt.X,
+		Height: s.Height / pt.Y,
 	}
 }
 
