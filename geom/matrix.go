@@ -43,11 +43,24 @@ func NewTranslationMatrix(tx, ty float32) Matrix {
 	}
 }
 
+// NewTranslationMatrixPt creates a new Matrix that translates by translation.X and translation.Y.
+func NewTranslationMatrixPt(translation Point) Matrix {
+	return NewTranslationMatrix(translation.X, translation.Y)
+}
+
 // NewScaleMatrix creates a new Matrix that scales by 'sx' and 'sy'.
 func NewScaleMatrix(sx, sy float32) Matrix {
 	return Matrix{
 		ScaleX: sx,
 		ScaleY: sy,
+	}
+}
+
+// NewScaleMatrixPt creates a new Matrix that scales by scale.X and scale.Y.
+func NewScaleMatrixPt(scale Point) Matrix {
+	return Matrix{
+		ScaleX: scale.X,
+		ScaleY: scale.Y,
 	}
 }
 
@@ -80,6 +93,11 @@ func (m Matrix) Translate(tx, ty float32) Matrix {
 	}
 }
 
+// TranslatePt returns a new Matrix which is a copy of this Matrix translated by translate.X and translate.Y.
+func (m Matrix) TranslatePt(translate Point) Matrix {
+	return m.Translate(translate.X, translate.Y)
+}
+
 // Scale returns a new Matrix which is a copy of this Matrix scaled by 'sx' and 'sy'.
 func (m Matrix) Scale(sx, sy float32) Matrix {
 	return Matrix{
@@ -90,6 +108,11 @@ func (m Matrix) Scale(sx, sy float32) Matrix {
 		ScaleY: m.ScaleY * sy,
 		TransY: m.TransY * sy,
 	}
+}
+
+// ScalePt returns a new Matrix which is a copy of this Matrix scaled by scale.X and scale.Y.
+func (m Matrix) ScalePt(scale Point) Matrix {
+	return m.Scale(scale.X, scale.Y)
 }
 
 // Rotate returns a new Matrix which is a copy of this Matrix rotated by 'radians'. Positive values are clockwise.
