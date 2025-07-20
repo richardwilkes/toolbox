@@ -70,6 +70,15 @@ func (p Point) MulPt(pt Point) Point {
 	}
 }
 
+// MulSize returns a new Point which is the result of multiplying the coordinates of this point by the dimensions of the
+// provided Size.
+func (p Point) MulSize(size Size) Point {
+	return Point{
+		X: p.X * size.Width,
+		Y: p.Y * size.Height,
+	}
+}
+
 // Div returns a new Point which is the result of dividing the coordinates of this point by the value.
 func (p Point) Div(value float32) Point {
 	return Point{
@@ -84,6 +93,15 @@ func (p Point) DivPt(pt Point) Point {
 	return Point{
 		X: p.X / pt.X,
 		Y: p.Y / pt.Y,
+	}
+}
+
+// DivSize returns a new Point which is the result of dividing the coordinates of this point by the dimensions of the
+// provided Size.
+func (p Point) DivSize(size Size) Point {
+	return Point{
+		X: p.X / size.Width,
+		Y: p.Y / size.Height,
 	}
 }
 
