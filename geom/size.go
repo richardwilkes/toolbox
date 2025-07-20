@@ -29,6 +29,14 @@ func NewSize(width, height float32) Size {
 	}
 }
 
+// NewUniformSize creates a new Size with equal width and height.
+func NewUniformSize(size float32) Size {
+	return Size{
+		Width:  size,
+		Height: size,
+	}
+}
+
 // SizeFromPoint creates a new Size from a Point.
 func SizeFromPoint(pt Point) Size {
 	return Size{
