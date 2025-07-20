@@ -61,11 +61,29 @@ func (p Point) Mul(value float32) Point {
 	}
 }
 
+// MulPt returns a new Point which is the result of multiplying the coordinates of this point by the coordinates of the
+// provided Point.
+func (p Point) MulPt(pt Point) Point {
+	return Point{
+		X: p.X * pt.X,
+		Y: p.Y * pt.Y,
+	}
+}
+
 // Div returns a new Point which is the result of dividing the coordinates of this point by the value.
 func (p Point) Div(value float32) Point {
 	return Point{
 		X: p.X / value,
 		Y: p.Y / value,
+	}
+}
+
+// DivPt returns a new Point which is the result of dividing the coordinates of this point by the coordinates of the
+// provided Point.
+func (p Point) DivPt(pt Point) Point {
+	return Point{
+		X: p.X / pt.X,
+		Y: p.Y / pt.Y,
 	}
 }
 
