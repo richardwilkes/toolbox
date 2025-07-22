@@ -13,6 +13,45 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
+// Line holds the start and end points of a line.
+type Line struct {
+	Start Point
+	End   Point
+}
+
+// NewLine creates a new line from the specified start and end points.
+func NewLine(start, end Point) Line {
+	return Line{
+		Start: start,
+		End:   end,
+	}
+}
+
+// Intersects returns true if this line intersects with the other line.
+func (l Line) Intersects(other Line) bool {
+	return len(l.Intersection(other)) > 0
+}
+
+// Intersection determines the intersection of this line with the other line. A return of no points indicates no
+// intersection. One point indicates intersection at a single point. Two points indicates an overlapping line segment.
+func (l Line) Intersection(other Line) []Point {
+	return LineIntersection(l.Start, l.End, other.Start, other.End)
+}
+
+// DistanceToPoint returns the the distance from the provided point to this line. The distance measured is the distance
+// between the specified point and the closest point between the line's end points. If the specified point intersects
+// the line in between the end points, this function returns 0.
+func (l Line) DistanceToPoint(pt Point) float32 {
+	return PointSegmentDistance(l.Start, l.End, pt)
+}
+
+// DistanceToPointSquared returns the square of the distance from the provided point to this line. The distance measured
+// is the distance between the specified point and the closest point between the line's end points. If the specified
+// point intersects the line in between the end points, this function returns 0.
+func (l Line) DistanceToPointSquared(pt Point) float32 {
+	return PointSegmentDistanceSquared(l.Start, l.End, pt)
+}
+
 // LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.
 // One point indicates intersection at a single point. Two points indicates an overlapping line segment.
 func LineIntersection(a1, a2, b1, b2 Point) []Point {
