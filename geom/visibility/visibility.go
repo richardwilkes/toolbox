@@ -167,7 +167,7 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 				remove(mapper.elem(sorted[i].lineIndex), heap, mapper, lines, viewPt, vertex)
 			} else {
 				insert(sorted[i].lineIndex, heap, mapper, lines, viewPt, vertex)
-				if heap.size() == 0 || heap.elem(0) != oldLine {
+				if heap.elem(0) != oldLine {
 					shorten = true
 				}
 			}
@@ -178,12 +178,10 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 		}
 		if extend {
 			polygon = append(polygon, geom.Point{X: vertex.X, Y: vertex.Y})
-			if heap.size() > 0 {
-				line := lines[heap.elem(0)]
-				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects &&
-					!cur.EqualWithin(vertex, epsilon) {
-					polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
-				}
+			line := lines[heap.elem(0)]
+			if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects &&
+				!cur.EqualWithin(vertex, epsilon) {
+				polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
 			}
 		} else if shorten {
 			line := lines[oldLine]
@@ -257,9 +255,6 @@ loop:
 }
 
 func insert(index int, heap, mapper *array, lines []geom.Line, position, destination geom.Point) {
-	// if _, intersects := intersectLines(lines[index].Start, lines[index].End, position, destination); !intersects {
-	// 	return
-	// }
 	cur := heap.size()
 	heap.push(index)
 	mapper.set(index, cur)
