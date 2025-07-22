@@ -13,6 +13,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
+// LineBoundsEpsilon is the amount by which to expand the bounds of a line to account for floating-point imprecision.
+var LineBoundsEpsilon float32 = 0.0001
+
 // Line holds the start and end points of a line.
 type Line struct {
 	Start Point
@@ -50,6 +53,15 @@ func (l Line) DistanceToPoint(pt Point) float32 {
 // point intersects the line in between the end points, this function returns 0.
 func (l Line) DistanceToPointSquared(pt Point) float32 {
 	return PointSegmentDistanceSquared(l.Start, l.End, pt)
+}
+
+// Bounds returns the bounding rectangle of this Line. This includes a slight bit of expansion to compensate for
+// floating-point imprecision.
+func (l Line) Bounds() Rect {
+	minX := min(l.Start.X, l.End.X)
+	minY := min(l.Start.Y, l.End.Y)
+	return NewRect(minX-LineBoundsEpsilon, minY-LineBoundsEpsilon, max(l.Start.X, l.End.X)-minX+LineBoundsEpsilon*2,
+		max(l.Start.Y, l.End.Y)-minY+LineBoundsEpsilon*2)
 }
 
 // LineIntersection determines the intersection of two lines, if any. A return of no points indicates no intersection.
