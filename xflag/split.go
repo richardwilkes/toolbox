@@ -54,3 +54,37 @@ func SplitCommandLine(command string) ([]string, error) {
 	}
 	return args, nil
 }
+
+// SplitCommandLineWithoutEscapes splits a command line string into its component parts without considering escape
+// sequences.
+func SplitCommandLineWithoutEscapes(command string) ([]string, error) {
+	var args []string
+	var current []rune
+	var lookingForQuote rune
+	for _, ch := range command {
+		switch {
+		case lookingForQuote == ch:
+			args = append(args, string(current))
+			current = nil
+			lookingForQuote = 0
+		case lookingForQuote != 0:
+			current = append(current, ch)
+		case ch == '"' || ch == '\'':
+			lookingForQuote = ch
+		case ch == ' ' || ch == '\t':
+			if len(current) != 0 {
+				args = append(args, string(current))
+				current = nil
+			}
+		default:
+			current = append(current, ch)
+		}
+	}
+	if lookingForQuote != 0 {
+		return nil, errs.Newf("unclosed quote in command line:\n%s", command)
+	}
+	if len(current) != 0 {
+		args = append(args, string(current))
+	}
+	return args, nil
+}
