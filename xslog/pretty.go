@@ -79,6 +79,9 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 			}
 			return slog.Attr{}
 		}
+		if a.Value.Kind() == slog.KindDuration {
+			return slog.Attr{Key: a.Key, Value: slog.StringValue(a.Value.Duration().String())}
+		}
 		if next == nil {
 			return a
 		}

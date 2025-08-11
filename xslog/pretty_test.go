@@ -30,12 +30,14 @@ func TestPrettyHandlerBasic(t *testing.T) {
 	handler := xslog.NewPrettyHandler(&buf, nil)
 	record := slog.NewRecord(time.Now(), slog.LevelInfo, "test message", 0)
 	record.Add("key1", "value1")
+	record.Add("elapsed", 5*time.Millisecond)
 	c := check.New(t)
 	c.NoError(handler.Handle(context.Background(), record))
 	output := buf.String()
 	c.Contains(output, "test message")
 	c.Contains(output, "INF")
-	c.Contains(output, `{"key1":"value1"}`)
+	c.Contains(output, `"key1":"value1"`)
+	c.Contains(output, `"elapsed":"5ms"`)
 }
 
 func TestPrettyHandlerLevels(t *testing.T) {
