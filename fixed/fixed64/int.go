@@ -176,12 +176,6 @@ func (f Int[T]) mul64(value, div Int[T]) Int[T] {
 	if f == 0 || value == 0 {
 		return 0
 	}
-	if f == 1 {
-		return value
-	}
-	if value == 1 {
-		return f
-	}
 	result := f * value
 	if f != math.MinInt64 && value != math.MinInt64 && result/value == f {
 		return result / div

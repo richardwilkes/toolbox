@@ -123,6 +123,7 @@ func testMulDiv[T fixed.Dx](t *testing.T) {
 	c.Equal("0.1", pointThree.Div(fixed64.FromInteger[T](3)).String())
 	c.Equal("0.9", pointThree.Mul(fixed64.FromInteger[T](3)).String())
 	c.Equal("-0.9", negativePointThree.Mul(fixed64.FromInteger[T](3)).String())
+	c.Equal(fixed64.Int[T](1), fixed64.Int[T](1).Mul(fixed64.FromInteger[T](1)))
 }
 
 func TestMod(t *testing.T) {
