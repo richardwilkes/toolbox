@@ -275,12 +275,10 @@ func TestConcurrentUse(t *testing.T) {
 
 	// Start 100 goroutines trying to use 10 units each
 	for range 100 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			err := <-rl.Use(10)
 			errors <- err
-		}()
+		})
 	}
 
 	wg.Wait()

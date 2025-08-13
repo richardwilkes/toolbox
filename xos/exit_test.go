@@ -88,11 +88,9 @@ func TestConcurrentCallsExit(t *testing.T) {
 			}
 		})
 		for range 5 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				xos.Exit(0)
-			}()
+			})
 		}
 		wg.Wait()
 		return

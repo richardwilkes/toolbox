@@ -167,12 +167,10 @@ func TestPrettyHandlerConcurrency(t *testing.T) {
 	const numGoroutines = 20
 	c := check.New(t)
 	for i := range numGoroutines {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			record := slog.NewRecord(time.Now(), slog.LevelInfo, fmt.Sprintf("concurrent test %d", id), 0)
+		wg.Go(func() {
+			record := slog.NewRecord(time.Now(), slog.LevelInfo, fmt.Sprintf("concurrent test %d", i), 0)
 			c.NoError(handler.Handle(context.Background(), record))
-		}(i)
+		})
 	}
 	wg.Wait()
 	output := buf.String()

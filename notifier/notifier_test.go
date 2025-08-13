@@ -482,26 +482,22 @@ func TestConcurrentAccess(t *testing.T) {
 
 	// Concurrent notifications
 	for range numGoroutines {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for j := range numNotifications {
 				n.Notify("test", j)
 			}
-		}()
+		})
 	}
 
 	// Concurrent registrations/unregistrations
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range 10 {
 			newTarget := &mockTarget{}
 			n.Register(newTarget, 0, "test")
 			time.Sleep(time.Millisecond)
 			n.Unregister(newTarget)
 		}
-	}()
+	})
 
 	wg.Wait()
 
