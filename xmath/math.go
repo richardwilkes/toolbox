@@ -11,8 +11,6 @@ package xmath
 
 import (
 	"math"
-
-	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -33,7 +31,7 @@ func Abs(x float32) float32 {
 }
 
 // AbsInt returns the absolute value of x.
-func AbsInt[T constraints.Signed](x T) T {
+func AbsInt[T Signed](x T) T {
 	if x < 0 {
 		return -x
 	}

@@ -14,16 +14,16 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/exp/constraints"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // CommaInt returns text version of the value that uses commas for every 3 orders of magnitude.
-func CommaInt[T constraints.Integer](value T) string {
+func CommaInt[T xmath.Integer](value T) string {
 	return CommaFromStringNum(fmt.Sprintf("%d", value))
 }
 
 // CommaFloat returns text version of the value that uses commas for every 3 orders of magnitude.
-func CommaFloat[T constraints.Float](value T) string {
+func CommaFloat[T xmath.Float](value T) string {
 	return CommaFromStringNum(strconv.FormatFloat(float64(value), 'f', -1, 64))
 }
 

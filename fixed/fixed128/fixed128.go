@@ -19,8 +19,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/num128"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 	"github.com/richardwilkes/toolbox/v2/xstrings"
-	"golang.org/x/exp/constraints"
 	"gopkg.in/yaml.v3"
 )
 
@@ -56,13 +56,13 @@ func multiplier[T fixed.Dx]() num128.Int {
 }
 
 // FromInteger creates a new value.
-func FromInteger[T fixed.Dx, FROM constraints.Integer](value FROM) Int[T] {
+func FromInteger[T fixed.Dx, FROM xmath.Integer](value FROM) Int[T] {
 	var t T
 	return Int[T]{data: num128.IntFrom64(int64(value)).Mul(num128.IntFrom64(t.Multiplier()))}
 }
 
 // FromFloat creates a new value.
-func FromFloat[T fixed.Dx, FROM constraints.Float](value FROM) Int[T] {
+func FromFloat[T fixed.Dx, FROM xmath.Float](value FROM) Int[T] {
 	f, _ := FromString[T](new(big.Float).SetPrec(128).SetFloat64(float64(value)).Text('f', MaxDecimalDigits[T]()+1)) //nolint:errcheck // Failure means 0
 	return f
 }
@@ -131,12 +131,12 @@ func FromStringForced[T fixed.Dx](str string) Int[T] {
 }
 
 // AsInteger returns the equivalent value in the destination type.
-func AsInteger[T fixed.Dx, TO constraints.Integer](f Int[T]) TO {
+func AsInteger[T fixed.Dx, TO xmath.Integer](f Int[T]) TO {
 	return TO(f.data.Div(multiplier[T]()).AsInt64())
 }
 
 // AsFloat returns the equivalent value in the destination type.
-func AsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) TO {
+func AsFloat[T fixed.Dx, TO xmath.Float](f Int[T]) TO {
 	var t T
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
@@ -145,7 +145,7 @@ func AsFloat[T fixed.Dx, TO constraints.Float](f Int[T]) TO {
 
 // AsIntegerChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in
 // the requested destination type.
-func AsIntegerChecked[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) {
+func AsIntegerChecked[T fixed.Dx, TO xmath.Integer](f Int[T]) (TO, error) {
 	n := TO(f.data.Div(multiplier[T]()).AsInt64())
 	if FromInteger[T](n) != f {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -155,7 +155,7 @@ func AsIntegerChecked[T fixed.Dx, TO constraints.Integer](f Int[T]) (TO, error) 
 
 // AsFloatChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in the
 // requested destination type.
-func AsFloatChecked[T fixed.Dx, TO constraints.Float](f Int[T]) (TO, error) {
+func AsFloatChecked[T fixed.Dx, TO xmath.Float](f Int[T]) (TO, error) {
 	var t T
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
