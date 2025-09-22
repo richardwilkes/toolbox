@@ -126,13 +126,13 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	var s *os.File
 	if s, err = os.Open(src); err != nil {
 		err = errs.Wrap(err)
-		return
+		return err
 	}
 	if _, err = io.Copy(f, s); err != nil {
 		err = errs.Wrap(err)
 	}
 	xio.CloseIgnoringErrors(s)
-	return
+	return err
 }
 
 func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) error {

@@ -197,7 +197,7 @@ func (c Checker) doesPanic(f func()) (panicErr error) {
 		}
 	}()
 	f()
-	return
+	return panicErr
 }
 
 func (c Checker) errMsg(prefix string, msgAndArgs ...any) {

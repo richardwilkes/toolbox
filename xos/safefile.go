@@ -32,9 +32,8 @@ type SafeFile struct {
 // WriteSafeFile creates a SafeFile, calls 'writer' to write data into it, then commits it.
 func WriteSafeFile(filename string, writer func(io.Writer) error) (err error) {
 	var f *SafeFile
-	f, err = CreateSafeFile(filename)
-	if err != nil {
-		return
+	if f, err = CreateSafeFile(filename); err != nil {
+		return err
 	}
 	w := bufio.NewWriterSize(f, 1<<16)
 	defer func() {
@@ -43,15 +42,15 @@ func WriteSafeFile(filename string, writer func(io.Writer) error) (err error) {
 		}
 	}()
 	if err = writer(w); err != nil {
-		return
+		return err
 	}
 	if err = w.Flush(); err != nil {
-		return
+		return err
 	}
-	if err = f.Commit(); err != nil {
-		return
+	if err = f.Commit(); err != nil { //nolint:revive // Can't return directly here so defer will work correctly
+		return err
 	}
-	return
+	return nil
 }
 
 // CreateSafeFile creates a temporary file in the same directory as filename, which will be renamed to the given

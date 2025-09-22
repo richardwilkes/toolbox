@@ -59,7 +59,7 @@ func (f Fraction[T]) StringWithSign() string {
 	n := f
 	n.Normalize()
 	s := n.Numerator.StringWithSign()
-	if n.Denominator == FromInteger[T, int](1) {
+	if n.Denominator == FromInteger[T](1) {
 		return s
 	}
 	return s + "/" + n.Denominator.String()
@@ -69,7 +69,7 @@ func (f Fraction[T]) String() string {
 	n := f
 	n.Normalize()
 	s := n.Numerator.String()
-	if n.Denominator == FromInteger[T, int](1) {
+	if n.Denominator == FromInteger[T](1) {
 		return s
 	}
 	return s + "/" + n.Denominator.String()
