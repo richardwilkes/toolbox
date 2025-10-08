@@ -98,3 +98,48 @@ func testAdditionalFractionEdgeCases[T fixed.Dx](t *testing.T) {
 	err := json.Unmarshal([]byte("invalid json"), &frac)
 	c.HasError(err)
 }
+
+func TestFractionArithmeticAndSimplify(t *testing.T) {
+	testFractionArithmeticAndSimplify[fixed.D1](t)
+	testFractionArithmeticAndSimplify[fixed.D2](t)
+	testFractionArithmeticAndSimplify[fixed.D3](t)
+	testFractionArithmeticAndSimplify[fixed.D4](t)
+	testFractionArithmeticAndSimplify[fixed.D5](t)
+	testFractionArithmeticAndSimplify[fixed.D6](t)
+}
+
+// nolint:gocritic // The comments aren't "commented out code"
+func testFractionArithmeticAndSimplify[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+
+	frac1 := fixed64.NewFraction[T]("1/2")
+	frac2 := fixed64.NewFraction[T]("1/3")
+
+	// Add: 1/2 + 1/3 = (3+2)/6 = 5/6
+	sum := frac1.Add(frac2)
+	c.Equal("5/6", sum.Simplify().String())
+
+	// Sub: 1/2 - 1/3 = (3-2)/6 = 1/6
+	diff := frac1.Sub(frac2)
+	c.Equal("1/6", diff.Simplify().String())
+
+	// Mul: 1/2 * 1/3 = 1/6
+	prod := frac1.Mul(frac2)
+	c.Equal("1/6", prod.Simplify().String())
+
+	// Div: (1/2) / (1/3) = (1*3)/(2*1) = 3/2
+	quot := frac1.Div(frac2)
+	c.Equal("3/2", quot.Simplify().String())
+
+	// Simplify: 2/4 = 1/2
+	simple := fixed64.NewFraction[T]("2/4").Simplify()
+	c.Equal("1/2", simple.String())
+
+	// Simplify: 10/100 = 1/10
+	simple2 := fixed64.NewFraction[T]("10/100").Simplify()
+	c.Equal("1/10", simple2.String())
+
+	// Simplify: 7/13 (should remain 7/13)
+	simple3 := fixed64.NewFraction[T]("7/13").Simplify()
+	c.Equal("7/13", simple3.String())
+}

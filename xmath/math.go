@@ -674,3 +674,17 @@ func Yn(n int, x float32) float32 {
 func EqualWithin(a, b, tolerance float32) bool {
 	return Abs(a-b) <= tolerance
 }
+
+// GCD returns the greatest common divisor of a and b using Euclid's algorithm.
+func GCD(a, b int) int {
+	if a < 0 {
+		a = -a
+	}
+	if b < 0 {
+		b = -b
+	}
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}

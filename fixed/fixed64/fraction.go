@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 // Fraction holds a fractional value.
@@ -52,6 +53,76 @@ func (f Fraction[T]) Value() Int[T] {
 	n := f
 	n.Normalize()
 	return n.Numerator.Div(n.Denominator)
+}
+
+// Add two fractions together and return the result.
+func (f Fraction[T]) Add(other Fraction[T]) Fraction[T] {
+	n := f
+	n.Normalize()
+	o := other
+	o.Normalize()
+	return Fraction[T]{
+		Numerator:   n.Numerator.Mul(o.Denominator).Add(o.Numerator.Mul(n.Denominator)),
+		Denominator: n.Denominator.Mul(o.Denominator),
+	}
+}
+
+// Sub subtracts other from f and return the result.
+func (f Fraction[T]) Sub(other Fraction[T]) Fraction[T] {
+	n := f
+	n.Normalize()
+	o := other
+	o.Normalize()
+	return Fraction[T]{
+		Numerator:   n.Numerator.Mul(o.Denominator).Sub(o.Numerator.Mul(n.Denominator)),
+		Denominator: n.Denominator.Mul(o.Denominator),
+	}
+}
+
+// Mul multiplies two fractions together and return the result.
+func (f Fraction[T]) Mul(other Fraction[T]) Fraction[T] {
+	n := f
+	n.Normalize()
+	o := other
+	o.Normalize()
+	return Fraction[T]{
+		Numerator:   n.Numerator.Mul(o.Numerator),
+		Denominator: n.Denominator.Mul(o.Denominator),
+	}
+}
+
+// Div divides f by other and return the result.
+func (f Fraction[T]) Div(other Fraction[T]) Fraction[T] {
+	n := f
+	n.Normalize()
+	o := other
+	o.Normalize()
+	return Fraction[T]{
+		Numerator:   n.Numerator.Mul(o.Denominator),
+		Denominator: n.Denominator.Mul(o.Numerator),
+	}
+}
+
+// Simplify the fraction, returning a new Fraction. If the numerator or denominator cannot be represented as an int, the
+// original fraction is returned.
+func (f Fraction[T]) Simplify() Fraction[T] {
+	n := f
+	n.Normalize()
+	numerator := AsInteger[T, int](n.Numerator)
+	if FromInteger[T](numerator) != n.Numerator {
+		return n
+	}
+	denominator := AsInteger[T, int](n.Denominator)
+	if FromInteger[T](denominator) != n.Denominator {
+		return n
+	}
+	gcd := xmath.GCD(numerator, denominator)
+	if gcd > 1 {
+		g := FromInteger[T](gcd)
+		n.Numerator = n.Numerator.Div(g)
+		n.Denominator = n.Denominator.Div(g)
+	}
+	return n
 }
 
 // StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
