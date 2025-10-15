@@ -81,6 +81,11 @@ func NewRotationByDegreesMatrix(degrees float32) Matrix {
 	return NewRotationMatrix(degrees * xmath.DegreesToRadians)
 }
 
+// IsIdentity returns true if this is an identity matrix.
+func (m Matrix) IsIdentity() bool {
+	return m.ScaleX == 1 && m.SkewX == 0 && m.TransX == 0 && m.SkewY == 0 && m.ScaleY == 1 && m.TransY == 0
+}
+
 // Translate returns a new Matrix which is a copy of this Matrix translated by 'tx' and 'ty'.
 func (m Matrix) Translate(tx, ty float32) Matrix {
 	return Matrix{
@@ -115,18 +120,31 @@ func (m Matrix) ScalePt(scale Point) Matrix {
 	return m.Scale(scale.X, scale.Y)
 }
 
+// Skew returns a new Matrix which is a copy of this Matrix skewed by 'sx' and 'sy' radians.
+func (m Matrix) Skew(sx, sy float32) Matrix {
+	return m.Multiply(Matrix{
+		ScaleX: 1,
+		SkewX:  xmath.Tan(sx),
+		SkewY:  xmath.Tan(sy),
+		ScaleY: 1,
+	})
+}
+
+// SkewByDegrees returns a new Matrix which is a copy of this Matrix skewed by 'sx' and 'sy' degrees.
+func (m Matrix) SkewByDegrees(sx, sy float32) Matrix {
+	return m.Skew(xmath.DegreesToRadians*sx, xmath.DegreesToRadians*sy)
+}
+
 // Rotate returns a new Matrix which is a copy of this Matrix rotated by 'radians'. Positive values are clockwise.
 func (m Matrix) Rotate(radians float32) Matrix {
 	s := xmath.Sin(radians)
 	c := xmath.Cos(radians)
-	return Matrix{
-		ScaleX: m.ScaleX*c - s*m.SkewY,
-		SkewX:  m.SkewX*c - s*m.ScaleY,
-		TransX: m.TransX*c - s*m.TransY,
-		SkewY:  m.ScaleX*s + m.SkewY*c,
-		ScaleY: m.SkewX*s + m.ScaleY*c,
-		TransY: m.TransX*s + m.TransY*c,
-	}
+	return m.Multiply(Matrix{
+		ScaleX: c,
+		SkewX:  -s,
+		SkewY:  s,
+		ScaleY: c,
+	})
 }
 
 // RotateByDegrees returns a new Matrix which is a copy of this Matrix rotated by 'degrees'. Positive values are clockwise.

@@ -28,6 +28,7 @@ func TestNewIdentityMatrix(t *testing.T) {
 	c.Equal(float32(0), m.SkewY)
 	c.Equal(float32(1), m.ScaleY)
 	c.Equal(float32(0), m.TransY)
+	c.True(m.IsIdentity())
 }
 
 func TestNewTranslationMatrix(t *testing.T) {
