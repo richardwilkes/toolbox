@@ -172,6 +172,24 @@ func (m Matrix) TransformPoint(p Point) Point {
 	}
 }
 
+// Invert returns the inverse of this Matrix. If the Matrix is non-invertible, an identity Matrix is returned.
+func (m Matrix) Invert() Matrix {
+	det := m.ScaleX*m.ScaleY - m.SkewX*m.SkewY
+	if det == 0 {
+		// Non-invertible matrix; return identity
+		return NewIdentityMatrix()
+	}
+	invDet := 1 / det
+	return Matrix{
+		ScaleX: m.ScaleY * invDet,
+		SkewX:  -m.SkewX * invDet,
+		TransX: (m.SkewX*m.TransY - m.ScaleY*m.TransX) * invDet,
+		SkewY:  -m.SkewY * invDet,
+		ScaleY: m.ScaleX * invDet,
+		TransY: (m.SkewY*m.TransX - m.ScaleX*m.TransY) * invDet,
+	}
+}
+
 // String implements fmt.Stringer.
 func (m Matrix) String() string {
 	return fmt.Sprintf("%#v,%#v,%#v,%#v,%#v,%#v", m.ScaleX, m.SkewX, m.TransX, m.SkewY, m.ScaleY, m.TransY)
