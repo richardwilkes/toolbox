@@ -392,7 +392,7 @@ func (b *BitSet) Load(data []uint64) {
 	b.Trim()
 	b.set = 0
 	for i := len(b.data) - 1; i >= 0; i-- {
-		word := data[i]
+		word := data[i] //nolint:gosec // This is not a security issue.
 		if word != 0 {
 			for j := range dataBitsPerWord {
 				mask := wordMask(j)

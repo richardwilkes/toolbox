@@ -10,7 +10,6 @@
 package geom_test
 
 import (
-	"math"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -58,25 +57,11 @@ func TestNewScaleMatrix(t *testing.T) {
 func TestNewRotationMatrix(t *testing.T) {
 	c := check.New(t)
 
-	// Test 90 degree rotation (π/2 radians)
-	m := geom.NewRotationMatrix(math.Pi / 2)
-
-	// cos(π/2) = 0, sin(π/2) = 1
-	// For clockwise rotation: ScaleX = cos, SkewX = -sin, SkewY = sin, ScaleY = cos
-	c.True(xmath.Abs(m.ScaleX) < 0.0001)  // Should be ~0
-	c.True(xmath.Abs(m.SkewX+1) < 0.0001) // Should be ~-1
-	c.Equal(float32(0), m.TransX)
-	c.True(xmath.Abs(m.SkewY-1) < 0.0001) // Should be ~1
-	c.True(xmath.Abs(m.ScaleY) < 0.0001)  // Should be ~0
-	c.Equal(float32(0), m.TransY)
-}
-
-func TestNewRotationByDegreesMatrix(t *testing.T) {
-	c := check.New(t)
-
 	// Test 90 degree rotation
-	m := geom.NewRotationByDegreesMatrix(90)
+	m := geom.NewRotationMatrix(90)
 
+	// cos(90) = 0, sin(90) = 1
+	// For clockwise rotation: ScaleX = cos, SkewX = -sin, SkewY = sin, ScaleY = cos
 	c.True(xmath.Abs(m.ScaleX) < 0.0001)  // Should be ~0
 	c.True(xmath.Abs(m.SkewX+1) < 0.0001) // Should be ~-1
 	c.Equal(float32(0), m.TransX)
@@ -116,10 +101,10 @@ func TestMatrixScale(t *testing.T) {
 
 	c.Equal(float32(2), scaled.ScaleX)
 	c.Equal(float32(0), scaled.SkewX)
-	c.Equal(float32(20), scaled.TransX) // Translation is also scaled
+	c.Equal(float32(20), scaled.TransX)
 	c.Equal(float32(0), scaled.SkewY)
 	c.Equal(float32(3), scaled.ScaleY)
-	c.Equal(float32(60), scaled.TransY) // Translation is also scaled
+	c.Equal(float32(60), scaled.TransY)
 
 	// Original matrix should be unchanged
 	c.Equal(float32(1), m.ScaleX)
@@ -132,7 +117,7 @@ func TestMatrixRotate(t *testing.T) {
 	c := check.New(t)
 
 	m := geom.NewIdentityMatrix()
-	rotated := m.Rotate(math.Pi / 2) // 90 degrees
+	rotated := m.Rotate(90)
 
 	c.True(xmath.Abs(rotated.ScaleX) < 0.0001)  // Should be ~0
 	c.True(xmath.Abs(rotated.SkewX+1) < 0.0001) // Should be ~-1
@@ -144,20 +129,6 @@ func TestMatrixRotate(t *testing.T) {
 	// Original matrix should be unchanged
 	c.Equal(float32(1), m.ScaleX)
 	c.Equal(float32(1), m.ScaleY)
-}
-
-func TestMatrixRotateByDegrees(t *testing.T) {
-	c := check.New(t)
-
-	m := geom.NewIdentityMatrix()
-	rotated := m.RotateByDegrees(90)
-
-	c.True(xmath.Abs(rotated.ScaleX) < 0.0001)  // Should be ~0
-	c.True(xmath.Abs(rotated.SkewX+1) < 0.0001) // Should be ~-1
-	c.Equal(float32(0), rotated.TransX)
-	c.True(xmath.Abs(rotated.SkewY-1) < 0.0001) // Should be ~1
-	c.True(xmath.Abs(rotated.ScaleY) < 0.0001)  // Should be ~0
-	c.Equal(float32(0), rotated.TransY)
 }
 
 func TestMatrixMultiply(t *testing.T) {
@@ -181,13 +152,12 @@ func TestMatrixMultiply(t *testing.T) {
 
 	c.Equal(float32(2), combined.ScaleX)
 	c.Equal(float32(0), combined.SkewX)
-	c.Equal(float32(20), combined.TransX) // Translation after scale
+	c.Equal(float32(20), combined.TransX)
 	c.Equal(float32(0), combined.SkewY)
 	c.Equal(float32(3), combined.ScaleY)
-	c.Equal(float32(60), combined.TransY) // Translation after scale
+	c.Equal(float32(60), combined.TransY)
 }
 
-//nolint:gocritic // The "commented out code" is actually explanation
 func TestMatrixTransformPoint(t *testing.T) {
 	c := check.New(t)
 
@@ -214,7 +184,7 @@ func TestMatrixTransformPoint(t *testing.T) {
 	c.Equal(float32(21), result3.Y) // 7 * 3
 
 	// Test 90-degree rotation (point (1,0) should become (0,1))
-	rotation := geom.NewRotationByDegreesMatrix(90)
+	rotation := geom.NewRotationMatrix(90)
 	p2 := geom.NewPoint(1.0, 0.0)
 	result4 := rotation.TransformPoint(p2)
 
@@ -226,8 +196,8 @@ func TestMatrixTransformPoint(t *testing.T) {
 	p3 := geom.NewPoint(3.0, 4.0)
 	result5 := combined.TransformPoint(p3)
 
-	c.Equal(float32(16), result5.X) // (3 + 5) * 2 = 16
-	c.Equal(float32(18), result5.Y) // (4 + 5) * 2 = 18
+	c.Equal(float32(16), result5.X)
+	c.Equal(float32(18), result5.Y)
 }
 
 func TestMatrixString(t *testing.T) {
