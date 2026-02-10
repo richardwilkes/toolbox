@@ -208,7 +208,7 @@ func TestBitSetLoad(t *testing.T) {
 	// Test loading max uint64
 	bs.Load([]uint64{^uint64(0)})
 	c.Equal(64, bs.Count())
-	for i := 0; i < 64; i++ {
+	for i := range 64 {
 		c.True(bs.State(i))
 	}
 

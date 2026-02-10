@@ -605,7 +605,7 @@ func TestIntFromRand(t *testing.T) {
 
 	// Generate multiple random values and ensure they're different
 	values := make(map[string]bool)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		result := num128.IntFromRand(source)
 		str := result.String()
 		c.False(values[str], "Random values should be unique: %s", str)
@@ -1413,7 +1413,7 @@ func TestIntYAMLUnmarshalEdgeCases(t *testing.T) {
 
 	// Test unmarshaling valid YAML
 	var i num128.Int
-	err := i.UnmarshalYAML(func(v interface{}) error {
+	err := i.UnmarshalYAML(func(v any) error {
 		*v.(*string) = "123" //nolint:errcheck // Simulate YAML unmarshaling
 		return nil
 	})

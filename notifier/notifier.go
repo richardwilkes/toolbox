@@ -98,7 +98,7 @@ func (n *Notifier) Register(target Target, priority int, names ...string) {
 
 func normalizeName(name string) string {
 	var buffer strings.Builder
-	for _, one := range strings.Split(name, ".") {
+	for one := range strings.SplitSeq(name, ".") {
 		if one != "" {
 			if buffer.Len() > 0 {
 				buffer.WriteByte('.')

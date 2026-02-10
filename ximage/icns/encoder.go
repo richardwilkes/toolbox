@@ -191,10 +191,7 @@ func createARGBData(img image.Image, iconType [4]byte) (*iconInfo, error) {
 func writeChannel(buffer *bytes.Buffer, data []byte) error {
 	size := len(data)
 	for i := 0; i < size; i += 128 {
-		count := size - i
-		if count > 128 {
-			count = 128
-		}
+		count := min(size-i, 128)
 		if err := buffer.WriteByte(byte(count - 1)); err != nil {
 			return errs.Wrap(err)
 		}

@@ -12,6 +12,7 @@ package xcrc64_test
 import (
 	"hash/crc64"
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -288,12 +289,7 @@ func TestEdgeCases(t *testing.T) {
 	c.Equal(crc1, crc2)
 
 	// Test with very long string
-	longString := ""
-	for range 10000 {
-		longString += "a"
-	}
-	crcLong := xcrc64.String(0, longString)
-	c.NotEqual(uint64(0), crcLong)
+	c.NotEqual(uint64(0), xcrc64.String(0, strings.Repeat("ab", 10000)))
 
 	// Test with large byte slice
 	largeBytes := make([]byte, 100000)

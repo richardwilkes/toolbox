@@ -75,10 +75,9 @@ func ClientIP(req *http.Request) net.IP {
 	if forwarded := req.Header.Get("Forwarded"); forwarded != "" {
 		// Forwarded can contain multiple values, we take the first one.
 		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded for more information.
-		for _, forwarded = range strings.Split(strings.SplitN(forwarded, ",", 2)[0], ";") {
-			if strings.HasPrefix(forwarded, "for=") {
-				forwarded = strings.TrimPrefix(forwarded, "for=")
-				forwarded = strings.TrimPrefix(forwarded, `"`)
+		for forwarded = range strings.SplitSeq(strings.SplitN(forwarded, ",", 2)[0], ";") {
+			if after, ok := strings.CutPrefix(forwarded, "for="); ok {
+				forwarded = strings.TrimPrefix(after, `"`)
 				forwarded = strings.TrimSuffix(forwarded, `"`)
 				if ip := net.ParseIP(forwarded); ip != nil {
 					return ip

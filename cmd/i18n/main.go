@@ -137,13 +137,13 @@ func main() {
 `, time.Now().Format(time.RFC1123))
 	for _, key := range keys {
 		fmt.Fprintln(out)
-		for _, p := range strings.Split(key, "\n") {
+		for p := range strings.SplitSeq(key, "\n") {
 			if _, err = fmt.Fprintf(out, "k:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				xos.Exit(1)
 			}
 		}
-		for _, p := range strings.Split(key, "\n") {
+		for p := range strings.SplitSeq(key, "\n") {
 			if _, err = fmt.Fprintf(out, "v:%q\n", p); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				xos.Exit(1)

@@ -527,12 +527,7 @@ type multiTargetMatcher struct {
 }
 
 func (m *multiTargetMatcher) Matches(n *node) bool {
-	for _, target := range m.targets {
-		if n == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(m.targets, n)
 }
 
 func TestNodeBoundsMethod(t *testing.T) {

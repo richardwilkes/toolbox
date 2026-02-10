@@ -158,10 +158,7 @@ func (b *BitSet) ClearRange(start, end int) {
 	if i1 > maximum {
 		return
 	}
-	i2 := end >> addressBitsPerWord
-	if i2 > maximum {
-		i2 = maximum
-	}
+	i2 := min(end>>addressBitsPerWord, maximum)
 	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
 		if i != i1 && i != i2 {

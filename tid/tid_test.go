@@ -186,7 +186,7 @@ func TestKindAlphabet(t *testing.T) {
 	c.Equal(62, len(tid.KindAlphabet), "KindAlphabet should have 62 characters")
 
 	// Test that all characters in KindAlphabet work as valid kinds
-	for i := 0; i < len(tid.KindAlphabet); i++ {
+	for i := range len(tid.KindAlphabet) {
 		kind := tid.KindAlphabet[i]
 		testTID, err := tid.NewTID(kind)
 		c.NoError(err, "All KindAlphabet characters should be valid kinds: %c", kind)

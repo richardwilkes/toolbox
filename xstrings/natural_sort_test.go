@@ -12,6 +12,7 @@ package xstrings_test
 import (
 	"math/rand/v2"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -272,19 +273,19 @@ func createBenchSet() []string {
 		strlen := rnd.IntN(6) + 3
 		numlen := rnd.IntN(3) + 1
 		numpos := rnd.IntN(strlen + 1)
-		var num string
+		var num strings.Builder
 		for range numlen {
-			num += strconv.Itoa(rnd.IntN(10))
+			num.WriteString(strconv.Itoa(rnd.IntN(10)))
 		}
-		var str string
+		var str strings.Builder
 		for j := range strlen + 1 {
 			if j == numpos {
-				str += num
+				str.WriteString(num.String())
 			} else {
-				str += string(rune('a' + rnd.IntN(16)))
+				str.WriteString(string(rune('a' + rnd.IntN(16))))
 			}
 		}
-		benchSet[i] = str
+		benchSet[i] = str.String()
 	}
 	return benchSet
 }
