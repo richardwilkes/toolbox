@@ -29,7 +29,7 @@ func TestRotator(t *testing.T) {
 
 	tmpdir := t.TempDir()
 
-	logFiles := []string{filepath.Join(tmpdir, "test")}
+	logFiles := append(make([]string, 0, 1+maxBackups), filepath.Join(tmpdir, "test"))
 	for i := range maxBackups {
 		logFiles = append(logFiles, filepath.Join(tmpdir, fmt.Sprintf("test-%d", i+1)))
 	}

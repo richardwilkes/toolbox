@@ -16,9 +16,9 @@ import (
 // SplitCommandLine splits a command line string into its component parts.
 func SplitCommandLine(command string) ([]string, error) {
 	var args []string
-	var current []rune
 	var lookingForQuote rune
 	var escapeNext bool
+	current := make([]rune, 0, len(command))
 	for _, ch := range command {
 		switch {
 		case escapeNext:
@@ -28,7 +28,7 @@ func SplitCommandLine(command string) ([]string, error) {
 			escapeNext = true
 		case lookingForQuote == ch:
 			args = append(args, string(current))
-			current = nil
+			current = current[:0]
 			lookingForQuote = 0
 		case lookingForQuote != 0:
 			current = append(current, ch)
@@ -37,7 +37,7 @@ func SplitCommandLine(command string) ([]string, error) {
 		case ch == ' ' || ch == '\t':
 			if len(current) != 0 {
 				args = append(args, string(current))
-				current = nil
+				current = current[:0]
 			}
 		default:
 			current = append(current, ch)
@@ -59,13 +59,13 @@ func SplitCommandLine(command string) ([]string, error) {
 // sequences.
 func SplitCommandLineWithoutEscapes(command string) ([]string, error) {
 	var args []string
-	var current []rune
 	var lookingForQuote rune
+	current := make([]rune, 0, len(command))
 	for _, ch := range command {
 		switch {
 		case lookingForQuote == ch:
 			args = append(args, string(current))
-			current = nil
+			current = current[:0]
 			lookingForQuote = 0
 		case lookingForQuote != 0:
 			current = append(current, ch)
@@ -74,7 +74,7 @@ func SplitCommandLineWithoutEscapes(command string) ([]string, error) {
 		case ch == ' ' || ch == '\t':
 			if len(current) != 0 {
 				args = append(args, string(current))
-				current = nil
+				current = current[:0]
 			}
 		default:
 			current = append(current, ch)
