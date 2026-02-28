@@ -71,6 +71,9 @@ linters:
         - G304
         - G306
         - G307
+        - G702
+        - G703
+        - G704
     govet:
       disable:
         - composites

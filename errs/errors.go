@@ -213,7 +213,7 @@ func (e *Error) Message() string {
 		return e.message
 	}
 	var buffer strings.Builder
-	buffer.WriteString(fmt.Sprintf("Multiple (%d) errors occurred:", e.Count()))
+	fmt.Fprintf(&buffer, "Multiple (%d) errors occurred:", e.Count())
 	err := e
 	for err != nil {
 		buffer.WriteString("\n- ")
