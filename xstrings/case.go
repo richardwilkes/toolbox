@@ -87,9 +87,7 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 // MustNewAllCaps takes a list of words that should be all uppercase when part of a camel-cased string. Failure to
 // create the AllCaps object causes the program to exit.
 func MustNewAllCaps(in ...string) *AllCaps {
-	result, err := NewAllCaps(in...)
-	xos.ExitIfErr(err)
-	return result
+	return xos.Must(NewAllCaps(in...))
 }
 
 // ToCamelCase converts a string to CamelCase.

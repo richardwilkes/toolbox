@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // TID is a unique identifier. These are similar to v4 UUIDs, but are shorter and have a different format that includes
@@ -28,11 +29,7 @@ const KindAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 
 // MustNewTID creates a new TID with a random value and the specified kind. If an error occurs, this function panics.
 func MustNewTID(kind byte) TID {
-	tid, err := NewTID(kind)
-	if err != nil {
-		panic(err)
-	}
-	return tid
+	return xos.Must(NewTID(kind))
 }
 
 // NewTID creates a new TID with a random value and the specified kind.
