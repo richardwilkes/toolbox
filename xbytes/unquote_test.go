@@ -95,7 +95,10 @@ func TestUnquoteBytes(t *testing.T) {
 	for i := range longContent {
 		longContent[i] = byte('a' + (i % 26))
 	}
-	quotedLong := append([]byte("\""), append(longContent, '"')...)
+	quotedLong := make([]byte, 0, len(longContent)+2)
+	quotedLong = append(quotedLong, '"')
+	quotedLong = append(quotedLong, longContent...)
+	quotedLong = append(quotedLong, '"')
 	c.Equal(longContent, xbytes.Unquote(quotedLong))
 
 	// Test that original slice is not modified
