@@ -13,23 +13,32 @@ use standard library code, the package has been named the same as the standard l
 
 ### Core Utilities
 
-- **`check`** - Enhanced testing utilities that wrap Go's standard testing interface with more informative error messages and convenient assertion methods.
+- **`check`** - Enhanced testing utilities that wrap Go's standard testing interface with more informative error
+  messages and convenient assertion methods.
 
-- **`errs`** - Structured error handling with stack traces, error chaining, and detailed error objects that provide source locations and nested causes for better debugging.
+- **`errs`** - Structured error handling with stack traces, error chaining, and detailed error objects that provide
+  source locations and nested causes for better debugging.
 
-- **`i18n`** - Internationalization support for applications, providing localization capabilities for user-facing text and messages.
+- **`i18n`** - Internationalization support for applications, providing localization capabilities for user-facing text
+  and messages.
 
-- **`notifier`** - Event notification system for implementing the observer pattern, allowing objects to register for and receive notifications about events.
+- **`notifier`** - Event notification system for implementing the observer pattern, allowing objects to register for and
+  receive notifications about events.
 
 - **`tid`** - Thread-safe unique identifier generation using cryptographically secure random values encoded in base64.
 
+- **`uti`** - Uniform Type Identifiers (UTI) and their relationship to other UTI's, MIME types, and file extensions.
+
 ### Mathematical and Numerical
 
-- **`xmath`** - Extended mathematical functions with generic type constraints (e.g., `Numeric` interface) that work across integer and floating-point types.
+- **`xmath`** - Extended mathematical functions with generic type constraints (e.g., `Numeric` interface) that work
+  across integer and floating-point types.
 
-- **`num128`** - 128-bit integer arithmetic with signed (`Int`) and unsigned (`UInt`) types for high-precision calculations that exceed native Go integer limits.
+- **`num128`** - 128-bit integer arithmetic with signed (`Int`) and unsigned (`UInt`) types for high-precision
+  calculations that exceed native Go integer limits.
 
-- **`fixed`** - Fixed-point decimal arithmetic for precise financial and monetary calculations, with separate packages for 64-bit (`fixed64`) and 128-bit (`fixed128`) precision.
+- **`fixed`** - Fixed-point decimal arithmetic for precise financial and monetary calculations, with separate packages
+  for 64-bit (`fixed64`) and 128-bit (`fixed128`) precision.
 
 ### Geometry and Graphics
 
@@ -55,13 +64,16 @@ use standard library code, the package has been named the same as the standard l
 
 - **`xcrypto`** - Cryptographic utilities including stream encryption/decryption helpers.
 
-- **`xfilepath`** - Extended file path utilities with filename manipulation, root detection, and cross-platform path splitting.
+- **`xfilepath`** - Extended file path utilities with filename manipulation, root detection, and cross-platform path
+  splitting.
 
-- **`xflag`** - Enhanced command-line flag parsing with rich usage formatting, automatic version flags, and post-parse function handling.
+- **`xflag`** - Enhanced command-line flag parsing with rich usage formatting, automatic version flags, and post-parse
+  function handling.
 
 - **`xhash`** - Extended hashing utilities for creating consistent hash values across different data types.
 
-- **`xhttp`** - HTTP utilities including basic authentication, gzip handling, metadata management, file retrieval, and server helpers.
+- **`xhttp`** - HTTP utilities including basic authentication, gzip handling, metadata management, file retrieval, and
+  server helpers.
 
 - **`ximage`** - Image processing utilities with support for various image formats.
 
@@ -71,7 +83,8 @@ use standard library code, the package has been named the same as the standard l
 
 - **`xnet`** - Network utilities for address manipulation and network-related operations.
 
-- **`xos`** - Operating system utilities including application information, browser launching, filesystem operations, panic recovery, safe file handling, task queues, and user information.
+- **`xos`** - Operating system utilities including application information, browser launching, filesystem operations,
+  panic recovery, safe file handling, task queues, and user information.
 
 - **`xrand`** - Extended random number generation utilities for cryptographically secure randomness.
 
@@ -79,15 +92,19 @@ use standard library code, the package has been named the same as the standard l
 
 - **`xruntime`** - Runtime utilities including detailed stack trace generation with source location information.
 
-- **`xslices`** - Enhanced slice manipulation utilities including column-based sorting and other advanced slice operations.
+- **`xslices`** - Enhanced slice manipulation utilities including column-based sorting and other advanced slice
+  operations.
 
-- **`xslog`** - Enhanced structured logging with a "pretty" formatter that provides colorful output, stack trace formatting, and improved readability.
+- **`xslog`** - Enhanced structured logging with a "pretty" formatter that provides colorful output, stack trace
+  formatting, and improved readability.
 
-- **`xstrings`** - String manipulation utilities including case conversion, text wrapping, natural sorting, emoji handling, capitalization, space collapsing, and various string processing functions.
+- **`xstrings`** - String manipulation utilities including case conversion, text wrapping, natural sorting, emoji
+  handling, capitalization, space collapsing, and various string processing functions.
 
 - **`xsync`** - Synchronization utilities extending Go's sync package with additional concurrent programming tools.
 
-- **`xterm`** - Terminal utilities for ANSI color codes, terminal detection, and formatted output with cross-platform compatibility.
+- **`xterm`** - Terminal utilities for ANSI color codes, terminal detection, and formatted output with cross-platform
+  compatibility.
 
 - **`xtime`** - Time manipulation utilities extending Go's time package with additional date/time functionality.
 
@@ -97,12 +114,16 @@ use standard library code, the package has been named the same as the standard l
 
 ### Specialized Utilities
 
-- **`rate`** - Rate limiting with hierarchical limiters, where each limiter can be capped by its parent, useful for implementing tiered rate limiting.
+- **`rate`** - Rate limiting with hierarchical limiters, where each limiter can be capped by its parent, useful for
+  implementing tiered rate limiting.
 
-- **`softref`** - Soft reference implementation for memory management, allowing resources to be garbage collected when memory pressure occurs.
+- **`softref`** - Soft reference implementation for memory management, allowing resources to be garbage collected when
+  memory pressure occurs.
 
 ### Command Line Tools
 
 - **`cmd/i18n`** - Command-line tool for extracting and managing internationalization strings from Go source code.
 
-All packages follow consistent patterns with use of Go generics for type safety where appropriate, comprehensive error handling with the `errs` package, and thorough testing with the `check` package. The "x" prefix convention allows seamless use alongside standard library packages without import conflicts.
+All packages follow consistent patterns with use of Go generics for type safety where appropriate, comprehensive error
+handling with the `errs` package, and thorough testing with the `check` package. The "x" prefix convention allows
+seamless use alongside standard library packages without import conflicts.
