@@ -212,15 +212,34 @@ func unregister(uti string) {
 
 // ByUTI looks up the DataType by its UTI.
 func ByUTI(uti string) *DataType {
+	lock.RLock()
+	defer lock.RUnlock()
 	return byUTI[strings.ToLower(uti)]
 }
 
 // ByMimeType looks up DataTypes that use the given MIME type.
 func ByMimeType(mimeType string) []*DataType {
+	lock.RLock()
+	defer lock.RUnlock()
 	return byMimeType[strings.ToLower(mimeType)]
 }
 
 // ByExtension looks up DataTypes that use the given file extension.
 func ByExtension(extension string) []*DataType {
+	lock.RLock()
+	defer lock.RUnlock()
 	return byExtension[strings.ToLower(extension)]
+}
+
+// ConformsTo returns true if this DataType is the same as or a descendant of the target DataType.
+func (dt *DataType) ConformsTo(target *DataType) bool {
+	if dt.UTI == target.UTI {
+		return true
+	}
+	for _, parent := range dt.Parents {
+		if parent.ConformsTo(target) {
+			return true
+		}
+	}
+	return false
 }
