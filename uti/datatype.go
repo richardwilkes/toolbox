@@ -20,6 +20,7 @@ var (
 	BMP           *DataType
 	Content       *DataType
 	Data          *DataType
+	FileURL       *DataType
 	GIF           *DataType
 	ICNS          *DataType
 	ICO           *DataType
@@ -32,6 +33,7 @@ var (
 	SVG           *DataType
 	Text          *DataType
 	TIFF          *DataType
+	URL           *DataType
 	UTF8PlainText *DataType
 	WBMP          *DataType
 	WEBP          *DataType
@@ -58,15 +60,16 @@ type DataType struct {
 
 func init() {
 	Content = register(&DataType{UTI: "public.content"})
-	Image = register(&DataType{UTI: "public.image"})
 	Item = register(&DataType{UTI: "public.item"})
-
 	Data = register(&DataType{
 		UTI:       "public.data",
 		Parents:   []*DataType{Item},
 		MimeTypes: []string{"application/octet-stream"},
 	})
-
+	Image = register(&DataType{
+		UTI:     "public.image",
+		Parents: []*DataType{Data, Content},
+	})
 	Text = register(&DataType{
 		UTI:     "public.text",
 		Parents: []*DataType{Data, Content},
@@ -159,6 +162,14 @@ func init() {
 		Parents:    []*DataType{Image},
 		MimeTypes:  []string{"image/webp"},
 		Extensions: []string{".webp"},
+	})
+	URL = register(&DataType{
+		UTI:     "public.url",
+		Parents: []*DataType{Data},
+	})
+	FileURL = register(&DataType{
+		UTI:     "public.file-url",
+		Parents: []*DataType{URL},
 	})
 }
 
