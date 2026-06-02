@@ -10,6 +10,7 @@
 package xstrings_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -91,12 +92,11 @@ func TestUnquote(t *testing.T) {
 	c.Equal("{\"key\":\"value\"}", xstrings.Unquote("\"{\"key\":\"value\"}\""))
 
 	// Test with very long content
-	longContent := ""
+	var longContent strings.Builder
 	for i := range 1000 {
-		longContent += string(rune('a' + (i % 26)))
+		longContent.WriteString(string(rune('a' + (i % 26))))
 	}
-	quotedLong := "\"" + longContent + "\""
-	c.Equal(longContent, xstrings.Unquote(quotedLong))
+	c.Equal(longContent.String(), xstrings.Unquote("\""+longContent.String()+"\""))
 
 	// Test Unicode quote characters (should not be processed)
 	unicodeQuotes := "\u201chello\u201d" // Unicode left/right double quotes
