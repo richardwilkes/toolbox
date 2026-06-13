@@ -484,25 +484,22 @@ func TestIntFromFloat64(t *testing.T) {
 	c.Equal(num128.IntFrom64(1), num128.IntFromFloat64(1.0))
 	c.Equal(num128.IntFrom64(42), num128.IntFromFloat64(42.5)) // truncation
 
-	// Test negative values - these should match the actual implementation behavior
-	negOne := num128.IntFromFloat64(-1.0)
-	negFortyTwo := num128.IntFromFloat64(-42.5)
+	// Test negative values
+	c.Equal(num128.IntFrom64(-1), num128.IntFromFloat64(-1.0))
+	c.Equal(num128.IntFrom64(-42), num128.IntFromFloat64(-42.5)) // truncation
+	c.Equal(num128.IntFrom64(-5), num128.IntFromFloat64(-5.0))
+	c.Equal(num128.IntFrom64(math.MinInt64), num128.IntFromFloat64(-9223372036854775808)) // -2^63
 
-	// These should be negative numbers according to the Sign method
-	c.Equal(-1, negOne.Sign())
-	c.Equal(-1, negFortyTwo.Sign())
+	// Test values larger than 64 bits
+	c.Equal(num128.IntFromComponents(1, 0), num128.IntFromFloat64(18446744073709551616))        // 2^64
+	c.Equal(num128.IntFromComponents(1, 0).Neg(), num128.IntFromFloat64(-18446744073709551616)) // -2^64
+	c.Equal(num128.IntFromComponents(2, 0), num128.IntFromFloat64(36893488147419103232))        // 2^65
+	c.Equal(num128.IntFromComponents(2, 0).Neg(), num128.IntFromFloat64(-36893488147419103232)) // -2^65
+	c.Equal(num128.IntFromStringNoCheck("-1000000000000000019884624838656"), num128.IntFromFloat64(-1e30))
 
-	// Test large positive values
-	largePos := float64(math.MaxUint64) * 2
-	result := num128.IntFromFloat64(largePos)
-	c.True(result.GreaterThan(num128.IntFromUint64(math.MaxUint64)))
-
-	// Test large negative values
-	largeNeg := -float64(math.MaxUint64) * 2
-	result = num128.IntFromFloat64(largeNeg)
-	c.Equal(-1, result.Sign())
-
-	// Test maximum/minimum float values
+	// Test values at and beyond the 128-bit boundaries
+	c.Equal(num128.MaxInt, num128.IntFromFloat64(170141183460469231731687303715884105728))  // 2^127 clamps
+	c.Equal(num128.MinInt, num128.IntFromFloat64(-170141183460469231731687303715884105728)) // -2^127 is MinInt
 	c.Equal(num128.MaxInt, num128.IntFromFloat64(math.MaxFloat64))
 	c.Equal(num128.MinInt, num128.IntFromFloat64(-math.MaxFloat64))
 }
@@ -689,19 +686,23 @@ func TestIntAsFloat64(t *testing.T) {
 	c.Equal(-42.0, num128.IntFrom64(-42).AsFloat64())
 
 	// Test values where hi == MaxUint64 (negative values)
-	negVal := num128.IntFromComponents(math.MaxUint64, math.MaxUint64-1)
-	result := negVal.AsFloat64()
-	c.True(result < 0)
+	negVal := num128.IntFromComponents(math.MaxUint64, math.MaxUint64-1) // -2
+	c.Equal(-2.0, negVal.AsFloat64())
+
+	// Test -2^64, where hi == MaxUint64 and lo == 0
+	negVal = num128.IntFromComponents(math.MaxUint64, 0)
+	c.Equal(-18446744073709551616.0, negVal.AsFloat64())
 
 	// Test large positive values with hi component
-	posVal := num128.IntFromComponents(1, 0)
-	result = posVal.AsFloat64()
-	c.True(result > 0)
+	posVal := num128.IntFromComponents(1, 0) // 2^64
+	c.Equal(18446744073709551616.0, posVal.AsFloat64())
 
 	// Test large negative values with sign bit set
-	negVal = num128.IntFromComponents(0x8000000000000001, 0)
-	result = negVal.AsFloat64()
-	c.True(result < 0)
+	negVal = num128.IntFromComponents(0x8000000000000001, 0) // -(2^127 - 2^64), which rounds to -2^127
+	c.Equal(-170141183460469231731687303715884105728.0, negVal.AsFloat64())
+
+	// Test MinInt
+	c.Equal(-170141183460469231731687303715884105728.0, num128.MinInt.AsFloat64())
 }
 
 // Test IsUint and AsUint
@@ -1129,7 +1130,7 @@ func TestIntYAMLMarshalingErrors(t *testing.T) {
 
 	// Test UnmarshalYAML with invalid input
 	err := val.UnmarshalYAML(func(v any) error {
-		*(v.(*string)) = "invalid" //nolint:errcheck // We are simulating an error
+		*v.(*string) = "invalid" //nolint:errcheck // We are simulating an error
 		return nil
 	})
 	c.HasError(err)
@@ -1251,20 +1252,16 @@ func TestIntFloatConversionEdgeCases(t *testing.T) {
 	largeNegInt := num128.IntFromFloat64(veryLargeNegFloat)
 	c.Equal(num128.MinInt, largeNegInt)
 
-	// Test edge cases around the boundaries - these may have precision issues
-	maxInt64Float := float64(math.MaxInt64)
-	maxInt64Int := num128.IntFromFloat64(maxInt64Float)
-	// Note: Float64 may not have exact precision for MaxInt64
-	if maxInt64Int.IsInt64() {
-		c.True(maxInt64Int.IsInt64())
-	}
+	// float64(math.MaxInt64) rounds up to 2^63, which no longer fits in an int64
+	maxInt64Int := num128.IntFromFloat64(float64(math.MaxInt64))
+	c.Equal(num128.IntFromComponents(0, 1<<63), maxInt64Int)
+	c.False(maxInt64Int.IsInt64())
 
-	minInt64Float := float64(math.MinInt64)
-	minInt64Int := num128.IntFromFloat64(minInt64Float)
-	// Note: Float64 may not have exact precision for MinInt64
-	if minInt64Int.IsInt64() {
-		c.True(minInt64Int.IsInt64())
-	}
+	// float64(math.MinInt64) is exactly -2^63
+	minInt64Int := num128.IntFromFloat64(float64(math.MinInt64))
+	c.Equal(num128.IntFrom64(math.MinInt64), minInt64Int)
+	c.True(minInt64Int.IsInt64())
+	c.Equal(int64(math.MinInt64), minInt64Int.AsInt64())
 }
 
 // TestIntStringParsingErrorCases tests various error conditions in string parsing

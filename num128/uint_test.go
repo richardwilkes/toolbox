@@ -700,10 +700,9 @@ func TestBitwiseOperations(t *testing.T) {
 	// Test AndNot
 	c.Equal(num128.UintFrom64(0b0010), val1.AndNot(val2)) // 2
 
-	// Test AndNot64 (note: this seems to have a bug in the original - it uses n.lo instead of just n)
-	result := val1.AndNot64(val2)
-	expected := num128.UintFrom64(val1.AsUint64() &^ val2.AsUint64())
-	c.Equal(expected.AsUint64(), result.AsUint64())
+	// Test AndNot64 (the high bits are kept, since the 64-bit operand has none to clear them with)
+	c.Equal(num128.UintFrom64(0b0010), val1.AndNot64(0b1100))
+	c.Equal(num128.UintFromComponents(5, 0b0010), num128.UintFromComponents(5, 0b1010).AndNot64(0b1100))
 
 	// Test Or
 	c.Equal(num128.UintFrom64(0b1110), val1.Or(val2)) // 14

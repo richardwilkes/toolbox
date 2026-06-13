@@ -91,22 +91,22 @@ func UintFromBigInt(v *big.Int) Uint {
 				lo: uint64(words[0]),
 			}
 		}
-		return Uint{lo: (uint64(words[1]) << 32) | (uint64(words[0]))}
+		return Uint{lo: (uint64(words[1]) << 32) | uint64(words[0])}
 	case 3:
 		if intSize == 64 {
 			return MaxUint
 		}
 		return Uint{
 			hi: uint64(words[2]),
-			lo: (uint64(words[1]) << 32) | (uint64(words[0])),
+			lo: (uint64(words[1]) << 32) | uint64(words[0]),
 		}
 	case 4:
 		if intSize == 64 {
 			return MaxUint
 		}
 		return Uint{
-			hi: (uint64(words[3]) << 32) | (uint64(words[2])),
-			lo: (uint64(words[1]) << 32) | (uint64(words[0])),
+			hi: (uint64(words[3]) << 32) | uint64(words[2]),
+			lo: (uint64(words[1]) << 32) | uint64(words[0]),
 		}
 	default:
 		return MaxUint
@@ -453,10 +453,10 @@ func (u Uint) AndNot(n Uint) Uint {
 }
 
 // AndNot64 returns u &^ n.
-func (u Uint) AndNot64(n Uint) Uint {
+func (u Uint) AndNot64(n uint64) Uint {
 	return Uint{
 		hi: u.hi,
-		lo: u.lo &^ n.lo,
+		lo: u.lo &^ n,
 	}
 }
 

@@ -33,10 +33,11 @@ var (
 )
 
 var (
-	minIntAsAbsUint = Uint{hi: signBit, lo: 0}
-	maxIntAsUint    = Uint{hi: 0x7FFFFFFFFFFFFFFF, lo: 0xFFFFFFFFFFFFFFFF}
-	maxBigUint, _   = new(big.Int).SetString("340282366920938463463374607431768211455", 10)
-	big1            = new(big.Int).SetInt64(1)
+	minIntAsAbsUint          = Uint{hi: signBit, lo: 0}
+	maxIntAsUint             = Uint{hi: 0x7FFFFFFFFFFFFFFF, lo: 0xFFFFFFFFFFFFFFFF}
+	maxBigUint, _            = new(big.Int).SetString("340282366920938463463374607431768211455", 10)
+	big1                     = new(big.Int).SetInt64(1)
+	maxRepresentableIntFloat = math.Nextafter(maxIntFloat, 0)
 )
 
 // Int represents a signed 128-bit integer.
@@ -65,34 +66,17 @@ func IntFromFloat64(f float64) Int {
 	case f == 0 || f != f: // 0 or NaN
 		return Int{}
 	case f < 0:
-		switch {
-		case f >= -float64(math.MaxUint64)-1:
-			return Int{
-				hi: math.MaxUint64,
-				lo: uint64(f),
-			}
-		case f >= minIntFloat:
-			f = -f
-			lo := math.Mod(f, wrapUint64Float)
-			return Int{
-				hi: ^uint64(f / wrapUint64Float),
-				lo: ^uint64(lo),
-			}
-		default:
+		if f < minIntFloat {
 			return MinInt
 		}
+		// Convert the magnitude as a Uint, then negate. This avoids converting a negative float64 directly to a
+		// uint64, which is implementation-defined when the value is out of range and differs between amd64 and arm64.
+		return Int(UintFromFloat64(-f)).Neg()
 	default:
-		switch {
-		case f <= float64(math.MaxUint64):
-			return Int{lo: uint64(f)}
-		case f <= maxIntFloat:
-			return Int{
-				hi: uint64(f / wrapUint64Float),
-				lo: uint64(math.Mod(f, wrapUint64Float)),
-			}
-		default:
+		if f > maxRepresentableIntFloat {
 			return MaxInt
 		}
+		return Int(UintFromFloat64(f))
 	}
 }
 
@@ -109,21 +93,21 @@ func IntFromBigInt(v *big.Int) Int {
 			i.hi = uint64(words[1])
 			i.lo = uint64(words[0])
 		} else {
-			i.lo = (uint64(words[1]) << 32) | (uint64(words[0]))
+			i.lo = (uint64(words[1]) << 32) | uint64(words[0])
 		}
 	case 3:
 		if intSize == 64 {
 			i = MaxUint
 		} else {
 			i.hi = uint64(words[2])
-			i.lo = (uint64(words[1]) << 32) | (uint64(words[0]))
+			i.lo = (uint64(words[1]) << 32) | uint64(words[0])
 		}
 	case 4:
 		if intSize == 64 {
 			i = MaxUint
 		} else {
-			i.hi = (uint64(words[3]) << 32) | (uint64(words[2]))
-			i.lo = (uint64(words[1]) << 32) | (uint64(words[0]))
+			i.hi = (uint64(words[3]) << 32) | uint64(words[2])
+			i.lo = (uint64(words[1]) << 32) | uint64(words[0])
 		}
 	default:
 		i = MaxUint
@@ -197,19 +181,10 @@ func (i Int) AsBigFloat() (b *big.Float) {
 
 // AsFloat64 returns the Int as a float64.
 func (i Int) AsFloat64() float64 {
-	switch {
-	case i.hi == 0:
-		if i.lo == 0 {
-			return 0
-		}
-		return float64(i.lo)
-	case i.hi == math.MaxUint64:
-		return -float64((^i.lo) + 1)
-	case i.hi&signBit == 0:
-		return (float64(i.hi) * maxUint64Float) + float64(i.lo)
-	default:
-		return (-float64(^i.hi) * maxUint64Float) + -float64(^i.lo)
+	if i.hi&signBit != 0 {
+		return -i.AbsUint().AsFloat64()
 	}
+	return Uint(i).AsFloat64()
 }
 
 // IsUint returns true if this value can be represented as an Uint without any loss.
