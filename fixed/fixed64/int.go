@@ -225,32 +225,54 @@ func (f Int[T]) Trunc() Int[T] {
 	return f / mult * mult
 }
 
-// Floor returns the value rounded down to the nearest whole number.
+// Floor returns the value rounded down to the nearest whole number. Because the whole-number floor of values just above
+// Minimum() is not representable, this saturates to Minimum() rather than overflowing in those cases.
 func (f Int[T]) Floor() Int[T] {
 	v := f.Trunc()
 	if f < 0 && f != v {
-		v -= Int[T](Multiplier[T]())
+		mult := Int[T](Multiplier[T]())
+		// The whole-number floor of values just above Minimum() is not representable, so saturate to Minimum().
+		if v < Minimum[T]()+mult {
+			return Minimum[T]()
+		}
+		v -= mult
 	}
 	return v
 }
 
-// Ceil returns the value rounded up to the nearest whole number.
+// Ceil returns the value rounded up to the nearest whole number. Because the whole-number ceiling of values just below
+// Maximum() is not representable, this saturates to Maximum() rather than overflowing in those cases.
 func (f Int[T]) Ceil() Int[T] {
 	v := f.Trunc()
 	if f > 0 && f != v {
-		v += Int[T](Multiplier[T]())
+		mult := Int[T](Multiplier[T]())
+		// The whole-number ceiling of values just below Maximum() is not representable, so saturate to Maximum().
+		if v > Maximum[T]()-mult {
+			return Maximum[T]()
+		}
+		v += mult
 	}
 	return v
 }
 
-// Round returns the nearest integer, rounding half away from zero.
+// Round returns the nearest integer, rounding half away from zero. Because the rounded result near Minimum() or
+// Maximum() is not always representable, this saturates to Minimum() or Maximum() rather than overflowing in those
+// cases.
 func (f Int[T]) Round() Int[T] {
 	one := Int[T](Multiplier[T]())
 	value := f.Trunc()
 	rem := f - value
 	if rem >= one/2 {
+		// The rounded result near Maximum() is not representable, so saturate to Maximum().
+		if value > Maximum[T]()-one {
+			return Maximum[T]()
+		}
 		value += one
 	} else if rem <= -(one / 2) {
+		// The rounded result near Minimum() is not representable, so saturate to Minimum().
+		if value < Minimum[T]()+one {
+			return Minimum[T]()
+		}
 		value -= one
 	}
 	return value

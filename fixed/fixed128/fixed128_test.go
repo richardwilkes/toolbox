@@ -754,6 +754,33 @@ func testFromStringEdgeCases[T fixed.Dx](t *testing.T) {
 	c.HasPrefix(val.String(), "0.1")
 }
 
+func TestFloorCeilRoundExtremes(t *testing.T) {
+	testFloorCeilRoundExtremes[fixed.D1](t)
+	testFloorCeilRoundExtremes[fixed.D2](t)
+	testFloorCeilRoundExtremes[fixed.D3](t)
+	testFloorCeilRoundExtremes[fixed.D4](t)
+	testFloorCeilRoundExtremes[fixed.D5](t)
+	testFloorCeilRoundExtremes[fixed.D6](t)
+}
+
+func testFloorCeilRoundExtremes[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+	zero := fixed128.FromInteger[T](0)
+	// The whole-number floor of Minimum() and ceiling of Maximum() are not representable, so these saturate rather than
+	// overflowing into a wrapped-around value.
+	c.Equal(fixed128.Minimum[T](), fixed128.Minimum[T]().Floor())
+	c.Equal(fixed128.Maximum[T](), fixed128.Maximum[T]().Ceil())
+	// The extreme that already rounds toward zero stays representable.
+	c.True(fixed128.Minimum[T]().Ceil().GreaterThan(fixed128.Minimum[T]()))
+	c.True(fixed128.Maximum[T]().Floor().LessThan(fixed128.Maximum[T]()))
+	// Whether Round() of an extreme saturates depends on the precision's fractional bits, but it must never wrap around
+	// to the opposite sign or out of range.
+	c.True(fixed128.Minimum[T]().Round().LessThan(zero))
+	c.True(fixed128.Minimum[T]().Round().GreaterThanOrEqual(fixed128.Minimum[T]()))
+	c.True(fixed128.Maximum[T]().Round().GreaterThan(zero))
+	c.True(fixed128.Maximum[T]().Round().LessThanOrEqual(fixed128.Maximum[T]()))
+}
+
 func TestCeilEdgeCases(t *testing.T) {
 	testCeilEdgeCases[fixed.D1](t)
 	testCeilEdgeCases[fixed.D2](t)

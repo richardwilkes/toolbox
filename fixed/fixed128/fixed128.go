@@ -238,33 +238,55 @@ func (f Int[T]) Trunc() Int[T] {
 	return Int[T]{data: f.data.Div(m).Mul(m)}
 }
 
-// Floor returns the value rounded down to the nearest whole number.
+// Floor returns the value rounded down to the nearest whole number. Because the whole-number floor of values just above
+// Minimum() is not representable, this saturates to Minimum() rather than overflowing in those cases.
 func (f Int[T]) Floor() Int[T] {
 	v := f.Trunc()
 	if f.LessThan(Int[T]{}) && f != v {
-		v = v.Sub(Multiplier[T]())
+		mult := Multiplier[T]()
+		// The whole-number floor of values just above Minimum() is not representable, so saturate to Minimum().
+		if v.LessThan(Minimum[T]().Add(mult)) {
+			return Minimum[T]()
+		}
+		v = v.Sub(mult)
 	}
 	return v
 }
 
-// Ceil returns the value rounded up to the nearest whole number.
+// Ceil returns the value rounded up to the nearest whole number. Because the whole-number ceiling of values just below
+// Maximum() is not representable, this saturates to Maximum() rather than overflowing in those cases.
 func (f Int[T]) Ceil() Int[T] {
 	v := f.Trunc()
 	if f.GreaterThan(Int[T]{}) && f != v {
-		v = v.Add(Multiplier[T]())
+		mult := Multiplier[T]()
+		// The whole-number ceiling of values just below Maximum() is not representable, so saturate to Maximum().
+		if v.GreaterThan(Maximum[T]().Sub(mult)) {
+			return Maximum[T]()
+		}
+		v = v.Add(mult)
 	}
 	return v
 }
 
-// Round returns the nearest integer, rounding half away from zero.
+// Round returns the nearest integer, rounding half away from zero. Because the rounded result near Minimum() or
+// Maximum() is not always representable, this saturates to Minimum() or Maximum() rather than overflowing in those
+// cases.
 func (f Int[T]) Round() Int[T] {
 	one := Multiplier[T]()
 	half := Int[T]{data: one.data.Div(num128.IntFrom64(2))}
 	value := f.Trunc()
 	rem := f.Sub(value)
 	if rem.GreaterThanOrEqual(half) {
+		// The rounded result near Maximum() is not representable, so saturate to Maximum().
+		if value.GreaterThan(Maximum[T]().Sub(one)) {
+			return Maximum[T]()
+		}
 		value = value.Add(one)
 	} else if rem.LessThanOrEqual(half.Neg()) {
+		// The rounded result near Minimum() is not representable, so saturate to Minimum().
+		if value.LessThan(Minimum[T]().Add(one)) {
+			return Minimum[T]()
+		}
 		value = value.Sub(one)
 	}
 	return value
