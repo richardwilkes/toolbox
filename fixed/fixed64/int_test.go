@@ -66,6 +66,10 @@ func testConversion[T fixed.Dx](t *testing.T) {
 	v, err = fixed64.FromString[T]("33.00000000000000000000")
 	c.NoError(err)
 	c.Equal(v, fixed64.FromInteger[T](33))
+
+	// Small source types must not wrap when scaled by the multiplier
+	c.Equal(fixed64.FromInteger[T](2), fixed64.FromInteger[T](int8(2)))
+	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromInteger[T](int8(-2)))
 }
 
 func TestAddSub(t *testing.T) {
@@ -156,9 +160,28 @@ func testFloor[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("0.3333").Floor())
 	c.Equal(fixed64.FromInteger[T](2), fixed64.FromStringForced[T]("2.6789").Floor())
 	c.Equal(fixed64.FromInteger[T](3), fixed64.FromInteger[T](3).Floor())
-	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("-0.3333").Floor())
-	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromStringForced[T]("-2.6789").Floor())
+	c.Equal(fixed64.FromInteger[T](-1), fixed64.FromStringForced[T]("-0.3333").Floor())
+	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromStringForced[T]("-2.6789").Floor())
 	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromInteger[T](-3).Floor())
+}
+
+func TestTrunc(t *testing.T) {
+	testTrunc[fixed.D1](t)
+	testTrunc[fixed.D2](t)
+	testTrunc[fixed.D3](t)
+	testTrunc[fixed.D4](t)
+	testTrunc[fixed.D5](t)
+	testTrunc[fixed.D6](t)
+}
+
+func testTrunc[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("0.3333").Trunc())
+	c.Equal(fixed64.FromInteger[T](2), fixed64.FromStringForced[T]("2.6789").Trunc())
+	c.Equal(fixed64.FromInteger[T](3), fixed64.FromInteger[T](3).Trunc())
+	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("-0.3333").Trunc())
+	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromStringForced[T]("-2.6789").Trunc())
+	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromInteger[T](-3).Trunc())
 }
 
 func TestCeil(t *testing.T) {
@@ -197,6 +220,10 @@ func testRound[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("-0.3333").Round())
 	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromStringForced[T]("-2.6789").Round())
 	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromInteger[T](-3).Round())
+	c.Equal(fixed64.FromInteger[T](1), fixed64.FromStringForced[T]("0.5").Round())
+	c.Equal(fixed64.FromInteger[T](-1), fixed64.FromStringForced[T]("-0.5").Round())
+	c.Equal(fixed64.FromInteger[T](3), fixed64.FromStringForced[T]("2.5").Round())
+	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromStringForced[T]("-2.5").Round())
 }
 
 func TestAbs(t *testing.T) {
@@ -411,6 +438,21 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	floatResult, err = fixed64.AsFloatChecked[T, float64](fracVal)
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
+
+	// Values whose shortest float representation uses an exponent should still convert
+	million := fixed64.FromInteger[T](1000000)
+	floatResult, err = fixed64.AsFloatChecked[T, float64](million)
+	c.NoError(err)
+	c.Equal(float64(1000000), floatResult)
+
+	// Small destination types should work when the value fits...
+	smallResult, err := fixed64.AsIntegerChecked[T, int8](fixed64.FromInteger[T](100))
+	c.NoError(err)
+	c.Equal(int8(100), smallResult)
+
+	// ...and fail when it does not
+	_, err = fixed64.AsIntegerChecked[T, int8](fixed64.FromInteger[T](200))
+	c.HasError(err)
 }
 
 func TestStringWithSign(t *testing.T) {
@@ -588,6 +630,20 @@ func testFromStringEdgeCases[T fixed.Dx](t *testing.T) {
 	// Just verify it doesn't panic and produces a reasonable result
 	c.NotEqual("", val.String())
 	c.HasPrefix(val.String(), "0.1")
+
+	// Test values that parse as integers but overflow once scaled
+	_, err = fixed64.FromString[T]("9223372036854775807")
+	c.HasError(err)
+	_, err = fixed64.FromString[T]("-9223372036854775807")
+	c.HasError(err)
+
+	// Test that the extremes round-trip
+	val, err = fixed64.FromString[T](fixed64.Maximum[T]().String())
+	c.NoError(err)
+	c.Equal(fixed64.Maximum[T](), val)
+	val, err = fixed64.FromString[T](fixed64.Minimum[T]().String())
+	c.NoError(err)
+	c.Equal(fixed64.Minimum[T](), val)
 }
 
 func TestCeilEdgeCases(t *testing.T) {

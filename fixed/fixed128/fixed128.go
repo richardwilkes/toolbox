@@ -160,7 +160,7 @@ func AsFloatChecked[T fixed.Dx, TO xmath.Float](f Int[T]) (TO, error) {
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
 	n := TO(fixed64)
-	if strconv.FormatFloat(float64(n), 'g', -1, reflect.TypeOf(n).Bits()) != f.String() {
+	if strconv.FormatFloat(float64(n), 'f', -1, reflect.TypeOf(n).Bits()) != f.String() {
 		return 0, fixed.ErrDoesNotFitInRequestedType
 	}
 	return n, nil
@@ -186,9 +186,10 @@ func (f Int[T]) Div(value Int[T]) Int[T] {
 	return Int[T]{data: f.data.Mul(multiplier[T]()).Div(value.data)}
 }
 
-// Mod returns the remainder after subtracting all full multiples of the passed-in value.
+// Mod returns the remainder after subtracting all full multiples of the passed-in value. The result has the same sign
+// as this value, matching the behavior of Go's % operator.
 func (f Int[T]) Mod(value Int[T]) Int[T] {
-	return f.Sub(value.Mul(f.Div(value).Floor()))
+	return f.Sub(value.Mul(f.Div(value).Trunc()))
 }
 
 // Neg negates this value, returning a new value.
@@ -231,15 +232,24 @@ func (f Int[T]) LessThanOrEqual(n Int[T]) bool {
 	return f.data.LessThanOrEqual(n.data)
 }
 
-// Floor returns the value rounded down to the nearest whole number.
-func (f Int[T]) Floor() Int[T] {
+// Trunc returns the value with the fractional portion removed, truncating toward zero.
+func (f Int[T]) Trunc() Int[T] {
 	m := multiplier[T]()
 	return Int[T]{data: f.data.Div(m).Mul(m)}
 }
 
+// Floor returns the value rounded down to the nearest whole number.
+func (f Int[T]) Floor() Int[T] {
+	v := f.Trunc()
+	if f.LessThan(Int[T]{}) && f != v {
+		v = v.Sub(Multiplier[T]())
+	}
+	return v
+}
+
 // Ceil returns the value rounded up to the nearest whole number.
 func (f Int[T]) Ceil() Int[T] {
-	v := f.Floor()
+	v := f.Trunc()
 	if f.GreaterThan(Int[T]{}) && f != v {
 		v = v.Add(Multiplier[T]())
 	}
@@ -250,12 +260,11 @@ func (f Int[T]) Ceil() Int[T] {
 func (f Int[T]) Round() Int[T] {
 	one := Multiplier[T]()
 	half := Int[T]{data: one.data.Div(num128.IntFrom64(2))}
-	negHalf := half.Neg()
-	value := f.Floor()
+	value := f.Trunc()
 	rem := f.Sub(value)
 	if rem.GreaterThanOrEqual(half) {
 		value = value.Add(one)
-	} else if rem.LessThan(negHalf) {
+	} else if rem.LessThanOrEqual(half.Neg()) {
 		value = value.Sub(one)
 	}
 	return value

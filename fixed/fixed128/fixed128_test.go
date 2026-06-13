@@ -152,9 +152,28 @@ func testFloor[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("0.3333").Floor())
 	c.Equal(fixed128.FromInteger[T](2), fixed128.FromStringForced[T]("2.6789").Floor())
 	c.Equal(fixed128.FromInteger[T](3), fixed128.FromInteger[T](3).Floor())
-	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Floor())
-	c.Equal(fixed128.FromInteger[T](-2), fixed128.FromStringForced[T]("-2.6789").Floor())
+	c.Equal(fixed128.FromInteger[T](-1), fixed128.FromStringForced[T]("-0.3333").Floor())
+	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromStringForced[T]("-2.6789").Floor())
 	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Floor())
+}
+
+func TestTrunc(t *testing.T) {
+	testTrunc[fixed.D1](t)
+	testTrunc[fixed.D2](t)
+	testTrunc[fixed.D3](t)
+	testTrunc[fixed.D4](t)
+	testTrunc[fixed.D5](t)
+	testTrunc[fixed.D6](t)
+}
+
+func testTrunc[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("0.3333").Trunc())
+	c.Equal(fixed128.FromInteger[T](2), fixed128.FromStringForced[T]("2.6789").Trunc())
+	c.Equal(fixed128.FromInteger[T](3), fixed128.FromInteger[T](3).Trunc())
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Trunc())
+	c.Equal(fixed128.FromInteger[T](-2), fixed128.FromStringForced[T]("-2.6789").Trunc())
+	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Trunc())
 }
 
 func TestCeil(t *testing.T) {
@@ -193,6 +212,10 @@ func testRound[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Round())
 	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromStringForced[T]("-2.6789").Round())
 	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Round())
+	c.Equal(fixed128.FromInteger[T](1), fixed128.FromStringForced[T]("0.5").Round())
+	c.Equal(fixed128.FromInteger[T](-1), fixed128.FromStringForced[T]("-0.5").Round())
+	c.Equal(fixed128.FromInteger[T](3), fixed128.FromStringForced[T]("2.5").Round())
+	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromStringForced[T]("-2.5").Round())
 }
 
 func TestAbs(t *testing.T) {
@@ -548,6 +571,12 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	floatResult, err = fixed128.AsFloatChecked[T, float64](fracVal)
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
+
+	// Values whose shortest float representation uses an exponent should still convert
+	million := fixed128.FromInteger[T](1000000)
+	floatResult, err = fixed128.AsFloatChecked[T, float64](million)
+	c.NoError(err)
+	c.Equal(float64(1000000), floatResult)
 }
 
 func TestStringWithSign(t *testing.T) {
