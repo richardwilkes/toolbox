@@ -382,10 +382,7 @@ func (u Uint) BitLen() int {
 
 // OnesCount returns the number of one bits ("population count") in u.
 func (u Uint) OnesCount() int {
-	if u.hi != 0 {
-		return bits.OnesCount64(u.hi) + 64
-	}
-	return bits.OnesCount64(u.lo)
+	return bits.OnesCount64(u.hi) + bits.OnesCount64(u.lo)
 }
 
 // Bit returns the value of the i'th bit of x. That is, it returns (x>>i)&1. If the bit index is less than 0 or greater

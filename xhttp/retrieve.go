@@ -71,6 +71,7 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 				return nil, errs.NewWithCause(filePathOrURL, err)
 			}
 			if rsp.StatusCode < 200 || rsp.StatusCode > 299 {
+				xio.DiscardAndCloseIgnoringErrors(rsp.Body)
 				return nil, errs.NewWithCause(filePathOrURL, errs.Newf("received status %d (%s)", rsp.StatusCode, rsp.Status))
 			}
 			return rsp.Body, nil

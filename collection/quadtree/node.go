@@ -81,7 +81,7 @@ func (n *node[N]) splitIfNeeded() {
 			n.children[0] = &node[N]{
 				rect: geom.Rect{
 					Point: n.rect.Point,
-					Size:  geom.NewSize(hw, hw),
+					Size:  geom.NewSize(hw, hh),
 				},
 				threshold: n.threshold,
 			}

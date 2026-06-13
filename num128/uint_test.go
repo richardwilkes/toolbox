@@ -638,9 +638,9 @@ func TestOnesCount(t *testing.T) {
 	c.Equal(64, num128.UintFrom64(math.MaxUint64).OnesCount())
 
 	// Test with high bits
-	val := num128.UintFromComponents(1, 0) // Only one bit set in high part
-	// The implementation has a bug: it returns bits.OnesCount64(u.hi) + 64 instead of + bits.OnesCount64(u.lo)
-	c.Equal(65, val.OnesCount()) // This is the current (buggy) behavior
+	c.Equal(1, num128.UintFromComponents(1, 0).OnesCount()) // Only one bit set in high part
+	c.Equal(2, num128.UintFromComponents(1, 1).OnesCount()) // One bit set in each half
+	c.Equal(128, num128.UintFromComponents(math.MaxUint64, math.MaxUint64).OnesCount())
 }
 
 // Test Bit and SetBit
