@@ -68,7 +68,18 @@ var (
 		MimeTypes:  []string{"application/x-yaml"},
 		Extensions: []string{".yaml", ".yml"},
 	})
-
+	Markdown = Register(&DataType{
+		UTI:        "net.daringfireball.markdown",
+		Parents:    []*DataType{PlainText},
+		MimeTypes:  []string{"text/markdown"},
+		Extensions: []string{".md", ".markdown"},
+	})
+	PDF = Register(&DataType{
+		UTI:        "com.adobe.pdf",
+		Parents:    []*DataType{Data},
+		MimeTypes:  []string{"application/pdf", "application/x-pdf"},
+		Extensions: []string{".pdf"},
+	})
 	BMP = Register(&DataType{
 		UTI:        "com.microsoft.bmp",
 		Parents:    []*DataType{Image},
@@ -96,7 +107,7 @@ var (
 		UTI:        "public.jpeg",
 		Parents:    []*DataType{Image},
 		MimeTypes:  []string{"image/jpeg", "image/jpg"},
-		Extensions: []string{"jpeg", ".jpg", "jpe", ".jif", ".jfif", ".jfi"},
+		Extensions: []string{".jpeg", ".jpg", ".jpe", ".jif", ".jfif", ".jfi"},
 	})
 	PNG = Register(&DataType{
 		UTI:        "public.png",
