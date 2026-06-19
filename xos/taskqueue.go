@@ -53,7 +53,7 @@ func NewTaskQueue(config *TaskQueueConfig) *TaskQueue {
 	return q
 }
 
-// Submit a task to be run.
+// Submit a task to be run. Must not be called after a call to Shutdown().
 func (q *TaskQueue) Submit(task func()) {
 	q.in <- task
 }
