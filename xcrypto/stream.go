@@ -58,11 +58,11 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 // will be smaller than the input stream by aes.BlockSize + publicKey.Size() bytes.
 func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.PrivateKey) error {
 	encryptedEncryptionKey := make([]byte, privateKey.Size())
-	if _, err := in.Read(encryptedEncryptionKey); err != nil {
+	if _, err := io.ReadFull(in, encryptedEncryptionKey); err != nil {
 		return errs.Wrap(err)
 	}
 	iv := make([]byte, aes.BlockSize)
-	if _, err := in.Read(iv); err != nil {
+	if _, err := io.ReadFull(in, iv); err != nil {
 		return errs.Wrap(err)
 	}
 	encryptionKey, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, encryptedEncryptionKey, nil)

@@ -14,6 +14,7 @@ import (
 	crypto_rand "crypto/rand"
 	"crypto/rsa"
 	"testing"
+	"testing/iotest"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xcrypto"
@@ -31,5 +32,23 @@ func TestEncryptDecryptStreamWithKeyPair(t *testing.T) {
 	c.True(encrypted.Len() > len(plaintext))
 	var decrypted bytes.Buffer
 	c.NoError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(encrypted.Bytes()), &decrypted, privateKey))
+	c.Equal(plaintext, decrypted.Bytes())
+}
+
+// TestDecryptStreamWithPartialReads ensures decryption works when the input stream returns data in short reads, as can
+// happen with network connections, pipes, and files. The encrypted key and IV must be read with io.ReadFull rather than
+// a single Read call.
+func TestDecryptStreamWithPartialReads(t *testing.T) {
+	c := check.New(t)
+	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
+	c.NoError(err)
+	publicKey := &privateKey.PublicKey
+	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
+	var encrypted bytes.Buffer
+	c.NoError(xcrypto.EncryptStreamWithPublicKey(bytes.NewReader(plaintext), &encrypted, publicKey))
+	// iotest.OneByteReader forces every Read to return at most a single byte, exercising the short-read path.
+	in := iotest.OneByteReader(bytes.NewReader(encrypted.Bytes()))
+	var decrypted bytes.Buffer
+	c.NoError(xcrypto.DecryptStreamWithPrivateKey(in, &decrypted, privateKey))
 	c.Equal(plaintext, decrypted.Bytes())
 }
