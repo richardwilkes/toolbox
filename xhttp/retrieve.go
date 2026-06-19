@@ -15,10 +15,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 // HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
@@ -56,7 +59,9 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 		}
 		switch u.Scheme {
 		case ProtocolFile:
-			filePathOrURL = u.Path
+			if filePathOrURL, err = fileURLToPath(u); err != nil {
+				return nil, err
+			}
 		case ProtocolHTTP, ProtocolHTTPS:
 			var req *http.Request
 			req, err = http.NewRequestWithContext(ctx, http.MethodGet, filePathOrURL, http.NoBody)
@@ -85,4 +90,25 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 		return nil, errs.NewWithCause(filePathOrURL, err)
 	}
 	return r, nil
+}
+
+// fileURLToPath converts a parsed file URL into a local filesystem path. Only local file URLs are supported, so a
+// non-empty host other than "localhost" is rejected, since os.Open cannot reach it.
+func fileURLToPath(u *url.URL) (string, error) {
+	if u.Host != "" && !strings.EqualFold(u.Host, "localhost") {
+		return "", errs.Newf("unsupported host in file URL: %s", u.String())
+	}
+	p := u.Path
+	if runtime.GOOS == xos.WindowsOS {
+		// Windows file URLs encode drive paths as /C:/path; strip the leading slash so os.Open sees C:/path.
+		if len(p) >= 3 && p[0] == '/' && p[2] == ':' && isASCIILetter(p[1]) {
+			p = p[1:]
+		}
+		p = filepath.FromSlash(p)
+	}
+	return p, nil
+}
+
+func isASCIILetter(b byte) bool {
+	return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
 }

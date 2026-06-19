@@ -16,11 +16,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xhttp"
 	"github.com/richardwilkes/toolbox/v2/xio"
+	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
 func TestHasHttpOrFileURLPrefix(t *testing.T) {
@@ -51,6 +53,41 @@ func TestRetrieveData_FileURL(t *testing.T) {
 	c.NoError(os.WriteFile(file, content, 0o600))
 	fileURL := "file://" + filepath.ToSlash(file) // ToSlash is necessary for Windows compatibility
 	data, err := xhttp.RetrieveData(context.Background(), nil, fileURL)
+	c.NoError(err)
+	c.Equal(content, data)
+}
+
+func TestRetrieveData_FileURLLocalhost(t *testing.T) {
+	c := check.New(t)
+	file := filepath.Join(t.TempDir(), "retrieve_test_localhost.txt")
+	content := []byte("hello localhost")
+	c.NoError(os.WriteFile(file, content, 0o600))
+	fileURL := "file://localhost" + filepath.ToSlash(file) // ToSlash is necessary for Windows compatibility
+	data, err := xhttp.RetrieveData(context.Background(), nil, fileURL)
+	c.NoError(err)
+	c.Equal(content, data)
+}
+
+func TestStreamData_FileURLNonLocalHost(t *testing.T) {
+	c := check.New(t)
+	_, err := xhttp.StreamData(context.Background(), nil, "file://otherhost/share/file.txt")
+	c.HasError(err)
+}
+
+func TestStreamData_FileURLWindowsDrivePath(t *testing.T) {
+	if runtime.GOOS != xos.WindowsOS {
+		t.Skip("Windows drive path handling only applies on Windows")
+	}
+	c := check.New(t)
+	file := filepath.Join(t.TempDir(), "retrieve_test_drive.txt")
+	content := []byte("hello drive")
+	c.NoError(os.WriteFile(file, content, 0o600))
+	// On Windows, filepath.ToSlash(file) yields something like C:/Users/...; the file URL becomes file:///C:/Users/...
+	fileURL := "file:///" + filepath.ToSlash(file)
+	r, err := xhttp.StreamData(context.Background(), nil, fileURL)
+	c.NoError(err)
+	defer xio.CloseIgnoringErrors(r)
+	data, err := io.ReadAll(r)
 	c.NoError(err)
 	c.Equal(content, data)
 }
