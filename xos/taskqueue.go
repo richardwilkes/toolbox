@@ -35,6 +35,9 @@ type TaskQueue struct {
 
 // NewTaskQueue creates an asynchronous queue which executes the tasks submitted to it.
 func NewTaskQueue(config *TaskQueueConfig) *TaskQueue {
+	if config == nil {
+		config = &TaskQueueConfig{}
+	}
 	numCPU := runtime.NumCPU()
 	q := &TaskQueue{
 		in:              make(chan func(), numCPU*2),
