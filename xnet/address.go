@@ -88,10 +88,15 @@ func externalIPAddress(ctx context.Context, timeout time.Duration, sites []strin
 				results <- nil
 				return
 			}
-			if v4 {
+			switch {
+			case v4:
+				// Reject IPv6 responses (To4 returns nil for them).
 				results <- ip.To4()
-			} else {
+			case ip.To4() == nil:
 				results <- ip
+			default:
+				// Reject IPv4 responses to an IPv6 query.
+				results <- nil
 			}
 		}(site)
 	}
