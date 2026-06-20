@@ -12,6 +12,7 @@ package xos_test
 import (
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xos"
@@ -68,6 +69,22 @@ func submitParallel(q *xos.TaskQueue, i int) {
 	q.Submit(func() {
 		atomic.AddInt32(&total, int32(i))
 		atomic.AddInt32(&count, 1)
+	})
+}
+
+func TestDepthOneQueue(t *testing.T) {
+	c := check.New(t)
+	c.NotPanics(func() {
+		q := xos.NewTaskQueue(&xos.TaskQueueConfig{Depth: 1, Workers: 1})
+		var n int32
+		for range 2000 {
+			q.Submit(func() {
+				time.Sleep(time.Microsecond)
+				atomic.AddInt32(&n, 1)
+			})
+		}
+		q.Shutdown()
+		c.Equal(int32(2000), atomic.LoadInt32(&n))
 	})
 }
 

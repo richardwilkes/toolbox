@@ -102,9 +102,13 @@ outer:
 			} else {
 				<-ready
 				processed++
-				tasks <- backlog[0]
-				copy(backlog, backlog[1:])
-				backlog[len(backlog)-1] = task
+				if len(backlog) == 0 {
+					tasks <- task
+				} else {
+					tasks <- backlog[0]
+					copy(backlog, backlog[1:])
+					backlog[len(backlog)-1] = task
+				}
 			}
 		case <-ready:
 			processed++
