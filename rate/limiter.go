@@ -96,26 +96,9 @@ func New(capacity int, period time.Duration) Limiter {
 						req.done <- errs.Newf("Amount (%d) is greater than capacity (%d)", req.amount, req.limiter.capacity)
 						continue
 					}
-					if c.root.capacity-c.root.used > 0 {
-						available := req.limiter.capacity - req.limiter.used
-						p := req.limiter.parent
-						for p != nil {
-							pa := p.capacity - p.used
-							if pa < available {
-								available = pa
-							}
-							p = p.parent
-						}
-						if available >= req.amount {
-							req.limiter.used += req.amount
-							p = req.limiter.parent
-							for p != nil {
-								p.used += req.amount
-								p = p.parent
-							}
-							req.done <- nil
-							continue
-						}
+					if req.limiter.tryConsume(req.amount) {
+						req.done <- nil
+						continue
 					}
 					remaining = append(remaining, req)
 				}
@@ -201,22 +184,7 @@ func (l *limiter) Use(amount int) <-chan error {
 		done <- errs.Newf("Amount (%d) is greater than capacity (%d)", amount, capacity)
 		return done
 	}
-	available := l.capacity - l.used
-	p := l.parent
-	for p != nil {
-		pa := p.capacity - p.used
-		if pa < available {
-			available = pa
-		}
-		p = p.parent
-	}
-	if available >= amount {
-		l.used += amount
-		p = l.parent
-		for p != nil {
-			p.used += amount
-			p = p.parent
-		}
+	if l.tryConsume(amount) {
 		l.controller.lock.Unlock()
 		done <- nil
 		return done
@@ -228,6 +196,26 @@ func (l *limiter) Use(amount int) <-chan error {
 	})
 	l.controller.lock.Unlock()
 	return done
+}
+
+// tryConsume attempts to reserve amount against this limiter and all of its ancestors, reporting whether it succeeded.
+// On success, the amount is added to the used count of this limiter and each ancestor. The controller lock must be
+// held.
+func (l *limiter) tryConsume(amount int) bool {
+	available := l.capacity - l.used
+	for p := l.parent; p != nil; p = p.parent {
+		if pa := p.capacity - p.used; pa < available {
+			available = pa
+		}
+	}
+	if available < amount {
+		return false
+	}
+	l.used += amount
+	for p := l.parent; p != nil; p = p.parent {
+		p.used += amount
+	}
+	return true
 }
 
 func (l *limiter) reset() {
