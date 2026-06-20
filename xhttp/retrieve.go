@@ -12,6 +12,7 @@ package xhttp
 import (
 	"context"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -37,17 +38,31 @@ func hasSchemePrefix(s, prefix string) bool {
 }
 
 // RetrieveData loads the bytes from the given file path or URL with scheme file, http, or https. If client is nil and a
-// network request is necessary, the http.DefaultClient will be used.
+// network request is necessary, the http.DefaultClient will be used. No limit is placed on the amount of data that will
+// be read; use RetrieveDataWithLimit if the source is untrusted.
 func RetrieveData(ctx context.Context, client *http.Client, filePathOrURL string) ([]byte, error) {
+	return RetrieveDataWithLimit(ctx, client, filePathOrURL, 0)
+}
+
+// RetrieveDataWithLimit behaves like RetrieveData, but returns an error if more than maxBytes would be read. A maxBytes
+// of zero or less means no limit.
+func RetrieveDataWithLimit(ctx context.Context, client *http.Client, filePathOrURL string, maxBytes int64) ([]byte, error) {
 	r, err := StreamData(ctx, client, filePathOrURL)
 	if err != nil {
 		return nil, err
 	}
 	defer xio.CloseIgnoringErrors(r)
+	var reader io.Reader = r
+	enforceLimit := maxBytes > 0 && maxBytes != math.MaxInt64
+	if enforceLimit {
+		reader = io.LimitReader(r, maxBytes+1) // +1 so reading exactly maxBytes can be distinguished from exceeding it
+	}
 	var data []byte
-	data, err = io.ReadAll(r)
-	if err != nil {
+	if data, err = io.ReadAll(reader); err != nil {
 		return nil, errs.NewWithCause(filePathOrURL, err)
+	}
+	if enforceLimit && int64(len(data)) > maxBytes {
+		return nil, errs.Newf("data from %s exceeds maximum of %d bytes", filePathOrURL, maxBytes)
 	}
 	return data, nil
 }

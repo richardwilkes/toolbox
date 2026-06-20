@@ -12,6 +12,7 @@ package xhttp_test
 import (
 	"context"
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -91,6 +92,37 @@ func TestStreamData_FileURLWindowsDrivePath(t *testing.T) {
 	c.NoError(err)
 	defer xio.CloseIgnoringErrors(r)
 	data, err := io.ReadAll(r)
+	c.NoError(err)
+	c.Equal(content, data)
+}
+
+func TestRetrieveDataWithLimit(t *testing.T) {
+	c := check.New(t)
+	file := filepath.Join(t.TempDir(), "retrieve_test_limit.txt")
+	content := []byte("0123456789") // 10 bytes
+	c.NoError(os.WriteFile(file, content, 0o600))
+
+	// Under the limit.
+	data, err := xhttp.RetrieveDataWithLimit(context.Background(), nil, file, 100)
+	c.NoError(err)
+	c.Equal(content, data)
+
+	// Exactly at the limit.
+	data, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, int64(len(content)))
+	c.NoError(err)
+	c.Equal(content, data)
+
+	// Over the limit.
+	_, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, int64(len(content))-1)
+	c.HasError(err)
+
+	// Zero means no limit.
+	data, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, 0)
+	c.NoError(err)
+	c.Equal(content, data)
+
+	// math.MaxInt64 also effectively means no limit.
+	data, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, math.MaxInt64)
 	c.NoError(err)
 	c.Equal(content, data)
 }
