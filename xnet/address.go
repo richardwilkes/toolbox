@@ -68,6 +68,8 @@ func ExternalIPv6Address(ctx context.Context, timeout time.Duration) net.IP {
 }
 
 func externalIPAddress(ctx context.Context, timeout time.Duration, sites []string, v4 bool) net.IP {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	client := &http.Client{Timeout: timeout}
 	results := make(chan net.IP, len(sites))
 	for _, site := range sites {
