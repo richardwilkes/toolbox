@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/v2/xhttp"
+	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
 var (
@@ -89,6 +90,7 @@ func externalIPAddress(ctx context.Context, timeout time.Duration, sites []strin
 func PrimaryIPAddress() net.IP {
 	// Since we're using udp, no connection will actually be made. We just need an external IP address.
 	if conn, err := net.Dial("udp", "8.8.8.8:80"); err == nil {
+		defer xio.CloseIgnoringErrors(conn)
 		if localAddr, ok := conn.LocalAddr().(*net.UDPAddr); ok {
 			return localAddr.IP
 		}
