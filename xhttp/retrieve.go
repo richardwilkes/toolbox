@@ -24,11 +24,16 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-// HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme.
+// HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme. The scheme comparison is
+// case-insensitive, since URI schemes are not case-sensitive (RFC 3986).
 func HasHTTPOrFileURLPrefix(urlStr string) bool {
-	return strings.HasPrefix(urlStr, "http://") ||
-		strings.HasPrefix(urlStr, "https://") ||
-		strings.HasPrefix(urlStr, "file://")
+	return hasSchemePrefix(urlStr, "http://") ||
+		hasSchemePrefix(urlStr, "https://") ||
+		hasSchemePrefix(urlStr, "file://")
+}
+
+func hasSchemePrefix(s, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
 }
 
 // RetrieveData loads the bytes from the given file path or URL with scheme file, http, or https. If client is nil and a
