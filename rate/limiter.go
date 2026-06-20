@@ -21,13 +21,13 @@ import (
 // Limiter provides a rate limiter.
 type Limiter interface {
 	// New returns a new limiter that is subordinate to this limiter, meaning that its cap rate is also capped by its
-	// parent.
+	// parent. A capacity less than 1 is treated as 1.
 	New(capacity int) Limiter
 
 	// Cap returns the capacity per time period.
 	Cap(applyParentCaps bool) int
 
-	// SetCap sets the capacity.
+	// SetCap sets the capacity. A capacity less than 1 is treated as 1.
 	SetCap(capacity int)
 
 	// LastUsed returns the capacity used in the last time period.
@@ -69,7 +69,7 @@ type request struct {
 }
 
 // New creates a new top-level rate limiter. 'capacity' is the number of units (bytes, for example) allowed to be used
-// in a particular time 'period'.
+// in a particular time 'period'. A capacity less than 1 is treated as 1.
 func New(capacity int, period time.Duration) Limiter {
 	c := &controller{
 		ticker: time.NewTicker(period),
@@ -77,7 +77,7 @@ func New(capacity int, period time.Duration) Limiter {
 	}
 	l := &limiter{
 		controller: c,
-		capacity:   capacity,
+		capacity:   max(capacity, 1),
 	}
 	c.root = l
 	go func() {
@@ -128,7 +128,7 @@ func (l *limiter) New(capacity int) Limiter {
 	child := &limiter{
 		controller: l.controller,
 		parent:     l,
-		capacity:   capacity,
+		capacity:   max(capacity, 1),
 	}
 	l.children = append(l.children, child)
 	return child
@@ -152,7 +152,7 @@ func (l *limiter) Cap(applyParentCaps bool) int {
 
 func (l *limiter) SetCap(capacity int) {
 	l.controller.lock.Lock()
-	l.capacity = capacity
+	l.capacity = max(capacity, 1)
 	l.controller.lock.Unlock()
 }
 
