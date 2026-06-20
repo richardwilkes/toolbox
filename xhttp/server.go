@@ -173,7 +173,7 @@ func (s *Server) Run() error {
 		s.lock.Unlock()
 		close(s.stopped)
 	}()
-	slog.Info(s.protocol + " server is now listening on " + s.ListenerAddress().String())
+	s.logger.Info(s.protocol + " server is now listening on " + s.ListenerAddress().String())
 	close(s.started)
 	s.lock.Unlock()
 	if s.protocol == ProtocolHTTPS {
@@ -240,11 +240,11 @@ func (s *Server) Stop() {
 		return
 	}
 	address := s.ListenerAddress().String()
-	slog.Info("stopping " + s.protocol + " server listening on " + address)
+	s.logger.Info("stopping " + s.protocol + " server listening on " + address)
 	defer func() {
 		xos.CancelRunAtExit(s.stopID)
 		s.stopID = 0
-		slog.Info(s.protocol + " server listening on " + address + " has stopped")
+		s.logger.Info(s.protocol + " server listening on " + address + " has stopped")
 	}()
 	ctx, cancel := context.WithTimeout(context.Background(), s.stopGracePeriod)
 	defer cancel()
