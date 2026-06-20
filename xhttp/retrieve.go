@@ -115,10 +115,18 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 // fileURLToPath converts a parsed file URL into a local filesystem path. Only local file URLs are supported, so a
 // non-empty host other than "localhost" is rejected, since os.Open cannot reach it.
 func fileURLToPath(u *url.URL) (string, error) {
-	if u.Host != "" && !strings.EqualFold(u.Host, "localhost") {
+	host := u.Host
+	p := u.Path
+	if runtime.GOOS == xos.WindowsOS && len(host) == 2 && host[1] == ':' && isASCIILetter(host[0]) {
+		// A file URL incorrectly written as file://C:/path (two slashes rather than three) puts the drive letter in the
+		// host. Fold it back into the path so it is treated as a local drive path rather than an unreachable remote
+		// host.
+		p = host + p
+		host = ""
+	}
+	if host != "" && !strings.EqualFold(host, "localhost") {
 		return "", errs.Newf("unsupported host in file URL: %s", u.String())
 	}
-	p := u.Path
 	if runtime.GOOS == xos.WindowsOS {
 		// Windows file URLs encode drive paths as /C:/path; strip the leading slash so os.Open sees C:/path.
 		if len(p) >= 3 && p[0] == '/' && p[2] == ':' && isASCIILetter(p[1]) {

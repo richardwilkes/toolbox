@@ -96,6 +96,25 @@ func TestStreamData_FileURLWindowsDrivePath(t *testing.T) {
 	c.Equal(content, data)
 }
 
+func TestStreamData_FileURLWindowsDriveHost(t *testing.T) {
+	if runtime.GOOS != xos.WindowsOS {
+		t.Skip("Windows drive path handling only applies on Windows")
+	}
+	c := check.New(t)
+	file := filepath.Join(t.TempDir(), "retrieve_test_drive_host.txt")
+	content := []byte("hello drive host")
+	c.NoError(os.WriteFile(file, content, 0o600))
+	// A two-slash form such as "file://" followed by C:/Users/... puts the drive letter in the URL host; it must still
+	// resolve to a local path.
+	fileURL := "file://" + filepath.ToSlash(file)
+	r, err := xhttp.StreamData(context.Background(), nil, fileURL)
+	c.NoError(err)
+	defer xio.CloseIgnoringErrors(r)
+	data, err := io.ReadAll(r)
+	c.NoError(err)
+	c.Equal(content, data)
+}
+
 func TestRetrieveDataWithLimit(t *testing.T) {
 	c := check.New(t)
 	file := filepath.Join(t.TempDir(), "retrieve_test_limit.txt")
