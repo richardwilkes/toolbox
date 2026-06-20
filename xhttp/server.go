@@ -173,7 +173,7 @@ func (s *Server) Run() error {
 		s.lock.Unlock()
 		close(s.stopped)
 	}()
-	s.logger.Info(s.protocol + " server is now listening on " + s.ListenerAddress().String())
+	s.logger.Info(s.protocol + " server is now listening on " + s.listenerAddress.String())
 	close(s.started)
 	s.lock.Unlock()
 	if s.protocol == ProtocolHTTPS {
@@ -191,6 +191,8 @@ func (s *Server) Run() error {
 
 // ListenerAddress returns the address of the underlying listener. This will return nil until the server is started.
 func (s *Server) ListenerAddress() net.Addr {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	return s.listenerAddress
 }
 
@@ -239,7 +241,7 @@ func (s *Server) Stop() {
 	if s.stopID == 0 {
 		return
 	}
-	address := s.ListenerAddress().String()
+	address := s.listenerAddress.String()
 	s.logger.Info("stopping " + s.protocol + " server listening on " + address)
 	defer func() {
 		xos.CancelRunAtExit(s.stopID)
