@@ -73,7 +73,7 @@ type request struct {
 func New(capacity int, period time.Duration) Limiter {
 	c := &controller{
 		ticker: time.NewTicker(period),
-		done:   make(chan bool),
+		done:   make(chan bool, 1),
 	}
 	l := &limiter{
 		controller: c,
