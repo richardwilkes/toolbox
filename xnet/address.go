@@ -23,25 +23,25 @@ import (
 var (
 	// These seem to prefer ipv4 responses, if possible
 	v4Sites = []string{
-		"http://whatismyip.akamai.com/",
+		"https://whatismyip.akamai.com/",
 		"https://myip.dnsomatic.com/",
-		"http://api.ipify.org/",
-		"http://checkip.amazonaws.com/",
-		"http://4.ident.me/",
+		"https://api.ipify.org/",
+		"https://checkip.amazonaws.com/",
+		"https://4.ident.me/",
 	}
 
 	// These seem to prefer ipv6 responses, if possible
 	v6Sites = []string{
-		"http://icanhazip.com/",
+		"https://icanhazip.com/",
 		"https://myexternalip.com/raw",
-		"http://ifconfig.io/ip",
-		"http://6.ident.me/",
+		"https://ifconfig.io/ip",
+		"https://6.ident.me/",
 	}
 )
 
 // ExternalIPAddress returns your IP address as seen by external sites. It does this by iterating through a list of
 // websites that will return your IP address as they see it. The first response with a valid IP address will be
-// returned. timeout sets the maximum amount of time for each attempt to connect with a site. If no valid IP address is
+// returned. timeout sets the maximum amount of time an attempt to connect with a site. If no valid IP address is
 // returned from any of the sites, nil is returned. Sites that usually return IPv4 addresses are checked first, then
 // those that usually return IPv6 addresses.
 func ExternalIPAddress(ctx context.Context, timeout time.Duration) net.IP {
@@ -53,34 +53,55 @@ func ExternalIPAddress(ctx context.Context, timeout time.Duration) net.IP {
 
 // ExternalIPv4Address returns your IPv4 address as seen by external sites. It does this by iterating through a list of
 // websites that will return your IPv4 address as they see it. The first response with a valid IPv4 address will be
-// returned. timeout sets the maximum amount of time for each attempt to connect with a site. If no valid IPv4 address
-// is returned from any of the sites, nil is returned.
+// returned. timeout sets the maximum amount of time an attempt to connect with a site. If no valid IPv4 address is
+// returned from any of the sites, nil is returned.
 func ExternalIPv4Address(ctx context.Context, timeout time.Duration) net.IP {
 	return externalIPAddress(ctx, timeout, v4Sites, true)
 }
 
 // ExternalIPv6Address returns your IPv6 address as seen by external sites. It does this by iterating through a list of
 // websites that will return your IPv6 address as they see it. The first response with a valid IPv6 address will be
-// returned. timeout sets the maximum amount of time for each attempt to connect with a site. If no valid IPv6 address
-// is returned from any of the sites, nil is returned.
+// returned. timeout sets the maximum amount of time an attempt to connect with a site. If no valid IPv6 address is
+// returned from any of the sites, nil is returned.
 func ExternalIPv6Address(ctx context.Context, timeout time.Duration) net.IP {
 	return externalIPAddress(ctx, timeout, v6Sites, false)
 }
 
 func externalIPAddress(ctx context.Context, timeout time.Duration, sites []string, v4 bool) net.IP {
 	client := &http.Client{Timeout: timeout}
+	results := make(chan net.IP, len(sites))
 	for _, site := range sites {
-		if ctx.Err() != nil {
-			return nil
-		}
-		if data, err := xhttp.RetrieveData(ctx, client, site); err == nil {
-			ip := net.ParseIP(strings.TrimSpace(string(data)))
-			if v4 {
-				ip = ip.To4()
+		go func(addr string) {
+			if ctx.Err() != nil {
+				results <- nil
+				return
 			}
+			data, err := xhttp.RetrieveData(ctx, client, addr)
+			if err != nil {
+				results <- nil
+				return
+			}
+			ip := net.ParseIP(strings.TrimSpace(string(data)))
+			if ip == nil {
+				results <- nil
+				return
+			}
+			if v4 {
+				results <- ip.To4()
+			} else {
+				results <- ip
+			}
+		}(site)
+	}
+	for range sites {
+		var ip net.IP
+		select {
+		case ip = <-results:
 			if ip != nil {
 				return ip
 			}
+		case <-ctx.Done():
+			return nil
 		}
 	}
 	return nil
