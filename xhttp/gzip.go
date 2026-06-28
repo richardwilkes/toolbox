@@ -66,8 +66,9 @@ func (w *gzipResponseWriter) Write(data []byte) (int, error) {
 }
 
 // WriteHeader implements http.ResponseWriter. The decision to compress is deferred until this point so that responses
-// which must not carry a body (1xx informational, 204 No Content, 304 Not Modified) are neither advertised as gzip nor
-// emitted as a gzip stream, both of which would produce an invalid response.
+// which must not carry a body (1xx informational, 204 No Content, 304 Not Modified), or which the handler has already
+// encoded itself (a non-empty Content-Encoding), are neither advertised as gzip nor emitted as a gzip stream, both of
+// which would produce an invalid or doubly-encoded response.
 func (w *gzipResponseWriter) WriteHeader(status int) {
 	// 1xx responses are interim; the final status arrives in a later call, so forward them without committing.
 	if status >= http.StatusContinue && status < http.StatusOK {
@@ -76,7 +77,10 @@ func (w *gzipResponseWriter) WriteHeader(status int) {
 	}
 	if !w.wroteHeader {
 		w.wroteHeader = true
-		if status != http.StatusNoContent && status != http.StatusNotModified {
+		// Skip a body-less status, and skip a response the handler already encoded: overwriting its Content-Encoding
+		// and wrapping its bytes in a second gzip stream would corrupt the content.
+		if status != http.StatusNoContent && status != http.StatusNotModified &&
+			w.w.Header().Get("Content-Encoding") == "" {
 			w.w.Header().Set("Content-Encoding", "gzip")
 			// The handler's Content-Length describes the uncompressed body and no longer matches the compressed bytes
 			// we are about to emit, so drop it and let the response be sent with chunked transfer encoding.

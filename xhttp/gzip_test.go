@@ -136,6 +136,23 @@ func TestGZipWrapKeepsContentLengthWhenNotCompressing(t *testing.T) {
 	c.Equal("0", rec.Header().Get("Content-Length"))
 }
 
+// TestGZipWrapSkipsAlreadyEncoded verifies that a response the handler has already encoded (a non-empty
+// Content-Encoding) is left untouched: its header is not overwritten to gzip and its bytes are not wrapped in a second
+// gzip stream.
+func TestGZipWrapSkipsAlreadyEncoded(t *testing.T) {
+	c := check.New(t)
+	const body = "pretend-brotli-bytes"
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Encoding", "br")
+		_, err := io.WriteString(w, body)
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("br", rec.Header().Get("Content-Encoding"), "handler's Content-Encoding must be preserved")
+	c.Equal(body, rec.Body.String(), "already-encoded body must be passed through verbatim, not re-gzipped")
+}
+
 // TestGZipWrapNoContent verifies that a 204 No Content response is neither advertised as gzip nor emitted as a gzip
 // stream, since responses with that status must not carry a body.
 func TestGZipWrapNoContent(t *testing.T) {
