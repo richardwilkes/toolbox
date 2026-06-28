@@ -18,6 +18,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/fixed"
+	"github.com/richardwilkes/toolbox/v2/fixed/fixed128"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
 	"github.com/richardwilkes/toolbox/v2/num128"
 	"gopkg.in/yaml.v3"
@@ -70,6 +71,42 @@ func testConversion[T fixed.Dx](t *testing.T) {
 	// Small source types must not wrap when scaled by the multiplier
 	c.Equal(fixed64.FromInteger[T](2), fixed64.FromInteger[T](int8(2)))
 	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromInteger[T](int8(-2)))
+}
+
+// TestFromFloatRounds verifies that FromFloat rounds the float64 representation to the target precision rather than
+// truncating it. A direct float multiply truncates 0.29*100 == 28.999999999999996 down to 0.28; these are the ordinary
+// inputs the previous implementation got wrong.
+func TestFromFloatRounds(t *testing.T) {
+	c := check.New(t)
+	c.Equal("0.29", fixed64.FromFloat[fixed.D2](0.29).String())
+	c.Equal("0.57", fixed64.FromFloat[fixed.D2](0.57).String())
+	c.Equal("0.58", fixed64.FromFloat[fixed.D2](0.58).String())
+	c.Equal("-0.29", fixed64.FromFloat[fixed.D2](-0.29).String())
+	c.Equal("-0.58", fixed64.FromFloat[fixed.D2](-0.58).String())
+	// A value exactly on the (places+1) boundary is truncated at the last representable place, matching fixed128.
+	c.Equal("0.12", fixed64.FromFloat[fixed.D2](0.125).String())
+}
+
+// TestFromFloatMatchesFixed128 verifies that fixed64.FromFloat and fixed128.FromFloat agree across precisions and many
+// ordinary float inputs, which they did not when fixed64 truncated.
+func TestFromFloatMatchesFixed128(t *testing.T) {
+	checkFromFloatMatchesFixed128[fixed.D1](t)
+	checkFromFloatMatchesFixed128[fixed.D2](t)
+	checkFromFloatMatchesFixed128[fixed.D3](t)
+	checkFromFloatMatchesFixed128[fixed.D4](t)
+	checkFromFloatMatchesFixed128[fixed.D6](t)
+}
+
+func checkFromFloatMatchesFixed128[T fixed.Dx](t *testing.T) {
+	t.Helper()
+	c := check.New(t)
+	mult := float64(fixed64.Multiplier[T]())
+	for i := -1000; i <= 1000; i++ {
+		// i units of the smallest representable step are terminating decimals whose float64 value often lands just
+		// below an integer after scaling (e.g. 0.29), which is exactly where truncation diverged from rounding.
+		v := float64(i) / mult
+		c.Equal(fixed128.FromFloat[T](v).String(), fixed64.FromFloat[T](v).String(), "value %v", v)
+	}
 }
 
 func TestAddSub(t *testing.T) {

@@ -12,6 +12,7 @@ package fixed64
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
@@ -57,7 +58,12 @@ func FromInteger[T fixed.Dx, FROM xmath.Integer](value FROM) Int[T] {
 
 // FromFloat creates a new value.
 func FromFloat[T fixed.Dx, FROM xmath.Float](value FROM) Int[T] {
-	return Int[T](value * FROM(Multiplier[T]()))
+	// Convert through a decimal string with one extra digit of precision so the result is rounded rather than
+	// truncated. A direct float multiply such as 0.29 * 100 yields 28.999999999999996, which truncates to 0.28; routing
+	// through big.Float (as fixed128 does) rounds the representation noise away and keeps the two precisions in
+	// agreement.
+	f, _ := FromString[T](new(big.Float).SetPrec(64).SetFloat64(float64(value)).Text('f', MaxDecimalDigits[T]()+1)) //nolint:errcheck // Failure means 0
+	return f
 }
 
 // FromString creates a new value from a string.
