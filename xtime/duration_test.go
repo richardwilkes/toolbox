@@ -96,6 +96,54 @@ func TestParseDuration(t *testing.T) {
 	c.HasError(err)
 }
 
+// TestParseDurationFractionalSeconds verifies that the fractional seconds component is interpreted by decimal position
+// (so ".5" is 500ms, not 5ms) and accepts more or fewer digits than the three FormatDuration emits.
+func TestParseDurationFractionalSeconds(t *testing.T) {
+	c := check.New(t)
+	for _, tc := range []struct {
+		in   string
+		want time.Duration
+	}{
+		{in: "0:00:00.5", want: 500 * time.Millisecond},
+		{in: "0:00:00.05", want: 50 * time.Millisecond},
+		{in: "0:00:00.005", want: 5 * time.Millisecond},
+		{in: "0:00:00.500", want: 500 * time.Millisecond},
+		{in: "0:00:00.050", want: 50 * time.Millisecond},
+		{in: "0:00:00.1", want: 100 * time.Millisecond},
+		{in: "0:00:00.123", want: 123 * time.Millisecond},
+		{in: "0:00:00.000001", want: time.Microsecond},
+		{in: "0:00:00.000000001", want: time.Nanosecond},
+		{in: "0:00:00.1234567899", want: 123456789 * time.Nanosecond}, // 10th digit truncated
+		{in: "0:00:01.5", want: time.Second + 500*time.Millisecond},
+	} {
+		result, err := xtime.ParseDuration(tc.in)
+		c.NoError(err, tc.in)
+		c.Equal(tc.want, result, tc.in)
+	}
+
+	// An empty fractional component (trailing dot) is rejected.
+	_, err := xtime.ParseDuration("0:00:00.")
+	c.HasError(err)
+}
+
+// TestParseDurationRoundTrip verifies that FormatDuration output parses back to the original millisecond-precision
+// duration.
+func TestParseDurationRoundTrip(t *testing.T) {
+	c := check.New(t)
+	for _, d := range []time.Duration{
+		0,
+		500 * time.Millisecond,
+		50 * time.Millisecond,
+		time.Second + time.Millisecond,
+		2*time.Hour + 30*time.Minute + 45*time.Second + 123*time.Millisecond,
+	} {
+		formatted := xtime.FormatDuration(d, true)
+		result, err := xtime.ParseDuration(formatted)
+		c.NoError(err, formatted)
+		c.Equal(d, result, formatted)
+	}
+}
+
 func TestDurationToCode(t *testing.T) {
 	c := check.New(t)
 

@@ -18,7 +18,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// ParseDuration parses the duration string, as produced by FormatDuration().
+// ParseDuration parses the duration string, as produced by FormatDuration(). The fractional seconds component, if
+// present, is interpreted as a decimal fraction of a second (so ".5" is 500ms and ".05" is 50ms), accepting more or
+// fewer than the three digits FormatDuration emits; digits beyond nanosecond resolution are truncated.
 func ParseDuration(duration string) (time.Duration, error) {
 	parts := strings.Split(strings.TrimSpace(duration), ":")
 	if len(parts) != 3 {
@@ -34,11 +36,11 @@ func ParseDuration(duration string) (time.Duration, error) {
 	}
 	parts = strings.Split(parts[2], ".")
 	var seconds int
-	var millis int
+	var nanos int
 	switch len(parts) {
 	case 2:
-		if millis, err = strconv.Atoi(parts[1]); err != nil || millis < 0 {
-			return 0, errs.New("Invalid millisecond format")
+		if nanos, err = parseFractionalSeconds(parts[1]); err != nil {
+			return 0, err
 		}
 		fallthrough
 	case 1:
@@ -48,7 +50,33 @@ func ParseDuration(duration string) (time.Duration, error) {
 	default:
 		return 0, errs.New("Invalid second format: too many decimal points")
 	}
-	return time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second + time.Duration(millis)*time.Millisecond, nil
+	return time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second +
+		time.Duration(nanos)*time.Nanosecond, nil
+}
+
+// parseFractionalSeconds interprets the digits following the decimal point of the seconds field as a decimal fraction
+// of a second, returning the equivalent number of nanoseconds. The digit positions matter: "5" yields 500ms and "05"
+// yields 50ms. Only digits are accepted (no sign) and any beyond nanosecond resolution (more than 9) are truncated.
+func parseFractionalSeconds(frac string) (int, error) {
+	if frac == "" {
+		return 0, errs.New("Invalid fractional second format")
+	}
+	for _, r := range frac {
+		if r < '0' || r > '9' {
+			return 0, errs.New("Invalid fractional second format")
+		}
+	}
+	const nanoDigits = 9
+	if len(frac) > nanoDigits {
+		frac = frac[:nanoDigits]
+	} else {
+		frac += strings.Repeat("0", nanoDigits-len(frac))
+	}
+	nanos, err := strconv.Atoi(frac)
+	if err != nil {
+		return 0, errs.New("Invalid fractional second format")
+	}
+	return nanos, nil
 }
 
 // FormatDuration formats the duration as either "0:00:00" or "0:00:00.000". Negative durations are treated as zero.
