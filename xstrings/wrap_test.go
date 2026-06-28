@@ -151,3 +151,21 @@ func TestWrap(t *testing.T) {
 	// Test very large max columns
 	c.Equal("short text here", xstrings.Wrap("", "short text here", 1000))
 }
+
+// TestWrapMeasuresRunesNotBytes verifies that wrapping uses the visible (rune) width rather than the byte length, so
+// multibyte text is not wrapped prematurely and a multibyte prefix does not shrink the available width.
+func TestWrapMeasuresRunesNotBytes(t *testing.T) {
+	c := check.New(t)
+
+	// "абвг абвг" is 9 visible columns (4 + 1 + 4); with byte counting each 4-rune word is 8 bytes, so it wrapped.
+	c.Equal("абвг абвг", xstrings.Wrap("", "абвг абвг", 9))
+	// One column short forces the wrap.
+	c.Equal("абвг\nабвг", xstrings.Wrap("", "абвг абвг", 8))
+
+	// Three two-rune words fit in 8 columns (2 + 1 + 2 + 1 + 2 = 8); byte counting would see 15 bytes and wrap.
+	c.Equal("日本 中文 한국", xstrings.Wrap("", "日本 中文 한국", 8))
+
+	// A multibyte prefix consumes only its rune width: "→ " is 2 columns, leaving 8 of 10 for "hello"+space+"world".
+	c.Equal("→ hello\n→ world", xstrings.Wrap("→ ", "hello world", 8))
+	c.Equal("→ hello world", xstrings.Wrap("→ ", "hello world", 13))
+}

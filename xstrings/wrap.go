@@ -11,31 +11,35 @@ package xstrings
 
 import (
 	"strings"
+	"unicode/utf8"
 )
 
 // Wrap text to a certain length, giving it an optional prefix on each line. Words will not be broken, even if they
-// exceed the maximum column size and instead will extend past the desired length.
+// exceed the maximum column size and instead will extend past the desired length. Column counts are measured in runes,
+// not bytes, so multibyte text wraps at its visible width.
 func Wrap(prefix, text string, maxColumns int) string {
 	var buffer strings.Builder
+	prefixLen := utf8.RuneCountInString(prefix)
 	for i, line := range strings.Split(text, "\n") {
 		if i != 0 {
 			buffer.WriteByte('\n')
 		}
 		buffer.WriteString(prefix)
-		avail := maxColumns - len(prefix)
+		avail := maxColumns - prefixLen
 		for j, token := range strings.Fields(line) {
+			tokenLen := utf8.RuneCountInString(token)
 			if j != 0 {
-				if 1+len(token) > avail {
+				if 1+tokenLen > avail {
 					buffer.WriteByte('\n')
 					buffer.WriteString(prefix)
-					avail = maxColumns - len(prefix)
+					avail = maxColumns - prefixLen
 				} else {
 					buffer.WriteByte(' ')
 					avail--
 				}
 			}
 			buffer.WriteString(token)
-			avail -= len(token)
+			avail -= tokenLen
 		}
 	}
 	return buffer.String()
