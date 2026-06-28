@@ -30,10 +30,17 @@ func Abs(x float32) float32 {
 	return math.Float32frombits(math.Float32bits(float32(x)) &^ (1 << 31))
 }
 
-// AbsInt returns the absolute value of x.
+// AbsInt returns the absolute value of x. The most-negative value of a signed type has no positive counterpart (its
+// magnitude is one larger than the maximum representable value), so AbsInt saturates it to the maximum value rather
+// than overflowing back to a negative result.
 func AbsInt[T Signed](x T) T {
 	if x < 0 {
-		return -x
+		if abs := -x; abs >= 0 {
+			return abs
+		}
+		// x is the most-negative value; -x overflowed. -(x+1) yields the maximum representable value without overflow,
+		// since x+1 is MinInt+1 and -(MinInt+1) is MaxInt.
+		return -(x + 1)
 	}
 	return x
 }
