@@ -12,6 +12,7 @@ package xrand
 
 import (
 	"crypto/rand"
+	"math/bits"
 	mrnd "math/rand/v2"
 )
 
@@ -35,24 +36,24 @@ func (r *cryptoRand) Intn(n int) int {
 	if n <= 0 {
 		return 0
 	}
+	un := uint64(n)
+	// Read only as many bits as are needed to represent [0, n) and reject any sample that lands at or above n. Working
+	// in unsigned space avoids the signed-overflow that made -v wrap to a negative result, and rejection sampling keeps
+	// the distribution uniform rather than introducing the modulo bias of a bare v % n.
+	bitLen := bits.Len64(un - 1)
+	byteLen := (bitLen + 7) / 8
+	mask := (uint64(1) << uint(bitLen)) - 1
 	var buffer [8]byte
-	size := 8
-	n64 := int64(n)
-	for i := 1; i < 8; i++ {
-		if n64 < int64(1)<<uint(i*8) {
-			size = i
-			break
+	for {
+		if _, err := rand.Read(buffer[:byteLen]); err != nil {
+			return mrnd.IntN(n) //nolint:gosec // Yes, it is ok to use a weak prng here
+		}
+		var v uint64
+		for i := range byteLen {
+			v |= uint64(buffer[i]) << uint(i*8)
+		}
+		if v &= mask; v < un {
+			return int(v) //nolint:gosec // v < un <= math.MaxInt, so the result is non-negative and fits in an int
 		}
 	}
-	if _, err := rand.Read(buffer[:size]); err != nil {
-		return mrnd.IntN(n) //nolint:gosec // Yes, it is ok to use a weak prng here
-	}
-	var v int
-	for i := size - 1; i >= 0; i-- {
-		v |= int(buffer[i]) << uint(i*8)
-	}
-	if v < 0 {
-		v = -v
-	}
-	return v % n
 }
