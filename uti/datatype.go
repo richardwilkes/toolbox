@@ -171,7 +171,7 @@ func Register(dataType *DataType) *DataType {
 		mimeType = strings.ToLower(mimeType)
 		byMimeType[mimeType] = append(byMimeType[mimeType], dataType)
 	}
-	for _, extension := range dataType.MimeTypes {
+	for _, extension := range dataType.Extensions {
 		extension = strings.ToLower(extension)
 		byExtension[extension] = append(byExtension[extension], dataType)
 	}
@@ -195,7 +195,7 @@ func unregister(uti string) {
 			mimeType = strings.ToLower(mimeType)
 			byMimeType[mimeType] = slices.DeleteFunc(byMimeType[mimeType], filter)
 		}
-		for _, extension := range existing.MimeTypes {
+		for _, extension := range existing.Extensions {
 			extension = strings.ToLower(extension)
 			byExtension[extension] = slices.DeleteFunc(byExtension[extension], filter)
 		}
