@@ -40,9 +40,9 @@ type PrettyHandler struct {
 	sharedBufferLock *sync.Mutex
 	buffer           *bytes.Buffer // Protected by sharedBufferLock
 	sharedWriterLock *sync.Mutex
-	w                io.Writer // Protected by sharedWriterLock
-	stack            []string  // Protected by sharedBufferLock
-	kind             xterm.Kind
+	w                io.Writer  // Protected by sharedWriterLock
+	stack            *[]string  // Protected by sharedBufferLock; shared by pointer so clones and the JSON handler's
+	kind             xterm.Kind // ReplaceAttr closure (bound to the original handler) all read and write the same slot
 	addSource        bool
 }
 
@@ -55,6 +55,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 		buffer:           &bytes.Buffer{},
 		sharedWriterLock: &sync.Mutex{},
 		w:                w,
+		stack:            new([]string),
 	}
 	var jsonHandlerOpts slog.HandlerOptions
 	if opts != nil {
@@ -75,7 +76,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 		}
 		if a.Key == errs.StackTraceKey {
 			if s, ok := a.Value.Any().([]string); ok {
-				h.stack = s
+				*h.stack = s
 			}
 			return slog.Attr{}
 		}
@@ -191,14 +192,14 @@ func (h *PrettyHandler) writeCaller(buf []byte, pc uintptr) []byte {
 func (h *PrettyHandler) collectAttrs(ctx context.Context, r *slog.Record) (textAttr string, stack []string, err error) {
 	h.sharedBufferLock.Lock()
 	defer func() {
-		h.stack = nil
+		*h.stack = nil
 		h.buffer.Reset()
 		h.sharedBufferLock.Unlock()
 	}()
 	if err = h.handler.Handle(ctx, *r); err != nil {
 		return "", nil, err
 	}
-	return strings.TrimRight(h.buffer.String(), "\n"), h.stack, nil
+	return strings.TrimRight(h.buffer.String(), "\n"), *h.stack, nil
 }
 
 func (h *PrettyHandler) writeAttributes(buf []byte, attrs string) []byte {

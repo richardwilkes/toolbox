@@ -90,6 +90,46 @@ func TestPrettyHandlerStackTrace(t *testing.T) {
 	c.Contains(buf.String(), "\n    [main.main] play/main.go:32\n    [runtime.main] runtime/proc.go:283")
 }
 
+// TestPrettyHandlerDerivedStackTrace verifies that a handler derived via WithAttrs/WithGroup still emits the stack
+// trace carried by its own records. The JSON handler's stack-capturing ReplaceAttr closure is bound to the original
+// handler, so a derived clone must share the capture slot rather than reading its own empty copy.
+func TestPrettyHandlerDerivedStackTrace(t *testing.T) {
+	c := check.New(t)
+	for _, derive := range []struct {
+		name string
+		fn   func(slog.Handler) slog.Handler
+	}{
+		{name: "WithAttrs", fn: func(h slog.Handler) slog.Handler {
+			return h.WithAttrs([]slog.Attr{{Key: "k", Value: slog.StringValue("v")}})
+		}},
+		{name: "WithGroup", fn: func(h slog.Handler) slog.Handler { return h.WithGroup("g") }},
+	} {
+		t.Run(derive.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			derived := derive.fn(xslog.NewPrettyHandler(&buf, nil))
+			record := slog.NewRecord(time.Now(), slog.LevelInfo, "derived stack", 0)
+			record.Add(errs.StackTraceKey, []string{"[main.main] play/main.go:32"})
+			c.NoError(derived.Handle(context.Background(), record))
+			c.Contains(buf.String(), "\n    [main.main] play/main.go:32")
+		})
+	}
+}
+
+// TestPrettyHandlerDerivedStackTraceNoLeak verifies that a stack trace handled by a derived clone does not leak into a
+// later, unrelated record handled by the base handler.
+func TestPrettyHandlerDerivedStackTraceNoLeak(t *testing.T) {
+	c := check.New(t)
+	var buf bytes.Buffer
+	base := xslog.NewPrettyHandler(&buf, nil)
+	derived := base.WithAttrs([]slog.Attr{{Key: "k", Value: slog.StringValue("v")}})
+	withStack := slog.NewRecord(time.Now(), slog.LevelInfo, "derived msg", 0)
+	withStack.Add(errs.StackTraceKey, []string{"[leak.func] leak/leak.go:1"})
+	c.NoError(derived.Handle(context.Background(), withStack))
+	buf.Reset()
+	c.NoError(base.Handle(context.Background(), slog.NewRecord(time.Now(), slog.LevelInfo, "base msg", 0)))
+	c.NotContains(buf.String(), "leak/leak.go:1")
+}
+
 func TestPrettyHandlerEmptyMsg(t *testing.T) {
 	var buf bytes.Buffer
 	handler := xslog.NewPrettyHandler(&buf, nil)
