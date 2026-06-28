@@ -14,6 +14,7 @@ import (
 	"compress/gzip"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/xio"
@@ -36,7 +37,7 @@ type gzipResponseWriter struct {
 // gzip encoding.
 func GZipWrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+		if acceptsGzip(req.Header.Get("Accept-Encoding")) {
 			gw := &gzipResponseWriter{w: w}
 			defer func() {
 				if gw.gw != nil {
@@ -47,6 +48,43 @@ func GZipWrap(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, req)
 	})
+}
+
+// acceptsGzip reports whether the Accept-Encoding header value indicates the client accepts the gzip encoding. It
+// parses the comma-separated codings and their optional q-values per RFC 7231, so an explicit refusal ("gzip;q=0") is
+// honored and gzip is only matched as a whole coding (not as a substring of, e.g., "x-gzip"). When gzip is not named
+// explicitly, a wildcard ("*") with a non-zero q-value also makes it acceptable.
+func acceptsGzip(acceptEncoding string) bool {
+	gzipQ := -1.0 // q-value of an explicit "gzip" coding, or -1 if absent
+	starQ := -1.0 // q-value of a "*" wildcard coding, or -1 if absent
+	for part := range strings.SplitSeq(acceptEncoding, ",") {
+		switch coding, q := parseCoding(part); coding {
+		case "gzip":
+			gzipQ = q
+		case "*":
+			starQ = q
+		}
+	}
+	if gzipQ >= 0 {
+		return gzipQ > 0
+	}
+	return starQ > 0
+}
+
+// parseCoding parses a single Accept-Encoding element into its lowercased coding name and q-value (defaulting to 1.0
+// per RFC 7231 when no valid q parameter is present).
+func parseCoding(part string) (coding string, q float64) {
+	segments := strings.Split(part, ";")
+	coding = strings.ToLower(strings.TrimSpace(segments[0]))
+	q = 1
+	for _, seg := range segments[1:] {
+		if value, ok := strings.CutPrefix(strings.ToLower(strings.TrimSpace(seg)), "q="); ok {
+			if parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64); err == nil {
+				q = parsed
+			}
+		}
+	}
+	return coding, q
 }
 
 // Header implements http.ResponseWriter.

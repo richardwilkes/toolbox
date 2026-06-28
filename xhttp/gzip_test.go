@@ -153,6 +153,49 @@ func TestGZipWrapSkipsAlreadyEncoded(t *testing.T) {
 	c.Equal(body, rec.Body.String(), "already-encoded body must be passed through verbatim, not re-gzipped")
 }
 
+// TestGZipWrapAcceptEncodingNegotiation verifies that the Accept-Encoding header is parsed per RFC 7231: q-values are
+// honored (an explicit gzip;q=0 refusal is not compressed), gzip is matched only as a whole coding (not as a substring
+// of x-gzip), and a wildcard makes gzip acceptable only when gzip is not explicitly refused.
+func TestGZipWrapAcceptEncodingNegotiation(t *testing.T) {
+	c := check.New(t)
+	for _, tc := range []struct {
+		acceptEncoding string
+		wantGzip       bool
+	}{
+		{acceptEncoding: "gzip", wantGzip: true},
+		{acceptEncoding: "GZIP", wantGzip: true}, // Codings are case-insensitive.
+		{acceptEncoding: "gzip;q=0.5", wantGzip: true},
+		{acceptEncoding: "deflate, gzip", wantGzip: true},
+		{acceptEncoding: "*", wantGzip: true},
+		{acceptEncoding: "br, *", wantGzip: true},
+		{acceptEncoding: "gzip;q=0", wantGzip: false},   // Explicit refusal.
+		{acceptEncoding: "gzip ; q=0", wantGzip: false}, // Refusal with whitespace.
+		{acceptEncoding: "deflate, gzip;q=0", wantGzip: false},
+		{acceptEncoding: "gzip;q=0, *", wantGzip: false}, // Explicit refusal overrides the wildcard.
+		{acceptEncoding: "x-gzip", wantGzip: false},      // Must not match as a substring.
+		{acceptEncoding: "identity", wantGzip: false},
+		{acceptEncoding: "*;q=0", wantGzip: false},
+		{acceptEncoding: "", wantGzip: false}, // Header absent.
+	} {
+		handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			_, err := io.WriteString(w, "body")
+			c.NoError(err)
+		}))
+		req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+		if tc.acceptEncoding != "" {
+			req.Header.Set("Accept-Encoding", tc.acceptEncoding)
+		}
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		gotGzip := rec.Header().Get("Content-Encoding") == "gzip"
+		c.Equal(tc.wantGzip, gotGzip, "Accept-Encoding: %q", tc.acceptEncoding)
+		if !tc.wantGzip {
+			c.Equal("body", rec.Body.String(), "Accept-Encoding: %q must pass the body through uncompressed",
+				tc.acceptEncoding)
+		}
+	}
+}
+
 // TestGZipWrapNoContent verifies that a 204 No Content response is neither advertised as gzip nor emitted as a gzip
 // stream, since responses with that status must not carry a body.
 func TestGZipWrapNoContent(t *testing.T) {
