@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -134,6 +135,30 @@ func TestWriteSafeFile_ReplaceExisting(t *testing.T) {
 	c.NoError(err)
 	c.Equal(newData, string(data))
 	c.NoError(os.Remove(filename))
+}
+
+// TestSafeFilePreservesExistingMode verifies that committing a SafeFile over an existing file preserves that file's
+// permission bits rather than dropping them to the 0600 of the temporary file os.CreateTemp creates.
+func TestSafeFilePreservesExistingMode(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX permission bits are not meaningful on Windows")
+	}
+	c := check.New(t)
+	for _, mode := range []os.FileMode{0o640, 0o644, 0o600, 0o664} {
+		filename := filepath.Join(c.TempDir(), "modes.txt")
+		c.NoError(os.WriteFile(filename, []byte("original"), 0o600))
+		c.NoError(os.Chmod(filename, mode)) // Force the exact mode regardless of the process umask.
+		c.NoError(xos.WriteSafeFile(filename, func(w io.Writer) error {
+			_, writeErr := io.WriteString(w, "replacement")
+			return writeErr
+		}))
+		fi, err := os.Stat(filename)
+		c.NoError(err)
+		c.Equal(mode, fi.Mode().Perm(), "permission bits must be preserved across a safe overwrite")
+		data, err := os.ReadFile(filename)
+		c.NoError(err)
+		c.Equal("replacement", string(data))
+	}
 }
 
 func TestWriteSafeFile_InvalidFilename(t *testing.T) {

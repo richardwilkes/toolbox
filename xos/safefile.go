@@ -93,6 +93,18 @@ func (f *SafeFile) Commit() error {
 			_ = os.Remove(name) //nolint:errcheck // no need to report this error, too
 		}
 	}()
+	// If we are replacing an existing file, preserve its permission bits. os.CreateTemp created the temporary file with
+	// mode 0600, so without this the rename would silently strip access (e.g. group/other read) the original file had.
+	if fi, statErr := os.Stat(f.name); statErr == nil {
+		if err = f.Chmod(fi.Mode().Perm()); err != nil {
+			return errs.Wrap(err)
+		}
+	}
+	// Flush the data to stable storage before the rename. Without this, a crash immediately after the rename could
+	// leave a correctly-named but empty or partially-written file, defeating the purpose of a safe write.
+	if err = f.Sync(); err != nil {
+		return errs.Wrap(err)
+	}
 	if err = f.File.Close(); err != nil {
 		return errs.Wrap(err)
 	}
