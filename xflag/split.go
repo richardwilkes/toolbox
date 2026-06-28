@@ -18,29 +18,32 @@ func SplitCommandLine(command string) ([]string, error) {
 	var args []string
 	var lookingForQuote rune
 	var escapeNext bool
+	var tokenStarted bool
 	current := make([]rune, 0, len(command))
 	for _, ch := range command {
 		switch {
 		case escapeNext:
 			current = append(current, ch)
 			escapeNext = false
+			tokenStarted = true
 		case ch == '\\':
 			escapeNext = true
 		case lookingForQuote == ch:
-			args = append(args, string(current))
-			current = current[:0]
 			lookingForQuote = 0
 		case lookingForQuote != 0:
 			current = append(current, ch)
 		case ch == '"' || ch == '\'':
 			lookingForQuote = ch
+			tokenStarted = true
 		case ch == ' ' || ch == '\t':
-			if len(current) != 0 {
+			if tokenStarted {
 				args = append(args, string(current))
 				current = current[:0]
+				tokenStarted = false
 			}
 		default:
 			current = append(current, ch)
+			tokenStarted = true
 		}
 	}
 	if escapeNext {
@@ -49,7 +52,7 @@ func SplitCommandLine(command string) ([]string, error) {
 	if lookingForQuote != 0 {
 		return nil, errs.Newf("unclosed quote in command line:\n%s", command)
 	}
-	if len(current) != 0 {
+	if tokenStarted {
 		args = append(args, string(current))
 	}
 	return args, nil
@@ -60,30 +63,32 @@ func SplitCommandLine(command string) ([]string, error) {
 func SplitCommandLineWithoutEscapes(command string) ([]string, error) {
 	var args []string
 	var lookingForQuote rune
+	var tokenStarted bool
 	current := make([]rune, 0, len(command))
 	for _, ch := range command {
 		switch {
 		case lookingForQuote == ch:
-			args = append(args, string(current))
-			current = current[:0]
 			lookingForQuote = 0
 		case lookingForQuote != 0:
 			current = append(current, ch)
 		case ch == '"' || ch == '\'':
 			lookingForQuote = ch
+			tokenStarted = true
 		case ch == ' ' || ch == '\t':
-			if len(current) != 0 {
+			if tokenStarted {
 				args = append(args, string(current))
 				current = current[:0]
+				tokenStarted = false
 			}
 		default:
 			current = append(current, ch)
+			tokenStarted = true
 		}
 	}
 	if lookingForQuote != 0 {
 		return nil, errs.Newf("unclosed quote in command line:\n%s", command)
 	}
-	if len(current) != 0 {
+	if tokenStarted {
 		args = append(args, string(current))
 	}
 	return args, nil

@@ -49,14 +49,59 @@ func TestSplitCommandLine(t *testing.T) {
 	splitChecker(c, "cmd\narg1", []string{"cmd\narg1"}, false)
 	splitChecker(c, "cmd arg1\narg2", []string{"cmd", "arg1\narg2"}, false)
 	splitChecker(c, `cmd\`, []string(nil), true)
-	splitChecker(c, `cmd 'a b'c`, []string{"cmd", "a b", "c"}, false)
+	splitChecker(c, `cmd 'a b'c`, []string{"cmd", "a bc"}, false)
 	splitChecker(c, `cmd ''`, []string{"cmd", ""}, false)
 	splitChecker(c, `cmd \"\"`, []string{"cmd", `""`}, false)
+	// A quoted segment adjacent to surrounding unquoted text forms a single argument.
+	splitChecker(c, `abc"def"ghi`, []string{"abcdefghi"}, false)
+	splitChecker(c, `foo'bar'baz`, []string{"foobarbaz"}, false)
+	splitChecker(c, `--name="John Doe"`, []string{"--name=John Doe"}, false)
+	splitChecker(c, `pre"middle"post next`, []string{"premiddlepost", "next"}, false)
+	splitChecker(c, `a"b"'c'd`, []string{"abcd"}, false)
+	splitChecker(c, `x""y`, []string{"xy"}, false)
+	splitChecker(c, `a''b c`, []string{"ab", "c"}, false)
 }
 
 func splitChecker(c check.Checker, in string, expected []string, shouldErr bool) {
 	c.Helper()
 	parts, err := xflag.SplitCommandLine(in)
+	if shouldErr {
+		c.HasError(err)
+	} else {
+		c.NoError(err)
+		c.Equal(expected, parts)
+		if !slices.Equal(expected, parts) {
+			for i, one := range parts {
+				fmt.Printf("%d: %q\n", i, one)
+			}
+		}
+	}
+}
+
+func TestSplitCommandLineWithoutEscapes(t *testing.T) {
+	c := check.New(t)
+	splitWithoutEscapesChecker(c, "cmd", []string{"cmd"}, false)
+	splitWithoutEscapesChecker(c, `cmd "world hello"`, []string{"cmd", "world hello"}, false)
+	splitWithoutEscapesChecker(c, `'cmd with spaces' "hello world"`, []string{"cmd with spaces", "hello world"}, false)
+	splitWithoutEscapesChecker(c, "", []string(nil), false)
+	splitWithoutEscapesChecker(c, "   ", []string(nil), false)
+	splitWithoutEscapesChecker(c, "cmd   arg1   arg2", []string{"cmd", "arg1", "arg2"}, false)
+	splitWithoutEscapesChecker(c, `cmd 'unterminated`, []string(nil), true)
+	splitWithoutEscapesChecker(c, `cmd "unterminated`, []string(nil), true)
+	splitWithoutEscapesChecker(c, `cmd ''`, []string{"cmd", ""}, false)
+	// Backslashes are literal when escapes are not considered.
+	splitWithoutEscapesChecker(c, `cmd\ arg`, []string{`cmd\`, "arg"}, false)
+	// A quoted segment adjacent to surrounding unquoted text forms a single argument.
+	splitWithoutEscapesChecker(c, `abc"def"ghi`, []string{"abcdefghi"}, false)
+	splitWithoutEscapesChecker(c, `foo'bar'baz`, []string{"foobarbaz"}, false)
+	splitWithoutEscapesChecker(c, `--name="John Doe"`, []string{"--name=John Doe"}, false)
+	splitWithoutEscapesChecker(c, `cmd 'a b'c`, []string{"cmd", "a bc"}, false)
+	splitWithoutEscapesChecker(c, `x""y`, []string{"xy"}, false)
+}
+
+func splitWithoutEscapesChecker(c check.Checker, in string, expected []string, shouldErr bool) {
+	c.Helper()
+	parts, err := xflag.SplitCommandLineWithoutEscapes(in)
 	if shouldErr {
 		c.HasError(err)
 	} else {
