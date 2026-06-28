@@ -10,11 +10,13 @@
 package xslog_test
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xos"
@@ -64,6 +66,54 @@ func TestRotator(t *testing.T) {
 	_, err = fmt.Fprintln(r, "hello")
 	c.NoError(err)
 	c.NoError(r.Close())
+}
+
+func TestRotatorOversizedWrite(t *testing.T) {
+	const maxSize = 100
+	tmpdir := t.TempDir()
+	path := filepath.Join(tmpdir, "test")
+	cfg := xslog.Rotator{
+		Path:       path,
+		MaxSize:    maxSize,
+		MaxBackups: 2,
+	}
+	r := cfg.NewWriteCloser()
+	c := check.New(t)
+	c.NotNil(r)
+
+	// A single write larger than MaxSize must still succeed and not loop forever. Run it under a watchdog so a
+	// regression of the infinite-loop bug fails fast instead of hanging the suite.
+	big := bytes.Repeat([]byte("a"), maxSize*3)
+	var n int
+	done := make(chan error, 1)
+	go func() {
+		var wErr error
+		n, wErr = r.Write(big)
+		done <- wErr
+	}()
+	select {
+	case wErr := <-done:
+		c.NoError(wErr)
+		c.Equal(len(big), n)
+	case <-time.After(10 * time.Second):
+		t.Fatal("Write of a record larger than MaxSize did not return; rotator is looping")
+	}
+	c.NoError(r.Close())
+
+	// The oversized record should have been written in full to the primary log file.
+	fi, err := os.Stat(path + xslog.LogFileExt)
+	c.NoError(err)
+	c.Equal(int64(len(big)), fi.Size())
+
+	// A subsequent normal write must still rotate that oversized file out of the way rather than appending to it.
+	r = cfg.NewWriteCloser()
+	c.NotNil(r)
+	_, err = fmt.Fprintln(r, "small")
+	c.NoError(err)
+	c.NoError(r.Close())
+	fi, err = os.Stat(path + xslog.LogFileExt)
+	c.NoError(err)
+	c.True(fi.Size() <= maxSize)
 }
 
 func TestRotatorDefaults(t *testing.T) {

@@ -117,7 +117,9 @@ retry:
 		}
 		r.file = file
 	}
-	if r.size+int64(len(b)) >= r.cfg.MaxSize {
+	// Only rotate a file that already has content. A single write that is itself >= MaxSize must still be written to an
+	// otherwise-empty file; rotating in that case would reset the size to 0 and loop forever without making progress.
+	if r.size > 0 && r.size+int64(len(b)) >= r.cfg.MaxSize {
 		if err := r.rotate(); err != nil {
 			return 0, err
 		}
