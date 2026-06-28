@@ -37,8 +37,8 @@ func UniquePaths(paths ...string) ([]string, error) {
 				if p2, err = filepath.Rel(actual, one); err != nil {
 					return nil, errs.NewWithCause(path, err)
 				}
-				prefixed := strings.HasPrefix(p1, "..")
-				if prefixed != strings.HasPrefix(p2, "..") {
+				prefixed := relAscends(p1)
+				if prefixed != relAscends(p2) {
 					if prefixed {
 						delete(set, one)
 					} else {
@@ -57,4 +57,11 @@ func UniquePaths(paths ...string) ([]string, error) {
 		result = append(result, p)
 	}
 	return result, nil
+}
+
+// relAscends reports whether a cleaned relative path (as returned by filepath.Rel) ascends out of its base directory,
+// i.e. it is exactly ".." or begins with a ".." path component. A name that merely starts with ".." (such as "..foo")
+// is an ordinary descendant and must not be mistaken for an ancestor relationship.
+func relAscends(rel string) bool {
+	return rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }

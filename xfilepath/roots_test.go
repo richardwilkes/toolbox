@@ -80,6 +80,33 @@ func TestUniquePaths_RelativeAndAbsolute(t *testing.T) {
 	c.Equal(noSymLinks, result[0])
 }
 
+// TestUniquePaths_DotDotPrefixedChild verifies that a child directory whose name merely begins with ".." (a legal name,
+// not an ancestor reference) is correctly pruned as a subset of its parent. The relative path from parent to child is
+// "..foo", which an over-eager HasPrefix(rel, "..") check mistook for an ascending path, leaving both entries.
+func TestUniquePaths_DotDotPrefixedChild(t *testing.T) {
+	c := check.New(t)
+	tempDir := t.TempDir()
+
+	child := filepath.Join(tempDir, "..foo")
+	c.NoError(os.MkdirAll(child, 0o755))
+
+	result, err := xfilepath.UniquePaths(tempDir, child)
+	c.NoError(err)
+	c.Equal(1, len(result))
+
+	abs, err := filepath.Abs(tempDir)
+	c.NoError(err)
+	noSymLinks, err := filepath.EvalSymlinks(abs)
+	c.NoError(err)
+	c.Equal(noSymLinks, result[0])
+
+	// The order of the inputs must not change the outcome.
+	result, err = xfilepath.UniquePaths(child, tempDir)
+	c.NoError(err)
+	c.Equal(1, len(result))
+	c.Equal(noSymLinks, result[0])
+}
+
 func TestUniquePaths_NestedPaths(t *testing.T) {
 	c := check.New(t)
 	tempDir := t.TempDir()
