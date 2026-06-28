@@ -59,3 +59,27 @@ func TestEncodeNRGBASubImageMatchesStandalone(t *testing.T) {
 		c.Equal(standaloneBuf.Bytes(), subBuf.Bytes())
 	}
 }
+
+// TestEncodeDoesNotReorderCallerSlice ensures Encode sorts a copy of the variadic images rather than the caller's
+// backing array. The images are supplied in ascending-width order; an in-place sort would permute them into
+// descending-width order, so the slice must read back in its original order after the call.
+func TestEncodeDoesNotReorderCallerSlice(t *testing.T) {
+	c := check.New(t)
+	images := []image.Image{
+		image.NewNRGBA(image.Rect(0, 0, 16, 16)),
+		image.NewNRGBA(image.Rect(0, 0, 32, 32)),
+		image.NewNRGBA(image.Rect(0, 0, 64, 64)),
+	}
+	widthsBefore := widths(images)
+	var buf bytes.Buffer
+	c.NoError(icns.Encode(&buf, images...))
+	c.Equal(widthsBefore, widths(images))
+}
+
+func widths(images []image.Image) []int {
+	result := make([]int, len(images))
+	for i, img := range images {
+		result[i] = img.Bounds().Dx()
+	}
+	return result
+}

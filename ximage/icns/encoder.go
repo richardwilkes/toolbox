@@ -11,12 +11,13 @@ package icns
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/binary"
 	"image"
 	"image/draw"
 	"image/png"
 	"io"
-	"sort"
+	"slices"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
@@ -44,8 +45,10 @@ func Encode(w io.Writer, images ...image.Image) error {
 	if len(images) == 0 {
 		return errs.New("must supply at least 1 image")
 	}
-	sort.Slice(images, func(i, j int) bool {
-		return images[i].Bounds().Dx() > images[j].Bounds().Dx()
+	// Work on a copy so sorting doesn't reorder the caller's backing array as a hidden side effect.
+	images = slices.Clone(images)
+	slices.SortFunc(images, func(a, b image.Image) int {
+		return cmp.Compare(b.Bounds().Dx(), a.Bounds().Dx())
 	})
 	var info []*iconInfo
 	for _, img := range images {
