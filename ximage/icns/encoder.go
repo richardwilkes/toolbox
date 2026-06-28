@@ -158,17 +158,25 @@ func createARGBData(img image.Image, iconType [4]byte) (*iconInfo, error) {
 		nrgba = image.NewNRGBA(bounds)
 		draw.Draw(nrgba, bounds, img, bounds.Min, draw.Src)
 	}
-	size := len(nrgba.Pix)
-	a := make([]byte, size/4)
-	r := make([]byte, size/4)
-	g := make([]byte, size/4)
-	b := make([]byte, size/4)
-	for i := 0; i < size; i += 4 {
-		j := i / 4
-		r[j] = nrgba.Pix[i]
-		g[j] = nrgba.Pix[i+1]
-		b[j] = nrgba.Pix[i+2]
-		a[j] = nrgba.Pix[i+3]
+	// Walk the actual pixel grid via Bounds/PixOffset rather than the raw Pix slice. A sub-image's Stride does not
+	// match its width and its Pix starts at a non-zero offset, so indexing Pix linearly would read the wrong bytes.
+	bounds := nrgba.Bounds()
+	size := bounds.Dx() * bounds.Dy()
+	a := make([]byte, size)
+	r := make([]byte, size)
+	g := make([]byte, size)
+	b := make([]byte, size)
+	j := 0
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		i := nrgba.PixOffset(bounds.Min.X, y)
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r[j] = nrgba.Pix[i]
+			g[j] = nrgba.Pix[i+1]
+			b[j] = nrgba.Pix[i+2]
+			a[j] = nrgba.Pix[i+3]
+			i += 4
+			j++
+		}
 	}
 	if err := writeChannel(&buffer, a); err != nil {
 		return nil, err
