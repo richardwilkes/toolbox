@@ -112,6 +112,54 @@ func TestUseAmountGreaterThanCapacity(t *testing.T) {
 	rl.Close()
 }
 
+func TestUseAmountGreaterThanParentCap(t *testing.T) {
+	c := check.New(t)
+	parent := rate.New(50, time.Second)
+	child := parent.New(100) // The child's own capacity deliberately exceeds the parent's cap.
+
+	// 80 <= the child's own capacity (100) but > its parent-capped effective capacity (50), so it can never be
+	// satisfied and must be rejected promptly rather than queued forever. The watchdog makes a regression of the
+	// infinite-block bug fail fast instead of hanging the suite.
+	done := child.Use(80)
+	select {
+	case err := <-done:
+		c.HasError(err)
+		c.Contains(err.Error(), "Amount (80) is greater than capacity (50)")
+	case <-time.After(10 * time.Second):
+		t.Fatal("child.Use(80) never returned; a request exceeding the parent cap was queued forever")
+	}
+
+	parent.Close()
+}
+
+func TestQueuedRequestRejectedWhenParentCapLowered(t *testing.T) {
+	c := check.New(t)
+	parent := rate.New(100, 50*time.Millisecond)
+	child := parent.New(100)
+
+	// Consume all of the parent's capacity this period so the child's request cannot be satisfied immediately and
+	// must wait for the next tick.
+	err := <-parent.Use(100)
+	c.NoError(err)
+
+	// Queue a child request that is valid right now (60 <= the effective cap of 100).
+	done := child.Use(60)
+
+	// Lower the parent's cap below the queued amount before the next period. The request can now never succeed, so the
+	// per-tick re-check must reject it rather than leaving it queued forever.
+	parent.SetCap(50)
+
+	select {
+	case err = <-done:
+		c.HasError(err)
+		c.Contains(err.Error(), "Amount (60) is greater than capacity (50)")
+	case <-time.After(10 * time.Second):
+		t.Fatal("queued request was not rejected after the parent cap was lowered below it")
+	}
+
+	parent.Close()
+}
+
 func TestUseOnClosedLimiter(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(100, time.Second)

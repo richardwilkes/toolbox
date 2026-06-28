@@ -92,8 +92,8 @@ func New(capacity int, period time.Duration) Limiter {
 						req.done <- errs.New("Limiter is closed")
 						continue
 					}
-					if req.amount > req.limiter.capacity {
-						req.done <- errs.Newf("Amount (%d) is greater than capacity (%d)", req.amount, req.limiter.capacity)
+					if capped := req.limiter.cappedCapacity(); req.amount > capped {
+						req.done <- errs.Newf("Amount (%d) is greater than capacity (%d)", req.amount, capped)
 						continue
 					}
 					if req.limiter.tryConsume(req.amount) {
@@ -137,14 +137,19 @@ func (l *limiter) New(capacity int) Limiter {
 func (l *limiter) Cap(applyParentCaps bool) int {
 	l.controller.lock.RLock()
 	defer l.controller.lock.RUnlock()
-	capacity := l.capacity
 	if applyParentCaps {
-		p := l.parent
-		for p != nil {
-			if p.capacity < capacity {
-				capacity = p.capacity
-			}
-			p = p.parent
+		return l.cappedCapacity()
+	}
+	return l.capacity
+}
+
+// cappedCapacity returns the effective capacity of this limiter after applying the smaller of any ancestor capacities.
+// The controller lock must be held.
+func (l *limiter) cappedCapacity() int {
+	capacity := l.capacity
+	for p := l.parent; p != nil; p = p.parent {
+		if p.capacity < capacity {
+			capacity = p.capacity
 		}
 	}
 	return capacity
@@ -178,8 +183,7 @@ func (l *limiter) Use(amount int) <-chan error {
 		done <- errs.New("Limiter is closed")
 		return done
 	}
-	if amount > l.capacity {
-		capacity := l.capacity
+	if capacity := l.cappedCapacity(); amount > capacity {
 		l.controller.lock.Unlock()
 		done <- errs.Newf("Amount (%d) is greater than capacity (%d)", amount, capacity)
 		return done
