@@ -78,6 +78,9 @@ func (w *gzipResponseWriter) WriteHeader(status int) {
 		w.wroteHeader = true
 		if status != http.StatusNoContent && status != http.StatusNotModified {
 			w.w.Header().Set("Content-Encoding", "gzip")
+			// The handler's Content-Length describes the uncompressed body and no longer matches the compressed bytes
+			// we are about to emit, so drop it and let the response be sent with chunked transfer encoding.
+			w.w.Header().Del("Content-Length")
 			w.gw = gzip.NewWriter(w.w)
 		}
 	}

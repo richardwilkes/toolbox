@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -96,6 +97,43 @@ func TestGZipWrapNoGzipWhenNotAccepted(t *testing.T) {
 	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
 	c.Equal("", rec.Header().Get("Content-Encoding"))
 	c.Equal("hello, plain", rec.Body.String())
+}
+
+// TestGZipWrapClearsContentLength verifies that when the response is compressed, a Content-Length the handler set for
+// the uncompressed body is removed, since it no longer matches the (smaller) compressed bytes. Leaving it would make
+// the client wait for bytes that never arrive or treat the response as truncated.
+func TestGZipWrapClearsContentLength(t *testing.T) {
+	c := check.New(t)
+	const body = "the quick brown fox jumps over the lazy dog, repeatedly and at length"
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		_, err := io.WriteString(w, body)
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	c.Equal("", rec.Header().Get("Content-Length"), "stale uncompressed Content-Length must be removed")
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal(body, string(data))
+}
+
+// TestGZipWrapKeepsContentLengthWhenNotCompressing verifies that a Content-Length set on a response that is not
+// compressed (here a 204 that must not carry a body) is left untouched.
+func TestGZipWrapKeepsContentLengthWhenNotCompressing(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", "0")
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("", rec.Header().Get("Content-Encoding"))
+	c.Equal("0", rec.Header().Get("Content-Length"))
 }
 
 // TestGZipWrapNoContent verifies that a 204 No Content response is neither advertised as gzip nor emitted as a gzip
