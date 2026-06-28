@@ -21,10 +21,11 @@ import (
 )
 
 var (
-	_ http.ResponseWriter = &gzipResponseWriter{}
-	_ http.Flusher        = &gzipResponseWriter{}
-	_ http.Hijacker       = &gzipResponseWriter{}
-	_ http.Pusher         = &gzipResponseWriter{}
+	_ http.ResponseWriter                       = &gzipResponseWriter{}
+	_ http.Flusher                              = &gzipResponseWriter{}
+	_ http.Hijacker                             = &gzipResponseWriter{}
+	_ http.Pusher                               = &gzipResponseWriter{}
+	_ interface{ Unwrap() http.ResponseWriter } = &gzipResponseWriter{}
 )
 
 type gzipResponseWriter struct {
@@ -159,4 +160,11 @@ func (w *gzipResponseWriter) Push(target string, opts *http.PushOptions) error {
 		return pusher.Push(target, opts)
 	}
 	return http.ErrNotSupported
+}
+
+// Unwrap returns the wrapped http.ResponseWriter so that http.ResponseController can reach optional interfaces this
+// writer does not implement itself, such as deadline control (SetReadDeadline/SetWriteDeadline) and EnableFullDuplex.
+// Flush is intentionally implemented here (rather than delegated via Unwrap) so the gzip stream is flushed correctly.
+func (w *gzipResponseWriter) Unwrap() http.ResponseWriter {
+	return w.w
 }

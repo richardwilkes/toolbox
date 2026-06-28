@@ -19,6 +19,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xhttp"
@@ -68,6 +69,43 @@ type pushWriter struct {
 func (p *pushWriter) Push(target string, _ *http.PushOptions) error {
 	p.pushed = target
 	return nil
+}
+
+// deadlineWriter is an http.ResponseWriter that also supports the per-request deadline methods that
+// http.ResponseController reaches for by descending through Unwrap. It records the deadlines it is given.
+type deadlineWriter struct {
+	http.ResponseWriter
+	readDeadline  time.Time
+	writeDeadline time.Time
+}
+
+func (d *deadlineWriter) SetReadDeadline(deadline time.Time) error {
+	d.readDeadline = deadline
+	return nil
+}
+
+func (d *deadlineWriter) SetWriteDeadline(deadline time.Time) error {
+	d.writeDeadline = deadline
+	return nil
+}
+
+// TestGZipWrapUnwrapReachesDeadlines verifies that http.ResponseController can reach the underlying writer's deadline
+// methods through the gzip wrapper, which it can only do if gzipResponseWriter implements Unwrap.
+func TestGZipWrapUnwrapReachesDeadlines(t *testing.T) {
+	c := check.New(t)
+	underlying := &deadlineWriter{ResponseWriter: httptest.NewRecorder()}
+	deadline := time.Now().Add(time.Minute)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		rc := http.NewResponseController(w)
+		c.NoError(rc.SetReadDeadline(deadline))
+		c.NoError(rc.SetWriteDeadline(deadline))
+	}))
+	handler.ServeHTTP(underlying, gzipAcceptingRequest())
+	c.True(ran)
+	c.Equal(deadline, underlying.readDeadline)
+	c.Equal(deadline, underlying.writeDeadline)
 }
 
 func TestGZipWrapRoundTrip(t *testing.T) {

@@ -16,10 +16,11 @@ import (
 )
 
 var (
-	_ http.ResponseWriter = &StatusWriter{}
-	_ http.Flusher        = &StatusWriter{}
-	_ http.Hijacker       = &StatusWriter{}
-	_ http.Pusher         = &StatusWriter{}
+	_ http.ResponseWriter                       = &StatusWriter{}
+	_ http.Flusher                              = &StatusWriter{}
+	_ http.Hijacker                             = &StatusWriter{}
+	_ http.Pusher                               = &StatusWriter{}
+	_ interface{ Unwrap() http.ResponseWriter } = &StatusWriter{}
 )
 
 // StatusWriter wraps an http.ResponseWriter and provides methods to retrieve the status code and number of bytes
@@ -92,4 +93,10 @@ func (w *StatusWriter) Push(target string, opts *http.PushOptions) error {
 		return pusher.Push(target, opts)
 	}
 	return http.ErrNotSupported
+}
+
+// Unwrap returns the wrapped http.ResponseWriter so that http.ResponseController can reach optional interfaces it does
+// not implement itself, such as deadline control (SetReadDeadline/SetWriteDeadline), EnableFullDuplex, and FlushError.
+func (w *StatusWriter) Unwrap() http.ResponseWriter {
+	return w.w
 }
