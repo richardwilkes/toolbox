@@ -99,27 +99,26 @@ func Text(text string) string {
 		}
 	})
 
-	var result string
-	if result = lookup(text, Language); result != "" {
+	if result, ok := lookup(text, Language); ok {
 		return result
 	}
 	for _, language := range Languages {
-		if result = lookup(text, language); result != "" {
+		if result, ok := lookup(text, language); ok {
 			return result
 		}
 	}
 	return text
 }
 
-func lookup(text, language string) string {
+func lookup(text, language string) (string, bool) {
 	for _, lang := range hierarchy(language) {
 		if translations := langMap[lang]; translations != nil {
 			if str, ok := translations[text]; ok {
-				return str
+				return str, true
 			}
 		}
 	}
-	return ""
+	return "", false
 }
 
 func hierarchy(language string) []string {
