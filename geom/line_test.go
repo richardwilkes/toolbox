@@ -72,6 +72,37 @@ func TestLineIntersection(t *testing.T) {
 	c.True(foundEnd)
 }
 
+func TestLineIntersectionCollinear(t *testing.T) {
+	c := check.New(t)
+
+	// Collinear but non-overlapping segments must report no intersection. This previously returned a phantom 2-point
+	// overlap because the empty clamped interval (left > right) was not detected.
+	horiz := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(1, 0))
+	beyond := geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(3, 0))
+	c.Equal(0, len(horiz.Intersection(beyond)))
+	c.Equal(0, len(beyond.Intersection(horiz))) // Order independent
+	c.False(horiz.Intersects(beyond))
+
+	// Same, but exercising the vertical (ady) branch of the overlap math.
+	vert := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(0, 1))
+	vertBeyond := geom.NewLine(geom.NewPoint(0, 2), geom.NewPoint(0, 3))
+	c.Equal(0, len(vert.Intersection(vertBeyond)))
+
+	// Collinear segments that touch at exactly one endpoint yield a single point.
+	touching := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(2, 0))
+	touch := horiz.Intersection(touching)
+	c.Equal(1, len(touch))
+	c.Equal(geom.NewPoint(1, 0), touch[0])
+
+	// Genuinely overlapping collinear segments still yield the two-point overlap.
+	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(2, 0))
+	b := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(3, 0))
+	c.Equal(2, len(a.Intersection(b)))
+
+	// Propagation: a rect must not report intersection with a line collinear with an edge but entirely beyond it.
+	c.False(geom.NewRect(0, 0, 10, 10).IntersectsLine(geom.NewPoint(20, 10), geom.NewPoint(30, 10)))
+}
+
 func TestPointSegmentDistance(t *testing.T) {
 	c := check.New(t)
 

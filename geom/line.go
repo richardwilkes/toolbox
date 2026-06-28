@@ -118,6 +118,9 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 			}
 			left := max(0, min(ub1, ub2))
 			right := min(1, max(ub1, ub2))
+			if left > right {
+				return nil
+			}
 			if left == right {
 				return []Point{
 					{
