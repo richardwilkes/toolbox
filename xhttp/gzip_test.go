@@ -98,6 +98,78 @@ func TestGZipWrapNoGzipWhenNotAccepted(t *testing.T) {
 	c.Equal("hello, plain", rec.Body.String())
 }
 
+// TestGZipWrapNoContent verifies that a 204 No Content response is neither advertised as gzip nor emitted as a gzip
+// stream, since responses with that status must not carry a body.
+func TestGZipWrapNoContent(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal(http.StatusNoContent, rec.Code)
+	c.Equal("", rec.Header().Get("Content-Encoding"))
+	c.Equal(0, rec.Body.Len())
+}
+
+// TestGZipWrapNotModified verifies that a 304 Not Modified response is neither advertised as gzip nor emitted as a gzip
+// stream, since responses with that status must not carry a body.
+func TestGZipWrapNotModified(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotModified)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal(http.StatusNotModified, rec.Code)
+	c.Equal("", rec.Header().Get("Content-Encoding"))
+	c.Equal(0, rec.Body.Len())
+}
+
+// TestGZipWrapExplicitStatusRoundTrip verifies that a handler which explicitly writes a body-bearing status still gets
+// its body compressed and the encoding advertised.
+func TestGZipWrapExplicitStatusRoundTrip(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, err := io.WriteString(w, "hello, gzip")
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal(http.StatusOK, rec.Code)
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal("hello, gzip", string(data))
+}
+
+// TestGZipWrapInterimResponse verifies that a 1xx interim response is forwarded without committing the gzip decision,
+// so a body-bearing final status that follows is still compressed. A plainWriter is used because httptest's recorder
+// does not model a real server's interim-response handling (it commits the first status code it sees).
+func TestGZipWrapInterimResponse(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusEarlyHints)
+		w.WriteHeader(http.StatusOK)
+		_, err := io.WriteString(w, "after interim")
+		c.NoError(err)
+	}))
+	pw := &plainWriter{}
+	handler.ServeHTTP(pw, gzipAcceptingRequest())
+	c.Equal(http.StatusOK, pw.status)
+	c.Equal("gzip", pw.Header().Get("Content-Encoding"))
+	gr, err := gzip.NewReader(&pw.body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal("after interim", string(data))
+}
+
 // TestGZipWrapFlush verifies that the wrapped writer exposes http.Flusher and that a flush both pushes the buffered
 // compressed data out and propagates to the underlying writer, which is what lets Server-Sent Events reach the client.
 func TestGZipWrapFlush(t *testing.T) {
