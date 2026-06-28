@@ -22,12 +22,9 @@ func Split(path string) []string {
 	sep := string(filepath.Separator)
 	volName := filepath.VolumeName(path)
 	path = path[len(volName):]
-	for {
+	for path != "." && path != sep {
 		path = filepath.Dir(path)
 		parts = append(parts, filepath.Base(path))
-		if path == "." || path == sep {
-			break
-		}
 	}
 	result := make([]string, len(parts))
 	for i := range parts {

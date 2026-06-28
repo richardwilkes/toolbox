@@ -58,6 +58,22 @@ func TestSplit(t *testing.T) {
 			in:  "/one/../..//two.txt/.",
 			out: []string{full, "two.txt"},
 		},
+		{
+			in:  "/",
+			out: []string{full},
+		},
+		{
+			in:  "//",
+			out: []string{full},
+		},
+		{
+			in:  ".",
+			out: []string{"."},
+		},
+		{
+			in:  "",
+			out: []string{"."},
+		},
 	}
 	c := check.New(t)
 	for i, one := range data {

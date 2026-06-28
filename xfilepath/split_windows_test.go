@@ -26,6 +26,10 @@ func TestWindowsSplit(t *testing.T) {
 			in:  `\\host\share\one\two.txt`,
 			out: []string{`\\host\share\`, "one", "two.txt"},
 		},
+		{
+			in:  `C:\`,
+			out: []string{`C:\`},
+		},
 	}
 	c := check.New(t)
 	for i, one := range data {
