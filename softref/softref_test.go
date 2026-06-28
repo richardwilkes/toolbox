@@ -70,6 +70,57 @@ func TestSoftRef(t *testing.T) {
 	lookFor(c, get.key, ch)
 }
 
+// inertRes is a resource whose Release does nothing.
+type inertRes struct {
+	key string
+}
+
+func (r *inertRes) Key() string { return r.key }
+func (r *inertRes) Release()    {}
+
+// reentrantRes re-enters its pool from within Release by acquiring another SoftRef. With the old implementation this
+// ran while the finalizer goroutine held the pool lock, deadlocking on the non-reentrant mutex.
+type reentrantRes struct {
+	pool *softref.Pool
+	done chan struct{}
+	kept *softref.SoftRef // Keeps the re-entrant ref alive so it isn't finalized during the test.
+	key  string
+}
+
+func (r *reentrantRes) Key() string { return r.key }
+
+func (r *reentrantRes) Release() {
+	r.kept, _ = r.pool.NewSoftRef(&inertRes{key: r.key + "-inner"})
+	close(r.done)
+}
+
+func TestSoftRefReleaseReentrantNoDeadlock(t *testing.T) {
+	c := check.New(t)
+	p := softref.NewPool()
+	done := make(chan struct{})
+
+	// Create and immediately drop the only reference, so the finalizer will run Release(), which re-enters the pool.
+	func() {
+		sr, existed := p.NewSoftRef(&reentrantRes{pool: p, key: "reentrant", done: done})
+		c.False(existed)
+		runtime.KeepAlive(sr)
+	}()
+
+	deadline := time.After(5 * time.Second)
+	for {
+		runtime.GC()
+		select {
+		case <-done:
+			return // Release() re-entered the pool and completed without deadlocking.
+		case <-deadline:
+			c.Errorf("Release() that re-entered the pool deadlocked; the finalizer held the pool lock across Release()")
+			return
+		case <-time.After(20 * time.Millisecond):
+			// The finalizer may not have run yet; loop and GC again.
+		}
+	}
+}
+
 func lookFor(c check.Checker, key string, ch <-chan string) {
 	c.Helper()
 	runtime.GC()

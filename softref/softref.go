@@ -73,11 +73,12 @@ func (p *Pool) NewSoftRef(resource Resource) (ref *SoftRef, existedPreviously bo
 
 func (p *Pool) finalizeSoftRef(ref *SoftRef) {
 	p.lock.Lock()
+	var toRelease Resource
 	if r, ok := p.refs[ref.Key]; ok {
 		r.count--
 		if r.count == 0 {
 			delete(p.refs, ref.Key)
-			r.resource.Release()
+			toRelease = r.resource
 		} else if r.count < 0 {
 			slog.Debug("SoftRef count is invalid", "key", ref.Key, "count", r.count)
 		}
@@ -85,4 +86,9 @@ func (p *Pool) finalizeSoftRef(ref *SoftRef) {
 		slog.Debug("SoftRef finalized for unknown key", "key", ref.Key)
 	}
 	p.lock.Unlock()
+	// Release outside the lock: Release() may be slow or re-enter the pool (e.g. acquire another SoftRef), either of
+	// which would otherwise stall every other pool user or deadlock on the non-reentrant mutex.
+	if toRelease != nil {
+		toRelease.Release()
+	}
 }
