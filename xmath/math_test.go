@@ -48,4 +48,18 @@ func TestGCD(t *testing.T) {
 	c.Equal(5, xmath.GCD(-5, 0))
 	c.Equal(5, xmath.GCD(0, -5))
 	c.Equal(4, xmath.GCD(-8, -12))
+	c.Equal(0, xmath.GCD(0, 0))
+
+	// The most-negative value must not overflow during negation. Its magnitude 2^63 shares the factor 2 with 6, so the
+	// GCD is 2; previously the unfixed negation left a negative and yielded -2.
+	c.Equal(2, xmath.GCD(math.MinInt, 6))
+	c.Equal(2, xmath.GCD(6, math.MinInt))
+	c.Equal(1, xmath.GCD(math.MinInt, 3))
+	c.Equal(1, xmath.GCD(math.MinInt, math.MaxInt)) // GCD(2^63, 2^63-1): consecutive integers are coprime.
+
+	// When the only non-zero operands are MinInt, the true GCD is MinInt's magnitude (2^63), which is not representable
+	// as an int, so it saturates to the maximum int value rather than returning a negative result.
+	c.Equal(math.MaxInt, xmath.GCD(math.MinInt, 0))
+	c.Equal(math.MaxInt, xmath.GCD(0, math.MinInt))
+	c.Equal(math.MaxInt, xmath.GCD(math.MinInt, math.MinInt))
 }

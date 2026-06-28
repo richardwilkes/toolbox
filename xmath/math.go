@@ -682,16 +682,26 @@ func EqualWithin(a, b, tolerance float32) bool {
 	return Abs(a-b) <= tolerance
 }
 
-// GCD returns the greatest common divisor of a and b using Euclid's algorithm.
+// GCD returns the greatest common divisor of a and b using Euclid's algorithm. The magnitudes are computed in unsigned
+// space so that the most-negative value does not overflow during negation (a = -a would wrap MinInt back to itself). In
+// the sole case whose true result is not representable as an int — when every non-zero operand is MinInt, so the result
+// is MinInt's magnitude (one larger than the maximum int) — it saturates to the maximum int value.
 func GCD(a, b int) int {
-	if a < 0 {
-		a = -a
+	ua, ub := absAsUint(a), absAsUint(b)
+	for ub != 0 {
+		ua, ub = ub, ua%ub
 	}
-	if b < 0 {
-		b = -b
+	if ua > math.MaxInt {
+		return math.MaxInt
 	}
-	for b != 0 {
-		a, b = b, a%b
+	return int(ua) //nolint:gosec // Guarded above: ua <= math.MaxInt here.
+}
+
+// absAsUint returns the absolute value of v as an unsigned integer. Unlike negating into the same signed type, this
+// does not overflow for the most-negative value, since |MinInt| fits in a uint of the same width.
+func absAsUint(v int) uint {
+	if v < 0 {
+		return uint(-(v + 1)) + 1
 	}
-	return a
+	return uint(v)
 }
