@@ -96,15 +96,15 @@ func TestPrettyHandlerStackTrace(t *testing.T) {
 func TestPrettyHandlerDerivedStackTrace(t *testing.T) {
 	c := check.New(t)
 	for _, derive := range []struct {
-		name string
 		fn   func(slog.Handler) slog.Handler
+		name string
 	}{
 		{name: "WithAttrs", fn: func(h slog.Handler) slog.Handler {
 			return h.WithAttrs([]slog.Attr{{Key: "k", Value: slog.StringValue("v")}})
 		}},
 		{name: "WithGroup", fn: func(h slog.Handler) slog.Handler { return h.WithGroup("g") }},
 	} {
-		t.Run(derive.name, func(t *testing.T) {
+		t.Run(derive.name, func(_ *testing.T) {
 			var buf bytes.Buffer
 			derived := derive.fn(xslog.NewPrettyHandler(&buf, nil))
 			record := slog.NewRecord(time.Now(), slog.LevelInfo, "derived stack", 0)

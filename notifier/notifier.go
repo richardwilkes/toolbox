@@ -240,18 +240,20 @@ func (n *Notifier) BatchLevel() int {
 
 // StartBatch informs all BatchTargets that a batch of notifications will be starting. If a previous call to this method
 // was made without a call to EndBatch(), then the batch level will be incremented, but no notifications will be made.
+//
+// The batch lifecycle is independent of the enabled state: the level is always tracked and the BatchMode(true)/
+// BatchMode(false) brackets are always delivered, so StartBatch and EndBatch stay balanced even if SetEnabled is
+// toggled within a batch. Only Notify/NotifyWithData are suppressed while disabled.
 func (n *Notifier) StartBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()
-	if n.enabled {
-		n.batchLevel++
-		if n.batchLevel == 1 && len(n.batchTargets) > 0 {
-			n.currentBatch = make([]BatchTarget, 0, len(n.batchTargets))
-			for k := range n.batchTargets {
-				n.currentBatch = append(n.currentBatch, k)
-			}
-			targets = n.currentBatch
+	n.batchLevel++
+	if n.batchLevel == 1 && len(n.batchTargets) > 0 {
+		n.currentBatch = make([]BatchTarget, 0, len(n.batchTargets))
+		for k := range n.batchTargets {
+			n.currentBatch = append(n.currentBatch, k)
 		}
+		targets = n.currentBatch
 	}
 	n.lock.Unlock()
 	for _, target := range targets {
@@ -269,7 +271,10 @@ func (n *Notifier) notifyBatchTarget(target BatchTarget, start bool) {
 func (n *Notifier) EndBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()
-	if n.enabled && n.batchLevel > 0 {
+	// Mirror StartBatch unconditionally (independent of the enabled state); the batchLevel > 0 guard simply prevents an
+	// unmatched EndBatch from driving the level negative. Gating this on enabled would strand a batch that began while
+	// enabled but ended after SetEnabled(false), leaving targets stuck in batch mode forever.
+	if n.batchLevel > 0 {
 		n.batchLevel--
 		if n.batchLevel == 0 {
 			targets = n.currentBatch

@@ -318,14 +318,69 @@ func TestBatchWhenDisabled(t *testing.T) {
 	n.Register(target, 0, "test")
 	n.SetEnabled(false)
 
-	// Batch operations should not work when disabled
+	// The batch lifecycle is independent of the enabled state: the level is still tracked and the BatchMode brackets
+	// are still delivered, so StartBatch/EndBatch remain balanced regardless of enablement.
 	n.StartBatch()
-	c.Equal(0, n.BatchLevel())
-	c.Equal(0, len(target.getBatchStarts()))
+	c.Equal(1, n.BatchLevel())
+	c.Equal([]bool{true}, target.getBatchStarts())
+
+	// Data notifications, however, remain suppressed while disabled.
+	n.Notify("test", "producer")
+	c.Equal(0, len(target.getNotifications()))
 
 	n.EndBatch()
 	c.Equal(0, n.BatchLevel())
-	c.Equal(0, len(target.getBatchStarts()))
+	c.Equal([]bool{true, false}, target.getBatchStarts())
+}
+
+// TestEndBatchAfterDisable verifies that a batch begun while enabled is properly ended (level returns to 0 and
+// BatchMode(false) is delivered) even if the notifier is disabled before EndBatch is called. Previously EndBatch was
+// gated on the enabled flag, so disabling mid-batch stranded the batch: the level stayed at 1 forever and targets
+// never received the matching BatchMode(false).
+func TestEndBatchAfterDisable(t *testing.T) {
+	c := check.New(t)
+	n := notifier.New(testRecoveryHandler)
+	target := &mockBatchTarget{}
+	n.Register(target, 0, "test")
+
+	n.StartBatch()
+	c.Equal(1, n.BatchLevel())
+	c.Equal([]bool{true}, target.getBatchStarts())
+
+	n.SetEnabled(false)
+	n.EndBatch()
+	c.Equal(0, n.BatchLevel(), "batch level must drop to 0 even though the notifier was disabled mid-batch")
+	c.Equal([]bool{true, false}, target.getBatchStarts(), "matching BatchMode(false) must still be delivered")
+
+	// Re-enabling must yield a clean, fully balanced batch rather than a level stuck above 0.
+	n.SetEnabled(true)
+	n.StartBatch()
+	c.Equal(1, n.BatchLevel())
+	n.EndBatch()
+	c.Equal(0, n.BatchLevel())
+	c.Equal([]bool{true, false, true, false}, target.getBatchStarts())
+}
+
+// TestEndBatchAfterDisableNested verifies the same balance property holds when the disable happens partway through a
+// nested batch.
+func TestEndBatchAfterDisableNested(t *testing.T) {
+	c := check.New(t)
+	n := notifier.New(testRecoveryHandler)
+	target := &mockBatchTarget{}
+	n.Register(target, 0, "test")
+
+	n.StartBatch()
+	n.StartBatch()
+	c.Equal(2, n.BatchLevel())
+	c.Equal([]bool{true}, target.getBatchStarts())
+
+	n.SetEnabled(false)
+	n.EndBatch()
+	c.Equal(1, n.BatchLevel())
+	c.Equal([]bool{true}, target.getBatchStarts(), "no BatchMode delivery until the outermost batch ends")
+	n.EndBatch()
+	c.Equal(0, n.BatchLevel())
+	c.Equal([]bool{true, false}, target.getBatchStarts())
 }
 
 func TestRegisterFromNotifier(t *testing.T) {
