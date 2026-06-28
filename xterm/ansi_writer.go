@@ -13,6 +13,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
@@ -462,7 +463,7 @@ func (a *AnsiWriter) writeByte(c byte) {
 func (a *AnsiWriter) WrapText(prefix, text string) {
 	a.writeString(prefix)
 	avail, _ := Size(a.w)
-	prefixLength := len(colorSequenceMatcher.ReplaceAllString(prefix, ""))
+	prefixLength := utf8.RuneCountInString(colorSequenceMatcher.ReplaceAllString(prefix, ""))
 	avail -= 1 + prefixLength
 	if avail < 1 {
 		avail = 1
@@ -479,7 +480,7 @@ func (a *AnsiWriter) WrapText(prefix, text string) {
 			}
 		}
 		for i, token := range strings.Fields(line) {
-			length := len(colorSequenceMatcher.ReplaceAllString(token, "")) + 1
+			length := utf8.RuneCountInString(colorSequenceMatcher.ReplaceAllString(token, "")) + 1
 			if i != 0 {
 				if length > remaining {
 					a.writeByte('\n')
