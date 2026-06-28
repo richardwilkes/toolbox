@@ -10,14 +10,21 @@
 package xhttp
 
 import (
+	"bufio"
 	"compress/gzip"
+	"net"
 	"net/http"
 	"strings"
 
 	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
-var _ http.ResponseWriter = &gzipResponseWriter{}
+var (
+	_ http.ResponseWriter = &gzipResponseWriter{}
+	_ http.Flusher        = &gzipResponseWriter{}
+	_ http.Hijacker       = &gzipResponseWriter{}
+	_ http.Pusher         = &gzipResponseWriter{}
+)
 
 type gzipResponseWriter struct {
 	w  http.ResponseWriter
@@ -54,4 +61,31 @@ func (w *gzipResponseWriter) Write(data []byte) (int, error) {
 // WriteHeader implements http.ResponseWriter.
 func (w *gzipResponseWriter) WriteHeader(status int) {
 	w.w.WriteHeader(status)
+}
+
+// Flush implements http.Flusher. It flushes any buffered compressed data to the underlying writer before flushing the
+// underlying writer itself, so streaming responses such as Server-Sent Events reach the client promptly.
+func (w *gzipResponseWriter) Flush() {
+	if err := w.gw.Flush(); err != nil {
+		return
+	}
+	if f, ok := w.w.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// Hijack implements http.Hijacker.
+func (w *gzipResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := w.w.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, http.ErrNotSupported
+}
+
+// Push implements http.Pusher.
+func (w *gzipResponseWriter) Push(target string, opts *http.PushOptions) error {
+	if pusher, ok := w.w.(http.Pusher); ok {
+		return pusher.Push(target, opts)
+	}
+	return http.ErrNotSupported
 }

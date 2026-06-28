@@ -1,0 +1,208 @@
+// Copyright (c) 2016-2026 by Richard A. Wilkes. All rights reserved.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, version 2.0. If a copy of the MPL was not distributed with
+// this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// This Source Code Form is "Incompatible With Secondary Licenses", as
+// defined by the Mozilla Public License, version 2.0.
+
+package xhttp_test
+
+import (
+	"bufio"
+	"bytes"
+	"compress/gzip"
+	"io"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/richardwilkes/toolbox/v2/check"
+	"github.com/richardwilkes/toolbox/v2/xhttp"
+)
+
+func gzipAcceptingRequest() *http.Request {
+	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+	req.Header.Set("Accept-Encoding", "gzip")
+	return req
+}
+
+// plainWriter is an http.ResponseWriter that implements none of the optional streaming/upgrade interfaces.
+type plainWriter struct {
+	header http.Header
+	body   bytes.Buffer
+	status int
+}
+
+func (p *plainWriter) Header() http.Header {
+	if p.header == nil {
+		p.header = make(http.Header)
+	}
+	return p.header
+}
+
+func (p *plainWriter) Write(data []byte) (int, error) { return p.body.Write(data) }
+
+func (p *plainWriter) WriteHeader(status int) { p.status = status }
+
+// hijackWriter adds http.Hijacker support to a recorder.
+type hijackWriter struct {
+	*httptest.ResponseRecorder
+	hijacked bool
+}
+
+func (h *hijackWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h.hijacked = true
+	return nil, nil, nil
+}
+
+// pushWriter adds http.Pusher support to a recorder.
+type pushWriter struct {
+	*httptest.ResponseRecorder
+	pushed string
+}
+
+func (p *pushWriter) Push(target string, _ *http.PushOptions) error {
+	p.pushed = target
+	return nil
+}
+
+func TestGZipWrapRoundTrip(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, err := io.WriteString(w, "hello, gzip")
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal("hello, gzip", string(data))
+}
+
+func TestGZipWrapNoGzipWhenNotAccepted(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, err := io.WriteString(w, "hello, plain")
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+	c.Equal("", rec.Header().Get("Content-Encoding"))
+	c.Equal("hello, plain", rec.Body.String())
+}
+
+// TestGZipWrapFlush verifies that the wrapped writer exposes http.Flusher and that a flush both pushes the buffered
+// compressed data out and propagates to the underlying writer, which is what lets Server-Sent Events reach the client.
+func TestGZipWrapFlush(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		f, ok := w.(http.Flusher)
+		c.True(ok, "wrapped ResponseWriter must implement http.Flusher")
+		_, err := io.WriteString(w, "stream me")
+		c.NoError(err)
+		if ok {
+			f.Flush()
+		}
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.True(ran)
+	c.True(rec.Flushed, "flush must propagate to the underlying http.Flusher")
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal("stream me", string(data))
+}
+
+// TestGZipWrapFlushUnsupportedUnderlying ensures Flush is a safe no-op when the underlying writer is not a Flusher.
+func TestGZipWrapFlushUnsupportedUnderlying(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		f, ok := w.(http.Flusher)
+		c.True(ok)
+		if ok {
+			f.Flush() // Must not panic even though the underlying writer cannot flush.
+		}
+	}))
+	handler.ServeHTTP(&plainWriter{}, gzipAcceptingRequest())
+	c.True(ran)
+}
+
+func TestGZipWrapHijack(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		h, ok := w.(http.Hijacker)
+		c.True(ok, "wrapped ResponseWriter must implement http.Hijacker")
+		if ok {
+			_, _, err := h.Hijack()
+			c.NoError(err)
+		}
+	}))
+	rec := &hijackWriter{ResponseRecorder: httptest.NewRecorder()}
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.True(ran)
+	c.True(rec.hijacked, "hijack must delegate to the underlying http.Hijacker")
+}
+
+func TestGZipWrapHijackUnsupportedUnderlying(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		h, ok := w.(http.Hijacker)
+		c.True(ok)
+		if ok {
+			_, _, err := h.Hijack()
+			c.HasError(err)
+		}
+	}))
+	handler.ServeHTTP(&plainWriter{}, gzipAcceptingRequest())
+	c.True(ran)
+}
+
+func TestGZipWrapPush(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		p, ok := w.(http.Pusher)
+		c.True(ok, "wrapped ResponseWriter must implement http.Pusher")
+		if ok {
+			c.NoError(p.Push("/style.css", nil))
+		}
+	}))
+	rec := &pushWriter{ResponseRecorder: httptest.NewRecorder()}
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.True(ran)
+	c.Equal("/style.css", rec.pushed)
+}
+
+func TestGZipWrapPushUnsupportedUnderlying(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		ran = true
+		p, ok := w.(http.Pusher)
+		c.True(ok)
+		if ok {
+			c.HasError(p.Push("/style.css", nil))
+		}
+	}))
+	handler.ServeHTTP(&plainWriter{}, gzipAcceptingRequest())
+	c.True(ran)
+}

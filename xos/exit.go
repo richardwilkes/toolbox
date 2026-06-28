@@ -29,7 +29,7 @@ var (
 	// ExitCodeForSIGINT is the exit code used when the program is terminated by a SIGINT (Ctrl+C). Defaults to 1.
 	ExitCodeForSIGINT = 1
 	// ExitCodeForSIGTERM is the exit code used when the program is terminated by a SIGTERM. Defaults to 1.
-	ExitCodeForSIGTERM = 1
+	ExitCodeForSIGTERM      = 1
 	exitLock                sync.Mutex
 	exitFuncs               []exitFunction
 	lastExitID              int
