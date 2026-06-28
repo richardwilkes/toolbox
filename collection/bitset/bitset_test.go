@@ -95,6 +95,58 @@ func TestBitSet(t *testing.T) {
 	c.Equal(-1, bs.NextSet(301))
 }
 
+// TestBitSetClearRangeBeyondStorage verifies that ClearRange fully clears its final allocated word when 'end' lies
+// beyond the backing storage. Previously the loop bound was capped to the last allocated word but the per-word "last
+// bit" was still derived from 'end', so the capped final word was only partially cleared, leaving set bits behind.
+func TestBitSetClearRangeBeyondStorage(t *testing.T) {
+	c := check.New(t)
+	var bs BitSet
+	bs.Set(230) // Allocates words 0..3; the highest allocated bit index is 255.
+	bs.ClearRange(168, 328)
+	c.False(bs.State(230), "bit 230 must be cleared")
+	c.Equal(0, bs.Count())
+
+	// A single set bit in the capped final word, cleared by a range that both starts and ends beyond storage in the
+	// same final word's span.
+	bs.Reset()
+	bs.Set(200)
+	bs.ClearRange(200, 100000)
+	c.False(bs.State(200))
+	c.Equal(0, bs.Count())
+}
+
+// TestBitSetClearRangeBruteForce differentially checks ClearRange against a straightforward per-bit reference across
+// many start/end pairs, including ranges that extend well past the allocated storage.
+func TestBitSetClearRangeBruteForce(t *testing.T) {
+	c := check.New(t)
+	// Keep the set bits within a few words (highest is 255, so words 0..3 are allocated) but drive 'end' far past that
+	// allocation so the capped-final-word path is exercised with set bits beyond (end & bitIndexMask).
+	const setLimit = 255
+	const endLimit = 600
+	for start := 0; start <= setLimit; start += 7 {
+		for end := 0; end <= endLimit; end += 11 {
+			var bs BitSet
+			ref := make(map[int]bool)
+			for bit := 0; bit <= setLimit; bit += 3 {
+				bs.Set(bit)
+				ref[bit] = true
+			}
+			bs.ClearRange(start, end)
+			lo, hi := start, end
+			if lo > hi {
+				lo, hi = hi, lo
+			}
+			for bit := lo; bit <= hi; bit++ {
+				delete(ref, bit)
+			}
+			for bit := 0; bit <= endLimit+dataBitsPerWord; bit++ {
+				c.Equal(ref[bit], bs.State(bit), "bit %d after ClearRange(%d, %d)", bit, start, end)
+			}
+			c.Equal(len(ref), bs.Count(), "Count after ClearRange(%d, %d)", start, end)
+		}
+	}
+}
+
 func TestBitSetEqual(t *testing.T) {
 	c := check.New(t)
 

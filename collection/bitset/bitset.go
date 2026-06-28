@@ -158,15 +158,20 @@ func (b *BitSet) ClearRange(start, end int) {
 	if i1 > maximum {
 		return
 	}
-	i2 := min(end>>addressBitsPerWord, maximum)
+	// endWord is the word actually containing 'end'. The loop bound i2 is capped to the allocated storage, so when
+	// 'end' lies beyond it, i2 < endWord; in that case the capped final word is wholly inside the range and must be
+	// cleared in full rather than only up to (end & bitIndexMask). Comparing against endWord (not i2) keeps that
+	// distinction.
+	endWord := end >> addressBitsPerWord
+	i2 := min(endWord, maximum)
 	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
-		if i != i1 && i != i2 {
+		if i != i1 && i != endWord {
 			b.set -= countSetBits(b.data[i])
 			b.data[i] = 0
 		} else {
 			var last int
-			if i == i2 {
+			if i == endWord {
 				last = bitIndexForMask(wordMask(end)) + 1
 			} else {
 				last = dataBitsPerWord
