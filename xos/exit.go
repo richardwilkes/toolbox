@@ -30,10 +30,11 @@ var (
 	ExitCodeForSIGINT = 1
 	// ExitCodeForSIGTERM is the exit code used when the program is terminated by a SIGTERM. Defaults to 1.
 	ExitCodeForSIGTERM = 1
-	exitLock           sync.Mutex
-	exitFuncs          []exitFunction
-	lastExitID         int
-	exiting            bool
+	exitLock                sync.Mutex
+	exitFuncs               []exitFunction
+	lastExitID              int
+	exiting                 bool
+	signalHandlersInstalled bool
 )
 
 type exitFunction struct {
@@ -47,7 +48,8 @@ type exitFunction struct {
 func EnsureAtSignalHandlersAreInstalled() {
 	exitLock.Lock()
 	defer exitLock.Unlock()
-	if lastExitID == 0 {
+	if !signalHandlersInstalled {
+		signalHandlersInstalled = true
 		sigChan := make(chan os.Signal, 2)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		go func() {

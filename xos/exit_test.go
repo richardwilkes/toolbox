@@ -191,6 +191,23 @@ func TestSIGTERM(t *testing.T) {
 	}
 }
 
+func TestEnsureAtSignalHandlersAreInstalledIsIdempotent(t *testing.T) {
+	c := check.New(t)
+	// Install the handlers and give the goroutine a moment to start and block on its channel.
+	xos.EnsureAtSignalHandlersAreInstalled()
+	time.Sleep(50 * time.Millisecond)
+	before := runtime.NumGoroutine()
+	// Repeated direct calls (with no intervening RunAtExit) must not install duplicate handlers or leak goroutines.
+	for range 20 {
+		xos.EnsureAtSignalHandlersAreInstalled()
+	}
+	time.Sleep(50 * time.Millisecond)
+	after := runtime.NumGoroutine()
+	// With the previous bug, each repeated call leaked a goroutine, so after would be before+20. Allow for a little
+	// unrelated runtime goroutine churn, but anything near +20 indicates the leak has returned.
+	c.True(after-before < 10)
+}
+
 func TestExitWithError(t *testing.T) {
 	if os.Getenv("EXIT_WITH_ERROR_TEST") == "1" {
 		// This is the subprocess
