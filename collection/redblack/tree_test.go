@@ -441,6 +441,54 @@ func TestReverseTraverseStartingAt(t *testing.T) {
 	c.Equal([]int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, visited)
 }
 
+func TestTraverseStartingAtWithDuplicateKeys(t *testing.T) {
+	c := check.New(t)
+	rbt := redblack.New[int, int](cmp.Compare[int])
+
+	// Insert several keys equal to the start key, plus lower and higher keys. The tree's rotations distribute the
+	// duplicates across both left and right subtrees; a starting-at traversal must still visit every one of them.
+	rbt.Insert(1, 1)
+	rbt.Insert(2, 2)
+	const dupCount = 7
+	for i := range dupCount {
+		rbt.Insert(5, 100+i) // Each duplicate of 5 carries a distinct value.
+	}
+	rbt.Insert(8, 8)
+	rbt.Insert(9, 9)
+
+	// TraverseStartingAt(5) must visit all keys >= 5: every duplicate of 5, then 8 and 9, in non-decreasing order.
+	var got []int
+	seen := make(map[int]bool)
+	rbt.TraverseStartingAt(5, func(k, v int) bool {
+		got = append(got, k)
+		if k == 5 {
+			seen[v] = true
+		}
+		return true
+	})
+	c.Equal(dupCount, len(seen)) // All distinct duplicate values were visited (none skipped).
+	c.Equal(dupCount+2, len(got))
+	for i := 1; i < len(got); i++ {
+		c.True(got[i-1] <= got[i])
+	}
+
+	// ReverseTraverseStartingAt(5) must visit all keys <= 5: every duplicate of 5, then 2 and 1, in non-increasing order.
+	got = nil
+	seen = make(map[int]bool)
+	rbt.ReverseTraverseStartingAt(5, func(k, v int) bool {
+		got = append(got, k)
+		if k == 5 {
+			seen[v] = true
+		}
+		return true
+	})
+	c.Equal(dupCount, len(seen))
+	c.Equal(dupCount+2, len(got))
+	for i := 1; i < len(got); i++ {
+		c.True(got[i-1] >= got[i])
+	}
+}
+
 func TestLargeDataset(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, int](cmp.Compare[int])
