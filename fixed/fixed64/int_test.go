@@ -109,6 +109,35 @@ func checkFromFloatMatchesFixed128[T fixed.Dx](t *testing.T) {
 	}
 }
 
+// TestMulDivSaturate verifies that Mul and Div saturate to Maximum/Minimum when the result overflows the int64 storage,
+// rather than wrapping to a garbage value, matching the saturation behavior of Floor/Ceil/Round.
+func TestMulDivSaturate(t *testing.T) {
+	c := check.New(t)
+	maximum := fixed64.Maximum[fixed.D2]()
+	minimum := fixed64.Minimum[fixed.D2]()
+	two := fixed64.FromInteger[fixed.D2](2)
+	negTwo := fixed64.FromInteger[fixed.D2](-2)
+	half := fixed64.FromStringForced[fixed.D2]("0.5")
+	negHalf := fixed64.FromStringForced[fixed.D2]("-0.5")
+
+	// Mul overflow saturates to the correct extreme based on sign.
+	c.Equal(maximum, maximum.Mul(two))
+	c.Equal(minimum, minimum.Mul(two))
+	c.Equal(minimum, maximum.Mul(negTwo))
+	c.Equal(maximum, minimum.Mul(negTwo))
+
+	// Div by a magnitude < 1 magnifies and can overflow; it must saturate too.
+	c.Equal(maximum, maximum.Div(half))
+	c.Equal(minimum, minimum.Div(half))
+	c.Equal(minimum, maximum.Div(negHalf))
+	c.Equal(maximum, fixed64.FromStringForced[fixed.D2]("90000000000000000").Div(half))
+
+	// A multiply whose int64 intermediate overflows but whose final result still fits must compute correctly, not
+	// saturate (this exercises the 128-bit path without overflow).
+	c.Equal("10000000000000000",
+		fixed64.FromInteger[fixed.D2](100000000).Mul(fixed64.FromInteger[fixed.D2](100000000)).String())
+}
+
 func TestAddSub(t *testing.T) {
 	testAddSub[fixed.D1](t)
 	testAddSub[fixed.D2](t)

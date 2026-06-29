@@ -200,10 +200,16 @@ func (f Int[T]) mul64(value, div Int[T]) Int[T] {
 	if f != math.MinInt64 && value != math.MinInt64 && result/value == f {
 		return result / div
 	}
-	return Int[T](num128.IntFrom64(int64(f)).
-		Mul(num128.IntFrom64(int64(value))).
-		Div(num128.IntFrom64(int64(div))).
-		AsInt64())
+	// The product overflowed int64, so compute it exactly in 128-bit space. The final value may still exceed the int64
+	// range, in which case saturate to Maximum()/Minimum() rather than letting AsInt64() wrap to a garbage value.
+	r := num128.IntFrom64(int64(f)).Mul(num128.IntFrom64(int64(value))).Div(num128.IntFrom64(int64(div)))
+	if r.GreaterThan(num128.IntFrom64(math.MaxInt64)) {
+		return Maximum[T]()
+	}
+	if r.LessThan(num128.IntFrom64(math.MinInt64)) {
+		return Minimum[T]()
+	}
+	return Int[T](r.AsInt64())
 }
 
 // Div divides this value by the passed-in value, returning a new value.

@@ -21,6 +21,34 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TestMulDivSaturate verifies that Mul and Div saturate to Maximum/Minimum when the result overflows the 128-bit
+// storage, rather than silently wrapping the intermediate product to a garbage value.
+func TestMulDivSaturate(t *testing.T) {
+	c := check.New(t)
+	maximum := fixed128.Maximum[fixed.D2]()
+	minimum := fixed128.Minimum[fixed.D2]()
+	two := fixed128.FromInteger[fixed.D2](2)
+	negTwo := fixed128.FromInteger[fixed.D2](-2)
+	half := fixed128.FromStringForced[fixed.D2]("0.5")
+	negHalf := fixed128.FromStringForced[fixed.D2]("-0.5")
+
+	// Mul overflow saturates to the correct extreme based on sign.
+	c.Equal(maximum, maximum.Mul(two))
+	c.Equal(minimum, minimum.Mul(two))
+	c.Equal(minimum, maximum.Mul(negTwo))
+	c.Equal(maximum, minimum.Mul(negTwo))
+
+	// Div by a magnitude < 1 magnifies and can overflow; it must saturate too.
+	c.Equal(maximum, maximum.Div(half))
+	c.Equal(minimum, minimum.Div(half))
+	c.Equal(minimum, maximum.Div(negHalf))
+
+	// A multiply with an operand too large for int64 whose result still fits must compute correctly, not saturate (this
+	// exercises the big.Int path without overflow).
+	c.Equal("300000000000000000000",
+		fixed128.FromStringForced[fixed.D2]("100000000000000000000").Mul(fixed128.FromInteger[fixed.D2](3)).String())
+}
+
 func TestConversion(t *testing.T) {
 	testConversion[fixed.D1](t)
 	testConversion[fixed.D2](t)

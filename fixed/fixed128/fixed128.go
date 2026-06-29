@@ -11,6 +11,7 @@ package fixed128
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"reflect"
 	"strconv"
@@ -178,12 +179,52 @@ func (f Int[T]) Sub(value Int[T]) Int[T] {
 
 // Mul multiplies this value by the passed-in value, returning a new value.
 func (f Int[T]) Mul(value Int[T]) Int[T] {
-	return Int[T]{data: f.data.Mul(value.data).Div(multiplier[T]())}
+	// When both operands fit in 64 bits, their product fits in 128 bits, so the fast num128 path cannot overflow.
+	// Otherwise the f.data*value.data intermediate could silently wrap, so compute it exactly in big.Int and saturate.
+	if fitsInInt64(f.data) && fitsInInt64(value.data) {
+		return Int[T]{data: f.data.Mul(value.data).Div(multiplier[T]())}
+	}
+	product := new(big.Int).Mul(f.data.AsBigInt(), value.data.AsBigInt())
+	return saturatedFromBig[T](product.Quo(product, multiplier[T]().AsBigInt()))
 }
 
 // Div divides this value by the passed-in value, returning a new value.
 func (f Int[T]) Div(value Int[T]) Int[T] {
-	return Int[T]{data: f.data.Mul(multiplier[T]()).Div(value.data)}
+	// When f fits in 64 bits, the f.data*multiplier intermediate fits in 128 bits (multiplier < 2^54), so the fast
+	// num128 path cannot overflow. Otherwise that intermediate could silently wrap, so compute exactly and saturate.
+	if fitsInInt64(f.data) {
+		return Int[T]{data: f.data.Mul(multiplier[T]()).Div(value.data)}
+	}
+	scaled := new(big.Int).Mul(f.data.AsBigInt(), multiplier[T]().AsBigInt())
+	return saturatedFromBig[T](scaled.Quo(scaled, value.data.AsBigInt()))
+}
+
+// int64 and 128-bit range boundaries, precomputed for the Mul/Div overflow handling. The big.Int values are only read
+// (via Cmp), never mutated, so sharing them is safe.
+var (
+	maxInt64As128  = num128.IntFrom64(math.MaxInt64)
+	minInt64As128  = num128.IntFrom64(math.MinInt64)
+	maxInt128AsBig = num128.MaxInt.AsBigInt()
+	minInt128AsBig = num128.MinInt.AsBigInt()
+)
+
+// fitsInInt64 reports whether v is within the signed 64-bit range. When both operands of a multiply (and the decimal
+// multiplier, which is always < 2^54) fit in 64 bits, their product cannot overflow the 128-bit intermediate, so the
+// fast path is safe.
+func fitsInInt64(v num128.Int) bool {
+	return !v.GreaterThan(maxInt64As128) && !v.LessThan(minInt64As128)
+}
+
+// saturatedFromBig converts an exact big.Int result to an Int[T], clamping to Maximum()/Minimum() when it does not fit
+// in the 128-bit storage rather than wrapping to a garbage value.
+func saturatedFromBig[T fixed.Dx](v *big.Int) Int[T] {
+	if v.Cmp(maxInt128AsBig) > 0 {
+		return Maximum[T]()
+	}
+	if v.Cmp(minInt128AsBig) < 0 {
+		return Minimum[T]()
+	}
+	return Int[T]{data: num128.IntFromBigInt(v)}
 }
 
 // Mod returns the remainder after subtracting all full multiples of the passed-in value. The result has the same sign
