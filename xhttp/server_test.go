@@ -25,8 +25,8 @@ import (
 // missing or superfluous WriteHeader call.
 type recordingWriter struct {
 	header       http.Header
-	body         bytes.Buffer
 	writeHeaders []int
+	body         bytes.Buffer
 }
 
 func (r *recordingWriter) Header() http.Header {
@@ -73,7 +73,7 @@ func TestServerPanicAfterWriteDoesNotResend(t *testing.T) {
 	var log bytes.Buffer
 	s := newTestServer(c, &log, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
-		_, _ = io.WriteString(w, "partial")
+		_, _ = io.WriteString(w, "partial") //nolint:errcheck // Ignored for testing
 		panic("boom after write")
 	})
 	rec := &recordingWriter{}
