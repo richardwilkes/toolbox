@@ -109,6 +109,27 @@ func TestMoveFile(t *testing.T) {
 	c.True(xos.FileExists(srcFile))
 }
 
+func TestCopySymlinkIntoMissingParent(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS { // Windows doesn't support symlinks without special permissions enabled first
+		t.Skip("symlinks not supported without special permissions on Windows")
+	}
+	c := check.New(t)
+
+	tmpDir := t.TempDir()
+	srcFile := filepath.Join(tmpDir, "target.txt")
+	c.NoError(os.WriteFile(srcFile, []byte("test content"), 0o644))
+	srcLink := filepath.Join(tmpDir, "link.txt")
+	c.NoError(os.Symlink(srcFile, srcLink))
+
+	// Destination's parent directory does not exist yet; linkCopy must create it.
+	dstLink := filepath.Join(tmpDir, "sub", "nested", "copylink.txt")
+	c.NoError(xos.Copy(srcLink, dstLink))
+
+	linkTarget, err := os.Readlink(dstLink)
+	c.NoError(err)
+	c.Equal(srcFile, linkTarget)
+}
+
 func TestCopy(t *testing.T) {
 	c := check.New(t)
 

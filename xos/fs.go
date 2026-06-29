@@ -95,7 +95,7 @@ func CopyWithMask(src, dst string, mask fs.FileMode) error {
 
 func generalCopy(src, dst string, srcMode, mask fs.FileMode) error {
 	if srcMode&os.ModeSymlink != 0 {
-		return linkCopy(src, dst)
+		return linkCopy(src, dst, mask)
 	}
 	if srcMode.IsDir() {
 		return dirCopy(src, dst, srcMode, mask)
@@ -156,9 +156,12 @@ func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) error {
 	return nil
 }
 
-func linkCopy(src, dst string) error {
+func linkCopy(src, dst string, mask fs.FileMode) error {
 	s, err := os.Readlink(src)
 	if err != nil {
+		return errs.Wrap(err)
+	}
+	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
 	if err = os.Symlink(s, dst); err != nil {
