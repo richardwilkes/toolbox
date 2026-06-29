@@ -89,7 +89,8 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	fraction := new(big.Int)
 	var t T
 	switch parts[0] {
-	case "":
+	case "", "+", "+0":
+		// A bare sign or an empty integer part (e.g. "+.5", "+", ".5") has a zero, non-negative integer portion.
 	case "-", "-0":
 		neg = true
 	default:

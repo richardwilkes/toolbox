@@ -18,8 +18,35 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed128"
+	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
 	"gopkg.in/yaml.v3"
 )
+
+// TestFromStringLeadingPlus verifies that a leading "+" with an empty integer part (e.g. "+.5", "+") is accepted and
+// parses the same way fixed64.FromString accepts it, rather than failing the underlying big.Int parse.
+func TestFromStringLeadingPlus(t *testing.T) {
+	c := check.New(t)
+	for _, tc := range []struct {
+		in   string
+		want string
+	}{
+		{in: "+.5", want: "0.5"},
+		{in: "+", want: "0"},
+		{in: "+0", want: "0"},
+		{in: "+0.5", want: "0.5"},
+		{in: "+5", want: "5"},
+		{in: "+5.25", want: "5.25"},
+	} {
+		v, err := fixed128.FromString[fixed.D2](tc.in)
+		c.NoError(err, tc.in)
+		c.Equal(tc.want, v.String(), tc.in)
+
+		// The two precisions must agree on these inputs.
+		v64, err64 := fixed64.FromString[fixed.D2](tc.in)
+		c.NoError(err64, tc.in)
+		c.Equal(v64.String(), v.String(), tc.in)
+	}
+}
 
 // TestMulDivSaturate verifies that Mul and Div saturate to Maximum/Minimum when the result overflows the 128-bit
 // storage, rather than silently wrapping the intermediate product to a garbage value.
