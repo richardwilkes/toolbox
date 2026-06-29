@@ -73,15 +73,25 @@ func ClientIP(req *http.Request) net.IP {
 		}
 	}
 	if forwarded := req.Header.Get("Forwarded"); forwarded != "" {
-		// Forwarded can contain multiple values, we take the first one.
+		// Forwarded can contain multiple comma-separated elements (one per proxy); we take the first, then scan its
+		// semicolon-separated parameters for "for". Per RFC 7239 the parameter name is case-insensitive and the value
+		// may be quoted and may include a port and IPv6 brackets (e.g. for="[2001:db8::1]:443").
 		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded for more information.
-		for forwarded = range strings.SplitSeq(strings.SplitN(forwarded, ",", 2)[0], ";") {
-			if after, ok := strings.CutPrefix(forwarded, "for="); ok {
-				forwarded = strings.TrimPrefix(after, `"`)
-				forwarded = strings.TrimSuffix(forwarded, `"`)
-				if ip := net.ParseIP(forwarded); ip != nil {
-					return ip
-				}
+		element := strings.SplitN(forwarded, ",", 2)[0]
+		for pair := range strings.SplitSeq(element, ";") {
+			name, value, ok := strings.Cut(pair, "=")
+			if !ok || !strings.EqualFold(strings.TrimSpace(name), "for") {
+				continue
+			}
+			value = strings.Trim(strings.TrimSpace(value), `"`)
+			// Strip a trailing port if present (which also removes IPv6 brackets); otherwise strip any bare brackets.
+			if host, _, err := net.SplitHostPort(value); err == nil {
+				value = host
+			} else {
+				value = strings.TrimSuffix(strings.TrimPrefix(value, "["), "]")
+			}
+			if ip := net.ParseIP(value); ip != nil {
+				return ip
 			}
 		}
 	}
