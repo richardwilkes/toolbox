@@ -506,6 +506,38 @@ func TestAsFloat64(t *testing.T) {
 	c.Equal(maxUint64Float, result)
 }
 
+// TestAsFloat64SingleRounding verifies that AsFloat64 rounds the true 128-bit value once, matching the
+// correctly-rounded result produced by big.Int.Float64, rather than double-rounding float64(hi) and float64(lo).
+func TestAsFloat64SingleRounding(t *testing.T) {
+	c := check.New(t)
+
+	// Values found to land 1 ULP off under the old double-rounding implementation.
+	for _, tc := range []struct {
+		hi, lo uint64
+	}{
+		{hi: 4336635309391699200, lo: 17908815611234327373},
+		{hi: 129007619635537288, lo: 10901813878762727394},
+		{hi: 55833241962612916, lo: 10426898480789762980},
+	} {
+		u := num128.UintFromComponents(tc.hi, tc.lo)
+		want, _ := u.AsBigInt().Float64()
+		c.Equal(want, u.AsFloat64(), "hi=%d lo=%d", tc.hi, tc.lo)
+	}
+
+	// Deterministic sweep: AsFloat64 must equal the correctly-rounded big.Int conversion for every value, including
+	// the negative Int range.
+	r := rand.New(rand.NewSource(1)) //nolint:gosec // deterministic generator is intentional for reproducible tests
+	for range 200000 {
+		u := num128.UintFromComponents(r.Uint64(), r.Uint64())
+		want, _ := u.AsBigInt().Float64()
+		c.Equal(want, u.AsFloat64(), "uint %s", u.String())
+
+		i := num128.IntFromComponents(r.Uint64(), r.Uint64())
+		iWant, _ := i.AsBigInt().Float64()
+		c.Equal(iWant, i.AsFloat64(), "int %s", i.String())
+	}
+}
+
 // Test IsInt and AsInt
 func TestIsIntAndAsInt(t *testing.T) {
 	c := check.New(t)

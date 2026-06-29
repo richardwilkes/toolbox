@@ -209,12 +209,21 @@ func (u Uint) AsBigFloat() *big.Float {
 // AsFloat64 returns the Uint as a float64.
 func (u Uint) AsFloat64() float64 {
 	if u.hi == 0 {
-		if u.lo == 0 {
-			return 0
-		}
 		return float64(u.lo)
 	}
-	return (float64(u.hi) * wrapUint64Float) + float64(u.lo)
+	// The value needs more than 64 bits, so it can't fit in a float64's 53-bit significand. Computing it as
+	// float64(hi)*2^64 + float64(lo) would round twice (once per operand) and can land 1 ULP off. Instead, round the
+	// true 128-bit value to the nearest float64 with a single round-to-nearest, ties-to-even step: keep the top 53
+	// bits and decide the rounding from the bits being dropped.
+	drop := uint(u.BitLen() - 53) // in [12, 75] since BitLen is in [65, 128] here
+	m := u.RightShift(drop).lo    // the top 53 significand bits; fits in a uint64
+	if u.Bit(int(drop)-1) == 1 {  // round bit set
+		// Round up on a non-zero remainder below the round bit (sticky), or, when exactly halfway, to even.
+		if u.TrailingZeros() < drop-1 || m&1 == 1 {
+			m++ // may carry to 2^53, which is still exactly representable
+		}
+	}
+	return math.Ldexp(float64(m), int(drop))
 }
 
 // IsInt returns true if this value can be represented as an Int without any loss.
