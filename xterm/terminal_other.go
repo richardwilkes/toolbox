@@ -30,12 +30,12 @@ func enableColor() bool {
 func colorSupport(envTerm string) Kind {
 	// "truecolor" and "24bit" are the two de-facto values terminals advertise in COLORTERM for 24-bit support.
 	envColorTerm := os.Getenv("COLORTERM")
-	if envColorTerm == "truecolor" || envColorTerm == "24bit" {
+	if envColorTerm == "truecolor" || envColorTerm == "24bit" { //nolint:goconst // Only duplicated in test code
 		return Color24
 	}
 	if exe, ok := os.LookupEnv("TERM_PROGRAM"); ok {
 		switch exe {
-		case "iTerm.app":
+		case "iTerm.app": //nolint:goconst // Only duplicated in test code
 			if version, err := strconv.Atoi(strings.Split(os.Getenv("TERM_PROGRAM_VERSION"), ".")[0]); err == nil && version >= 3 {
 				return Color24
 			}

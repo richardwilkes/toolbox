@@ -18,6 +18,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xhttp"
 )
 
+//nolint:goconst // The tests are more readable without constants for duplicated string
 func TestClientIP(t *testing.T) {
 	for _, tc := range []struct {
 		name          string
