@@ -26,10 +26,11 @@ var (
 // StatusWriter wraps an http.ResponseWriter and provides methods to retrieve the status code and number of bytes
 // written.
 type StatusWriter struct {
-	w      http.ResponseWriter
-	status int
-	bytes  int
-	headOp bool
+	w           http.ResponseWriter
+	status      int
+	bytes       int
+	headOp      bool
+	wroteHeader bool
 }
 
 // NewStatusWriter creates a new StatusWriter.
@@ -51,6 +52,14 @@ func (w *StatusWriter) BytesWritten() int {
 	return w.bytes
 }
 
+// HeaderWritten returns true if a response header has been committed, either explicitly via WriteHeader() or implicitly
+// by the first call to Write(). Once this is true, a further WriteHeader() call would be ignored by the underlying
+// writer (and logged as superfluous), so callers such as panic recovery can use it to decide whether it is still
+// possible to set a status.
+func (w *StatusWriter) HeaderWritten() bool {
+	return w.wroteHeader
+}
+
 // Header implements http.ResponseWriter.
 func (w *StatusWriter) Header() http.Header {
 	return w.w.Header()
@@ -61,6 +70,7 @@ func (w *StatusWriter) Write(data []byte) (int, error) {
 	if w.headOp {
 		return len(data), nil
 	}
+	w.wroteHeader = true // The first write commits the implicit 200 header on the underlying writer.
 	n, err := w.w.Write(data)
 	w.bytes += n
 	return n, err
@@ -68,6 +78,7 @@ func (w *StatusWriter) Write(data []byte) (int, error) {
 
 // WriteHeader implements http.ResponseWriter.
 func (w *StatusWriter) WriteHeader(status int) {
+	w.wroteHeader = true
 	w.status = status
 	w.w.WriteHeader(status)
 }

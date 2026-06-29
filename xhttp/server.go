@@ -283,8 +283,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}()
 	defer xos.PanicRecovery(func(err error) {
 		logger.Error("recovered from panic in handler", "error", err)
-		// It might be too late to set the header, but we'll try anyway.
-		w.WriteHeader(http.StatusInternalServerError)
+		// Write the 500 through the StatusWriter so the status is recorded for the access log, but only if no header
+		// has been committed yet; otherwise the response has already started and a further WriteHeader would be ignored
+		// and logged as superfluous.
+		if !sw.HeaderWritten() {
+			sw.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 	ctx := metadataInContext(req.Context(), md)
 	if s.server.WriteTimeout > 0 {
