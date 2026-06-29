@@ -28,8 +28,9 @@ func enableColor() bool {
 }
 
 func colorSupport(envTerm string) Kind {
-	envColorTerm, envColorTermSet := os.LookupEnv("COLORTERM")
-	if envColorTerm == "truecolor" {
+	// "truecolor" and "24bit" are the two de-facto values terminals advertise in COLORTERM for 24-bit support.
+	envColorTerm := os.Getenv("COLORTERM")
+	if envColorTerm == "truecolor" || envColorTerm == "24bit" {
 		return Color24
 	}
 	if exe, ok := os.LookupEnv("TERM_PROGRAM"); ok {
@@ -46,7 +47,9 @@ func colorSupport(envTerm string) Kind {
 	if term256Matcher.MatchString(envTerm) {
 		return Color8
 	}
-	if envColorTermSet || term16Matcher.MatchString(envTerm) {
+	// A non-empty COLORTERM (any other value) is a hint of at least basic color support. An empty value carries no
+	// information, so it is not treated as a hint.
+	if envColorTerm != "" || term16Matcher.MatchString(envTerm) {
 		return Color4
 	}
 	return Dumb
