@@ -9,7 +9,10 @@
 
 package xos
 
-import "runtime"
+import (
+	"runtime"
+	"sync"
+)
 
 // TaskQueueConfig provides configuration for a TaskQueue.
 type TaskQueueConfig struct {
@@ -29,8 +32,10 @@ type TaskQueue struct {
 	in              chan func()
 	done            chan bool
 	recoveryHandler func(error)
+	lock            sync.RWMutex
 	depth           int
 	workers         int
+	closed          bool
 }
 
 // NewTaskQueue creates an asynchronous queue which executes the tasks submitted to it.
@@ -53,14 +58,28 @@ func NewTaskQueue(config *TaskQueueConfig) *TaskQueue {
 	return q
 }
 
-// Submit a task to be run. Must not be called after a call to Shutdown().
-func (q *TaskQueue) Submit(task func()) {
+// Submit a task to be run. Returns true if the task was accepted into the queue, or false if the queue has already been
+// shut down, in which case the task is dropped and will not run. Safe to call concurrently, including concurrently with
+// or after Shutdown().
+func (q *TaskQueue) Submit(task func()) bool {
+	q.lock.RLock()
+	defer q.lock.RUnlock()
+	if q.closed {
+		return false
+	}
 	q.in <- task
+	return true
 }
 
-// Shutdown the queue. Does not return until all pending tasks have completed.
+// Shutdown the queue. Does not return until all pending tasks have completed. After it returns, further calls to
+// Submit() are rejected. Safe to call more than once and concurrently; every call blocks until completion.
 func (q *TaskQueue) Shutdown() {
-	close(q.in)
+	q.lock.Lock()
+	if !q.closed {
+		q.closed = true
+		close(q.in)
+	}
+	q.lock.Unlock()
 	<-q.done
 }
 
@@ -138,7 +157,7 @@ outer:
 		processed++
 	}
 	close(tasks)
-	q.done <- true
+	close(q.done)
 }
 
 func (q *TaskQueue) work(tasks <-chan func(), ready chan<- bool) {
