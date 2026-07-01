@@ -109,7 +109,7 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	}
 	var f *os.File
 	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, (srcMode&mask)|0o200); err != nil {
-		return err
+		return errs.Wrap(err)
 	}
 	// Registered first so it runs last (after f has been closed by the defer below): if the copy fails for any reason,
 	// remove the destination so we don't leave a truncated, empty, or incorrectly-permissioned file behind.
