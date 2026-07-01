@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -83,4 +84,40 @@ func TestServerPanicAfterWriteDoesNotResend(t *testing.T) {
 	c.Equal([]int{http.StatusAccepted}, rec.writeHeaders)
 	c.Equal("partial", rec.body.String())
 	c.Contains(log.String(), "status=202")
+}
+
+// TestServerRunReturnsServeError verifies that a serve-time failure (here, a TLS server pointed at non-existent
+// certificate files) is returned from Run itself, not merely stashed away for Error to report. Previously Run always
+// returned nil, so callers doing `if err := srv.Run(); err != nil` never observed serve failures.
+func TestServerRunReturnsServeError(t *testing.T) {
+	c := check.New(t)
+	var log bytes.Buffer
+	s, err := xhttp.NewServer(&xhttp.ServerConfig{
+		Logger:   slog.New(slog.NewTextHandler(&log, nil)),
+		CertFile: filepath.Join(t.TempDir(), "missing-cert.pem"),
+		KeyFile:  filepath.Join(t.TempDir(), "missing-key.pem"),
+	})
+	c.NoError(err)
+	c.Equal(xhttp.ProtocolHTTPS, s.Protocol())
+
+	runErr := s.Run()
+	c.HasError(runErr)
+	// The same error must also be observable via Error.
+	c.Equal(runErr, s.Error())
+}
+
+// TestServerRunReturnsNilOnCleanShutdown verifies that a normal shutdown via Stop causes Run to return nil rather than
+// leaking http.ErrServerClosed to the caller.
+func TestServerRunReturnsNilOnCleanShutdown(t *testing.T) {
+	c := check.New(t)
+	var log bytes.Buffer
+	s := newTestServer(c, &log, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	runErr := make(chan error, 1)
+	go func() { runErr <- s.Run() }()
+	s.WaitForStart()
+	s.Stop()
+	c.NoError(<-runErr)
+	c.NoError(s.Error())
 }

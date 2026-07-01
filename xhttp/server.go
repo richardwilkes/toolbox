@@ -151,7 +151,8 @@ func (s *Server) Protocol() string {
 	return s.protocol
 }
 
-// Run the server. It blocks until the server stops or an error occurs.
+// Run the server. It blocks until the server stops or an error occurs. If the server terminates due to a serve-time
+// error (anything other than a clean shutdown), that error is returned here as well as being made available via Error.
 func (s *Server) Run() error {
 	s.lock.Lock()
 	started := s.stopID != 0
@@ -185,6 +186,7 @@ func (s *Server) Run() error {
 		s.lock.Lock()
 		s.err = err
 		s.lock.Unlock()
+		return err
 	}
 	return nil
 }
