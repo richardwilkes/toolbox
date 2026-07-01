@@ -106,8 +106,10 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 					}
 				}
 			}
-		} else if uat == 0 || ubt == 0 {
-			// Parallel, so check for overlap
+		} else if uat == 0 && ubt == 0 {
+			// Parallel, so check for overlap. Collinearity requires both cross-product numerators to be zero; in exact
+			// arithmetic either being zero implies the other, but requiring both guards against a phantom overlap when
+			// float rounding zeroes only one of them for parallel-but-offset segments.
 			var ub1, ub2 float32
 			if xmath.Abs(adx) > xmath.Abs(ady) {
 				ub1 = (b1.X - a1.X) / adx

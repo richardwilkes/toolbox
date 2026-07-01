@@ -103,6 +103,43 @@ func TestLineIntersectionCollinear(t *testing.T) {
 	c.False(geom.NewRect(0, 0, 10, 10).IntersectsLine(geom.NewPoint(20, 10), geom.NewPoint(30, 10)))
 }
 
+func TestLineIntersectionParallelCollinearity(t *testing.T) {
+	c := check.New(t)
+
+	// The parallel branch treats two segments as collinear only when both cross-product numerators are zero. These
+	// diagonal cases exercise that math with non-axis-aligned direction vectors, so neither numerator is trivially zero.
+
+	// Collinear overlapping diagonal segments: both numerators are zero, so the overlap is reported as two points.
+	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(4, 4))
+	b := geom.NewLine(geom.NewPoint(1, 1), geom.NewPoint(3, 3))
+	overlap := a.Intersection(b)
+	c.Equal(2, len(overlap))
+	foundStart := false
+	foundEnd := false
+	for _, pt := range overlap {
+		if pt == geom.NewPoint(1, 1) {
+			foundStart = true
+		}
+		if pt == geom.NewPoint(3, 3) {
+			foundEnd = true
+		}
+	}
+	c.True(foundStart)
+	c.True(foundEnd)
+
+	// Collinear diagonal segments touching at a single endpoint yield exactly one point.
+	touching := geom.NewLine(geom.NewPoint(4, 4), geom.NewPoint(6, 6))
+	touch := a.Intersection(touching)
+	c.Equal(1, len(touch))
+	c.Equal(geom.NewPoint(4, 4), touch[0])
+
+	// Parallel-but-offset diagonal segments (same slope, different line) are not collinear and must not intersect.
+	offset := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(5, 4))
+	c.Equal(0, len(a.Intersection(offset)))
+	c.Equal(0, len(offset.Intersection(a))) // Order independent
+	c.False(a.Intersects(offset))
+}
+
 func TestPointSegmentDistance(t *testing.T) {
 	c := check.New(t)
 
