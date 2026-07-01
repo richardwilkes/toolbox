@@ -92,5 +92,11 @@ func BaseName(path string) string {
 
 // TrimExtension trims any extension from the path.
 func TrimExtension(path string) string {
-	return path[:len(path)-len(filepath.Ext(path))]
+	ext := filepath.Ext(path)
+	// A leading dot marks a hidden file rather than an extension separator (e.g. ".bashrc"), so when filepath.Ext
+	// matched the entire final path element there is no extension to trim.
+	if ext == filepath.Base(path) {
+		return path
+	}
+	return path[:len(path)-len(ext)]
 }

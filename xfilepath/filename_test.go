@@ -117,15 +117,19 @@ func TestBaseName(t *testing.T) {
 	c.Equal("README", xfilepath.BaseName("README"))
 	c.Equal("Makefile", xfilepath.BaseName("/project/Makefile"))
 
-	// Test edge cases
-	c.Equal("", xfilepath.BaseName(".txt"))
-	c.Equal("", xfilepath.BaseName("."))
-	c.Equal(".", xfilepath.BaseName(".."))
-	c.Equal("", xfilepath.BaseName(".hidden"))
+	// Test dotfiles: a leading dot marks a hidden file, not an extension, so the name is preserved.
+	c.Equal(".txt", xfilepath.BaseName(".txt"))
+	c.Equal(".hidden", xfilepath.BaseName(".hidden"))
+	c.Equal(".profile", xfilepath.BaseName("/etc/.profile"))
+	c.Equal(".hidden", xfilepath.BaseName("dir/.hidden.txt"))
 	c.Equal(".config", xfilepath.BaseName(".config.yaml"))
 
-	// Test empty and root paths
-	c.Equal("", xfilepath.BaseName(""))
+	// Test edge cases
+	c.Equal(".", xfilepath.BaseName("."))
+	c.Equal(".", xfilepath.BaseName(".."))
+
+	// Test empty and root paths. filepath.Base("") is ".", which has no extension, so BaseName returns ".".
+	c.Equal(".", xfilepath.BaseName(""))
 	c.Equal(string(filepath.Separator), xfilepath.BaseName("/"))
 	if runtime.GOOS == xos.WindowsOS {
 		c.Equal(string(filepath.Separator), xfilepath.BaseName("\\"))
@@ -150,12 +154,17 @@ func TestTrimExtension(t *testing.T) {
 	c.Equal("README", xfilepath.TrimExtension("README"))
 	c.Equal("/project/Makefile", xfilepath.TrimExtension("/project/Makefile"))
 
-	// Test edge cases
-	c.Equal("", xfilepath.TrimExtension(".txt"))
-	c.Equal("", xfilepath.TrimExtension("."))
-	c.Equal(".", xfilepath.TrimExtension(".."))
-	c.Equal("", xfilepath.TrimExtension(".hidden"))
+	// Test dotfiles: a leading dot marks a hidden file, not an extension, so the name is preserved.
+	c.Equal(".txt", xfilepath.TrimExtension(".txt"))
+	c.Equal(".hidden", xfilepath.TrimExtension(".hidden"))
+	c.Equal(".bashrc", xfilepath.TrimExtension(".bashrc"))
+	c.Equal("/etc/.profile", xfilepath.TrimExtension("/etc/.profile"))
+	c.Equal("dir/.hidden", xfilepath.TrimExtension("dir/.hidden.txt"))
 	c.Equal(".config", xfilepath.TrimExtension(".config.yaml"))
+
+	// Test edge cases
+	c.Equal(".", xfilepath.TrimExtension("."))
+	c.Equal(".", xfilepath.TrimExtension(".."))
 
 	// Test empty path
 	c.Equal("", xfilepath.TrimExtension(""))
