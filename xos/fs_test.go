@@ -184,3 +184,57 @@ func TestCopy(t *testing.T) {
 	c.NoError(err)
 	c.Equal(fs.FileMode(0o444), fi.Mode())
 }
+
+// TestCopyWithMaskClearingOwnerWrite verifies that a mask which strips the owner's write bit does not abort a directory
+// copy partway. Before the fix, destination directories were created without owner write, so creating files inside them
+// failed with a permission error.
+func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("POSIX permission semantics not applicable on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root bypasses permission checks, so the masked-copy scenario cannot be exercised")
+	}
+	c := check.New(t)
+
+	// Build a small source tree and normalize its modes so the assertions are deterministic regardless of umask.
+	srcDir := filepath.Join(t.TempDir(), "src")
+	c.NoError(os.MkdirAll(filepath.Join(srcDir, "sub"), 0o755))
+	content := []byte("payload")
+	c.NoError(os.WriteFile(filepath.Join(srcDir, "file.txt"), content, 0o644))
+	c.NoError(os.WriteFile(filepath.Join(srcDir, "sub", "nested.txt"), content, 0o644))
+	c.NoError(os.Chmod(filepath.Join(srcDir, "sub"), 0o755))
+	c.NoError(os.Chmod(srcDir, 0o755))
+
+	dstDir := filepath.Join(t.TempDir(), "dst")
+	// Restore owner write on the copied directories so t.TempDir cleanup can remove the tree. Registered after
+	// t.TempDir, so it runs before the temp dir removal (cleanups run in LIFO order).
+	t.Cleanup(func() {
+		c.NoError(os.Chmod(dstDir, 0o700))
+		c.NoError(os.Chmod(filepath.Join(dstDir, "sub"), 0o700))
+	})
+
+	// Mask 0o577 clears the owner write bit (0o755 & 0o577 == 0o555 for dirs, 0o644 & 0o577 == 0o444 for files).
+	c.NoError(xos.CopyWithMask(srcDir, dstDir, 0o577))
+
+	// All content was copied.
+	got, err := os.ReadFile(filepath.Join(dstDir, "file.txt"))
+	c.NoError(err)
+	c.Equal(string(content), string(got))
+	got, err = os.ReadFile(filepath.Join(dstDir, "sub", "nested.txt"))
+	c.NoError(err)
+	c.Equal(string(content), string(got))
+
+	// Directories carry exactly the masked mode.
+	fi, err := os.Stat(dstDir)
+	c.NoError(err)
+	c.Equal(fs.FileMode(0o555), fi.Mode().Perm())
+	fi, err = os.Stat(filepath.Join(dstDir, "sub"))
+	c.NoError(err)
+	c.Equal(fs.FileMode(0o555), fi.Mode().Perm())
+
+	// Files carry exactly the masked mode.
+	fi, err = os.Stat(filepath.Join(dstDir, "file.txt"))
+	c.NoError(err)
+	c.Equal(fs.FileMode(0o444), fi.Mode().Perm())
+}

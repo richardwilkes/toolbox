@@ -135,12 +135,23 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	return err
 }
 
-func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) error {
-	if err := os.MkdirAll(dstDir, srcMode&mask); err != nil {
+func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) (err error) {
+	dstMode := srcMode & mask
+	// Force owner rwx while the directory is being populated so children can be created even when the mask clears the
+	// owner's write or execute bits, then restore the intended mode once the contents are in place. This mirrors the
+	// owner-write forcing that fileCopy does for regular files.
+	if err = os.MkdirAll(dstDir, dstMode|0o700); err != nil {
 		return errs.Wrap(err)
 	}
-	list, err := os.ReadDir(srcDir)
-	if err != nil {
+	if dstMode|0o700 != dstMode {
+		defer func() {
+			if chmodErr := os.Chmod(dstDir, dstMode); chmodErr != nil && err == nil {
+				err = errs.Wrap(chmodErr)
+			}
+		}()
+	}
+	var list []os.DirEntry
+	if list, err = os.ReadDir(srcDir); err != nil {
 		return errs.Wrap(err)
 	}
 	for _, one := range list {
