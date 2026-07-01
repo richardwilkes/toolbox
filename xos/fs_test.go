@@ -238,3 +238,37 @@ func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
 	c.NoError(err)
 	c.Equal(fs.FileMode(0o444), fi.Mode().Perm())
 }
+
+// TestCopySymlinkOverExisting verifies that copying a symlink onto an existing destination overwrites it, matching the
+// overwrite behavior of the regular-file path and making tree copies containing symlinks idempotent. Before the fix,
+// os.Symlink failed with EEXIST when the destination already existed.
+func TestCopySymlinkOverExisting(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("symlinks not supported without special permissions on Windows")
+	}
+	c := check.New(t)
+
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "target.txt")
+	c.NoError(os.WriteFile(target, []byte("content"), 0o644))
+	srcLink := filepath.Join(tmpDir, "src-link")
+	c.NoError(os.Symlink(target, srcLink))
+
+	// Destination is an existing symlink pointing elsewhere (the re-copy / idempotency case).
+	otherTarget := filepath.Join(tmpDir, "other.txt")
+	c.NoError(os.WriteFile(otherTarget, []byte("other"), 0o644))
+	dstLink := filepath.Join(tmpDir, "dst-link")
+	c.NoError(os.Symlink(otherTarget, dstLink))
+	c.NoError(xos.Copy(srcLink, dstLink))
+	got, err := os.Readlink(dstLink)
+	c.NoError(err)
+	c.Equal(target, got)
+
+	// Destination is an existing regular file.
+	dstFile := filepath.Join(tmpDir, "dst-file")
+	c.NoError(os.WriteFile(dstFile, []byte("existing"), 0o644))
+	c.NoError(xos.Copy(srcLink, dstFile))
+	got, err = os.Readlink(dstFile)
+	c.NoError(err)
+	c.Equal(target, got)
+}

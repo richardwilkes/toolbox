@@ -175,6 +175,11 @@ func linkCopy(src, dst string, mask fs.FileMode) error {
 	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
+	// Remove any existing destination so the symlink can be recreated, matching the overwrite behavior of the regular
+	// file path (which opens with O_TRUNC). os.Symlink otherwise fails with EEXIST.
+	if err = os.Remove(dst); err != nil && !os.IsNotExist(err) {
+		return errs.Wrap(err)
+	}
 	if err = os.Symlink(s, dst); err != nil {
 		return errs.Wrap(err)
 	}
