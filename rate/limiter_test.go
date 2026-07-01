@@ -212,6 +212,48 @@ func TestUseWaiting(t *testing.T) {
 	rl.Close()
 }
 
+func TestUseFIFOOrderingNoFastPathJump(t *testing.T) {
+	c := check.New(t)
+	rl := rate.New(10, 25*time.Millisecond)
+	defer rl.Close()
+
+	// Consume part of the current period so a full-capacity request cannot be satisfied until the next tick, but
+	// spare capacity still remains this period.
+	c.NoError(<-rl.Use(5))
+
+	// Queue a large request that needs the whole capacity; with only 5 units free it must wait for the next period.
+	big := rl.Use(10)
+
+	// Submit smaller requests afterward. Even though 5 units are free right now, FIFO admission must keep these
+	// behind the already-queued large request rather than letting them slip through the fast path.
+	small1 := rl.Use(1)
+	small2 := rl.Use(1)
+
+	// They must not have been satisfied immediately ahead of the earlier, larger request. This check runs
+	// synchronously right after submission, well within a single period, so no tick can have intervened.
+	assertPending := func(ch <-chan error, name string) {
+		select {
+		case <-ch:
+			t.Fatalf("%s slipped through the fast path ahead of an earlier queued request", name)
+		default:
+		}
+	}
+	assertPending(small1, "small1")
+	assertPending(small2, "small2")
+
+	// The large request, submitted first, must eventually be served rather than being starved by later requests.
+	select {
+	case err := <-big:
+		c.NoError(err)
+	case <-time.After(2 * time.Second):
+		t.Fatal("large request was starved and never completed")
+	}
+
+	// The smaller requests still complete on subsequent periods.
+	c.NoError(<-small1)
+	c.NoError(<-small2)
+}
+
 func TestLastUsed(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(100, 50*time.Millisecond)

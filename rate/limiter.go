@@ -191,7 +191,10 @@ func (l *limiter) Use(amount int) <-chan error {
 		done <- errs.Newf("Amount (%d) is greater than capacity (%d)", amount, capacity)
 		return done
 	}
-	if l.tryConsume(amount) {
+	// Preserve FIFO ordering by only taking the fast path when no requests are already waiting. Otherwise a steady
+	// stream of smaller requests could keep slipping through the fast path and consuming capacity ahead of an
+	// earlier, larger request that is stuck in the queue, delaying or starving it.
+	if len(l.controller.waiting) == 0 && l.tryConsume(amount) {
 		l.controller.lock.Unlock()
 		done <- nil
 		return done
