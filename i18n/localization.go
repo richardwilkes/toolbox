@@ -13,10 +13,10 @@ package i18n
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -173,8 +173,8 @@ func load(name string) {
 				hasKey = false
 				hasValue = false
 			}
-			var buffer string
-			if _, err = fmt.Sscanf(line, "k:%q", &buffer); err != nil {
+			buffer, uerr := strconv.Unquote(line[len("k:"):])
+			if uerr != nil {
 				slog.Warn("i18n: ignoring invalid key", lineLogKey, lineNum, fileLogKey, path)
 			} else {
 				if hasKey {
@@ -187,8 +187,8 @@ func load(name string) {
 			}
 		} else if strings.HasPrefix(line, "v:") {
 			if hasKey {
-				var buffer string
-				if _, err = fmt.Sscanf(line, "v:%q", &buffer); err != nil {
+				buffer, uerr := strconv.Unquote(line[len("v:"):])
+				if uerr != nil {
 					slog.Warn("i18n: ignoring invalid value", lineLogKey, lineNum, fileLogKey, path)
 				} else {
 					if hasValue {
