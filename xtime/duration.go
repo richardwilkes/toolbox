@@ -50,8 +50,36 @@ func ParseDuration(duration string) (time.Duration, error) {
 	default:
 		return 0, errs.New("Invalid second format: too many decimal points")
 	}
-	return time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second +
-		time.Duration(nanos)*time.Nanosecond, nil
+	total := time.Duration(0)
+	var ok bool
+	for _, component := range []struct {
+		count int
+		unit  time.Duration
+	}{
+		{count: hours, unit: time.Hour},
+		{count: minutes, unit: time.Minute},
+		{count: seconds, unit: time.Second},
+		{count: nanos, unit: time.Nanosecond},
+	} {
+		if total, ok = addDurationComponent(total, component.count, component.unit); !ok {
+			return 0, errs.New("Duration out of range")
+		}
+	}
+	return total, nil
+}
+
+// addDurationComponent adds count*unit to sum, reporting whether the multiplication or addition overflowed. Both count
+// and sum are assumed to be non-negative, as guaranteed by ParseDuration's component validation.
+func addDurationComponent(sum time.Duration, count int, unit time.Duration) (time.Duration, bool) {
+	product := time.Duration(count) * unit
+	if product/unit != time.Duration(count) {
+		return 0, false
+	}
+	total := sum + product
+	if total < sum {
+		return 0, false
+	}
+	return total, true
 }
 
 // parseFractionalSeconds interprets the digits following the decimal point of the seconds field as a decimal fraction

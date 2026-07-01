@@ -10,6 +10,7 @@
 package xtime_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -94,6 +95,40 @@ func TestParseDuration(t *testing.T) {
 	// Test too many decimal points in seconds
 	_, err = xtime.ParseDuration("0:0:0.001.002")
 	c.HasError(err)
+}
+
+// TestParseDurationOverflow verifies that components which would overflow the underlying int64 nanosecond
+// representation are rejected rather than silently wrapping to a bogus (often negative) duration.
+func TestParseDurationOverflow(t *testing.T) {
+	c := check.New(t)
+
+	// Hours far beyond the maximum representable duration.
+	_, err := xtime.ParseDuration("9999999999:00:00")
+	c.HasError(err)
+
+	// Minutes beyond range.
+	_, err = xtime.ParseDuration("0:999999999999:00")
+	c.HasError(err)
+
+	// Seconds beyond range.
+	_, err = xtime.ParseDuration("0:00:99999999999999999")
+	c.HasError(err)
+
+	// Each component is individually in range, but their sum overflows by one second past the maximum.
+	_, err = xtime.ParseDuration("2562047:47:17")
+	c.HasError(err)
+
+	// One second below that boundary is the largest value expressible without a fractional component.
+	result, err := xtime.ParseDuration("2562047:47:16")
+	c.NoError(err)
+	c.Equal(2562047*time.Hour+47*time.Minute+16*time.Second, result)
+
+	// The largest valid duration must still round-trip successfully.
+	result, err = xtime.ParseDuration(xtime.FormatDuration(math.MaxInt64, true))
+	c.NoError(err)
+	// FormatDuration only emits millisecond precision, so the parsed value is the input truncated to whole
+	// milliseconds.
+	c.Equal(time.Duration(math.MaxInt64)/time.Millisecond*time.Millisecond, result)
 }
 
 // TestParseDurationFractionalSeconds verifies that the fractional seconds component is interpreted by decimal position
