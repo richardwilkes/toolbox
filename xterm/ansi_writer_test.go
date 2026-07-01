@@ -42,3 +42,25 @@ func TestWrapTextMeasuresRunesNotBytes(t *testing.T) {
 	xterm.NewAnsiWriter(&buf).WrapText("→ ", a+" "+b)
 	c.Equal("→ "+a+"\n  "+b+"\n", buf.String())
 }
+
+// TestWrapTextResetsBudgetPerLine verifies that the remaining-width budget is reset for each input line, so a line that
+// individually fits is not wrongly wrapped just because an earlier line consumed most of the width. A non-file writer
+// reports a fixed 80-column width, so with an empty prefix each line has 79 columns available.
+func TestWrapTextResetsBudgetPerLine(t *testing.T) {
+	c := check.New(t)
+
+	// Line 1 nearly fills the 79-column budget; line 2 ("aaaa bbbb", 9 columns) easily fits. Before the fix, line 2
+	// inherited line 1's nearly-exhausted budget and was split into "aaaa\nbbbb".
+	first := strings.Repeat("w", 70)
+	var buf bytes.Buffer
+	xterm.NewAnsiWriter(&buf).WrapText("", first+"\naaaa bbbb")
+	c.Equal(first+"\naaaa bbbb\n", buf.String())
+
+	// Sanity check the reset did not disable wrapping: two 40-column words cannot share a single 79-column line, so the
+	// second must wrap onto its own line.
+	a := strings.Repeat("a", 40)
+	b := strings.Repeat("b", 40)
+	buf.Reset()
+	xterm.NewAnsiWriter(&buf).WrapText("", a+" "+b)
+	c.Equal(a+"\n"+b+"\n", buf.String())
+}

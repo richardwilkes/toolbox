@@ -468,9 +468,9 @@ func (a *AnsiWriter) WrapText(prefix, text string) {
 	if avail < 1 {
 		avail = 1
 	}
-	remaining := avail
 	indent := strings.Repeat(" ", prefixLength)
 	for line := range strings.SplitSeq(text, "\n") {
+		remaining := avail
 		for _, ch := range line {
 			if ch == ' ' {
 				a.writeByte(' ')
