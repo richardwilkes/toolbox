@@ -157,7 +157,8 @@ func (r Rect) Union(other Rect) Rect {
 	}
 }
 
-// Align returns a new Rect aligned with integer coordinates that would encompass the original rectangle.
+// Align returns a new Rect aligned with integer coordinates. The size of the new rectangle is guaranteed to be at least
+// as large as the original.
 func (r Rect) Align() Rect {
 	return Rect{Point: r.Point.Floor(), Size: r.Size.Ceil()}
 }

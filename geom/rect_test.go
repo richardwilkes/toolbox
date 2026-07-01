@@ -14,6 +14,7 @@ import (
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/geom"
+	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
 func TestNewRect(t *testing.T) {
@@ -265,6 +266,37 @@ func TestRectAlign(t *testing.T) {
 	c.Equal(float32(20), aligned.Y)
 	c.Equal(float32(31), aligned.Width)
 	c.Equal(float32(41), aligned.Height)
+}
+
+// TestRectAlignGuarantees verifies the documented contract of Align: the result is aligned to integer coordinates and
+// its size is at least as large as the original.
+func TestRectAlignGuarantees(t *testing.T) {
+	c := check.New(t)
+
+	for _, r := range []geom.Rect{
+		geom.NewRect(10.3, 20.7, 30.2, 40.8),  // fractional origin and size
+		geom.NewRect(-1.5, -2.5, 3.5, 4.5),    // negative fractional origin
+		geom.NewRect(5, 6, 7, 8),              // already integer-aligned
+		geom.NewRect(1.2, 3.4, 0, 0),          // zero size
+		geom.NewRect(0.5, 0.5, 1, 1),          // fractional origin, integer size
+		geom.NewRect(-100.9, 0.1, 100.1, 0.9), // mixed signs
+	} {
+		aligned := r.Align()
+
+		// Every coordinate of the result is an integer value.
+		c.Equal(xmath.Floor(aligned.X), aligned.X)
+		c.Equal(xmath.Floor(aligned.Y), aligned.Y)
+		c.Equal(xmath.Floor(aligned.Width), aligned.Width)
+		c.Equal(xmath.Floor(aligned.Height), aligned.Height)
+
+		// The origin is the floor of the original origin.
+		c.Equal(xmath.Floor(r.X), aligned.X)
+		c.Equal(xmath.Floor(r.Y), aligned.Y)
+
+		// The size is at least as large as the original.
+		c.True(aligned.Width >= r.Width)
+		c.True(aligned.Height >= r.Height)
+	}
 }
 
 func TestRectExpand(t *testing.T) {
