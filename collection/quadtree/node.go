@@ -73,6 +73,11 @@ func (n *node[N]) remove(obj N) bool {
 	return false
 }
 
+// splitIfNeeded subdivides a leaf cell once it reaches the threshold, pushing each object down into the child that
+// fully contains it. Objects whose bounds straddle the cell's center line fit none of the four children and remain in
+// this cell's contents; if every object straddles, they all remain here and no further subdivision is possible. Only
+// leaves are considered, so a cell subdivides at most once and non-leaf cells never re-split — see QuadTree for the
+// degenerate-input behavior this implies.
 func (n *node[N]) splitIfNeeded() {
 	if n.isLeaf() {
 		if len(n.contents) >= n.threshold {

@@ -34,9 +34,19 @@ type Matcher[N Node] interface {
 }
 
 // QuadTree stores two-dimensional nodes for fast lookup.
+//
+// Each node is stored in the deepest cell that fully contains its Bounds(). A node whose bounds straddle a cell's
+// center line cannot descend into any of that cell's four children, so it is retained in the cell itself. As a result,
+// input that concentrates many overlapping or center-crossing nodes into one region — or nodes that are large relative
+// to the tree's overall bounds — accumulates in a single cell that cannot subdivide further, degrading queries over
+// that region toward O(n). This is inherent to storing whole rectangles rather than points: keep node bounds small
+// relative to the tree and spread out to preserve the expected logarithmic behavior. Threshold tunes how many nodes a
+// cell holds before it attempts to subdivide.
 type QuadTree[N Node] struct {
-	root      *node[N]
-	outside   []N
+	root    *node[N]
+	outside []N
+	// Threshold is the number of nodes a cell may hold before it subdivides. Values below MinQuadTreeThreshold are
+	// treated as DefaultQuadTreeThreshold.
 	Threshold int
 	count     int
 }

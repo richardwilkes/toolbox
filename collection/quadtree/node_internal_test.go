@@ -45,3 +45,36 @@ func TestSplitQuadrants(t *testing.T) {
 	c.Equal(geom.NewRect(0, hh, hw, hh), n.children[2].rect)  // bottom-left
 	c.Equal(geom.NewRect(hw, hh, hw, hh), n.children[3].rect) // bottom-right
 }
+
+// TestStraddlingContentsAccumulate documents the degenerate-input behavior described on splitIfNeeded and the QuadTree
+// type: objects whose bounds straddle a cell's center line fit none of the children, so they pile into a single cell
+// that cannot subdivide further. This verifies both that such input produces exactly that shape and that queries over
+// the degenerate cell still return correct results despite scanning it linearly.
+func TestStraddlingContentsAccumulate(t *testing.T) {
+	c := check.New(t)
+
+	const threshold = 4
+	n := &node[boundsNode]{
+		rect:      geom.NewRect(0, 0, 100, 100),
+		threshold: threshold,
+	}
+	// Every object is centered on (50, 50) — the cell's center — so none can descend into any child, no matter how
+	// many are inserted or how far past the threshold the cell grows.
+	const count = 3 * threshold
+	for i := range count {
+		half := float32(i + 1)
+		n.insert(boundsNode{Rect: geom.NewRect(50-half, 50-half, 2*half, 2*half)})
+	}
+
+	// The cell subdivided once (it is no longer a leaf), but every object stayed behind, so the children are empty
+	// leaves and contents holds them all.
+	c.False(n.isLeaf())
+	c.Equal(count, len(n.contents))
+	for _, child := range n.children {
+		c.True(child.isLeaf())
+		c.Equal(0, len(child.contents))
+	}
+
+	// Despite the degeneracy, a query over the cell still returns every matching object.
+	c.Equal(count, len(n.findContainsPoint(geom.NewPoint(50, 50), nil)))
+}
