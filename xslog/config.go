@@ -11,13 +11,11 @@ package xslog
 
 import (
 	"flag"
-	"io"
 	"log/slog"
 	"os"
 
 	"github.com/richardwilkes/toolbox/v2/i18n"
 	"github.com/richardwilkes/toolbox/v2/xflag"
-	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
 // LogFlagPriority is the priority used when adding the automatic post-parse function for the log flags.
@@ -47,16 +45,23 @@ func (c *Config) AddFlags() {
 		flag.BoolVar(&c.Console, "console", false, i18n.Text("Copy the log output to the console"))
 	}
 	xflag.AddPostParseFunc(LogFlagPriority, func() {
-		w := io.Writer(c.RotatorCfg.NewWriteCloser())
-		if c.Console {
-			w = io.MultiWriter(w, os.Stdout)
+		// Fan out at the handler level rather than the writer level so each destination auto-detects color support from
+		// its own writer. An io.MultiWriter broadcasts identical bytes to every destination, so a single handler over
+		// it can only ever be all-colored or all-plain -- it cannot produce colored console output plus a plain file.
+		// Each PrettyHandler here auto-detects: DetectKind returns Dumb (no escapes) for the non-terminal rotating file
+		// and a color kind for a TTY stdout.
+		newOpts := func() *PrettyOptions {
+			return &PrettyOptions{
+				HandlerOptions: slog.HandlerOptions{
+					AddSource: true,
+					Level:     c.LogLevel,
+				},
+			}
 		}
-		slog.SetDefault(slog.New(NewPrettyHandler(w, &PrettyOptions{
-			HandlerOptions: slog.HandlerOptions{
-				AddSource: true,
-				Level:     c.LogLevel,
-			},
-			ColorSupportOverride: xterm.DetectKind(os.Stdout),
-		})))
+		var handler slog.Handler = NewPrettyHandler(c.RotatorCfg.NewWriteCloser(), newOpts())
+		if c.Console {
+			handler = NewMultiHandler(handler, NewPrettyHandler(os.Stdout, newOpts()))
+		}
+		slog.SetDefault(slog.New(handler))
 	})
 }

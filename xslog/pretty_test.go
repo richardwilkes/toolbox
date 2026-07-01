@@ -23,7 +23,29 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xslog"
+	"github.com/richardwilkes/toolbox/v2/xterm"
 )
+
+// TestPrettyHandlerNoColorForNonTerminal verifies that a handler over a non-terminal writer (such as a log file)
+// auto-detects Dumb and emits no ANSI escape sequences, while a handler with an explicit color ColorSupportOverride
+// does emit them.
+func TestPrettyHandlerNoColorForNonTerminal(t *testing.T) {
+	c := check.New(t)
+
+	var plain bytes.Buffer
+	plainHandler := xslog.NewPrettyHandler(&plain, nil)
+	record := slog.NewRecord(time.Now(), slog.LevelInfo, "no color please", 0)
+	c.NoError(plainHandler.Handle(context.Background(), record))
+	c.Contains(plain.String(), "no color please")
+	c.NotContains(plain.String(), "\x1b[")
+
+	var colored bytes.Buffer
+	coloredHandler := xslog.NewPrettyHandler(&colored, &xslog.PrettyOptions{ColorSupportOverride: xterm.Color24})
+	record = slog.NewRecord(time.Now(), slog.LevelInfo, "colorful", 0)
+	c.NoError(coloredHandler.Handle(context.Background(), record))
+	c.Contains(colored.String(), "colorful")
+	c.Contains(colored.String(), "\x1b[")
+}
 
 func TestPrettyHandlerBasic(t *testing.T) {
 	var buf bytes.Buffer
