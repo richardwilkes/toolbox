@@ -283,6 +283,96 @@ func TestGZipWrapExplicitStatusRoundTrip(t *testing.T) {
 	c.Equal("hello, gzip", string(data))
 }
 
+// TestGZipWrapEmptyBodyExplicitStatus verifies that a handler which commits a body-bearing status but writes no body is
+// not advertised as gzip and does not emit a gzip stream; an empty response must stay empty rather than becoming a
+// (~20-byte) empty gzip stream.
+func TestGZipWrapEmptyBodyExplicitStatus(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal(http.StatusOK, rec.Code)
+	c.Equal("", rec.Header().Get("Content-Encoding"), "empty body must not be advertised as gzip")
+	c.Equal(0, rec.Body.Len(), "empty body must not be emitted as a gzip stream")
+}
+
+// TestGZipWrapEmptyBodyNoWrite verifies that a handler which neither writes a body nor calls WriteHeader is not
+// advertised as gzip and does not emit a gzip stream.
+func TestGZipWrapEmptyBodyNoWrite(t *testing.T) {
+	c := check.New(t)
+	ran := false
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		ran = true
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.True(ran)
+	c.Equal("", rec.Header().Get("Content-Encoding"), "empty body must not be advertised as gzip")
+	c.Equal(0, rec.Body.Len(), "empty body must not be emitted as a gzip stream")
+}
+
+// TestGZipWrapEmptyBodyPreservesContentLength verifies that a handler which sets Content-Length: 0 and writes no body
+// keeps that header and is not turned into a gzip stream.
+func TestGZipWrapEmptyBodyPreservesContentLength(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", "0")
+		w.WriteHeader(http.StatusOK)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal(http.StatusOK, rec.Code)
+	c.Equal("", rec.Header().Get("Content-Encoding"), "empty body must not be advertised as gzip")
+	c.Equal("0", rec.Header().Get("Content-Length"), "empty body must keep its Content-Length")
+	c.Equal(0, rec.Body.Len())
+}
+
+// TestGZipWrapEmptyBodyServerSetsContentLength drives the wrapper through a real server to verify that an empty-body
+// response is sent with Content-Length: 0 and no Content-Encoding, rather than as a chunked gzip stream.
+func TestGZipWrapEmptyBodyServerSetsContentLength(t *testing.T) {
+	c := check.New(t)
+	server := httptest.NewServer(xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})))
+	defer server.Close()
+	req, err := http.NewRequest(http.MethodGet, server.URL, http.NoBody)
+	c.NoError(err)
+	req.Header.Set("Accept-Encoding", "gzip") // Set manually so the transport will not transparently decompress.
+	resp, err := http.DefaultClient.Do(req)
+	c.NoError(err)
+	defer func() { c.NoError(resp.Body.Close()) }()
+	body, err := io.ReadAll(resp.Body)
+	c.NoError(err)
+	c.Equal(http.StatusOK, resp.StatusCode)
+	c.Equal("", resp.Header.Get("Content-Encoding"), "empty body must not be advertised as gzip")
+	c.Equal(int64(0), resp.ContentLength, "empty body must be sent with Content-Length: 0")
+	c.Equal(0, len(body), "empty body must not be sent as a gzip stream")
+}
+
+// TestGZipWrapLeadingEmptyWriteStillCompresses verifies that a leading zero-length write does not disable compression:
+// a subsequent non-empty write is still gzip-compressed.
+func TestGZipWrapLeadingEmptyWriteStillCompresses(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		n, err := w.Write(nil)
+		c.NoError(err)
+		c.Equal(0, n)
+		_, err = io.WriteString(w, "hello after empty")
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal("hello after empty", string(data))
+}
+
 // TestGZipWrapInterimResponse verifies that a 1xx interim response is forwarded without committing the gzip decision,
 // so a body-bearing final status that follows is still compressed. A plainWriter is used because httptest's recorder
 // does not model a real server's interim-response handling (it commits the first status code it sees).
