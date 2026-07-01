@@ -111,6 +111,13 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, (srcMode&mask)|0o200); err != nil {
 		return err
 	}
+	// Registered first so it runs last (after f has been closed by the defer below): if the copy fails for any reason,
+	// remove the destination so we don't leave a truncated, empty, or incorrectly-permissioned file behind.
+	defer func() {
+		if err != nil {
+			_ = os.Remove(dst) //nolint:errcheck // best-effort cleanup; the original error is what matters
+		}
+	}()
 	defer func() {
 		if closeErr := f.Close(); closeErr != nil && err == nil {
 			err = errs.Wrap(closeErr)

@@ -239,6 +239,36 @@ func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
 	c.Equal(fs.FileMode(0o444), fi.Mode().Perm())
 }
 
+// TestCopyRemovesDestinationOnError verifies that a failed file copy does not leave a partial, empty, or truncated
+// destination behind. The destination is opened with O_CREATE|O_TRUNC before the source is opened, so if the source
+// cannot be read the (now empty) destination must be removed rather than left in place.
+func TestCopyRemovesDestinationOnError(t *testing.T) {
+	if runtime.GOOS == xos.WindowsOS {
+		t.Skip("POSIX permission semantics not applicable on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root bypasses permission checks, so the unreadable-source scenario cannot be exercised")
+	}
+	c := check.New(t)
+
+	tmpDir := t.TempDir()
+	srcFile := filepath.Join(tmpDir, "unreadable-src.txt")
+	c.NoError(os.WriteFile(srcFile, []byte("payload"), 0o644))
+	// Make the source unreadable so os.Open fails only after the destination has already been created and truncated.
+	c.NoError(os.Chmod(srcFile, 0o000))
+
+	// Destination does not exist yet: the empty file created during the failed copy must be cleaned up.
+	dstFile := filepath.Join(tmpDir, "dst.txt")
+	c.HasError(xos.Copy(srcFile, dstFile))
+	c.False(xos.FileExists(dstFile))
+
+	// Destination already exists: it is truncated when opened, so a subsequent failure must remove it rather than leave
+	// a truncated, empty file behind.
+	c.NoError(os.WriteFile(dstFile, []byte("existing content"), 0o644))
+	c.HasError(xos.Copy(srcFile, dstFile))
+	c.False(xos.FileExists(dstFile))
+}
+
 // TestCopySymlinkOverExisting verifies that copying a symlink onto an existing destination overwrites it, matching the
 // overwrite behavior of the regular-file path and making tree copies containing symlinks idempotent. Before the fix,
 // os.Symlink failed with EEXIST when the destination already existed.
