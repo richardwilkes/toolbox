@@ -182,8 +182,8 @@ func TestParseDurationRoundTrip(t *testing.T) {
 func TestDurationToCode(t *testing.T) {
 	c := check.New(t)
 
-	// Test zero duration
-	c.Equal("", xtime.DurationToCode(0))
+	// Test zero duration emits a compilable token rather than an empty string
+	c.Equal("0", xtime.DurationToCode(0))
 
 	// Test single nanoseconds
 	c.Equal("time.Nanosecond", xtime.DurationToCode(1))
@@ -249,4 +249,12 @@ func TestDurationToCode(t *testing.T) {
 
 	// Test fractional combinations
 	c.Equal("time.Hour + 30 * time.Minute + 45 * time.Second + 123 * time.Millisecond + 456 * time.Microsecond + 789 * time.Nanosecond", xtime.DurationToCode(time.Hour+30*time.Minute+45*time.Second+123*time.Millisecond+456*time.Microsecond+789))
+
+	// Test negative durations are wrapped in a leading negation
+	c.Equal("-(5 * time.Second)", xtime.DurationToCode(-5*time.Second))
+	c.Equal("-(time.Nanosecond)", xtime.DurationToCode(-1))
+	c.Equal("-(time.Hour + time.Minute + time.Second)", xtime.DurationToCode(-(time.Hour + time.Minute + time.Second)))
+
+	// Test the most negative duration, whose negation would overflow, emits the raw value instead of recursing
+	c.Equal("time.Duration(-9223372036854775808)", xtime.DurationToCode(math.MinInt64))
 }

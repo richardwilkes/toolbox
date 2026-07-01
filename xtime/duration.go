@@ -11,6 +11,7 @@ package xtime
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -125,8 +126,19 @@ func FormatDuration(duration time.Duration, includeMillis bool) string {
 }
 
 // DurationToCode turns a time.Duration into more human-readable text required for code than a simple number of
-// nanoseconds.
+// nanoseconds. The result is always a valid Go expression: zero yields "0" and negative durations are wrapped in a
+// leading negation, e.g. "-(5 * time.Second)".
 func DurationToCode(duration time.Duration) string {
+	switch {
+	case duration == 0:
+		return "0"
+	case duration == math.MinInt64:
+		// Negating math.MinInt64 overflows back to itself, which would recurse forever, so emit the raw value. It
+		// remains a valid Go expression.
+		return "time.Duration(" + strconv.FormatInt(int64(duration), 10) + ")"
+	case duration < 0:
+		return "-(" + DurationToCode(-duration) + ")"
+	}
 	var buffer strings.Builder
 	duration = durationToCodePart(&buffer, duration, time.Hour, "Hour")
 	duration = durationToCodePart(&buffer, duration, time.Minute, "Minute")
