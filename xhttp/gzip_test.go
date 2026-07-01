@@ -125,6 +125,46 @@ func TestGZipWrapRoundTrip(t *testing.T) {
 	c.Equal("hello, gzip", string(data))
 }
 
+// TestGZipWrapSniffsContentType verifies that a handler which writes a body but never sets a Content-Type still gets a
+// correctly sniffed Content-Type. Once the wrapper sets Content-Encoding: gzip, net/http stops sniffing the body
+// itself (Go issue #31753), so the wrapper must sniff the uncompressed body before installing gzip; otherwise the
+// response would carry no Content-Type at all.
+func TestGZipWrapSniffsContentType(t *testing.T) {
+	c := check.New(t)
+	const body = "<!DOCTYPE html><html><head><title>hi</title></head><body>hello</body></html>"
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, err := io.WriteString(w, body)
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	c.Equal(http.DetectContentType([]byte(body)), rec.Header().Get("Content-Type"),
+		"unset Content-Type must be sniffed from the uncompressed body before gzip is installed")
+	c.Equal("text/html; charset=utf-8", rec.Header().Get("Content-Type"))
+	gr, err := gzip.NewReader(rec.Body)
+	c.NoError(err)
+	data, err := io.ReadAll(gr)
+	c.NoError(err)
+	c.NoError(gr.Close())
+	c.Equal(body, string(data))
+}
+
+// TestGZipWrapPreservesHandlerContentType verifies that a Content-Type the handler set explicitly is not overwritten by
+// the wrapper's sniffing, even when the sniffed type would differ.
+func TestGZipWrapPreservesHandlerContentType(t *testing.T) {
+	c := check.New(t)
+	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, err := io.WriteString(w, "<html>this would sniff as html</html>")
+		c.NoError(err)
+	}))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, gzipAcceptingRequest())
+	c.Equal("gzip", rec.Header().Get("Content-Encoding"))
+	c.Equal("application/json", rec.Header().Get("Content-Type"), "handler's Content-Type must be preserved")
+}
+
 func TestGZipWrapNoGzipWhenNotAccepted(t *testing.T) {
 	c := check.New(t)
 	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

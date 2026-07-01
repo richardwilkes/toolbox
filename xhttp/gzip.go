@@ -104,7 +104,7 @@ func (w *gzipResponseWriter) Write(data []byte) (int, error) {
 		if len(data) == 0 {
 			return 0, nil
 		}
-		w.commit(true)
+		w.commit(true, data)
 	}
 	if w.gw != nil {
 		return w.gw.Write(data)
@@ -134,16 +134,25 @@ func (w *gzipResponseWriter) WriteHeader(status int) {
 // Modified, and no existing Content-Encoding), it installs gzip compression: overwriting an existing Content-Encoding
 // or wrapping already-encoded bytes in a second gzip stream would corrupt the content, so those cases are left
 // untouched. When gzip is installed, the handler's Content-Length describes the uncompressed body and no longer matches
-// the compressed bytes, so it is dropped and the response is sent with chunked transfer encoding.
-func (w *gzipResponseWriter) commit(useGzip bool) {
+// the compressed bytes, so it is dropped and the response is sent with chunked transfer encoding. The body slice, when
+// non-nil, is the first chunk of the uncompressed body and is used to sniff a Content-Type before gzip is installed.
+func (w *gzipResponseWriter) commit(useGzip bool, body []byte) {
 	if w.committed {
 		return
 	}
 	w.committed = true
 	if useGzip && w.status != http.StatusNoContent && w.status != http.StatusNotModified &&
 		w.w.Header().Get("Content-Encoding") == "" {
-		w.w.Header().Set("Content-Encoding", "gzip")
-		w.w.Header().Del("Content-Length")
+		header := w.w.Header()
+		// net/http skips its automatic Content-Type sniffing once Content-Encoding is set (see Go issue #31753), and
+		// sniffing the compressed bytes would be wrong anyway, so sniff the uncompressed body ourselves here to
+		// preserve the Content-Type a handler relies on being detected automatically. http.DetectContentType only
+		// examines the first 512 bytes, so the first body chunk is enough.
+		if len(body) > 0 && header.Get("Content-Type") == "" {
+			header.Set("Content-Type", http.DetectContentType(body))
+		}
+		header.Set("Content-Encoding", "gzip")
+		header.Del("Content-Length")
 		w.gw = gzip.NewWriter(w.w)
 	}
 	w.w.WriteHeader(w.status)
@@ -154,7 +163,7 @@ func (w *gzipResponseWriter) commit(useGzip bool) {
 // closes the gzip writer if one was installed.
 func (w *gzipResponseWriter) finish(req *http.Request) {
 	if w.wroteHeader && !w.committed {
-		w.commit(false)
+		w.commit(false, nil)
 	}
 	if w.gw != nil {
 		xio.CloseLoggingErrorsTo(LoggerForRequest(req), w.gw)
@@ -170,7 +179,7 @@ func (w *gzipResponseWriter) Flush() {
 		w.WriteHeader(http.StatusOK)
 	}
 	if !w.committed {
-		w.commit(true)
+		w.commit(true, nil)
 	}
 	if w.gw != nil {
 		if err := w.gw.Flush(); err != nil {
