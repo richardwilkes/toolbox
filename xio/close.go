@@ -13,8 +13,18 @@ package xio
 import (
 	"io"
 	"log/slog"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
+)
+
+// Bounds applied by DiscardAndCloseIgnoringErrors when draining an unread reader before closing it. They mirror the
+// limits net/http uses when it drains a response body on Close (Go 1.27): stop after drainOnCloseByteLimit bytes or
+// drainOnCloseTimeLimit of wall-clock time, whichever comes first, so a huge or slow-trickling source can't make
+// closing expensive.
+const (
+	drainOnCloseByteLimit = 256 * 1024
+	drainOnCloseTimeLimit = 50 * time.Millisecond
 )
 
 // CloseIgnoringErrors closes the closer and ignores any error it might produce. Should only be used for read-only
@@ -23,9 +33,18 @@ func CloseIgnoringErrors(closer io.Closer) {
 	_ = closer.Close() //nolint:errcheck // intentionally ignoring any error
 }
 
-// DiscardAndCloseIgnoringErrors reads any content remaining in the body and discards it, then closes the body.
+// DiscardAndCloseIgnoringErrors reads and discards any content remaining in the reader, then closes it. Draining lets a
+// keep-alive HTTP/1.1 connection be reused by a later request rather than being discarded. The drain is bounded to
+// drainOnCloseByteLimit bytes and drainOnCloseTimeLimit of wall-clock time, whichever is reached first, so an oversized
+// or slow-trickling source can't make closing expensive; these are the same bounds net/http applies when it drains a
+// response body on Close (Go 1.27). The time bound is enforced by closing the reader out from under an in-flight read,
+// so the reader must tolerate a concurrent Close (net/http bodies and os.File do).
 func DiscardAndCloseIgnoringErrors(rc io.ReadCloser) {
-	_, _ = io.Copy(io.Discard, rc) //nolint:errcheck // intentionally ignoring any error
+	// If the drain outlasts the time bound (e.g. a slow-trickling source), close rc to interrupt the in-progress read;
+	// the trailing Close below is then a harmless second close.
+	timer := time.AfterFunc(drainOnCloseTimeLimit, func() { CloseIgnoringErrors(rc) })
+	_, _ = io.CopyN(io.Discard, rc, drainOnCloseByteLimit) //nolint:errcheck // intentionally ignoring any error
+	timer.Stop()
 	CloseIgnoringErrors(rc)
 }
 

@@ -51,7 +51,10 @@ func RetrieveDataWithLimit(ctx context.Context, client *http.Client, filePathOrU
 	if err != nil {
 		return nil, err
 	}
-	defer xio.CloseIgnoringErrors(r)
+	// Drain (within bounds) any body left unread before closing, so an HTTP/1.1 keep-alive connection can be reused
+	// (see StreamData's note). This matters on the over-limit path below, where the LimitReader stops before EOF and
+	// would otherwise leave the body undrained.
+	defer xio.DiscardAndCloseIgnoringErrors(r)
 	var reader io.Reader = r
 	enforceLimit := maxBytes > 0 && maxBytes != math.MaxInt64
 	if enforceLimit {

@@ -15,7 +15,10 @@ import (
 	"io"
 	"log/slog"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xio"
@@ -87,6 +90,67 @@ func TestDiscardAndCloseIgnoringErrors(t *testing.T) {
 	}
 	xio.DiscardAndCloseIgnoringErrors(rc2)
 	c.True(rc2.closer.closed)
+}
+
+// countingReadCloser serves up to remaining bytes and records how many were actually read.
+type countingReadCloser struct {
+	remaining int
+	read      int
+	closed    bool
+}
+
+func (r *countingReadCloser) Read(p []byte) (int, error) {
+	if r.remaining <= 0 {
+		return 0, io.EOF
+	}
+	n := min(len(p), r.remaining)
+	r.remaining -= n
+	r.read += n
+	return n, nil
+}
+
+func (r *countingReadCloser) Close() error {
+	r.closed = true
+	return nil
+}
+
+func TestDiscardAndCloseIgnoringErrors_ByteBound(t *testing.T) {
+	c := check.New(t)
+	// A source with far more than the drain byte bound available; only the bound's worth should be read before closing.
+	rc := &countingReadCloser{remaining: 4 * 1024 * 1024}
+	xio.DiscardAndCloseIgnoringErrors(rc)
+	c.True(rc.closed)
+	c.Equal(256*1024, rc.read)
+	c.True(rc.remaining > 0) // The source was left partially unread rather than drained fully.
+}
+
+// blockingReadCloser blocks in Read until it is closed, simulating a source that stalls without delivering data or EOF.
+type blockingReadCloser struct {
+	closeCh chan struct{}
+	once    sync.Once
+	closed  atomic.Bool
+}
+
+func (r *blockingReadCloser) Read(_ []byte) (int, error) {
+	<-r.closeCh
+	return 0, io.EOF
+}
+
+func (r *blockingReadCloser) Close() error {
+	r.once.Do(func() { close(r.closeCh) })
+	r.closed.Store(true)
+	return nil
+}
+
+func TestDiscardAndCloseIgnoringErrors_TimeBound(t *testing.T) {
+	c := check.New(t)
+	rc := &blockingReadCloser{closeCh: make(chan struct{})}
+	start := time.Now()
+	xio.DiscardAndCloseIgnoringErrors(rc)
+	elapsed := time.Since(start)
+	// The time bound must fire and close the stalled reader rather than hanging indefinitely.
+	c.True(rc.closed.Load())
+	c.True(elapsed < 5*time.Second)
 }
 
 func TestCloseLoggingAnyError(t *testing.T) {

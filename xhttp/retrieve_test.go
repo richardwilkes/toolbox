@@ -10,11 +10,13 @@
 package xhttp_test
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httptrace"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -144,6 +146,32 @@ func TestRetrieveDataWithLimit(t *testing.T) {
 	data, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, math.MaxInt64)
 	c.NoError(err)
 	c.Equal(content, data)
+}
+
+func TestRetrieveDataWithLimit_HTTPOverLimitDrainsForReuse(t *testing.T) {
+	c := check.New(t)
+	body := bytes.Repeat([]byte("x"), 4096)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write(body) //nolint:errcheck // Can't fail for test, so no need to check
+	}))
+	defer server.Close()
+	client := server.Client()
+
+	// The first request exceeds the limit and must still return the limit error.
+	_, err := xhttp.RetrieveDataWithLimit(context.Background(), client, server.URL, 16)
+	c.HasError(err)
+
+	// Because the over-limit body was drained before the connection was closed, the keep-alive connection is returned to
+	// the idle pool and the follow-up request reuses it rather than dialing a new one.
+	var reused bool
+	trace := &httptrace.ClientTrace{
+		GotConn: func(info httptrace.GotConnInfo) { reused = info.Reused },
+	}
+	ctx := httptrace.WithClientTrace(context.Background(), trace)
+	data, err := xhttp.RetrieveDataWithLimit(ctx, client, server.URL, int64(len(body)))
+	c.NoError(err)
+	c.Equal(body, data)
+	c.True(reused)
 }
 
 func TestRetrieveData_HTTP(t *testing.T) {
