@@ -24,7 +24,10 @@ var (
 	_ io.ByteWriter   = &AnsiWriter{}
 )
 
-var colorSequenceMatcher = regexp.MustCompile(`\033\[(?:\d+(?:;\d+)*)*m`)
+// ansiSequenceMatcher matches ANSI CSI escape sequences (color/style as well as cursor movement, erase, etc.) so their
+// zero-width bytes aren't counted when measuring visible text width. A CSI sequence is the introducer (ESC [) followed
+// by any parameter bytes, any intermediate bytes, and a single final byte in the range '@' to '~'.
+var ansiSequenceMatcher = regexp.MustCompile(`\033\[[0-9;?]*[\x20-\x2f]*[\x40-\x7e]`)
 
 // AnsiWriter provides support for ANSI terminal escape sequences.
 type AnsiWriter struct {
@@ -463,7 +466,7 @@ func (a *AnsiWriter) writeByte(c byte) {
 func (a *AnsiWriter) WrapText(prefix, text string) {
 	a.writeString(prefix)
 	avail, _ := Size(a.w)
-	prefixLength := utf8.RuneCountInString(colorSequenceMatcher.ReplaceAllString(prefix, ""))
+	prefixLength := utf8.RuneCountInString(ansiSequenceMatcher.ReplaceAllString(prefix, ""))
 	avail -= 1 + prefixLength
 	if avail < 1 {
 		avail = 1
@@ -480,7 +483,7 @@ func (a *AnsiWriter) WrapText(prefix, text string) {
 			}
 		}
 		for i, token := range strings.Fields(line) {
-			length := utf8.RuneCountInString(colorSequenceMatcher.ReplaceAllString(token, "")) + 1
+			length := utf8.RuneCountInString(ansiSequenceMatcher.ReplaceAllString(token, "")) + 1
 			if i != 0 {
 				if length > remaining {
 					a.writeByte('\n')

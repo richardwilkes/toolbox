@@ -64,3 +64,40 @@ func TestWrapTextResetsBudgetPerLine(t *testing.T) {
 	xterm.NewAnsiWriter(&buf).WrapText("", a+" "+b)
 	c.Equal(a+"\n"+b+"\n", buf.String())
 }
+
+// TestWrapTextIgnoresNonSGREscapes verifies that non-SGR ANSI escapes (cursor movement, erase, etc.) embedded in the
+// text are treated as zero-width when measuring column width, so they produce the same wrap points as the same text
+// without the escape. A non-file writer reports a fixed 80-column width, so with an empty prefix each line has 79
+// columns available.
+func TestWrapTextIgnoresNonSGREscapes(t *testing.T) {
+	c := check.New(t)
+
+	// word1 (40 columns) and word2 (37 columns) fit together on one 79-column line (40 + 1 + 37 = 78). Prefixing word2
+	// with a 4-byte erase-line escape ("\033[2K") must not change that, since the escape is zero-width. Counting it as
+	// 4 visible columns (the pre-fix behavior, which only stripped SGR "...m" sequences) pushed the pair to 82 columns
+	// and wrongly wrapped word2 onto its own line.
+	word1 := strings.Repeat("a", 40)
+	word2 := strings.Repeat("b", 37)
+	const eraseLine = "\033[2K"
+
+	var plain bytes.Buffer
+	xterm.NewAnsiWriter(&plain).WrapText("", word1+" "+word2)
+
+	var withEscape bytes.Buffer
+	xterm.NewAnsiWriter(&withEscape).WrapText("", word1+" "+eraseLine+word2)
+
+	// The wrap points must match: stripping the escape from the escaped output yields the plain output.
+	c.Equal(plain.String(), strings.ReplaceAll(withEscape.String(), eraseLine, ""))
+
+	// Concretely, both stay on a single line, with the escape passed through untouched.
+	c.Equal(word1+" "+word2+"\n", plain.String())
+	c.Equal(word1+" "+eraseLine+word2+"\n", withEscape.String())
+
+	// A non-SGR escape in the prefix is likewise zero-width, so the continuation indent matches the visible prefix
+	// width rather than being widened by the escape's bytes.
+	x := strings.Repeat("x", 40)
+	y := strings.Repeat("y", 40)
+	var buf bytes.Buffer
+	xterm.NewAnsiWriter(&buf).WrapText(eraseLine+"→ ", x+" "+y)
+	c.Equal(eraseLine+"→ "+x+"\n  "+y+"\n", buf.String())
+}
