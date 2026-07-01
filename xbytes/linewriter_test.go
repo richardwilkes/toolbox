@@ -177,3 +177,20 @@ func TestLineWriter(t *testing.T) {
 	err = w.WriteByte('x')
 	c.Equal(fs.ErrClosed, err)
 }
+
+// TestLineWriterRetainedSlices verifies that a callback which retains the raw []byte it receives sees each line's own
+// content, rather than every retained slice aliasing the writer's reused buffer and ending up showing the last line.
+func TestLineWriterRetainedSlices(t *testing.T) {
+	c := check.New(t)
+
+	retained := make([][]byte, 0)
+	w := xbytes.NewLineWriter(func(line []byte) { retained = append(retained, line) })
+	_, err := w.WriteString("first\nsecond\nthird\n")
+	c.NoError(err)
+	c.NoError(w.Close())
+
+	c.Equal(3, len(retained))
+	c.Equal("first", string(retained[0]))
+	c.Equal("second", string(retained[1]))
+	c.Equal("third", string(retained[2]))
+}

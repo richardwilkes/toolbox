@@ -23,7 +23,8 @@ var (
 )
 
 // LineWriter buffers its input into lines before sending each line to an output function without the trailing line
-// feed.
+// feed. Each line passed to the output function is a fresh copy, so the callback may retain it without it being
+// overwritten by subsequent lines.
 type LineWriter struct {
 	buffer *bytes.Buffer
 	out    func([]byte)
@@ -51,7 +52,7 @@ func (w *LineWriter) WriteString(s string) (n int, err error) {
 				return n, err
 			}
 		}
-		w.out(w.buffer.Bytes())
+		w.out(bytes.Clone(w.buffer.Bytes()))
 		w.buffer.Reset()
 		s = s[i+1:]
 	}
@@ -66,7 +67,7 @@ func (w *LineWriter) WriteByte(ch byte) error {
 	if ch != '\n' {
 		return w.buffer.WriteByte(ch)
 	}
-	w.out(w.buffer.Bytes())
+	w.out(bytes.Clone(w.buffer.Bytes()))
 	w.buffer.Reset()
 	return nil
 }
@@ -88,7 +89,7 @@ func (w *LineWriter) Write(data []byte) (n int, err error) {
 				return n, err
 			}
 		}
-		w.out(w.buffer.Bytes())
+		w.out(bytes.Clone(w.buffer.Bytes()))
 		w.buffer.Reset()
 		data = data[i+1:]
 	}
@@ -99,7 +100,7 @@ func (w *LineWriter) Write(data []byte) (n int, err error) {
 func (w *LineWriter) Close() error {
 	if w.buffer != nil {
 		if w.buffer.Len() > 0 {
-			w.out(w.buffer.Bytes())
+			w.out(bytes.Clone(w.buffer.Bytes()))
 		}
 		w.buffer = nil
 		w.out = nil
