@@ -20,8 +20,15 @@ import (
 func BasicAuthWrap(next http.Handler, lookup func(user, realm string) ([]byte, bool), hasher func(input string) []byte, realm string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if user, pw, ok := r.BasicAuth(); ok {
+			hashed := hasher(pw)
 			stored, found := lookup(user, realm)
-			passwordMatch := subtle.ConstantTimeCompare(hasher(pw), stored) == 1
+			if !found {
+				// Compare against a same-length dummy so the comparison cost doesn't reveal whether the user exists.
+				// Without this, an unknown user yields a length mismatch that lets subtle.ConstantTimeCompare return
+				// early, producing a timing side channel usable for username enumeration.
+				stored = make([]byte, len(hashed))
+			}
+			passwordMatch := subtle.ConstantTimeCompare(hashed, stored) == 1
 			if found && passwordMatch {
 				if md := MetadataFromRequest(r); md != nil {
 					md.User = user
