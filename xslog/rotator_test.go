@@ -68,6 +68,44 @@ func TestRotator(t *testing.T) {
 	c.NoError(r.Close())
 }
 
+func TestRotatorPrunesStaleBackupsOnShrink(t *testing.T) {
+	const maxSize = 100
+	tmpdir := t.TempDir()
+	path := filepath.Join(tmpdir, "test")
+	c := check.New(t)
+
+	// Simulate a previous run that retained more backups than the current configuration allows.
+	const priorBackups = 5
+	for i := 1; i <= priorBackups; i++ {
+		c.NoError(os.WriteFile(fmt.Sprintf("%s-%d%s", path, i, xslog.LogFileExt), []byte("old"), 0o644))
+	}
+
+	// Run with a smaller MaxBackups and write enough to force at least one rotation.
+	const maxBackups = 2
+	cfg := xslog.Rotator{
+		Path:       path,
+		MaxSize:    maxSize,
+		MaxBackups: maxBackups,
+	}
+	r := cfg.NewWriteCloser()
+	c.NotNil(r)
+	for i := range maxSize * (2 + maxBackups) {
+		_, err := fmt.Fprintln(r, i)
+		c.NoError(err)
+	}
+	c.NoError(r.Close())
+
+	// The retained backups (1..maxBackups) must exist and the stale higher-numbered ones must be gone.
+	for i := 1; i <= priorBackups; i++ {
+		_, err := os.Stat(fmt.Sprintf("%s-%d%s", path, i, xslog.LogFileExt))
+		if i <= maxBackups {
+			c.NoError(err)
+		} else {
+			c.True(os.IsNotExist(err))
+		}
+	}
+}
+
 func TestRotatorOversizedWrite(t *testing.T) {
 	const maxSize = 100
 	tmpdir := t.TempDir()

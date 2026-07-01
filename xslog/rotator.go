@@ -153,8 +153,15 @@ func (r *rotatingWriter) rotate() error {
 			return errs.Wrap(err)
 		}
 	}
-	if err := os.Remove(r.pathFor(r.cfg.MaxBackups)); err != nil && !os.IsNotExist(err) {
-		return errs.Wrap(err)
+	// Remove the oldest retained backup along with any higher-numbered backups left behind by a previous run that used
+	// a larger MaxBackups. Backups are always consecutive, so the first missing slot ends the sweep.
+	for n := r.cfg.MaxBackups; ; n++ {
+		if err := os.Remove(r.pathFor(n)); err != nil {
+			if os.IsNotExist(err) {
+				break
+			}
+			return errs.Wrap(err)
+		}
 	}
 	for i := r.cfg.MaxBackups; i > 0; i-- {
 		if err := os.Rename(r.pathFor(i-1), r.pathFor(i)); err != nil && !os.IsNotExist(err) {
