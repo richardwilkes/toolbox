@@ -11,12 +11,15 @@ package xhttp_test
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/richardwilkes/toolbox/v2/check"
 	"github.com/richardwilkes/toolbox/v2/xhttp"
@@ -120,4 +123,97 @@ func TestServerRunReturnsNilOnCleanShutdown(t *testing.T) {
 	s.Stop()
 	c.NoError(<-runErr)
 	c.NoError(s.Error())
+}
+
+// newTestServerWithWriteTimeout builds a server with the given WriteTimeout so tests can exercise the request-context
+// deadline that mirrors the connection's write deadline.
+func newTestServerWithWriteTimeout(c check.Checker, writeTimeout time.Duration, handler http.HandlerFunc) *xhttp.Server {
+	var log bytes.Buffer
+	s, err := xhttp.NewServer(&xhttp.ServerConfig{
+		Logger:       slog.New(slog.NewTextHandler(&log, nil)),
+		Handler:      handler,
+		WriteTimeout: writeTimeout,
+	})
+	c.NoError(err)
+	return s
+}
+
+// TestServerWriteTimeoutAnchorsContextDeadlineAtRequestStart verifies that, when WriteTimeout is configured, the
+// request context handed to the handler carries a deadline of WriteTimeout anchored to the moment the request is
+// received (which is when net/http arms the socket's write deadline), not some later or earlier instant.
+func TestServerWriteTimeoutAnchorsContextDeadlineAtRequestStart(t *testing.T) {
+	c := check.New(t)
+	const writeTimeout = 200 * time.Millisecond
+	var gotDeadline time.Time
+	var gotOK bool
+	s := newTestServerWithWriteTimeout(c, writeTimeout, func(_ http.ResponseWriter, req *http.Request) {
+		gotDeadline, gotOK = req.Context().Deadline()
+	})
+
+	before := time.Now()
+	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+	after := time.Now()
+
+	c.True(gotOK, "handler context should have a deadline when WriteTimeout is set")
+	// The anchor is the request-start instant captured inside ServeHTTP, which necessarily falls within [before,
+	// after], so the deadline must fall within [before+WriteTimeout, after+WriteTimeout]. This pins the anchor to
+	// request entry rather than to some later point after this method's setup work.
+	c.False(gotDeadline.Before(before.Add(writeTimeout)), "deadline anchored before the request was received")
+	c.False(gotDeadline.After(after.Add(writeTimeout)), "deadline anchored after the request completed")
+}
+
+// TestServerNoWriteTimeoutLeavesContextWithoutDeadline verifies that when WriteTimeout is not configured, the handler's
+// request context is left without an added deadline.
+func TestServerNoWriteTimeoutLeavesContextWithoutDeadline(t *testing.T) {
+	c := check.New(t)
+	var gotOK bool
+	s := newTestServerWithWriteTimeout(c, 0, func(_ http.ResponseWriter, req *http.Request) {
+		_, gotOK = req.Context().Deadline()
+	})
+	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+	c.False(gotOK, "handler context should not have a deadline when WriteTimeout is unset")
+}
+
+// TestServerWriteTimeoutResetPerRequest verifies that the context deadline is derived fresh for each request rather
+// than drifting across requests. This mirrors a reused keep-alive connection, where net/http re-arms the socket write
+// deadline for every request: a request that arrives after an idle gap must still get the full WriteTimeout budget, not
+// a shrunken remainder.
+func TestServerWriteTimeoutResetPerRequest(t *testing.T) {
+	c := check.New(t)
+	const writeTimeout = 200 * time.Millisecond
+	var remaining []time.Duration
+	s := newTestServerWithWriteTimeout(c, writeTimeout, func(_ http.ResponseWriter, req *http.Request) {
+		deadline, ok := req.Context().Deadline()
+		c.True(ok)
+		remaining = append(remaining, time.Until(deadline))
+	})
+
+	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+	// Simulate an idle gap between two requests on the same keep-alive connection.
+	time.Sleep(writeTimeout * 3 / 4)
+	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+
+	c.Equal(2, len(remaining))
+	// If the deadline drifted (anchored once and shared), the second request's remaining budget would be roughly a
+	// quarter of WriteTimeout after the sleep. A fresh per-request deadline leaves nearly the full budget.
+	c.True(remaining[1] > writeTimeout*3/4,
+		"second request should get a fresh WriteTimeout budget, got", remaining[1])
+}
+
+// TestServerWriteTimeoutCancelsSlowHandler verifies the deadline actually fires: a handler that outlives WriteTimeout
+// observes ctx.Done() with a DeadlineExceeded error rather than blocking indefinitely.
+func TestServerWriteTimeoutCancelsSlowHandler(t *testing.T) {
+	c := check.New(t)
+	const writeTimeout = 100 * time.Millisecond
+	var ctxErr error
+	s := newTestServerWithWriteTimeout(c, writeTimeout, func(_ http.ResponseWriter, req *http.Request) {
+		select {
+		case <-req.Context().Done():
+			ctxErr = req.Context().Err()
+		case <-time.After(5 * time.Second):
+			ctxErr = errors.New("handler was not canceled by the write timeout")
+		}
+	})
+	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+	c.True(errors.Is(ctxErr, context.DeadlineExceeded), "expected DeadlineExceeded, got", ctxErr)
 }

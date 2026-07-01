@@ -294,9 +294,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	})
 	ctx := metadataInContext(req.Context(), md)
 	if s.server.WriteTimeout > 0 {
-		// Update the context to expire at the same time as the write timeout.
+		// Give the request context a deadline mirroring the connection's write deadline so handlers that only watch
+		// ctx.Done() still observe the write timeout. net/http (re)arms the socket write deadline to WriteTimeout from
+		// the instant each request's header finishes being read, which is immediately before this handler is entered,
+		// so we anchor to the request's start time rather than calling time.Now() again after this method's own setup
+		// work. Because the deadline is derived per invocation and ServeHTTP runs once per request, it is reset for
+		// every request on a reused keep-alive connection, tracking the socket's per-request write deadline rather than
+		// drifting or expiring early.
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, s.server.WriteTimeout)
+		ctx, cancel = context.WithDeadline(ctx, started.Add(s.server.WriteTimeout))
 		defer cancel()
 	}
 	s.originalHandler.ServeHTTP(sw, req.WithContext(ctx))
