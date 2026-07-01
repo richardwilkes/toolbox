@@ -21,7 +21,8 @@ import (
 // Limiter provides a rate limiter.
 type Limiter interface {
 	// New returns a new limiter that is subordinate to this limiter, meaning that its cap rate is also capped by its
-	// parent. A capacity less than 1 is treated as 1.
+	// parent. A capacity less than 1 is treated as 1. If this limiter is closed, it returns itself (a closed limiter)
+	// so that chained calls report the closed state rather than panicking on a nil interface.
 	New(capacity int) Limiter
 
 	// Cap returns the capacity per time period.
@@ -123,7 +124,9 @@ func (l *limiter) New(capacity int) Limiter {
 	l.controller.lock.Lock()
 	defer l.controller.lock.Unlock()
 	if l.closed {
-		return nil
+		// A closed limiter can have no children. Return it (a closed limiter) rather than nil so that chained calls
+		// such as parent.New(n).Use(...) report the closed state instead of panicking on a nil interface.
+		return l
 	}
 	child := &limiter{
 		controller: l.controller,

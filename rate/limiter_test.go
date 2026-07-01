@@ -310,8 +310,14 @@ func TestNewOnClosedLimiter(t *testing.T) {
 	rl := rate.New(100, time.Second)
 	rl.Close()
 
+	// New on a closed limiter returns a non-nil, closed limiter rather than nil.
 	child := rl.New(50)
-	c.Nil(child) // Should return nil when creating child on closed limiter
+	c.NotNil(child)
+	c.True(child.Closed())
+
+	// The idiomatic chained call must degrade to a "closed" error rather than panicking on a nil interface.
+	err := <-rl.New(50).Use(10)
+	c.HasError(err)
 }
 
 func TestConcurrentUse(t *testing.T) {
