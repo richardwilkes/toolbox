@@ -11,9 +11,11 @@ package xos
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
@@ -95,8 +97,12 @@ func (f *SafeFile) Commit() error {
 	}()
 	// If we are replacing an existing file, preserve its permission bits. os.CreateTemp created the temporary file with
 	// mode 0600, so without this the rename would silently strip access (e.g. group/other read) the original file had.
-	if fi, statErr := os.Stat(f.name); statErr == nil {
-		if err = f.Chmod(fi.Mode().Perm()); err != nil {
+	// Permission preservation is best-effort: some filesystems (e.g. certain SMB/CIFS network mounts) don't support
+	// chmod and return an "operation not supported" error, which shouldn't abort an otherwise-valid save.
+	var fi os.FileInfo
+	if fi, err = os.Stat(f.name); err == nil {
+		if err = f.Chmod(fi.Mode().Perm()); err != nil && !errors.Is(err, syscall.ENOTSUP) &&
+			!errors.Is(err, syscall.EOPNOTSUPP) {
 			return errs.Wrap(err)
 		}
 	}

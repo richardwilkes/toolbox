@@ -10,10 +10,12 @@
 package xos
 
 import (
+	"errors"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xio"
@@ -124,9 +126,7 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 		}
 		if err == nil {
 			if (srcMode&mask)|0o200 != srcMode&mask {
-				if err = os.Chmod(dst, srcMode&mask); err != nil {
-					err = errs.Wrap(err)
-				}
+				err = chmodIfSupported(dst, srcMode&mask)
 			}
 		}
 	}()
@@ -152,8 +152,8 @@ func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) (err error) {
 	}
 	if dstMode|0o700 != dstMode {
 		defer func() {
-			if chmodErr := os.Chmod(dstDir, dstMode); chmodErr != nil && err == nil {
-				err = errs.Wrap(chmodErr)
+			if chmodErr := chmodIfSupported(dstDir, dstMode); chmodErr != nil && err == nil {
+				err = chmodErr
 			}
 		}()
 	}
@@ -188,6 +188,17 @@ func linkCopy(src, dst string, mask fs.FileMode) error {
 		return errs.Wrap(err)
 	}
 	if err = os.Symlink(s, dst); err != nil {
+		return errs.Wrap(err)
+	}
+	return nil
+}
+
+// chmodIfSupported changes the mode of the named path, but treats an "operation not supported" error as success.
+// Permission adjustment is best-effort: some filesystems (e.g. certain SMB/CIFS network mounts) don't support chmod and
+// return such an error, which shouldn't abort an otherwise-valid copy.
+func chmodIfSupported(name string, mode fs.FileMode) error {
+	if err := os.Chmod(name, mode); err != nil && !errors.Is(err, syscall.ENOTSUP) &&
+		!errors.Is(err, syscall.EOPNOTSUPP) {
 		return errs.Wrap(err)
 	}
 	return nil
