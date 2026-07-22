@@ -13,7 +13,13 @@ import "unsafe"
 
 // PtrFromUintptr converts a uintptr value to a pointer of the specified type. The type parameter U is constrained to be
 // a uintptr or a type that is based on uintptr. This function is useful for converting uintptr values obtained from
-// unsafe operations back into pointers of the desired type without the linter complaining.
+// unsafe operations back into pointers of the desired type without the linter complaining. Unlike a direct
+// (*T)(unsafe.Pointer(v)) conversion — which checkptr instrumentation (enabled by -race) treats as pointer arithmetic
+// with no known source allocation and aborts on whenever the result lands inside a Go heap object — reading the
+// pointer out of the address of a local involves no instrumented conversion, so it stays valid under checkptr. That
+// matters when the value round-trips one of our own pinned Go objects through the OS, as COM does. The caller remains
+// responsible for ensuring the value designates memory that is still live and, when it refers to Go memory, pinned or
+// otherwise immovable.
 func PtrFromUintptr[T any, U ~uintptr](v U) *T {
-	return (*T)(unsafe.Pointer(v))
+	return *(**T)(unsafe.Pointer(&v))
 }
