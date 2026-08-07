@@ -809,7 +809,7 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 	// Test YAML unmarshaling with string data
 	var intVal fixed64.Int[T]
 	err := intVal.UnmarshalYAML(func(v any) error {
-		*(v.(*string)) = "42" //nolint:errcheck // This is just a test, we know it will succeed
+		*v.(*string) = "42" //nolint:errcheck // This is just a test, we know it will succeed
 		return nil
 	})
 	// This should handle the string value correctly
@@ -834,4 +834,94 @@ func TestMulOverflow(t *testing.T) {
 	d2 := fixed64.FromInteger[fixed.D4](d1)
 	result := fixed64.AsInteger[fixed.D4, int64](v2.Mul(m2.Div(d2)))
 	c.Equal(expected, result)
+}
+
+// TestOutOfRangeSaturates verifies that a value too large for the type to hold converts to Maximum/Minimum rather than
+// to 0. FromFloat used to discard the conversion error and hand back 0, which turned the largest possible input into
+// the smallest possible result — the exact opposite of what was asked for, and silently.
+func TestOutOfRangeSaturates(t *testing.T) {
+	testOutOfRangeSaturates[fixed.D1](t)
+	testOutOfRangeSaturates[fixed.D2](t)
+	testOutOfRangeSaturates[fixed.D3](t)
+	testOutOfRangeSaturates[fixed.D4](t)
+	testOutOfRangeSaturates[fixed.D5](t)
+	testOutOfRangeSaturates[fixed.D6](t)
+}
+
+func testOutOfRangeSaturates[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+	maximum := fixed64.Maximum[T]()
+	minimum := fixed64.Minimum[T]()
+
+	// The float just past the top of the range, and one far beyond it, both saturate.
+	beyond := fixed64.AsFloat[T, float64](maximum) * 1.1
+	c.Equal(maximum, fixed64.FromFloat[T](beyond))
+	c.Equal(minimum, fixed64.FromFloat[T](-beyond))
+	c.Equal(maximum, fixed64.FromFloat[T](math.MaxFloat64))
+	c.Equal(minimum, fixed64.FromFloat[T](-math.MaxFloat64))
+
+	// Infinities saturate to the matching extreme rather than becoming 0.
+	c.Equal(maximum, fixed64.FromFloat[T](math.Inf(1)))
+	c.Equal(minimum, fixed64.FromFloat[T](math.Inf(-1)))
+
+	// NaN has no meaningful extreme to saturate toward, so it becomes 0. It must not panic: big.Float.SetFloat64,
+	// which the conversion routes through, panics on a NaN.
+	c.NotPanics(func() { c.Equal(fixed64.Int[T](0), fixed64.FromFloat[T](math.NaN())) })
+
+	// A value that fits is unaffected by any of the above.
+	c.Equal(fixed64.FromInteger[T](3), fixed64.FromFloat[T](3.0))
+}
+
+// TestFromStringOutOfRangeReportsAndSaturates verifies that FromString reports an out-of-range value while still
+// handing back the saturated bound, so that FromStringForced — which discards the error — is left with the nearest
+// representable value instead of 0. It also covers the exponent path, which used to route through FromFloat and
+// silently return 0 with no error at all.
+func TestFromStringOutOfRangeReportsAndSaturates(t *testing.T) {
+	c := check.New(t)
+	maximum := fixed64.Maximum[fixed.D4]()
+	minimum := fixed64.Minimum[fixed.D4]()
+
+	for _, tc := range []struct {
+		str  string
+		want fixed64.Int[fixed.D4]
+	}{
+		{str: "1e300", want: maximum},                  // exponent form, beyond the range
+		{str: "-1e300", want: minimum},                 //
+		{str: "1e400", want: maximum},                  // beyond float64 itself, so ParseFloat reports a range error
+		{str: "-1e400", want: minimum},                 //
+		{str: "1000000000000000", want: maximum},       // plain decimal, overflows once scaled
+		{str: "-1000000000000000", want: minimum},      //
+		{str: "999999999999999999999", want: maximum},  // too large for even a uint64
+		{str: "-999999999999999999999", want: minimum}, //
+		{str: "1000000000000000.5", want: maximum},     // overflows via the fractional path
+		{str: "-1000000000000000.5", want: minimum},    //
+	} {
+		v, err := fixed64.FromString[fixed.D4](tc.str)
+		c.HasError(err, "%q should be reported as out of range", tc.str)
+		c.Equal(tc.want, v, "%q", tc.str)
+		c.Equal(tc.want, fixed64.FromStringForced[fixed.D4](tc.str), "%q forced", tc.str)
+	}
+
+	// A malformed string is a different failure: there is no nearest value, so it stays 0.
+	for _, str := range []string{"abc", "1.2.3", ""} {
+		v, err := fixed64.FromString[fixed.D4](str)
+		c.HasError(err, "%q should be rejected", str)
+		c.Equal(fixed64.Int[fixed.D4](0), v, "%q", str)
+		c.Equal(fixed64.Int[fixed.D4](0), fixed64.FromStringForced[fixed.D4](str), "%q forced", str)
+	}
+
+	// Values within range are unaffected, including the exponent form and the extremes themselves.
+	for _, tc := range []struct {
+		str  string
+		want fixed64.Int[fixed.D4]
+	}{
+		{str: "1e5", want: fixed64.FromInteger[fixed.D4](100000)},
+		{str: "-1.5e2", want: fixed64.FromStringForced[fixed.D4]("-150")},
+		{str: maximum.String(), want: maximum},
+		{str: minimum.String(), want: minimum},
+	} {
+		v, err := fixed64.FromString[fixed.D4](tc.str)
+		c.NoError(err, "%q", tc.str)
+		c.Equal(tc.want, v, "%q", tc.str)
+	}
 }

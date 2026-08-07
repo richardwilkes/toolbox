@@ -12,6 +12,7 @@ package fixed128_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
@@ -906,7 +907,7 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 	// Test YAML unmarshaling with string data
 	var intVal fixed128.Int[T]
 	err := intVal.UnmarshalYAML(func(v any) error {
-		*(v.(*string)) = "42" //nolint:errcheck // This is just a test, we know it will succeed
+		*v.(*string) = "42" //nolint:errcheck // This is just a test, we know it will succeed
 		return nil
 	})
 	// This should handle the string value correctly
@@ -917,4 +918,76 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 		return fmt.Errorf("unmarshal error")
 	})
 	c.HasError(err)
+}
+
+// TestOutOfRangeSaturates verifies that a value too large for the type to hold converts to Maximum/Minimum rather than
+// to 0, and that an infinity or a NaN is handled without panicking. FromFloat routes through big.Float.SetFloat64,
+// which panics on a NaN, and used to turn an infinity into 0.
+func TestOutOfRangeSaturates(t *testing.T) {
+	testOutOfRangeSaturates[fixed.D1](t)
+	testOutOfRangeSaturates[fixed.D2](t)
+	testOutOfRangeSaturates[fixed.D3](t)
+	testOutOfRangeSaturates[fixed.D4](t)
+	testOutOfRangeSaturates[fixed.D5](t)
+	testOutOfRangeSaturates[fixed.D6](t)
+}
+
+func testOutOfRangeSaturates[T fixed.Dx](t *testing.T) {
+	c := check.New(t)
+	maximum := fixed128.Maximum[T]()
+	minimum := fixed128.Minimum[T]()
+
+	c.Equal(maximum, fixed128.FromFloat[T](math.MaxFloat64))
+	c.Equal(minimum, fixed128.FromFloat[T](-math.MaxFloat64))
+	c.Equal(maximum, fixed128.FromFloat[T](math.Inf(1)))
+	c.Equal(minimum, fixed128.FromFloat[T](math.Inf(-1)))
+	c.NotPanics(func() { c.Equal(fixed128.Int[T]{}, fixed128.FromFloat[T](math.NaN())) })
+	c.Equal(fixed128.FromInteger[T](3), fixed128.FromFloat[T](3.0))
+}
+
+// TestFromStringOutOfRangeReportsAndSaturates verifies that FromString reports a value beyond what the type can hold.
+// num128 saturates on its own, but silently, so an out-of-range string used to come back as the maximum with no error
+// whatsoever.
+func TestFromStringOutOfRangeReportsAndSaturates(t *testing.T) {
+	c := check.New(t)
+	maximum := fixed128.Maximum[fixed.D4]()
+	minimum := fixed128.Minimum[fixed.D4]()
+
+	for _, tc := range []struct {
+		str  string
+		want fixed128.Int[fixed.D4]
+	}{
+		{str: "1e300", want: maximum},
+		{str: "-1e300", want: minimum},
+		{str: "1e400", want: maximum},
+		{str: "-1e400", want: minimum},
+		{str: "99999999999999999999999999999999999999999", want: maximum},
+		{str: "-99999999999999999999999999999999999999999", want: minimum},
+	} {
+		v, err := fixed128.FromString[fixed.D4](tc.str)
+		c.HasError(err, "%q should be reported as out of range", tc.str)
+		c.Equal(tc.want, v, "%q", tc.str)
+		c.Equal(tc.want, fixed128.FromStringForced[fixed.D4](tc.str), "%q forced", tc.str)
+	}
+
+	// A malformed string has no nearest value, so it stays 0.
+	for _, str := range []string{"abc", ""} {
+		v, err := fixed128.FromString[fixed.D4](str)
+		c.HasError(err, "%q should be rejected", str)
+		c.Equal(fixed128.Int[fixed.D4]{}, v, "%q", str)
+	}
+
+	// Values within range are unaffected, including the extremes themselves.
+	for _, tc := range []struct {
+		str  string
+		want fixed128.Int[fixed.D4]
+	}{
+		{str: "1e5", want: fixed128.FromInteger[fixed.D4](100000)},
+		{str: maximum.String(), want: maximum},
+		{str: minimum.String(), want: minimum},
+	} {
+		v, err := fixed128.FromString[fixed.D4](tc.str)
+		c.NoError(err, "%q", tc.str)
+		c.Equal(tc.want, v, "%q", tc.str)
+	}
 }

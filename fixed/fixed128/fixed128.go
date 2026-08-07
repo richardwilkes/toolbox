@@ -10,6 +10,7 @@
 package fixed128
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -62,26 +63,50 @@ func FromInteger[T fixed.Dx, FROM xmath.Integer](value FROM) Int[T] {
 	return Int[T]{data: num128.IntFrom64(int64(value)).Mul(num128.IntFrom64(t.Multiplier()))}
 }
 
-// FromFloat creates a new value.
+// FromFloat creates a new value. A value whose magnitude is too large for the type to hold saturates to Maximum() or
+// Minimum(), as an infinity does; NaN converts to 0.
 func FromFloat[T fixed.Dx, FROM xmath.Float](value FROM) Int[T] {
-	f, _ := FromString[T](new(big.Float).SetPrec(128).SetFloat64(float64(value)).Text('f', MaxDecimalDigits[T]()+1)) //nolint:errcheck // Failure means 0
+	f, _ := fromFloat[T](float64(value)) //nolint:errcheck // The saturated value is the documented result
 	return f
 }
 
-// FromString creates a new value from a string.
+// fromFloat converts a float64, returning the saturated value along with an error if it falls outside the range the
+// type can represent. That lets FromFloat accept the saturation while FromString reports the failure.
+func fromFloat[T fixed.Dx](value float64) (Int[T], error) {
+	switch {
+	case math.IsNaN(value):
+		// big.Float.SetFloat64 panics on a NaN, so it has to be turned away before the conversion below.
+		return Int[T]{}, errs.New("NaN is not a valid value")
+	case math.IsInf(value, 1):
+		return Maximum[T](), errs.New("value out of range: +Inf")
+	case math.IsInf(value, -1):
+		return Minimum[T](), errs.New("value out of range: -Inf")
+	}
+	// Text('f') never emits an exponent, so this cannot recurse back through FromString's exponent path.
+	return FromString[T](new(big.Float).SetPrec(128).SetFloat64(value).Text('f', MaxDecimalDigits[T]()+1))
+}
+
+// FromString creates a new value from a string. A value that falls outside the range the type can represent is reported
+// as an error, with the saturated bound returned alongside it, so that a caller which ignores the error (such as
+// FromStringForced) is left holding the nearest representable value.
 func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if str == "" {
 		return Int[T]{}, errs.New("empty string is not valid")
 	}
 	str = strings.ReplaceAll(str, ",", "")
 	if strings.ContainsAny(str, "Ee") {
-		// Given a floating-point value with an exponent, which technically
-		// isn't valid input, but we'll try to convert it anyway.
+		// Given a floating-point value with an exponent, which technically isn't valid input, but we'll try to convert
+		// it anyway. A range error from ParseFloat still yields an infinity, which saturates in fromFloat, so only a
+		// malformed value is turned away here.
 		f, err := strconv.ParseFloat(str, 64)
-		if err != nil {
-			return Int[T]{}, err
+		if err != nil && !errors.Is(err, strconv.ErrRange) {
+			return Int[T]{}, errs.Wrap(err)
 		}
-		return FromFloat[T](f), nil
+		v, ferr := fromFloat[T](f)
+		if ferr != nil {
+			return v, errs.Newf("value out of range: %s", str)
+		}
+		return v, nil
 	}
 	parts := strings.SplitN(str, ".", 2)
 	var neg bool
@@ -123,12 +148,19 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if neg {
 		value.Neg(value)
 	}
+	// num128.IntFromBigInt saturates on its own, but silently, so the range is checked here in order to report it. Note
+	// that this is the only place the overflow can be seen: once saturated, a genuinely out-of-range value is
+	// indistinguishable from one that legitimately equals the bound.
+	if value.Cmp(num128.MaxInt.AsBigInt()) > 0 || value.Cmp(num128.MinInt.AsBigInt()) < 0 {
+		return Int[T]{data: num128.IntFromBigInt(value)}, errs.Newf("value out of range: %s", str)
+	}
 	return Int[T]{data: num128.IntFromBigInt(value)}, nil
 }
 
-// FromStringForced creates a new value from a string.
+// FromStringForced creates a new value from a string, discarding any error. A malformed string yields 0, while one
+// whose value is merely out of range yields the saturated bound FromString returns with the error.
 func FromStringForced[T fixed.Dx](str string) Int[T] {
-	f, _ := FromString[T](str) //nolint:errcheck // failure results in 0, which is acceptable here
+	f, _ := FromString[T](str) //nolint:errcheck // The value returned alongside the error is the intended result here
 	return f
 }
 
