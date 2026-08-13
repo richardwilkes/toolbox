@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -68,7 +69,13 @@ func TestRetrieveData_FileURLLocalhost(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "retrieve_test_localhost.txt")
 	content := []byte("hello localhost")
 	c.NoError(os.WriteFile(file, content, 0o600))
-	fileURL := "file://localhost" + filepath.ToSlash(file) // ToSlash is necessary for Windows compatibility
+	// ToSlash is necessary for Windows compatibility, as is the leading slash: a Windows path starts with a drive
+	// letter rather than a separator, so without it the drive letter would run into the host portion of the URL.
+	p := filepath.ToSlash(file)
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	fileURL := "file://localhost" + p
 	data, err := xhttp.RetrieveData(context.Background(), nil, fileURL)
 	c.NoError(err)
 	c.Equal(content, data)

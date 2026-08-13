@@ -30,6 +30,11 @@ func TestWindowsSplit(t *testing.T) {
 			in:  `C:\`,
 			out: []string{`C:\`},
 		},
+		{
+			// A path that is nothing but a volume name denotes that volume's root.
+			in:  `\\host\share`,
+			out: []string{`\\host\share\`},
+		},
 	}
 	c := check.New(t)
 	for i, one := range data {

@@ -11,6 +11,7 @@ package xfilepath
 
 import (
 	"path/filepath"
+	"strings"
 )
 
 // Split a path into its component parts. In the case of a full path, the first element will be filepath.Separator,
@@ -21,7 +22,19 @@ func Split(path string) []string {
 	parts = append(parts, filepath.Base(path))
 	sep := string(filepath.Separator)
 	volName := filepath.VolumeName(path)
-	path = path[len(volName):]
+	if volName != "" && strings.Trim(volName, sep) == "" {
+		// On Windows, filepath.Clean() reduces a path made up of nothing but separators (e.g. "//") to `\\`, which
+		// filepath.VolumeName() then reports as a volume name even though it names neither a host nor a share. It
+		// isn't a real volume, so discard it and treat what remains as a plain root.
+		volName = ""
+		path = sep
+	} else {
+		path = path[len(volName):]
+		if path == "" {
+			// The path was nothing but a volume name (e.g. `\\host\share`), which denotes that volume's root.
+			path = sep
+		}
+	}
 	for path != "." && path != sep {
 		path = filepath.Dir(path)
 		parts = append(parts, filepath.Base(path))
