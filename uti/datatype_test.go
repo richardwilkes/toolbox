@@ -46,27 +46,22 @@ func TestByExtension(t *testing.T) {
 func TestRegisterUnregisterExtension(t *testing.T) {
 	c := check.New(t)
 
-	const (
-		customUTI  = "test.uti.custom"
-		customExt  = ".uti-test-ext"
-		customMime = "application/x-uti-test"
-	)
-	c.Nil(uti.ByExtension(customExt))
+	c.Nil(uti.ByExtension(".uti-test-ext"))
 
 	dt := uti.Register(&uti.DataType{
-		UTI:        customUTI,
+		UTI:        "test.uti.custom",
 		Parents:    []*uti.DataType{uti.Data},
-		MimeTypes:  []string{customMime},
-		Extensions: []string{customExt},
+		MimeTypes:  []string{"application/x-uti-test"},
+		Extensions: []string{".uti-test-ext"},
 	})
 	// Register must index the extension (exercises the byExtension build loop).
-	c.Equal([]*uti.DataType{dt}, uti.ByExtension(customExt))
-	c.Equal([]*uti.DataType{dt}, uti.ByMimeType(customMime))
-	c.Equal(dt, uti.ByUTI(customUTI))
+	c.Equal([]*uti.DataType{dt}, uti.ByExtension(".uti-test-ext"))
+	c.Equal([]*uti.DataType{dt}, uti.ByMimeType("application/x-uti-test"))
+	c.Equal(dt, uti.ByUTI("test.uti.custom"))
 
 	uti.Unregister(dt)
 	// Unregister must remove the extension entry (exercises the byExtension cleanup loop).
-	c.Equal(0, len(uti.ByExtension(customExt)))
-	c.Equal(0, len(uti.ByMimeType(customMime)))
-	c.Nil(uti.ByUTI(customUTI))
+	c.Equal(0, len(uti.ByExtension(".uti-test-ext")))
+	c.Equal(0, len(uti.ByMimeType("application/x-uti-test")))
+	c.Nil(uti.ByUTI("test.uti.custom"))
 }

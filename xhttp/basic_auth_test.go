@@ -19,15 +19,13 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xhttp"
 )
 
-const validUserName = "alice"
-
 func sha256Hasher(input string) []byte {
 	sum := sha256.Sum256([]byte(input))
 	return sum[:]
 }
 
 func newBasicAuthHandler(hasher func(string) []byte) http.Handler {
-	stored := map[string][]byte{validUserName: sha256Hasher("secret")}
+	stored := map[string][]byte{"alice": sha256Hasher("secret")}
 	lookup := func(user, _ string) ([]byte, bool) {
 		h, ok := stored[user]
 		return h, ok
@@ -50,8 +48,8 @@ func TestBasicAuthWrap(t *testing.T) {
 		wantStatus int
 		setAuth    bool
 	}{
-		{name: "valid credentials", user: validUserName, pw: "secret", wantStatus: http.StatusOK, setAuth: true},
-		{name: "wrong password", user: validUserName, pw: "nope", wantStatus: http.StatusUnauthorized, setAuth: true},
+		{name: "valid credentials", user: "alice", pw: "secret", wantStatus: http.StatusOK, setAuth: true},
+		{name: "wrong password", user: "alice", pw: "nope", wantStatus: http.StatusUnauthorized, setAuth: true},
 		{name: "unknown user", user: "bob", pw: "secret", wantStatus: http.StatusUnauthorized, setAuth: true},
 		{name: "no auth header", wantStatus: http.StatusUnauthorized, setAuth: false},
 	} {
@@ -94,7 +92,7 @@ func TestBasicAuthWrapConstantWork(t *testing.T) {
 
 	// Known user with a wrong password: the password is hashed once and the request is rejected.
 	hasherCalls = 0
-	knownWrong := serve(validUserName, "wrong")
+	knownWrong := serve("alice", "wrong")
 	c.Equal(1, hasherCalls)
 	c.Equal(http.StatusUnauthorized, knownWrong.Code)
 

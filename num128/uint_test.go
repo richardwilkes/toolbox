@@ -87,8 +87,8 @@ func bigUintFromStr(t *testing.T, one *uInfo, index int) *big.Int {
 	t.Helper()
 	b, ok := new(big.Int).SetString(one.ValueAsStr, 10)
 	c := check.New(t)
-	c.True(ok, indexFmt, index)
-	c.Equal(one.ValueAsStr, b.String(), indexFmt, index)
+	c.True(ok, "index %d", index)
+	c.Equal(one.ValueAsStr, b.String(), "index %d", index)
 	return b
 }
 
@@ -96,7 +96,7 @@ func TestUint128FromUint64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range uTable {
 		if one.IsUint64 {
-			c.Equal(one.ExpectedConversionAsStr, num128.UintFrom64(one.Uint64).String(), indexFmt, i)
+			c.Equal(one.ExpectedConversionAsStr, num128.UintFrom64(one.Uint64).String(), "index %d", i)
 		}
 	}
 }
@@ -104,7 +104,7 @@ func TestUint128FromUint64(t *testing.T) {
 func TestUint128FromBigInt(t *testing.T) {
 	c := check.New(t)
 	for i, one := range uTable {
-		c.Equal(one.ExpectedConversionAsStr, num128.UintFromBigInt(bigUintFromStr(t, one, i)).String(), indexFmt, i)
+		c.Equal(one.ExpectedConversionAsStr, num128.UintFromBigInt(bigUintFromStr(t, one, i)).String(), "index %d", i)
 	}
 }
 
@@ -112,7 +112,7 @@ func TestUint128AsBigInt(t *testing.T) {
 	c := check.New(t)
 	for i, one := range uTable {
 		if one.IsUint128 {
-			c.Equal(one.ValueAsStr, num128.UintFromBigInt(bigUintFromStr(t, one, i)).AsBigInt().String(), indexFmt, i)
+			c.Equal(one.ValueAsStr, num128.UintFromBigInt(bigUintFromStr(t, one, i)).AsBigInt().String(), "index %d", i)
 		}
 	}
 }
@@ -121,7 +121,7 @@ func TestUint128AsUint64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range uTable {
 		if one.IsUint64 {
-			c.Equal(one.Uint64, num128.UintFrom64(one.Uint64).AsUint64(), indexFmt, i)
+			c.Equal(one.Uint64, num128.UintFrom64(one.Uint64).AsUint64(), "index %d", i)
 		}
 	}
 }
@@ -130,7 +130,7 @@ func TestUint128IsUint64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range uTable {
 		if one.IsUint128 {
-			c.Equal(one.IsUint64, num128.UintFromBigInt(bigUintFromStr(t, one, i)).IsUint64(), indexFmt, i)
+			c.Equal(one.IsUint64, num128.UintFromBigInt(bigUintFromStr(t, one, i)).IsUint64(), "index %d", i)
 		}
 	}
 }
@@ -143,10 +143,10 @@ func TestUint128Inc(t *testing.T) {
 			b := bigUintFromStr(t, one, i)
 			v := num128.UintFromBigInt(b)
 			if v == num128.MaxUint {
-				c.Equal(num128.Uint{}, v.Inc(), indexFmt, i)
+				c.Equal(num128.Uint{}, v.Inc(), "index %d", i)
 			} else {
 				b.Add(b, big1)
-				c.Equal(b.String(), v.Inc().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Inc().AsBigInt().String(), "index %d", i)
 			}
 		}
 	}
@@ -160,10 +160,10 @@ func TestUint128Dec(t *testing.T) {
 			b := bigUintFromStr(t, one, i)
 			v := num128.UintFromBigInt(b)
 			if v.IsZero() {
-				c.Equal(num128.MaxUint, v.Dec(), indexFmt, i)
+				c.Equal(num128.MaxUint, v.Dec(), "index %d", i)
 			} else {
 				b.Sub(b, big1)
-				c.Equal(b.String(), v.Dec().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Dec().AsBigInt().String(), "index %d", i)
 			}
 		}
 	}
@@ -274,10 +274,10 @@ func TestUint128Json(t *testing.T) {
 		}
 		in := num128.UintFromStringNoCheck(one.ValueAsStr)
 		data, err := json.Marshal(in)
-		c.NoError(err, indexFmt, i)
+		c.NoError(err, "index %d", i)
 		var out num128.Uint
-		c.NoError(json.Unmarshal(data, &out), indexFmt, i)
-		c.Equal(in, out, indexFmt, i)
+		c.NoError(json.Unmarshal(data, &out), "index %d", i)
+		c.Equal(in, out, "index %d", i)
 	}
 }
 
@@ -289,10 +289,10 @@ func TestUint128Yaml(t *testing.T) {
 		}
 		in := num128.UintFromStringNoCheck(one.ValueAsStr)
 		data, err := yaml.Marshal(in)
-		c.NoError(err, indexFmt, i)
+		c.NoError(err, "index %d", i)
 		var out num128.Uint
-		c.NoError(yaml.Unmarshal(data, &out), indexFmt, i)
-		c.Equal(in, out, indexFmt, i)
+		c.NoError(yaml.Unmarshal(data, &out), "index %d", i)
+		c.Equal(in, out, "index %d", i)
 	}
 }
 
@@ -345,8 +345,8 @@ func TestUintFromString(t *testing.T) {
 
 	for i, tc := range cases {
 		result, err := num128.UintFromString(tc.input)
-		c.NoError(err, indexFmt, i)
-		c.Equal(tc.expected, result, indexFmt, i)
+		c.NoError(err, "index %d", i)
+		c.Equal(tc.expected, result, "index %d", i)
 	}
 
 	// Test exponential notation (floating point)
@@ -370,7 +370,7 @@ func TestUintFromString(t *testing.T) {
 
 	for i, input := range invalidInputs {
 		_, err = num128.UintFromString(input)
-		c.HasError(err, indexFmt, i)
+		c.HasError(err, "index %d", i)
 	}
 
 	// Test negative number handling specifically
@@ -409,9 +409,9 @@ func TestUintFromComponents(t *testing.T) {
 	for i, tc := range testCases {
 		result := num128.UintFromComponents(tc.hi, tc.lo)
 		high, low := result.Components()
-		c.Equal(tc.hi, high, indexFmt, i)
-		c.Equal(tc.lo, low, indexFmt, i)
-		c.Equal(tc.expected, result.String(), indexFmt, i)
+		c.Equal(tc.hi, high, "index %d", i)
+		c.Equal(tc.lo, low, "index %d", i)
+		c.Equal(tc.expected, result.String(), "index %d", i)
 	}
 }
 
@@ -459,11 +459,11 @@ func TestToBigIntAndAsBigInt(t *testing.T) {
 		// Test ToBigInt
 		var b big.Int
 		tc.ToBigInt(&b)
-		c.Equal(tc.String(), b.String(), indexFmt, i)
+		c.Equal(tc.String(), b.String(), "index %d", i)
 
 		// Test AsBigInt
 		b2 := tc.AsBigInt()
-		c.Equal(tc.String(), b2.String(), indexFmt, i)
+		c.Equal(tc.String(), b2.String(), "index %d", i)
 	}
 }
 
@@ -481,7 +481,7 @@ func TestAsBigFloat(t *testing.T) {
 	for i, tc := range testCases {
 		result := tc.AsBigFloat()
 		expected := new(big.Float).SetInt(tc.AsBigInt())
-		c.Equal(expected.String(), result.String(), indexFmt, i)
+		c.Equal(expected.String(), result.String(), "index %d", i)
 	}
 }
 

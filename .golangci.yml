@@ -50,6 +50,12 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
+      # Tests keep their strings inline. A table-driven case reads better with the literal it asserts on in front of
+      # the reader than with a constant they have to go look up, and the same string recurring across unrelated cases
+      # is not the duplication this linter exists to catch. This drops test files from the analysis rather than just
+      # hiding their reports, so a string repeated only in tests no longer pushes a single production use over the
+      # occurrence threshold either.
+      ignore-tests: true
     gocritic:
       disabled-checks:
         - sloppyReassign

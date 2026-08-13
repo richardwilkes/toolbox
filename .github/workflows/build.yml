@@ -1,0 +1,80 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancel superseded runs for a pull request when new commits are pushed to it, but let runs on main finish so every
+# commit there gets a result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The only platform-specific source in the module is Windows vs. everything else (e.g.
+        # xterm/terminal_windows.go) and nothing is architecture-specific, so one native runner per OS is enough to
+        # lint and test every code path. ubuntu-22.04-arm is the exception: geom, fixed and xmath do enough floating
+        # point that an amd64/arm64 pair on the same OS is worth having to catch any divergence between them. The
+        # cross-build job below keeps the remaining OS/architecture pairs compiling.
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-26, windows-2022]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # Lint via the official action rather than build.sh's --lint step: the latter downloads golangci-lint through
+      # its upstream install.sh, whose checksum verification fails for unauthenticated release downloads in CI.
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+
+      # build.sh builds, runs the tests with the race detector and installs the executables. The race runtime links
+      # against cgo everywhere except macOS, which the runners' preinstalled C toolchains cover; the module itself
+      # has no cgo.
+      - name: Build
+        run: ./build.sh --race
+
+  # The module is pure Go, so the OS/architecture pairs without a native runner above can still be compiled from one
+  # host. Cheap insurance against compile breakage on those platforms.
+  cross-build:
+    name: Cross-build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Cross-build the remaining platforms
+        env:
+          CGO_ENABLED: 0
+        run: |
+          for pair in darwin/amd64 windows/arm64; do
+            echo "::group::$pair"
+            GOOS=${pair%/*} GOARCH=${pair#*/} go build ./...
+            echo "::endgroup::"
+          done

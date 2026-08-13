@@ -89,14 +89,13 @@ func TestLoadRejectsTrailingContent(t *testing.T) {
 	Dir = dir
 	defer func() { Dir = savedDir }()
 
-	const name = "trailing.i18n"
 	content := "k:\"foo\" bar\n" + // trailing "bar" after the closing quote makes this an invalid key
 		"v:\"dropped\"\n" + // value for the rejected key; there is no live key, so it is discarded too
 		"k:\"good\"\n" + // a well-formed pair that must still round-trip
 		"v:\"translated\"\n"
-	c.NoError(os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600))
+	c.NoError(os.WriteFile(filepath.Join(dir, "trailing.i18n"), []byte(content), 0o600))
 
-	load(name)
+	load("trailing.i18n")
 	defer delete(langMap, "trailing")
 
 	translations := langMap["trailing"]
@@ -111,9 +110,8 @@ func TestLoadRejectsTrailingContent(t *testing.T) {
 
 	// Sanity check: a value line with trailing content is likewise rejected, leaving the key without a value.
 	logBuf.Reset()
-	const name2 = "badvalue.i18n"
-	c.NoError(os.WriteFile(filepath.Join(dir, name2), []byte("k:\"key\"\nv:\"val\" extra\n"), 0o600))
-	load(name2)
+	c.NoError(os.WriteFile(filepath.Join(dir, "badvalue.i18n"), []byte("k:\"key\"\nv:\"val\" extra\n"), 0o600))
+	load("badvalue.i18n")
 	defer delete(langMap, "badvalue")
 	badValue := langMap["badvalue"]
 	c.NotNil(badValue)

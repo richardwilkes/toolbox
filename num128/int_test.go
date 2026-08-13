@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	indexFmt               = "index %d"
 	maxInt64PlusOneAsStr   = "9223372036854775808"
 	minInt64MinusOneAsStr  = "-9223372036854775809"
 	maxInt128AsStr         = "170141183460469231731687303715884105727"
@@ -125,8 +124,8 @@ func bigIntFromStr(t *testing.T, one *info, index int) *big.Int {
 	t.Helper()
 	b, ok := new(big.Int).SetString(one.ValueAsStr, 10)
 	c := check.New(t)
-	c.True(ok, indexFmt, index)
-	c.Equal(one.ValueAsStr, b.String(), indexFmt, index)
+	c.True(ok, "index %d", index)
+	c.Equal(one.ValueAsStr, b.String(), "index %d", index)
 	return b
 }
 
@@ -134,7 +133,7 @@ func TestInt128FromInt64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt64 {
-			c.Equal(one.ExpectedConversionAsStr, num128.IntFrom64(one.Int64).String(), indexFmt, i)
+			c.Equal(one.ExpectedConversionAsStr, num128.IntFrom64(one.Int64).String(), "index %d", i)
 		}
 	}
 }
@@ -142,7 +141,7 @@ func TestInt128FromInt64(t *testing.T) {
 func TestInt128FromBigInt(t *testing.T) {
 	c := check.New(t)
 	for i, one := range table {
-		c.Equal(one.ExpectedConversionAsStr, num128.IntFromBigInt(bigIntFromStr(t, one, i)).String(), indexFmt, i)
+		c.Equal(one.ExpectedConversionAsStr, num128.IntFromBigInt(bigIntFromStr(t, one, i)).String(), "index %d", i)
 	}
 }
 
@@ -150,7 +149,7 @@ func TestInt128AsBigInt(t *testing.T) {
 	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt128 {
-			c.Equal(one.ValueAsStr, num128.IntFromBigInt(bigIntFromStr(t, one, i)).AsBigInt().String(), indexFmt, i)
+			c.Equal(one.ValueAsStr, num128.IntFromBigInt(bigIntFromStr(t, one, i)).AsBigInt().String(), "index %d", i)
 		}
 	}
 }
@@ -159,7 +158,7 @@ func TestInt128AsInt64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt64 {
-			c.Equal(one.Int64, num128.IntFrom64(one.Int64).AsInt64(), indexFmt, i)
+			c.Equal(one.Int64, num128.IntFrom64(one.Int64).AsInt64(), "index %d", i)
 		}
 	}
 }
@@ -168,7 +167,7 @@ func TestInt128IsInt64(t *testing.T) {
 	c := check.New(t)
 	for i, one := range table {
 		if one.IsInt128 {
-			c.Equal(one.IsInt64, num128.IntFromBigInt(bigIntFromStr(t, one, i)).IsInt64(), indexFmt, i)
+			c.Equal(one.IsInt64, num128.IntFromBigInt(bigIntFromStr(t, one, i)).IsInt64(), "index %d", i)
 		}
 	}
 }
@@ -186,7 +185,7 @@ func TestInt128Sign(t *testing.T) {
 			default:
 				sign = 1
 			}
-			c.Equal(sign, num128.IntFromBigInt(bigIntFromStr(t, one, i)).Sign(), indexFmt, i)
+			c.Equal(sign, num128.IntFromBigInt(bigIntFromStr(t, one, i)).Sign(), "index %d", i)
 		}
 	}
 }
@@ -199,10 +198,10 @@ func TestInt128Inc(t *testing.T) {
 			b := bigIntFromStr(t, one, i)
 			v := num128.IntFromBigInt(b)
 			if v == num128.MaxInt {
-				c.Equal(num128.MinInt, v.Inc(), indexFmt, i)
+				c.Equal(num128.MinInt, v.Inc(), "index %d", i)
 			} else {
 				b.Add(b, big1)
-				c.Equal(b.String(), v.Inc().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Inc().AsBigInt().String(), "index %d", i)
 			}
 		}
 	}
@@ -216,10 +215,10 @@ func TestInt128Dec(t *testing.T) {
 			b := bigIntFromStr(t, one, i)
 			v := num128.IntFromBigInt(b)
 			if v == num128.MinInt {
-				c.Equal(num128.MaxInt, v.Dec(), indexFmt, i)
+				c.Equal(num128.MaxInt, v.Dec(), "index %d", i)
 			} else {
 				b.Sub(b, big1)
-				c.Equal(b.String(), v.Dec().AsBigInt().String(), indexFmt, i)
+				c.Equal(b.String(), v.Dec().AsBigInt().String(), "index %d", i)
 			}
 		}
 	}
@@ -427,10 +426,10 @@ func TestInt128Json(t *testing.T) {
 		}
 		in := num128.IntFromStringNoCheck(one.ValueAsStr)
 		data, err := json.Marshal(in)
-		c.NoError(err, indexFmt, i)
+		c.NoError(err, "index %d", i)
 		var out num128.Int
-		c.NoError(json.Unmarshal(data, &out), indexFmt, i)
-		c.Equal(in, out, indexFmt, i)
+		c.NoError(json.Unmarshal(data, &out), "index %d", i)
+		c.Equal(in, out, "index %d", i)
 	}
 }
 
@@ -442,10 +441,10 @@ func TestInt128Yaml(t *testing.T) {
 		}
 		in := num128.IntFromStringNoCheck(one.ValueAsStr)
 		data, err := yaml.Marshal(in)
-		c.NoError(err, indexFmt, i)
+		c.NoError(err, "index %d", i)
 		var out num128.Int
-		c.NoError(yaml.Unmarshal(data, &out), indexFmt, i)
-		c.Equal(in, out, indexFmt, i)
+		c.NoError(yaml.Unmarshal(data, &out), "index %d", i)
+		c.Equal(in, out, "index %d", i)
 	}
 }
 
