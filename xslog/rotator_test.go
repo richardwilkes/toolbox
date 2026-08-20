@@ -167,7 +167,7 @@ func TestRotatorDefaults(t *testing.T) {
 
 func TestRotatorWithNilConfig(t *testing.T) {
 	c := check.New(t)
-	c.NotNil(((*xslog.Rotator)(nil)).NewWriteCloser())
+	c.NotNil((*xslog.Rotator)(nil).NewWriteCloser())
 }
 
 func TestRotatorAddFlags(t *testing.T) {

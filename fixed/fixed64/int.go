@@ -184,18 +184,40 @@ func FromStringForced[T fixed.Dx](str string) Int[T] {
 }
 
 // AsInteger returns the equivalent value in the destination type.
+//
+// Deprecated: Use f.AsInteger[TO]() instead.
 func AsInteger[T fixed.Dx, TO xmath.Integer](f Int[T]) TO {
+	return f.AsInteger[TO]()
+}
+
+// AsInteger returns the equivalent value in the destination type.
+func (f Int[T]) AsInteger[TO xmath.Integer]() TO {
 	return TO(int64(f) / Multiplier[T]())
 }
 
 // AsFloat returns the equivalent value in the destination type.
+//
+// Deprecated: Use f.AsFloat[TO]() instead.
 func AsFloat[T fixed.Dx, TO xmath.Float](f Int[T]) TO {
+	return f.AsFloat[TO]()
+}
+
+// AsFloat returns the equivalent value in the destination type.
+func (f Int[T]) AsFloat[TO xmath.Float]() TO {
 	return TO(float64(f) / float64(Multiplier[T]()))
 }
 
 // AsIntegerChecked is the same as AsInteger(), except that it returns an error if the value cannot be represented
 // exactly in the requested destination type.
+//
+// Deprecated: Use f.AsIntegerChecked[TO]() instead.
 func AsIntegerChecked[T fixed.Dx, TO xmath.Integer](f Int[T]) (TO, error) {
+	return f.AsIntegerChecked[TO]()
+}
+
+// AsIntegerChecked is the same as AsInteger(), except that it returns an error if the value cannot be represented
+// exactly in the requested destination type.
+func (f Int[T]) AsIntegerChecked[TO xmath.Integer]() (TO, error) {
 	n := TO(int64(f) / Multiplier[T]())
 	if FromInteger[T](n) != f {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -205,7 +227,15 @@ func AsIntegerChecked[T fixed.Dx, TO xmath.Integer](f Int[T]) (TO, error) {
 
 // AsFloatChecked is the same as AsFloat(), except that it returns an error if the value cannot be represented exactly
 // in the requested destination type.
+//
+// Deprecated: Use f.AsFloatChecked[TO]() instead.
 func AsFloatChecked[T fixed.Dx, TO xmath.Float](f Int[T]) (TO, error) {
+	return f.AsFloatChecked[TO]()
+}
+
+// AsFloatChecked is the same as AsFloat(), except that it returns an error if the value cannot be represented exactly
+// in the requested destination type.
+func (f Int[T]) AsFloatChecked[TO xmath.Float]() (TO, error) {
 	n := TO(float64(f) / float64(Multiplier[T]()))
 	if strconv.FormatFloat(float64(n), 'f', -1, reflect.TypeOf(n).Bits()) != f.String() {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -260,7 +290,7 @@ func (f Int[T]) Div(value Int[T]) Int[T] {
 // Mod returns the remainder after subtracting all full multiples of the passed-in value. The result has the same sign
 // as this value, matching the behavior of Go's % operator.
 func (f Int[T]) Mod(value Int[T]) Int[T] {
-	return f - (value.Mul(f.Div(value).Trunc()))
+	return f - value.Mul(f.Div(value).Trunc())
 }
 
 // Abs returns the absolute value of this value.

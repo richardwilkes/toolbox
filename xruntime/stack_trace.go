@@ -58,14 +58,13 @@ func PCsToStackTrace(pcs []uintptr) []string {
 // identify the location within the project.
 func StackTracePath(function, file string) string {
 	dirs := strings.Split(path.Dir(file), "/")
-	functions := strings.Split(function, "/")
-	if len(functions) > 0 {
-		functions[len(functions)-1] = strings.TrimSuffix(
-			strings.SplitN(functions[len(functions)-1], ".", 2)[0], "_test")
+	list := strings.Split(function, "/")
+	if len(list) > 0 {
+		list[len(list)-1] = strings.TrimSuffix(strings.SplitN(list[len(list)-1], ".", 2)[0], "_test")
 	}
-	i := len(functions)
+	i := len(list)
 	j := len(dirs)
-	for i > 0 && j > 0 && functions[i-1] == dirs[j-1] {
+	for i > 0 && j > 0 && list[i-1] == dirs[j-1] {
 		i--
 		j--
 	}

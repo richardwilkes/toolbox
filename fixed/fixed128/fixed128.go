@@ -165,12 +165,26 @@ func FromStringForced[T fixed.Dx](str string) Int[T] {
 }
 
 // AsInteger returns the equivalent value in the destination type.
+//
+// Deprecated: Use f.AsInteger[TO]() instead.
 func AsInteger[T fixed.Dx, TO xmath.Integer](f Int[T]) TO {
+	return f.AsInteger[TO]()
+}
+
+// AsInteger returns the equivalent value in the destination type.
+func (f Int[T]) AsInteger[TO xmath.Integer]() TO {
 	return TO(f.data.Div(multiplier[T]()).AsInt64())
 }
 
 // AsFloat returns the equivalent value in the destination type.
+//
+// Deprecated: Use f.AsFloat[TO]() instead.
 func AsFloat[T fixed.Dx, TO xmath.Float](f Int[T]) TO {
+	return f.AsFloat[TO]()
+}
+
+// AsFloat returns the equivalent value in the destination type.
+func (f Int[T]) AsFloat[TO xmath.Float]() TO {
 	var t T
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()
@@ -179,7 +193,15 @@ func AsFloat[T fixed.Dx, TO xmath.Float](f Int[T]) TO {
 
 // AsIntegerChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in
 // the requested destination type.
+//
+// Deprecated: Use f.AsIntegerChecked[TO]() instead.
 func AsIntegerChecked[T fixed.Dx, TO xmath.Integer](f Int[T]) (TO, error) {
+	return f.AsIntegerChecked[TO]()
+}
+
+// AsIntegerChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in
+// the requested destination type.
+func (f Int[T]) AsIntegerChecked[TO xmath.Integer]() (TO, error) {
 	n := TO(f.data.Div(multiplier[T]()).AsInt64())
 	if FromInteger[T](n) != f {
 		return 0, fixed.ErrDoesNotFitInRequestedType
@@ -189,7 +211,15 @@ func AsIntegerChecked[T fixed.Dx, TO xmath.Integer](f Int[T]) (TO, error) {
 
 // AsFloatChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in the
 // requested destination type.
+//
+// Deprecated: Use f.AsFloatChecked[TO]() instead.
 func AsFloatChecked[T fixed.Dx, TO xmath.Float](f Int[T]) (TO, error) {
+	return f.AsFloatChecked[TO]()
+}
+
+// AsFloatChecked is the same as As(), except that it returns an error if the value cannot be represented exactly in the
+// requested destination type.
+func (f Int[T]) AsFloatChecked[TO xmath.Float]() (TO, error) {
 	var t T
 	fixed64, _ := new(big.Float).SetPrec(128).Quo(f.data.AsBigFloat(),
 		new(big.Float).SetPrec(128).SetInt(big.NewInt(t.Multiplier()))).Float64()

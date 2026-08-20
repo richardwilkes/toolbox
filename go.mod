@@ -1,6 +1,6 @@
 module github.com/richardwilkes/toolbox/v2
 
-go 1.26.0
+go 1.27.0
 
 require (
 	golang.org/x/image v0.44.0
