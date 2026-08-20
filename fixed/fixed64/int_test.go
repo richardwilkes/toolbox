@@ -449,28 +449,28 @@ func testAs[T fixed.Dx](t *testing.T) {
 
 	// Test integer conversions
 	intVal := fixed64.FromInteger[T](42)
-	c.Equal(int(42), fixed64.AsInteger[T, int](intVal))
-	c.Equal(int8(42), fixed64.AsInteger[T, int8](intVal))
-	c.Equal(int16(42), fixed64.AsInteger[T, int16](intVal))
-	c.Equal(int32(42), fixed64.AsInteger[T, int32](intVal))
-	c.Equal(int64(42), fixed64.AsInteger[T, int64](intVal))
-	c.Equal(uint(42), fixed64.AsInteger[T, uint](intVal))
-	c.Equal(uint8(42), fixed64.AsInteger[T, uint8](intVal))
-	c.Equal(uint16(42), fixed64.AsInteger[T, uint16](intVal))
-	c.Equal(uint32(42), fixed64.AsInteger[T, uint32](intVal))
-	c.Equal(uint64(42), fixed64.AsInteger[T, uint64](intVal))
+	c.Equal(int(42), intVal.AsInteger[int]())
+	c.Equal(int8(42), intVal.AsInteger[int8]())
+	c.Equal(int16(42), intVal.AsInteger[int16]())
+	c.Equal(int32(42), intVal.AsInteger[int32]())
+	c.Equal(int64(42), intVal.AsInteger[int64]())
+	c.Equal(uint(42), intVal.AsInteger[uint]())
+	c.Equal(uint8(42), intVal.AsInteger[uint8]())
+	c.Equal(uint16(42), intVal.AsInteger[uint16]())
+	c.Equal(uint32(42), intVal.AsInteger[uint32]())
+	c.Equal(uint64(42), intVal.AsInteger[uint64]())
 
 	// Test float conversions
 	floatVal := fixed64.FromStringForced[T]("3.1")
-	f32Result := fixed64.AsFloat[T, float32](floatVal)
-	f64Result := fixed64.AsFloat[T, float64](floatVal)
+	f32Result := floatVal.AsFloat[float32]()
+	f64Result := floatVal.AsFloat[float64]()
 	c.True(f32Result > 3.0 && f32Result < 3.2)
 	c.True(f64Result > 3.0 && f64Result < 3.2)
 
 	// Test negative values
 	negVal := fixed64.FromInteger[T](-10)
-	c.Equal(int(-10), fixed64.AsInteger[T, int](negVal))
-	c.Equal(float64(-10.0), fixed64.AsFloat[T, float64](negVal))
+	c.Equal(int(-10), negVal.AsInteger[int]())
+	c.Equal(float64(-10.0), negVal.AsFloat[float64]())
 }
 
 func TestCheckedAs(t *testing.T) {
@@ -487,37 +487,37 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 
 	// Test successful conversions
 	intVal := fixed64.FromInteger[T](42)
-	result, err := fixed64.AsIntegerChecked[T, int](intVal)
+	result, err := intVal.AsIntegerChecked[int]()
 	c.NoError(err)
 	c.Equal(int(42), result)
 
-	floatResult, err := fixed64.AsFloatChecked[T, float64](intVal)
+	floatResult, err := intVal.AsFloatChecked[float64]()
 	c.NoError(err)
 	c.Equal(float64(42.0), floatResult)
 
 	// Test conversion that should fail (fractional part)
 	fracVal := fixed64.FromStringForced[T]("42.5")
-	_, err = fixed64.AsIntegerChecked[T, int](fracVal)
+	_, err = fracVal.AsIntegerChecked[int]()
 	c.HasError(err)
 
 	// Float conversion should succeed for fractional values
-	floatResult, err = fixed64.AsFloatChecked[T, float64](fracVal)
+	floatResult, err = fracVal.AsFloatChecked[float64]()
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
 
 	// Values whose shortest float representation uses an exponent should still convert
 	million := fixed64.FromInteger[T](1000000)
-	floatResult, err = fixed64.AsFloatChecked[T, float64](million)
+	floatResult, err = million.AsFloatChecked[float64]()
 	c.NoError(err)
 	c.Equal(float64(1000000), floatResult)
 
 	// Small destination types should work when the value fits...
-	smallResult, err := fixed64.AsIntegerChecked[T, int8](fixed64.FromInteger[T](100))
+	smallResult, err := fixed64.FromInteger[T](100).AsIntegerChecked[int8]()
 	c.NoError(err)
 	c.Equal(int8(100), smallResult)
 
 	// ...and fail when it does not
-	_, err = fixed64.AsIntegerChecked[T, int8](fixed64.FromInteger[T](200))
+	_, err = fixed64.FromInteger[T](200).AsIntegerChecked[int8]()
 	c.HasError(err)
 }
 
@@ -803,7 +803,7 @@ func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 
 	// Test CheckedAs with float conversion that should fail
 	val := fixed64.FromStringForced[T]("999999999999999999.9")
-	_, _ = fixed64.AsFloatChecked[T, float32](val) //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
+	_, _ = val.AsFloatChecked[float32]() //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
 	c.NotNil(val)
 
 	// Test YAML unmarshaling with string data
@@ -832,7 +832,7 @@ func TestMulOverflow(t *testing.T) {
 	v2 := fixed64.FromInteger[fixed.D4](v1)
 	m2 := fixed64.FromInteger[fixed.D4](m1)
 	d2 := fixed64.FromInteger[fixed.D4](d1)
-	result := fixed64.AsInteger[fixed.D4, int64](v2.Mul(m2.Div(d2)))
+	result := v2.Mul(m2.Div(d2)).AsInteger[int64]()
 	c.Equal(expected, result)
 }
 
@@ -854,7 +854,7 @@ func testOutOfRangeSaturates[T fixed.Dx](t *testing.T) {
 	minimum := fixed64.Minimum[T]()
 
 	// The float just past the top of the range, and one far beyond it, both saturate.
-	beyond := fixed64.AsFloat[T, float64](maximum) * 1.1
+	beyond := maximum.AsFloat[float64]() * 1.1
 	c.Equal(maximum, fixed64.FromFloat[T](beyond))
 	c.Equal(minimum, fixed64.FromFloat[T](-beyond))
 	c.Equal(maximum, fixed64.FromFloat[T](math.MaxFloat64))

@@ -108,11 +108,11 @@ func (f Fraction[T]) Div(other Fraction[T]) Fraction[T] {
 func (f Fraction[T]) Simplify() Fraction[T] {
 	n := f
 	n.Normalize()
-	numerator := AsInteger[T, int](n.Numerator)
+	numerator := n.Numerator.AsInteger[int]()
 	if FromInteger[T](numerator) != n.Numerator {
 		return n
 	}
-	denominator := AsInteger[T, int](n.Denominator)
+	denominator := n.Denominator.AsInteger[int]()
 	if FromInteger[T](denominator) != n.Denominator {
 		return n
 	}
