@@ -10,7 +10,7 @@
 package bitset
 
 import (
-	"math"
+	"math/bits"
 
 	"github.com/richardwilkes/toolbox/v2/errs"
 	"github.com/richardwilkes/toolbox/v2/xos"
@@ -89,15 +89,6 @@ func (b *BitSet) Set(index int) {
 	}
 }
 
-func countSetBits(x uint64) int {
-	x -= (x >> 1) & 0x5555555555555555
-	x = (x>>2)&0x3333333333333333 + x&0x3333333333333333
-	x += x >> 4
-	x &= 0x0f0f0f0f0f0f0f0f
-	x *= 0x0101010101010101
-	return int(x >> 56)
-}
-
 // SetRange sets the bits from 'start' to 'end', inclusive.
 func (b *BitSet) SetRange(start, end int) {
 	validateBitSetIndex(start)
@@ -108,28 +99,18 @@ func (b *BitSet) SetRange(start, end int) {
 	i1 := start >> addressBitsPerWord
 	i2 := end >> addressBitsPerWord
 	b.EnsureCapacity(i2 + 1)
-	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
-		if i != i1 && i != i2 {
-			b.set += dataBitsPerWord - countSetBits(b.data[i])
-			b.data[i] = math.MaxUint64
-		} else {
-			var last int
-			if i == i2 {
-				last = bitIndexForMask(wordMask(end)) + 1
-			} else {
-				last = dataBitsPerWord
-			}
-			for j < last {
-				mask := wordMask(j)
-				if b.data[i]&mask == 0 {
-					b.data[i] |= mask
-					b.set++
-				}
-				j++
-			}
-			j = 0
+		lo := 0
+		if i == i1 {
+			lo = start & bitIndexMask
 		}
+		hi := bitIndexMask
+		if i == i2 {
+			hi = end & bitIndexMask
+		}
+		mask := (^uint64(0) << uint(lo)) & (^uint64(0) >> uint(bitIndexMask-hi))
+		b.set += bits.OnesCount64(mask &^ b.data[i])
+		b.data[i] |= mask
 	}
 }
 
@@ -160,32 +141,22 @@ func (b *BitSet) ClearRange(start, end int) {
 	}
 	// endWord is the word actually containing 'end'. The loop bound i2 is capped to the allocated storage, so when
 	// 'end' lies beyond it, i2 < endWord; in that case the capped final word is wholly inside the range and must be
-	// cleared in full rather than only up to (end & bitIndexMask). Comparing against endWord (not i2) keeps that
-	// distinction.
+	// cleared in full, i.e. its hi bound is bitIndexMask rather than (end & bitIndexMask). Comparing against endWord
+	// (not i2) keeps that distinction.
 	endWord := end >> addressBitsPerWord
 	i2 := min(endWord, maximum)
-	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
-		if i != i1 && i != endWord {
-			b.set -= countSetBits(b.data[i])
-			b.data[i] = 0
-		} else {
-			var last int
-			if i == endWord {
-				last = bitIndexForMask(wordMask(end)) + 1
-			} else {
-				last = dataBitsPerWord
-			}
-			for j < last {
-				mask := wordMask(j)
-				if b.data[i]&mask == mask {
-					b.data[i] &= ^mask
-					b.set--
-				}
-				j++
-			}
-			j = 0
+		lo := 0
+		if i == i1 {
+			lo = start & bitIndexMask
 		}
+		hi := bitIndexMask
+		if i == endWord {
+			hi = end & bitIndexMask
+		}
+		mask := (^uint64(0) << uint(lo)) & (^uint64(0) >> uint(bitIndexMask-hi))
+		b.set -= bits.OnesCount64(mask & b.data[i])
+		b.data[i] &^= mask
 	}
 }
 
@@ -213,30 +184,49 @@ func (b *BitSet) FlipRange(start, end int) {
 	i1 := start >> addressBitsPerWord
 	i2 := end >> addressBitsPerWord
 	b.EnsureCapacity(i2 + 1)
-	j := bitIndexForMask(wordMask(start))
 	for i := i1; i <= i2; i++ {
-		if i != i1 && i != i2 {
-			b.set += dataBitsPerWord - 2*countSetBits(b.data[i])
-			b.data[i] ^= math.MaxUint64
-		} else {
-			var last int
-			if i == i2 {
-				last = bitIndexForMask(wordMask(end)) + 1
-			} else {
-				last = dataBitsPerWord
-			}
-			for j < last {
-				mask := wordMask(j)
-				b.data[i] ^= mask
-				if b.data[i]&mask == mask {
-					b.set++
-				} else {
-					b.set--
-				}
-				j++
-			}
-			j = 0
+		lo := 0
+		if i == i1 {
+			lo = start & bitIndexMask
 		}
+		hi := bitIndexMask
+		if i == i2 {
+			hi = end & bitIndexMask
+		}
+		mask := (^uint64(0) << uint(lo)) & (^uint64(0) >> uint(bitIndexMask-hi))
+		b.set += bits.OnesCount64(mask&^b.data[i]) - bits.OnesCount64(mask&b.data[i])
+		b.data[i] ^= mask
+	}
+}
+
+// And changes this BitSet in place to the bitwise AND of itself and 'other'.
+func (b *BitSet) And(other *BitSet) {
+	limit := min(len(b.data), len(other.data))
+	for i := range limit {
+		b.set -= bits.OnesCount64(b.data[i] &^ other.data[i])
+		b.data[i] &= other.data[i]
+	}
+	for i := limit; i < len(b.data); i++ {
+		b.set -= bits.OnesCount64(b.data[i])
+		b.data[i] = 0
+	}
+}
+
+// Or changes this BitSet in place to the bitwise OR of itself and 'other'.
+func (b *BitSet) Or(other *BitSet) {
+	b.EnsureCapacity(len(other.data))
+	for i, word := range other.data {
+		b.set += bits.OnesCount64(word &^ b.data[i])
+		b.data[i] |= word
+	}
+}
+
+// Xor changes this BitSet in place to the bitwise XOR (exclusive OR) of itself and 'other'.
+func (b *BitSet) Xor(other *BitSet) {
+	b.EnsureCapacity(len(other.data))
+	for i, word := range other.data {
+		b.set += bits.OnesCount64(word&^b.data[i]) - bits.OnesCount64(word&b.data[i])
+		b.data[i] ^= word
 	}
 }
 
@@ -255,24 +245,17 @@ func (b *BitSet) LastSet() int {
 func (b *BitSet) PreviousSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
-	var firstBit int
+	firstBit := start & bitIndexMask
 	if maximum := len(b.data) - 1; i > maximum {
 		i = maximum
-		firstBit = 63
-	} else {
-		firstBit = bitIndexForMask(wordMask(start))
+		firstBit = bitIndexMask
 	}
+	mask := ^uint64(0) >> uint(bitIndexMask-firstBit)
 	for i >= 0 {
-		word := b.data[i]
-		if word != 0 {
-			for j := firstBit; j >= 0; j-- {
-				mask := wordMask(j)
-				if word&mask == mask {
-					return i<<addressBitsPerWord + j
-				}
-			}
+		if word := b.data[i] & mask; word != 0 {
+			return i<<addressBitsPerWord + bitIndexMask - bits.LeadingZeros64(word)
 		}
-		firstBit = 63
+		mask = ^uint64(0)
 		i--
 	}
 	return -1
@@ -282,19 +265,13 @@ func (b *BitSet) PreviousSet(start int) int {
 func (b *BitSet) NextSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
-	firstBit := bitIndexForMask(wordMask(start))
+	mask := ^uint64(0) << uint(start&bitIndexMask)
 	maximum := len(b.data)
 	for i < maximum {
-		word := b.data[i]
-		if word != 0 {
-			for j := firstBit; j < dataBitsPerWord; j++ {
-				mask := wordMask(j)
-				if word&mask == mask {
-					return i<<addressBitsPerWord + j
-				}
-			}
+		if word := b.data[i] & mask; word != 0 {
+			return i<<addressBitsPerWord + bits.TrailingZeros64(word)
 		}
-		firstBit = 0
+		mask = ^uint64(0)
 		i++
 	}
 	return -1
@@ -308,18 +285,12 @@ func (b *BitSet) PreviousClear(start int) int {
 	if i > len(b.data)-1 {
 		return start
 	}
-	firstBit := bitIndexForMask(wordMask(start))
+	mask := ^uint64(0) >> uint(bitIndexMask-(start&bitIndexMask))
 	for i >= 0 {
-		word := b.data[i]
-		if word != math.MaxUint64 {
-			for j := firstBit; j >= 0; j-- {
-				mask := wordMask(j)
-				if word&mask == 0 {
-					return i<<addressBitsPerWord + j
-				}
-			}
+		if word := ^b.data[i] & mask; word != 0 {
+			return i<<addressBitsPerWord + bitIndexMask - bits.LeadingZeros64(word)
 		}
-		firstBit = 63
+		mask = ^uint64(0)
 		i--
 	}
 	return -1
@@ -329,19 +300,13 @@ func (b *BitSet) PreviousClear(start int) int {
 func (b *BitSet) NextClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
-	firstBit := bitIndexForMask(wordMask(start))
+	mask := ^uint64(0) << uint(start&bitIndexMask)
 	maximum := len(b.data)
 	for i < maximum {
-		word := b.data[i]
-		if word != math.MaxUint64 {
-			for j := firstBit; j < dataBitsPerWord; j++ {
-				mask := wordMask(j)
-				if word&mask == 0 {
-					return i<<addressBitsPerWord + j
-				}
-			}
+		if word := ^b.data[i] & mask; word != 0 {
+			return i<<addressBitsPerWord + bits.TrailingZeros64(word)
 		}
-		firstBit = 0
+		mask = ^uint64(0)
 		i++
 	}
 	return max(maximum*dataBitsPerWord, start)
@@ -393,16 +358,8 @@ func (b *BitSet) Load(data []uint64) {
 	copy(b.data, data)
 	b.Trim()
 	b.set = 0
-	for i := len(b.data) - 1; i >= 0; i-- {
-		word := data[i] //nolint:gosec // This is not a security issue.
-		if word != 0 {
-			for j := range dataBitsPerWord {
-				mask := wordMask(j)
-				if word&mask == mask {
-					b.set++
-				}
-			}
-		}
+	for _, word := range b.data {
+		b.set += bits.OnesCount64(word)
 	}
 }
 
@@ -414,16 +371,6 @@ func (b *BitSet) Reset() {
 
 func wordMask(index int) uint64 {
 	return uint64(1) << uint(index&bitIndexMask)
-}
-
-func bitIndexForMask(mask uint64) int {
-	for i := range dataBitsPerWord {
-		if mask == wordMask(i) {
-			return i
-		}
-	}
-	xos.ExitWithErr(errs.Newf("Unable to determine bit index for mask %064b\n", mask))
-	return 0
 }
 
 func validateBitSetIndex(index int) {

@@ -282,3 +282,393 @@ func TestBitSetLoad(t *testing.T) {
 	c.Equal(0, bs.Count())
 	c.Nil(bs.data)
 }
+
+// checkBitSetContents verifies that 'bs' has exactly the bits listed in 'indexes' set and no others. It checks the
+// state of each expected bit, verifies Count() against both the expected number of bits and an independent tally made
+// by walking the set bits with NextSet(), and compares 'bs' to an expected BitSet built purely from Set() calls. The
+// Equal() comparison is made on trimmed copies, since Equal() also compares the underlying storage lengths, which
+// legitimately vary with how the storage happened to be grown. 'indexes' must not contain duplicates.
+func checkBitSetContents(c check.Checker, bs *BitSet, label string, indexes ...int) {
+	c.Helper()
+	var expected BitSet
+	for _, index := range indexes {
+		expected.Set(index)
+	}
+	for _, index := range indexes {
+		c.True(bs.State(index), "%s: bit %d should be set", label, index)
+	}
+	tally := 0
+	for i := bs.FirstSet(); i != -1; i = bs.NextSet(i + 1) {
+		tally++
+		c.True(expected.State(i), "%s: bit %d should not be set", label, i)
+	}
+	c.Equal(len(indexes), tally, "%s: number of set bits found by iterating with NextSet", label)
+	c.Equal(len(indexes), bs.Count(), "%s: Count", label)
+	if len(indexes) == 0 {
+		c.Equal(-1, bs.FirstSet(), "%s: FirstSet of an empty BitSet", label)
+		c.Equal(-1, bs.LastSet(), "%s: LastSet of an empty BitSet", label)
+	}
+	actual := bs.Clone()
+	actual.Trim()
+	expected.Trim()
+	c.True(actual.Equal(&expected), "%s: result should equal the expected BitSet", label)
+}
+
+func TestBitSetAnd(t *testing.T) {
+	c := check.New(t)
+
+	// Overlapping sets within a single word
+	var bs1, bs2 BitSet
+	bs1.Set(1)
+	bs1.Set(2)
+	bs1.Set(3)
+	bs1.Set(4)
+	bs2.Set(3)
+	bs2.Set(4)
+	bs2.Set(5)
+	bs1.And(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, single word", 3, 4)
+
+	// Overlapping sets spanning multiple words
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{0, 65, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{65, 130, 131, 255} {
+		bs2.Set(index)
+	}
+	bs1.And(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, multiple words", 65, 130)
+
+	// Disjoint sets
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{1, 3, 70, 129} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{2, 4, 71, 130} {
+		bs2.Set(index)
+	}
+	bs1.And(&bs2)
+	checkBitSetContents(c, &bs1, "disjoint")
+
+	// The receiver has more words than 'other', so the bits beyond the last word of 'other' must be cleared
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{10, 100, 150, 250} {
+		bs1.Set(index)
+	}
+	bs2.Set(10)
+	bs2.Set(100)
+	c.True(len(bs1.data) > len(bs2.data), "the receiver should have more words than 'other'")
+	bs1.And(&bs2)
+	c.False(bs1.State(150), "bit 150 lies beyond the last word of 'other' and must be cleared")
+	c.False(bs1.State(250), "bit 250 lies beyond the last word of 'other' and must be cleared")
+	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 10, 100)
+
+	// 'other' has more words than the receiver; the receiver must not grow
+	bs1.Reset()
+	bs2.Reset()
+	bs1.Set(5)
+	bs1.Set(70)
+	for _, index := range []int{5, 70, 200} {
+		bs2.Set(index)
+	}
+	words := len(bs1.data)
+	c.True(len(bs2.data) > words, "'other' should have more words than the receiver")
+	bs1.And(&bs2)
+	c.Equal(words, len(bs1.data), "And must not grow the receiver")
+	checkBitSetContents(c, &bs1, "'other' larger than receiver", 5, 70)
+
+	// An empty receiver
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 200} {
+		bs2.Set(index)
+	}
+	bs1.And(&bs2)
+	c.Nil(bs1.data, "And must not allocate storage for an empty receiver")
+	checkBitSetContents(c, &bs1, "empty receiver")
+
+	// An empty 'other'
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	bs1.And(&bs2)
+	checkBitSetContents(c, &bs1, "empty 'other'")
+
+	// Both empty
+	bs1.Reset()
+	bs2.Reset()
+	bs1.And(&bs2)
+	checkBitSetContents(c, &bs1, "both empty")
+
+	// Aliased call
+	bs1.Reset()
+	for _, index := range []int{3, 70, 130, 255} {
+		bs1.Set(index)
+	}
+	bs1.And(&bs1)
+	checkBitSetContents(c, &bs1, "aliased", 3, 70, 130, 255)
+}
+
+func TestBitSetOr(t *testing.T) {
+	c := check.New(t)
+
+	// Overlapping sets within a single word
+	var bs1, bs2 BitSet
+	bs1.Set(1)
+	bs1.Set(2)
+	bs1.Set(3)
+	bs2.Set(3)
+	bs2.Set(4)
+	bs2.Set(5)
+	bs1.Or(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, single word", 1, 2, 3, 4, 5)
+
+	// Overlapping sets spanning multiple words
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{0, 65, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{65, 130, 131, 255} {
+		bs2.Set(index)
+	}
+	bs1.Or(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, multiple words", 0, 65, 70, 130, 131, 200, 255)
+
+	// Disjoint sets
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{0, 64, 129} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{1, 65, 130} {
+		bs2.Set(index)
+	}
+	bs1.Or(&bs2)
+	checkBitSetContents(c, &bs1, "disjoint", 0, 1, 64, 65, 129, 130)
+
+	// The receiver has more words than 'other'; the bits beyond the last word of 'other' must be left alone
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 200} {
+		bs1.Set(index)
+	}
+	bs2.Set(6)
+	words := len(bs1.data)
+	c.True(words > len(bs2.data), "the receiver should have more words than 'other'")
+	bs1.Or(&bs2)
+	c.Equal(words, len(bs1.data), "Or must not grow the receiver when 'other' is smaller")
+	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 5, 6, 70, 200)
+
+	// 'other' has more words than the receiver, so the receiver must grow
+	bs1.Reset()
+	bs2.Reset()
+	bs1.Set(5)
+	bs2.Set(5)
+	bs2.Set(130)
+	c.True(len(bs2.data) > len(bs1.data), "'other' should have more words than the receiver")
+	bs1.Or(&bs2)
+	c.True(len(bs1.data) >= len(bs2.data), "Or must grow the receiver when 'other' has more words")
+	c.True(bs1.State(130), "bit 130 came from the extra words of 'other'")
+	checkBitSetContents(c, &bs1, "'other' larger than receiver", 5, 130)
+
+	// An empty receiver
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 200} {
+		bs2.Set(index)
+	}
+	bs1.Or(&bs2)
+	checkBitSetContents(c, &bs1, "empty receiver", 5, 70, 200)
+
+	// An empty 'other'
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	words = len(bs1.data)
+	bs1.Or(&bs2)
+	c.Equal(words, len(bs1.data), "Or with an empty 'other' must not grow the receiver")
+	checkBitSetContents(c, &bs1, "empty 'other'", 5, 70, 130, 200)
+
+	// Both empty
+	bs1.Reset()
+	bs2.Reset()
+	bs1.Or(&bs2)
+	checkBitSetContents(c, &bs1, "both empty")
+
+	// Aliased call
+	bs1.Reset()
+	for _, index := range []int{3, 70, 130, 255} {
+		bs1.Set(index)
+	}
+	bs1.Or(&bs1)
+	checkBitSetContents(c, &bs1, "aliased", 3, 70, 130, 255)
+}
+
+func TestBitSetXor(t *testing.T) {
+	c := check.New(t)
+
+	// Overlapping sets within a single word
+	var bs1, bs2 BitSet
+	bs1.Set(1)
+	bs1.Set(2)
+	bs1.Set(3)
+	bs2.Set(3)
+	bs2.Set(4)
+	bs2.Set(5)
+	bs1.Xor(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, single word", 1, 2, 4, 5)
+
+	// Overlapping sets spanning multiple words
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{0, 65, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{65, 130, 131, 255} {
+		bs2.Set(index)
+	}
+	bs1.Xor(&bs2)
+	checkBitSetContents(c, &bs1, "overlapping, multiple words", 0, 70, 131, 200, 255)
+
+	// Disjoint sets
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{0, 64, 129} {
+		bs1.Set(index)
+	}
+	for _, index := range []int{1, 65, 130} {
+		bs2.Set(index)
+	}
+	bs1.Xor(&bs2)
+	checkBitSetContents(c, &bs1, "disjoint", 0, 1, 64, 65, 129, 130)
+
+	// The receiver has more words than 'other'; the bits beyond the last word of 'other' must be left alone
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 200} {
+		bs1.Set(index)
+	}
+	bs2.Set(5)
+	bs2.Set(71)
+	words := len(bs1.data)
+	c.True(words > len(bs2.data), "the receiver should have more words than 'other'")
+	bs1.Xor(&bs2)
+	c.Equal(words, len(bs1.data), "Xor must not grow the receiver when 'other' is smaller")
+	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 70, 71, 200)
+
+	// 'other' has more words than the receiver, so the receiver must grow
+	bs1.Reset()
+	bs2.Reset()
+	bs1.Set(5)
+	bs2.Set(5)
+	bs2.Set(130)
+	c.True(len(bs2.data) > len(bs1.data), "'other' should have more words than the receiver")
+	bs1.Xor(&bs2)
+	c.True(len(bs1.data) >= len(bs2.data), "Xor must grow the receiver when 'other' has more words")
+	c.True(bs1.State(130), "bit 130 came from the extra words of 'other'")
+	checkBitSetContents(c, &bs1, "'other' larger than receiver", 130)
+
+	// An empty receiver
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 200} {
+		bs2.Set(index)
+	}
+	bs1.Xor(&bs2)
+	checkBitSetContents(c, &bs1, "empty receiver", 5, 70, 200)
+
+	// An empty 'other'
+	bs1.Reset()
+	bs2.Reset()
+	for _, index := range []int{5, 70, 130, 200} {
+		bs1.Set(index)
+	}
+	words = len(bs1.data)
+	bs1.Xor(&bs2)
+	c.Equal(words, len(bs1.data), "Xor with an empty 'other' must not grow the receiver")
+	checkBitSetContents(c, &bs1, "empty 'other'", 5, 70, 130, 200)
+
+	// Both empty
+	bs1.Reset()
+	bs2.Reset()
+	bs1.Xor(&bs2)
+	checkBitSetContents(c, &bs1, "both empty")
+
+	// Aliased call: a BitSet XOR'd with itself must be empty
+	bs1.Reset()
+	for _, index := range []int{3, 70, 130, 255} {
+		bs1.Set(index)
+	}
+	bs1.Xor(&bs1)
+	c.Equal(0, bs1.Count(), "aliased: Count")
+	c.Equal(-1, bs1.FirstSet(), "aliased: FirstSet")
+	checkBitSetContents(c, &bs1, "aliased")
+}
+
+// TestBitSetLogicalOpsBruteForce differentially checks And, Or and Xor against straightforward per-bit references
+// across a variety of receiver and argument shapes, including empty sets and both orderings of "one side has more
+// words than the other".
+func TestBitSetLogicalOpsBruteForce(t *testing.T) {
+	c := check.New(t)
+	// The specs are (step, highest) pairs; a step of 0 produces an empty set. The highest values straddle the word
+	// boundaries at 64, 128, 192 and 256 so that the various word-length combinations are exercised.
+	specs := [][2]int{{0, 0}, {1, 5}, {3, 63}, {1, 64}, {7, 130}, {5, 255}, {64, 255}}
+	build := func(spec [2]int) (*BitSet, map[int]bool) {
+		bs := &BitSet{}
+		ref := make(map[int]bool)
+		if spec[0] > 0 {
+			for bit := 0; bit <= spec[1]; bit += spec[0] {
+				bs.Set(bit)
+				ref[bit] = true
+			}
+		}
+		return bs, ref
+	}
+	const limit = 5 * dataBitsPerWord // Deliberately beyond the largest allocation any spec produces
+	for _, lhsSpec := range specs {
+		for _, rhsSpec := range specs {
+			for _, op := range []string{"And", "Or", "Xor"} {
+				bs, ref := build(lhsSpec)
+				other, otherRef := build(rhsSpec)
+				expected := make(map[int]bool)
+				for bit := range limit {
+					switch op {
+					case "And":
+						if ref[bit] && otherRef[bit] {
+							expected[bit] = true
+						}
+					case "Or":
+						if ref[bit] || otherRef[bit] {
+							expected[bit] = true
+						}
+					default:
+						if ref[bit] != otherRef[bit] {
+							expected[bit] = true
+						}
+					}
+				}
+				switch op {
+				case "And":
+					bs.And(other)
+				case "Or":
+					bs.Or(other)
+				default:
+					bs.Xor(other)
+				}
+				for bit := range limit {
+					c.Equal(expected[bit], bs.State(bit), "bit %d after %v.%s(%v)", bit, lhsSpec, op, rhsSpec)
+				}
+				c.Equal(len(expected), bs.Count(), "Count after %v.%s(%v)", lhsSpec, op, rhsSpec)
+			}
+		}
+	}
+}
