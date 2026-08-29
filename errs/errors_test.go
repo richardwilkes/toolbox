@@ -136,14 +136,11 @@ func TestDoubleWrap(t *testing.T) {
 	c := check.New(t)
 	errError := error(errs.New("foo"))
 
-	// Verify *errs.Error doesn't get wrapped again
 	c.Equal(errError, errs.Wrap(errError))
 
-	// Wrap the error using the standard library
 	wrappedErr := fmt.Errorf("bar: %w", errError)
 	c.Equal(errError, errors.Unwrap(wrappedErr))
 
-	// Verify that an error with an embedded *errs.Error cause doesn't get wrapped again
 	c.Equal(wrappedErr, errs.Wrap(wrappedErr))
 }
 
@@ -151,14 +148,12 @@ func TestDoubleWrapTyped(t *testing.T) {
 	c := check.New(t)
 	errError := errs.New("foo")
 
-	// Verify *errs.Error doesn't get wrapped again
 	c.Equal(errError, errs.WrapTyped(errError))
 
-	// Wrap the error using the standard library
 	wrappedErr := fmt.Errorf("bar: %w", errError)
 	c.Equal(error(errError), errors.Unwrap(wrappedErr))
 
-	// It seems the best thing to do here is to wrap again
+	// Unlike Wrap, an error that merely wraps an *Error is wrapped again.
 	rewrittenError := errs.WrapTyped(wrappedErr)
 	c.Equal(wrappedErr, errors.Unwrap(rewrittenError))
 }
@@ -267,7 +262,6 @@ func TestLogValue(t *testing.T) {
 	err := errs.New("foo")
 	val := err.LogValue()
 	c.Equal("Group", val.Kind().String())
-	// Check that the group contains the error message
 	c.Contains(val.Group()[0].Value.String(), "foo")
 }
 

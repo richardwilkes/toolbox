@@ -11,9 +11,9 @@ package xslices
 
 import "slices"
 
-// ColumnSort sorts the slice in place using the provided comparison function. The resulting order will be as if the
-// slice was divided into columns and each column was sorted independently. If the slice is not evenly divisible by
-// the number of columns, the extra elements will be distributed across the columns from left to right.
+// ColumnSort sorts 's' in place using 'cmp', then rearranges it so that laying the result out row by row into
+// 'columns' columns places the sorted order down each column in turn. If the slice is not evenly divisible by the
+// number of columns, the extra elements are distributed across the columns from left to right.
 func ColumnSort[S ~[]E, E any](s S, columns int, cmp func(a, b E) int) {
 	slices.SortFunc(s, cmp)
 	if columns > 1 && len(s) > columns {

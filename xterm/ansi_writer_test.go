@@ -18,13 +18,11 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
-// TestWrapTextMeasuresRunesNotBytes verifies that WrapText measures column width by visible runes rather than bytes. A
-// non-file writer reports a fixed 80-column width, so these cases are deterministic.
 func TestWrapTextMeasuresRunesNotBytes(t *testing.T) {
 	c := check.New(t)
 
-	// Nine 4-rune Cyrillic words total 44 visible columns, well within the 80-column width, so they stay on one line.
-	// With byte counting each word is 8 bytes (total 80), which exceeded the available width and forced a wrap.
+	// A non-file writer is treated as 80 columns wide. Nine 4-rune Cyrillic words are 44 visible columns (80 bytes),
+	// so they must stay on one line.
 	parts := make([]string, 9)
 	for i := range parts {
 		parts[i] = "абвг"
@@ -34,8 +32,7 @@ func TestWrapTextMeasuresRunesNotBytes(t *testing.T) {
 	xterm.NewAnsiWriter(&buf).WrapText("", text)
 	c.Equal(text+"\n", buf.String())
 
-	// A multibyte prefix must contribute only its visible width to the continuation indent. "→ " is 2 columns (4
-	// bytes); byte counting indented continuation lines with 4 spaces and shrank the usable width.
+	// "→ " is 2 columns (4 bytes), so continuation lines must be indented by 2 spaces.
 	a := strings.Repeat("a", 40)
 	b := strings.Repeat("b", 40)
 	buf.Reset()
@@ -43,21 +40,17 @@ func TestWrapTextMeasuresRunesNotBytes(t *testing.T) {
 	c.Equal("→ "+a+"\n  "+b+"\n", buf.String())
 }
 
-// TestWrapTextResetsBudgetPerLine verifies that the remaining-width budget is reset for each input line, so a line that
-// individually fits is not wrongly wrapped just because an earlier line consumed most of the width. A non-file writer
-// reports a fixed 80-column width, so with an empty prefix each line has 79 columns available.
 func TestWrapTextResetsBudgetPerLine(t *testing.T) {
 	c := check.New(t)
 
-	// Line 1 nearly fills the 79-column budget; line 2 ("aaaa bbbb", 9 columns) easily fits. Before the fix, line 2
-	// inherited line 1's nearly-exhausted budget and was split into "aaaa\nbbbb".
+	// The width budget (79 columns with an empty prefix) must reset for each input line: line 2 fits on its own even
+	// though line 1 nearly exhausted it.
 	first := strings.Repeat("w", 70)
 	var buf bytes.Buffer
 	xterm.NewAnsiWriter(&buf).WrapText("", first+"\naaaa bbbb")
 	c.Equal(first+"\naaaa bbbb\n", buf.String())
 
-	// Sanity check the reset did not disable wrapping: two 40-column words cannot share a single 79-column line, so the
-	// second must wrap onto its own line.
+	// Two 40-column words still cannot share a 79-column line.
 	a := strings.Repeat("a", 40)
 	b := strings.Repeat("b", 40)
 	buf.Reset()
@@ -65,17 +58,11 @@ func TestWrapTextResetsBudgetPerLine(t *testing.T) {
 	c.Equal(a+"\n"+b+"\n", buf.String())
 }
 
-// TestWrapTextIgnoresNonSGREscapes verifies that non-SGR ANSI escapes (cursor movement, erase, etc.) embedded in the
-// text are treated as zero-width when measuring column width, so they produce the same wrap points as the same text
-// without the escape. A non-file writer reports a fixed 80-column width, so with an empty prefix each line has 79
-// columns available.
 func TestWrapTextIgnoresNonSGREscapes(t *testing.T) {
 	c := check.New(t)
 
-	// word1 (40 columns) and word2 (37 columns) fit together on one 79-column line (40 + 1 + 37 = 78). Prefixing word2
-	// with a 4-byte erase-line escape ("\033[2K") must not change that, since the escape is zero-width. Counting it as
-	// 4 visible columns (the pre-fix behavior, which only stripped SGR "...m" sequences) pushed the pair to 82 columns
-	// and wrongly wrapped word2 onto its own line.
+	// word1 and word2 fit on one 79-column line (40 + 1 + 37 = 78) only if the 4-byte erase-line escape is treated as
+	// zero-width.
 	word1 := strings.Repeat("a", 40)
 	word2 := strings.Repeat("b", 37)
 	const eraseLine = "\033[2K"
@@ -86,15 +73,14 @@ func TestWrapTextIgnoresNonSGREscapes(t *testing.T) {
 	var withEscape bytes.Buffer
 	xterm.NewAnsiWriter(&withEscape).WrapText("", word1+" "+eraseLine+word2)
 
-	// The wrap points must match: stripping the escape from the escaped output yields the plain output.
+	// Stripping the escape from the escaped output must yield the plain output.
 	c.Equal(plain.String(), strings.ReplaceAll(withEscape.String(), eraseLine, ""))
 
-	// Concretely, both stay on a single line, with the escape passed through untouched.
+	// Both stay on a single line, with the escape passed through untouched.
 	c.Equal(word1+" "+word2+"\n", plain.String())
 	c.Equal(word1+" "+eraseLine+word2+"\n", withEscape.String())
 
-	// A non-SGR escape in the prefix is likewise zero-width, so the continuation indent matches the visible prefix
-	// width rather than being widened by the escape's bytes.
+	// A non-SGR escape in the prefix is likewise zero-width, so it does not widen the continuation indent.
 	x := strings.Repeat("x", 40)
 	y := strings.Repeat("y", 40)
 	var buf bytes.Buffer

@@ -30,16 +30,14 @@ func Abs(x float32) float32 {
 	return math.Float32frombits(math.Float32bits(float32(x)) &^ (1 << 31))
 }
 
-// AbsInt returns the absolute value of x. The most-negative value of a signed type has no positive counterpart (its
-// magnitude is one larger than the maximum representable value), so AbsInt saturates it to the maximum value rather
-// than overflowing back to a negative result.
+// AbsInt returns the absolute value of x. The most-negative value of a signed type has no positive counterpart, so it
+// saturates to the maximum value rather than overflowing back to a negative result.
 func AbsInt[T Signed](x T) T {
 	if x < 0 {
 		if abs := -x; abs >= 0 {
 			return abs
 		}
-		// x is the most-negative value; -x overflowed. -(x+1) yields the maximum representable value without overflow,
-		// since x+1 is MinInt+1 and -(MinInt+1) is MaxInt.
+		// x is the most-negative value, so -x overflowed; -(x+1) is the maximum value and cannot overflow.
 		return -(x + 1)
 	}
 	return x
@@ -82,8 +80,7 @@ func Asinh(x float32) float32 {
 	return float32(math.Asinh(float64(x)))
 }
 
-// Atan2 returns the arc tangent y/x, using the signs of the two to determine the quadrant of the
-// return value.
+// Atan2 returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value.
 //
 // Special cases are (in order):
 //
@@ -168,7 +165,7 @@ func Cosh(x float32) float32 {
 	return float32(math.Cosh(float64(x)))
 }
 
-// Dim returns the maximum x-y or 0.
+// Dim returns the maximum of x-y or 0.
 //
 // Special cases are:
 //
@@ -232,8 +229,7 @@ func Erfcinv(x float32) float32 {
 //	Exp(+Inf) = +Inf
 //	Exp(NaN) = NaN
 //
-// Very large values overflow to 0 or +Inf.
-// Very small values underflow to 1.
+// Very large values overflow to 0 or +Inf. Very small values underflow to 1.
 func Exp(x float32) float32 {
 	return float32(math.Exp(float64(x)))
 }
@@ -245,8 +241,7 @@ func Exp2(x float32) float32 {
 	return float32(math.Exp2(float64(x)))
 }
 
-// Expm1 returns e**x - 1, the base-e exponential of x minus 1.
-// It is more accurate than Exp(x) - 1 when x is near zero.
+// Expm1 returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than Exp(x) - 1 when x is near zero.
 //
 // Special cases are:
 //
@@ -264,16 +259,13 @@ func Floor(x float32) float32 {
 	return float32(math.Floor(float64(x)))
 }
 
-// FMA returns x * y + z, computed with only one rounding.
-// (That is, FMA returns the fused multiply-add of x, y, and z.)
+// FMA returns the fused multiply-add x * y + z, computed in float64 with one rounding and then rounded to float32.
 func FMA(x, y, z float32) float32 {
 	return float32(math.FMA(float64(x), float64(y), float64(z)))
 }
 
-// Frexp breaks f into a normalized fraction
-// and an integral power of two.
-// It returns frac and exp satisfying f == frac × 2**exp,
-// with the absolute value of frac in the interval [½, 1).
+// Frexp breaks f into a normalized fraction and an integral power of two. It returns frac and exp satisfying
+// f == frac × 2**exp, with the absolute value of frac in the interval [½, 1).
 //
 // Special cases are:
 //
@@ -299,8 +291,7 @@ func Gamma(x float32) float32 {
 	return float32(math.Gamma(float64(x)))
 }
 
-// Hypot returns Sqrt(p*p + q*q), taking care to avoid
-// unnecessary overflow and underflow.
+// Hypot returns Sqrt(p*p + q*q), taking care to avoid unnecessary overflow and underflow.
 //
 // Special cases are:
 //
@@ -334,10 +325,8 @@ func Inf(sign int) float32 {
 	return math.Float32frombits(v)
 }
 
-// IsInf reports whether f is an infinity, according to sign.
-// If sign > 0, IsInf reports whether f is positive infinity.
-// If sign < 0, IsInf reports whether f is negative infinity.
-// If sign == 0, IsInf reports whether f is either infinity.
+// IsInf reports whether f is an infinity, according to sign: positive infinity if sign > 0, negative infinity if
+// sign < 0, or either infinity if sign == 0.
 func IsInf(f float32, sign int) bool {
 	return sign >= 0 && f > math.MaxFloat32 || sign <= 0 && f < -math.MaxFloat32
 }
@@ -379,8 +368,7 @@ func Jn(n int, x float32) float32 {
 	return float32(math.Jn(n, float64(x)))
 }
 
-// Ldexp is the inverse of Frexp.
-// It returns frac × 2**exp.
+// Ldexp is the inverse of Frexp. It returns frac × 2**exp.
 //
 // Special cases are:
 //
@@ -466,8 +454,7 @@ func Mod(x, y float32) float32 {
 	return float32(math.Mod(float64(x), float64(y)))
 }
 
-// Modf returns integer and fractional floating-point numbers
-// that sum to f. Both values have the same sign as f.
+// Modf returns integer and fractional floating-point numbers that sum to f. Both values have the same sign as f.
 //
 // Special cases are:
 //
@@ -515,8 +502,8 @@ func Pow(x, y float32) float32 {
 //
 // Special cases are:
 //
-//	Pow10(n) =    0 for n < -323
-//	Pow10(n) = +Inf for n > 308
+//	Pow10(n) =    0 for n < -45
+//	Pow10(n) = +Inf for n > 38
 func Pow10(n int) float32 {
 	return float32(math.Pow10(n))
 }
@@ -682,10 +669,9 @@ func EqualWithin(a, b, tolerance float32) bool {
 	return Abs(a-b) <= tolerance
 }
 
-// GCD returns the greatest common divisor of a and b using Euclid's algorithm. The magnitudes are computed in unsigned
-// space so that the most-negative value does not overflow during negation (a = -a would wrap MinInt back to itself). In
-// the sole case whose true result is not representable as an int — when every non-zero operand is MinInt, so the result
-// is MinInt's magnitude (one larger than the maximum int) — it saturates to the maximum int value.
+// GCD returns the greatest common divisor of the magnitudes of a and b. The most-negative int is handled without
+// overflow; when every non-zero operand is MinInt, the true result (its magnitude) is not representable as an int, so
+// it saturates to MaxInt.
 func GCD(a, b int) int {
 	ua, ub := absAsUint(a), absAsUint(b)
 	for ub != 0 {
@@ -697,8 +683,8 @@ func GCD(a, b int) int {
 	return int(ua) //nolint:gosec // Guarded above: ua <= math.MaxInt here.
 }
 
-// absAsUint returns the absolute value of v as an unsigned integer. Unlike negating into the same signed type, this
-// does not overflow for the most-negative value, since |MinInt| fits in a uint of the same width.
+// absAsUint returns the absolute value of v as a uint, which unlike a signed negation cannot overflow for the
+// most-negative value.
 func absAsUint(v int) uint {
 	if v < 0 {
 		return uint(-(v + 1)) + 1

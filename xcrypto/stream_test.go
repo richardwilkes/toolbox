@@ -35,8 +35,8 @@ func TestEncryptDecryptStreamWithKeyPair(t *testing.T) {
 	c.Equal(plaintext, decrypted.Bytes())
 }
 
-// TestEncryptDecryptStreamVariousSizes exercises the chunking boundaries, including empty input, sub-chunk input, and
-// inputs that span exact and partial multiples of the internal chunk size.
+// TestEncryptDecryptStreamVariousSizes exercises the chunking boundaries: empty, sub-chunk, and exact and partial
+// multiples of the chunk size.
 func TestEncryptDecryptStreamVariousSizes(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
@@ -55,9 +55,8 @@ func TestEncryptDecryptStreamVariousSizes(t *testing.T) {
 	}
 }
 
-// TestDecryptStreamWithPartialReads ensures decryption works when the input stream returns data in short reads, as can
-// happen with network connections, pipes, and files. The encrypted key and IV must be read with io.ReadFull rather than
-// a single Read call.
+// TestDecryptStreamWithPartialReads ensures decryption works when the input returns short reads, as network
+// connections, pipes, and files can. The encrypted key and nonce prefix must be read with io.ReadFull.
 func TestDecryptStreamWithPartialReads(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
@@ -66,22 +65,21 @@ func TestDecryptStreamWithPartialReads(t *testing.T) {
 	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
 	var encrypted bytes.Buffer
 	c.NoError(xcrypto.EncryptStreamWithPublicKey(bytes.NewReader(plaintext), &encrypted, publicKey))
-	// iotest.OneByteReader forces every Read to return at most a single byte, exercising the short-read path.
 	in := iotest.OneByteReader(bytes.NewReader(encrypted.Bytes()))
 	var decrypted bytes.Buffer
 	c.NoError(xcrypto.DecryptStreamWithPrivateKey(in, &decrypted, privateKey))
 	c.Equal(plaintext, decrypted.Bytes())
 }
 
-// TestDecryptStreamDetectsBitFlip verifies that flipping a single bit anywhere in the ciphertext body causes
-// decryption to fail rather than silently returning attacker-controlled plaintext.
+// TestDecryptStreamDetectsBitFlip verifies that flipping any single bit in the ciphertext body causes decryption to
+// fail.
 func TestDecryptStreamDetectsBitFlip(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
 	c.NoError(err)
 	publicKey := &privateKey.PublicKey
 	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
-	// Flip a bit at each position past the RSA-sealed key + nonce prefix header and confirm every one is rejected.
+	// Flip a bit at every position past the header (RSA-sealed key + nonce prefix) and confirm each is rejected.
 	headerSize := privateKey.Size() + 7
 	for offset := headerSize; ; offset++ {
 		var encrypted bytes.Buffer
@@ -96,21 +94,21 @@ func TestDecryptStreamDetectsBitFlip(t *testing.T) {
 	}
 }
 
-// TestDecryptStreamDetectsTruncation verifies that removing trailing bytes (a truncation attack) is detected rather
-// than being accepted as a shorter-but-valid stream.
+// TestDecryptStreamDetectsTruncation verifies that removing trailing bytes is detected rather than accepted as a
+// shorter but valid stream.
 func TestDecryptStreamDetectsTruncation(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
 	c.NoError(err)
 	publicKey := &privateKey.PublicKey
-	// Use more than one chunk so dropping the final chunk leaves an otherwise well-formed prefix.
+	// Use more than one chunk so that truncation leaves at least one intact chunk ahead of the cut.
 	plaintext := make([]byte, 2*64*1024+512)
 	_, err = crypto_rand.Read(plaintext)
 	c.NoError(err)
 	var encrypted bytes.Buffer
 	c.NoError(xcrypto.EncryptStreamWithPublicKey(bytes.NewReader(plaintext), &encrypted, publicKey))
 	full := encrypted.Bytes()
-	// Drop the trailing chunk (plaintext chunk + 16-byte tag) entirely.
+	// Cut the stream mid-chunk, losing the final chunk and most of the one before it.
 	truncated := full[:len(full)-(64*1024+16)]
 	var decrypted bytes.Buffer
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(truncated), &decrypted, privateKey))
@@ -119,8 +117,8 @@ func TestDecryptStreamDetectsTruncation(t *testing.T) {
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(full[:len(full)-1]), &decrypted2, privateKey))
 }
 
-// TestDecryptStreamDetectsExtraData verifies that appending an extra forged chunk after a legitimate final chunk is
-// rejected, since the real final chunk is bound as final by its authentication tag.
+// TestDecryptStreamDetectsExtraData verifies that data appended after the final chunk is rejected, since that chunk
+// is bound as final by its authentication tag.
 func TestDecryptStreamDetectsExtraData(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
@@ -134,8 +132,8 @@ func TestDecryptStreamDetectsExtraData(t *testing.T) {
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(extended), &decrypted, privateKey))
 }
 
-// TestDecryptStreamDetectsReorderedChunks verifies that swapping two whole chunks is detected, since each chunk's
-// position is bound into its authentication tag.
+// TestDecryptStreamDetectsReorderedChunks verifies that swapping two chunks is detected, since each chunk's position
+// is bound into its authentication tag.
 func TestDecryptStreamDetectsReorderedChunks(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
@@ -159,7 +157,7 @@ func TestDecryptStreamDetectsReorderedChunks(t *testing.T) {
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(data), &decrypted, privateKey))
 }
 
-// TestDecryptStreamWrongKeyFails verifies that a stream encrypted to one key cannot be decrypted with a different key.
+// TestDecryptStreamWrongKeyFails verifies that a stream cannot be decrypted with a different key.
 func TestDecryptStreamWrongKeyFails(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)

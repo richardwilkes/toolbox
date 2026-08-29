@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	// DefaultQuadTreeThreshold is the default threshold that will be used if none is specified.
+	// DefaultQuadTreeThreshold is the threshold used when QuadTree.Threshold is below MinQuadTreeThreshold.
 	DefaultQuadTreeThreshold = 64
 	// MinQuadTreeThreshold is the minimum allowed threshold.
 	MinQuadTreeThreshold = 4
 )
 
-// Node defines the methods an object that can be stored within the QuadTree must implement.
+// Node defines the methods an object stored in a QuadTree must implement.
 type Node interface {
 	// Bounds returns the node's bounding rectangle.
 	Bounds() geom.Rect
@@ -36,12 +36,11 @@ type Matcher[N Node] interface {
 // QuadTree stores two-dimensional nodes for fast lookup.
 //
 // Each node is stored in the deepest cell that fully contains its Bounds(). A node whose bounds straddle a cell's
-// center line cannot descend into any of that cell's four children, so it is retained in the cell itself. As a result,
-// input that concentrates many overlapping or center-crossing nodes into one region — or nodes that are large relative
-// to the tree's overall bounds — accumulates in a single cell that cannot subdivide further, degrading queries over
-// that region toward O(n). This is inherent to storing whole rectangles rather than points: keep node bounds small
-// relative to the tree and spread out to preserve the expected logarithmic behavior. Threshold tunes how many nodes a
-// cell holds before it attempts to subdivide.
+// center line cannot descend into any of its four children, so it stays in that cell. Input that concentrates many
+// overlapping or center-crossing nodes in one region, or nodes that are large relative to the tree's bounds, therefore
+// piles up in a single cell that cannot subdivide further, degrading queries over that region toward O(n). This is
+// inherent to storing whole rectangles rather than points: keep node bounds small relative to the tree and spread out
+// to preserve the expected logarithmic behavior.
 type QuadTree[N Node] struct {
 	root    *node[N]
 	outside []N
@@ -63,8 +62,7 @@ func (q *QuadTree[N]) threshold() int {
 	return q.Threshold
 }
 
-// Insert a node. NOTE: Once a node is inserted, the value it returns from a call to Bounds() MUST REMAIN THE SAME until
-// the node is removed.
+// Insert a node. Its Bounds() must not change until it is removed. Nodes with empty bounds are ignored.
 func (q *QuadTree[N]) Insert(n N) {
 	rect := n.Bounds()
 	if rect.Empty() {
@@ -111,7 +109,7 @@ func (q *QuadTree[N]) All() []N {
 	return all
 }
 
-// Reorganize the QuadTree to optimally fit its contents.
+// Reorganize rebuilds the QuadTree so that its root bounds fit its current contents.
 func (q *QuadTree[N]) Reorganize() {
 	all := q.All()
 	var rect geom.Rect
@@ -167,7 +165,7 @@ func (q *QuadTree[N]) FindContainsPoint(pt geom.Point) []N {
 	return result
 }
 
-// MatchedContainsPoint returns true if at least one node that the matcher returns true for contains the point.
+// MatchedContainsPoint returns true if at least one node accepted by the matcher contains the point.
 func (q *QuadTree[N]) MatchedContainsPoint(matcher Matcher[N], pt geom.Point) bool {
 	if q.root != nil {
 		if q.root.matchedContainsPoint(matcher, pt) {
@@ -182,7 +180,7 @@ func (q *QuadTree[N]) MatchedContainsPoint(matcher Matcher[N], pt geom.Point) bo
 	return false
 }
 
-// FindMatchedContainsPoint returns the nodes that the matcher returns true for which contain the point.
+// FindMatchedContainsPoint returns the nodes accepted by the matcher that contain the point.
 func (q *QuadTree[N]) FindMatchedContainsPoint(matcher Matcher[N], pt geom.Point) []N {
 	var result []N
 	if q.root != nil {
@@ -225,7 +223,7 @@ func (q *QuadTree[N]) FindIntersects(rect geom.Rect) []N {
 	return result
 }
 
-// MatchedIntersects returns true if at least one node that the matcher returns true for intersects the rect.
+// MatchedIntersects returns true if at least one node accepted by the matcher intersects the rect.
 func (q *QuadTree[N]) MatchedIntersects(matcher Matcher[N], rect geom.Rect) bool {
 	if q.root != nil {
 		if q.root.matchedIntersects(matcher, rect) {
@@ -240,7 +238,7 @@ func (q *QuadTree[N]) MatchedIntersects(matcher Matcher[N], rect geom.Rect) bool
 	return false
 }
 
-// FindMatchedIntersects returns the nodes that the matcher returns true for which intersect the rect.
+// FindMatchedIntersects returns the nodes accepted by the matcher that intersect the rect.
 func (q *QuadTree[N]) FindMatchedIntersects(matcher Matcher[N], rect geom.Rect) []N {
 	var result []N
 	if q.root != nil {
@@ -283,7 +281,7 @@ func (q *QuadTree[N]) FindContainsRect(rect geom.Rect) []N {
 	return result
 }
 
-// MatchedContainsRect returns true if at least one node that the matcher returns true for contains the rect.
+// MatchedContainsRect returns true if at least one node accepted by the matcher contains the rect.
 func (q *QuadTree[N]) MatchedContainsRect(matcher Matcher[N], rect geom.Rect) bool {
 	if q.root != nil {
 		if q.root.matchedContainsRect(matcher, rect) {
@@ -298,7 +296,7 @@ func (q *QuadTree[N]) MatchedContainsRect(matcher Matcher[N], rect geom.Rect) bo
 	return false
 }
 
-// FindMatchedContainsRect returns the nodes that the matcher returns true for which contains the rect.
+// FindMatchedContainsRect returns the nodes accepted by the matcher that contain the rect.
 func (q *QuadTree[N]) FindMatchedContainsRect(matcher Matcher[N], rect geom.Rect) []N {
 	var result []N
 	if q.root != nil {
@@ -341,7 +339,7 @@ func (q *QuadTree[N]) FindContainedByRect(rect geom.Rect) []N {
 	return result
 }
 
-// MatchedContainedByRect returns true if at least one node that the matcher returns true for is contained by the rect.
+// MatchedContainedByRect returns true if at least one node accepted by the matcher is contained by the rect.
 func (q *QuadTree[N]) MatchedContainedByRect(matcher Matcher[N], rect geom.Rect) bool {
 	if q.root != nil {
 		if q.root.matchedContainedByRect(matcher, rect) {
@@ -356,7 +354,7 @@ func (q *QuadTree[N]) MatchedContainedByRect(matcher Matcher[N], rect geom.Rect)
 	return false
 }
 
-// FindMatchedContainedByRect returns the nodes that the matcher returns true for which are contained by the rect.
+// FindMatchedContainedByRect returns the nodes accepted by the matcher that are contained by the rect.
 func (q *QuadTree[N]) FindMatchedContainedByRect(matcher Matcher[N], rect geom.Rect) []N {
 	var result []N
 	if q.root != nil {

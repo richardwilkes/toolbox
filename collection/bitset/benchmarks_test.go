@@ -132,8 +132,7 @@ func BenchmarkFlipRange(b *testing.B) {
 func BenchmarkAnd(b *testing.B) {
 	bs := newDenseBenchSet()
 	other := newSparseBenchSet()
-	// And is idempotent, so the receiver reaches its final state on the first call and every later call measures the
-	// steady-state word loop over the full benchWords of storage.
+	// And is idempotent, so after the first call each iteration measures the steady-state loop over the full storage.
 	for b.Loop() {
 		bs.And(other)
 	}
@@ -143,8 +142,7 @@ func BenchmarkAnd(b *testing.B) {
 func BenchmarkOr(b *testing.B) {
 	bs := newDenseBenchSet()
 	other := newSparseBenchSet()
-	// Or is idempotent, so the receiver reaches its final state on the first call and every later call measures the
-	// steady-state word loop over the full benchWords of storage.
+	// Or is idempotent, so after the first call each iteration measures the steady-state loop over the full storage.
 	for b.Loop() {
 		bs.Or(other)
 	}
@@ -154,8 +152,7 @@ func BenchmarkOr(b *testing.B) {
 func BenchmarkXor(b *testing.B) {
 	bs := newDenseBenchSet()
 	other := newSparseBenchSet()
-	// Xor is not idempotent, so it is called twice per iteration to restore the receiver's original state, which keeps
-	// the starting point of each iteration identical.
+	// Xor is not idempotent, so it is applied twice per iteration to restore the receiver to its starting state.
 	for b.Loop() {
 		bs.Xor(other)
 		bs.Xor(other)

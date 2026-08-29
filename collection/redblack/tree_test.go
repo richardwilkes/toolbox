@@ -146,21 +146,17 @@ func TestEmptyTree(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, string](cmp.Compare[int])
 
-	// Test empty tree properties
 	c.True(rbt.Empty())
 	c.Equal(0, rbt.Count())
 
-	// Test Get on empty tree
 	_, exists := rbt.Get(42)
 	c.False(exists)
 
-	// Test First/Last on empty tree
 	_, exists = rbt.First()
 	c.False(exists)
 	_, exists = rbt.Last()
 	c.False(exists)
 
-	// Test traversal on empty tree
 	called := false
 	rbt.Traverse(func(int, string) bool {
 		called = true
@@ -186,7 +182,6 @@ func TestEmptyTree(t *testing.T) {
 	})
 	c.False(called)
 
-	// Test Remove on empty tree
 	rbt.Remove(42) // Should not panic
 	c.Equal(0, rbt.Count())
 }
@@ -199,7 +194,6 @@ func TestSingleNode(t *testing.T) {
 	c.False(rbt.Empty())
 	c.Equal(1, rbt.Count())
 
-	// Test First/Last on single node
 	first, exists := rbt.First()
 	c.True(exists)
 	c.Equal("ten", first)
@@ -208,7 +202,6 @@ func TestSingleNode(t *testing.T) {
 	c.True(exists)
 	c.Equal("ten", last)
 
-	// Test Get
 	value, exists := rbt.Get(10)
 	c.True(exists)
 	c.Equal("ten", value)
@@ -216,7 +209,6 @@ func TestSingleNode(t *testing.T) {
 	_, exists = rbt.Get(20)
 	c.False(exists)
 
-	// Test traversal
 	var keys []int
 	var values []string
 	rbt.Traverse(func(k int, v string) bool {
@@ -227,7 +219,6 @@ func TestSingleNode(t *testing.T) {
 	c.Equal([]int{10}, keys)
 	c.Equal([]string{"ten"}, values)
 
-	// Test reverse traversal
 	keys = nil
 	values = nil
 	rbt.ReverseTraverse(func(k int, v string) bool {
@@ -238,7 +229,6 @@ func TestSingleNode(t *testing.T) {
 	c.Equal([]int{10}, keys)
 	c.Equal([]string{"ten"}, values)
 
-	// Test removal
 	rbt.Remove(10)
 	c.True(rbt.Empty())
 	c.Equal(0, rbt.Count())
@@ -248,7 +238,6 @@ func TestFirstLast(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, string](cmp.Compare[int])
 
-	// Insert in random order
 	values := []int{50, 30, 70, 20, 40, 60, 80, 10, 90}
 	for _, v := range values {
 		rbt.Insert(v, fmt.Sprintf("value_%d", v))
@@ -262,7 +251,6 @@ func TestFirstLast(t *testing.T) {
 	c.True(exists)
 	c.Equal("value_90", last)
 
-	// Remove first and last, test again
 	rbt.Remove(10)
 	rbt.Remove(90)
 
@@ -279,18 +267,15 @@ func TestDuplicateKeys(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, string](cmp.Compare[int])
 
-	// Insert duplicate keys with different values
 	rbt.Insert(10, "first")
 	rbt.Insert(10, "second")
 	rbt.Insert(10, "third")
 	c.Equal(3, rbt.Count())
 
-	// Get should return the left-most (first inserted) value
 	value, exists := rbt.Get(10)
 	c.True(exists)
 	c.Equal("first", value)
 
-	// Traverse should show all duplicates in order
 	var values []string
 	rbt.Traverse(func(_ int, v string) bool {
 		values = append(values, v)
@@ -298,7 +283,6 @@ func TestDuplicateKeys(t *testing.T) {
 	})
 	c.Equal([]string{"first", "second", "third"}, values)
 
-	// Remove should remove the left-most occurrence first
 	rbt.Remove(10)
 	c.Equal(2, rbt.Count())
 
@@ -326,35 +310,31 @@ func TestTraversalEarlyTermination(t *testing.T) {
 		rbt.Insert(i, i*10)
 	}
 
-	// Test early termination in forward traversal
 	var visited []int
 	rbt.Traverse(func(k, _ int) bool {
 		visited = append(visited, k)
-		return k < 5 // Stop at 5
+		return k < 5
 	})
 	c.Equal([]int{1, 2, 3, 4, 5}, visited)
 
-	// Test early termination in reverse traversal
 	visited = nil
 	rbt.ReverseTraverse(func(k, _ int) bool {
 		visited = append(visited, k)
-		return k > 6 // Stop at 6
+		return k > 6
 	})
 	c.Equal([]int{10, 9, 8, 7, 6}, visited)
 
-	// Test early termination in TraverseStartingAt
 	visited = nil
 	rbt.TraverseStartingAt(5, func(k, _ int) bool {
 		visited = append(visited, k)
-		return k < 8 // Stop at 8
+		return k < 8
 	})
 	c.Equal([]int{5, 6, 7, 8}, visited)
 
-	// Test early termination in ReverseTraverseStartingAt
 	visited = nil
 	rbt.ReverseTraverseStartingAt(7, func(k, _ int) bool {
 		visited = append(visited, k)
-		return k > 4 // Stop at 4
+		return k > 4
 	})
 	c.Equal([]int{7, 6, 5, 4}, visited)
 }
@@ -367,7 +347,6 @@ func TestTraverseStartingAt(t *testing.T) {
 		rbt.Insert(i, i*10)
 	}
 
-	// Test starting at existing key
 	var visited []int
 	rbt.TraverseStartingAt(5, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -375,15 +354,13 @@ func TestTraverseStartingAt(t *testing.T) {
 	})
 	c.Equal([]int{5, 6, 7, 8, 9, 10}, visited)
 
-	// Test starting at non-existing key (should start at next greater)
 	visited = nil
-	rbt.TraverseStartingAt(6, func(k, _ int) bool { // Changed from 5.5 to 6
+	rbt.TraverseStartingAt(6, func(k, _ int) bool {
 		visited = append(visited, k)
 		return true
 	})
 	c.Equal([]int{6, 7, 8, 9, 10}, visited)
 
-	// Test starting at key greater than all
 	visited = nil
 	rbt.TraverseStartingAt(15, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -391,7 +368,6 @@ func TestTraverseStartingAt(t *testing.T) {
 	})
 	c.Equal(0, len(visited))
 
-	// Test starting at key less than all
 	visited = nil
 	rbt.TraverseStartingAt(-5, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -408,7 +384,6 @@ func TestReverseTraverseStartingAt(t *testing.T) {
 		rbt.Insert(i, i*10)
 	}
 
-	// Test starting at existing key
 	var visited []int
 	rbt.ReverseTraverseStartingAt(6, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -416,15 +391,13 @@ func TestReverseTraverseStartingAt(t *testing.T) {
 	})
 	c.Equal([]int{6, 5, 4, 3, 2, 1}, visited)
 
-	// Test starting at non-existing key (should start at next smaller)
 	visited = nil
-	rbt.ReverseTraverseStartingAt(7, func(k, _ int) bool { // Changed from 6.5 to 7
+	rbt.ReverseTraverseStartingAt(7, func(k, _ int) bool {
 		visited = append(visited, k)
 		return true
 	})
-	c.Equal([]int{7, 6, 5, 4, 3, 2, 1}, visited) // Updated expected result
+	c.Equal([]int{7, 6, 5, 4, 3, 2, 1}, visited)
 
-	// Test starting at key less than all
 	visited = nil
 	rbt.ReverseTraverseStartingAt(-5, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -432,7 +405,6 @@ func TestReverseTraverseStartingAt(t *testing.T) {
 	})
 	c.Equal(0, len(visited))
 
-	// Test starting at key greater than all
 	visited = nil
 	rbt.ReverseTraverseStartingAt(15, func(k, _ int) bool {
 		visited = append(visited, k)
@@ -445,18 +417,17 @@ func TestTraverseStartingAtWithDuplicateKeys(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, int](cmp.Compare[int])
 
-	// Insert several keys equal to the start key, plus lower and higher keys. The tree's rotations distribute the
-	// duplicates across both left and right subtrees; a starting-at traversal must still visit every one of them.
+	// Rotations distribute duplicates of the start key across both subtrees; a starting-at traversal must still visit
+	// every one of them.
 	rbt.Insert(1, 1)
 	rbt.Insert(2, 2)
 	const dupCount = 7
 	for i := range dupCount {
-		rbt.Insert(5, 100+i) // Each duplicate of 5 carries a distinct value.
+		rbt.Insert(5, 100+i)
 	}
 	rbt.Insert(8, 8)
 	rbt.Insert(9, 9)
 
-	// TraverseStartingAt(5) must visit all keys >= 5: every duplicate of 5, then 8 and 9, in non-decreasing order.
 	var got []int
 	seen := make(map[int]bool)
 	rbt.TraverseStartingAt(5, func(k, v int) bool {
@@ -466,13 +437,12 @@ func TestTraverseStartingAtWithDuplicateKeys(t *testing.T) {
 		}
 		return true
 	})
-	c.Equal(dupCount, len(seen)) // All distinct duplicate values were visited (none skipped).
+	c.Equal(dupCount, len(seen))
 	c.Equal(dupCount+2, len(got))
 	for i := 1; i < len(got); i++ {
 		c.True(got[i-1] <= got[i])
 	}
 
-	// ReverseTraverseStartingAt(5) must visit all keys <= 5: every duplicate of 5, then 2 and 1, in non-increasing order.
 	got = nil
 	seen = make(map[int]bool)
 	rbt.ReverseTraverseStartingAt(5, func(k, v int) bool {
@@ -493,21 +463,18 @@ func TestLargeDataset(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, int](cmp.Compare[int])
 
-	// Insert many values to test tree balance
 	n := 1000
 	for i := range n {
 		rbt.Insert(i, i*2)
 	}
 	c.Equal(n, rbt.Count())
 
-	// Verify all values can be retrieved
 	for i := range n {
 		value, exists := rbt.Get(i)
 		c.True(exists)
 		c.Equal(i*2, value)
 	}
 
-	// Test First/Last
 	first, exists := rbt.First()
 	c.True(exists)
 	c.Equal(0, first)
@@ -516,13 +483,11 @@ func TestLargeDataset(t *testing.T) {
 	c.True(exists)
 	c.Equal((n-1)*2, last)
 
-	// Remove half the values
 	for i := 0; i < n; i += 2 {
 		rbt.Remove(i)
 	}
 	c.Equal(n/2, rbt.Count())
 
-	// Verify remaining values
 	for i := 1; i < n; i += 2 {
 		var value int
 		value, exists = rbt.Get(i)
@@ -530,7 +495,6 @@ func TestLargeDataset(t *testing.T) {
 		c.Equal(i*2, value)
 	}
 
-	// Verify removed values are gone
 	for i := 0; i < n; i += 2 {
 		_, exists = rbt.Get(i)
 		c.False(exists)
@@ -554,14 +518,12 @@ func TestStringKeys(t *testing.T) {
 	}
 	c.Equal(5, rbt.Count())
 
-	// Test retrieval
 	for k, v := range data {
 		value, exists := rbt.Get(k)
 		c.True(exists)
 		c.Equal(v, value)
 	}
 
-	// Test traversal order (should be alphabetical)
 	var keys []string
 	rbt.Traverse(func(k string, _ int) bool {
 		keys = append(keys, k)
@@ -569,7 +531,6 @@ func TestStringKeys(t *testing.T) {
 	})
 	c.Equal([]string{"apple", "banana", "cherry", "date", "elder"}, keys)
 
-	// Test reverse traversal
 	keys = nil
 	rbt.ReverseTraverse(func(k string, _ int) bool {
 		keys = append(keys, k)
@@ -581,9 +542,8 @@ func TestStringKeys(t *testing.T) {
 func TestCustomComparator(t *testing.T) {
 	c := check.New(t)
 
-	// Reverse comparator for descending order
 	reverseCompare := func(a, b int) int {
-		return cmp.Compare(b, a) // Reversed
+		return cmp.Compare(b, a)
 	}
 
 	rbt := redblack.New[int, string](reverseCompare)
@@ -593,7 +553,6 @@ func TestCustomComparator(t *testing.T) {
 		rbt.Insert(v, fmt.Sprintf("val_%d", v))
 	}
 
-	// Traversal should be in descending order
 	var keys []int
 	rbt.Traverse(func(k int, _ string) bool {
 		keys = append(keys, k)
@@ -601,7 +560,6 @@ func TestCustomComparator(t *testing.T) {
 	})
 	c.Equal([]int{9, 6, 5, 4, 3, 2, 1, 1}, keys)
 
-	// First should be largest, Last should be smallest
 	first, exists := rbt.First()
 	c.True(exists)
 	c.Equal("val_9", first)
@@ -621,17 +579,14 @@ func TestRedBlackTreeProperties(t *testing.T) {
 		rbt.Insert(v, v)
 	}
 
-	// Tree should still function correctly despite potential for imbalance
 	c.Equal(10, rbt.Count())
 
-	// All values should be retrievable
 	for _, v := range values {
 		val, exists := rbt.Get(v)
 		c.True(exists)
 		c.Equal(v, val)
 	}
 
-	// Traversal should be in order
 	var result []int
 	rbt.Traverse(func(k, _ int) bool {
 		result = append(result, k)
@@ -639,7 +594,6 @@ func TestRedBlackTreeProperties(t *testing.T) {
 	})
 	c.Equal(values, result)
 
-	// Remove all values
 	for _, v := range values {
 		rbt.Remove(v)
 	}
@@ -647,19 +601,16 @@ func TestRedBlackTreeProperties(t *testing.T) {
 }
 
 func TestDump(_ *testing.T) {
-	// This test just ensures Dump doesn't panic
+	// Ensures Dump doesn't panic.
 	rbt := redblack.New[int, int](cmp.Compare[int])
 
-	// Empty tree
-	rbt.Dump() // Should not panic
+	rbt.Dump()
 
-	// Single node
 	rbt.Insert(10, 100)
-	rbt.Dump() // Should not panic
+	rbt.Dump()
 
-	// Multiple nodes
 	for i := 1; i <= 5; i++ {
 		rbt.Insert(i, i*10)
 	}
-	rbt.Dump() // Should not panic
+	rbt.Dump()
 }

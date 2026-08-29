@@ -75,8 +75,7 @@ func TestLineIntersection(t *testing.T) {
 func TestLineIntersectionCollinear(t *testing.T) {
 	c := check.New(t)
 
-	// Collinear but non-overlapping segments must report no intersection. This previously returned a phantom 2-point
-	// overlap because the empty clamped interval (left > right) was not detected.
+	// Collinear but non-overlapping segments must report no intersection rather than a phantom 2-point overlap.
 	horiz := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(1, 0))
 	beyond := geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(3, 0))
 	c.Equal(0, len(horiz.Intersection(beyond)))
@@ -107,7 +106,7 @@ func TestLineIntersectionParallelCollinearity(t *testing.T) {
 	c := check.New(t)
 
 	// The parallel branch treats two segments as collinear only when both cross-product numerators are zero. These
-	// diagonal cases exercise that math with non-axis-aligned direction vectors, so neither numerator is trivially zero.
+	// diagonal cases use non-axis-aligned direction vectors, so neither numerator is trivially zero.
 
 	// Collinear overlapping diagonal segments: both numerators are zero, so the overlap is reported as two points.
 	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(4, 4))

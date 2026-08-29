@@ -34,7 +34,6 @@ func TestExecutionOrderExit(t *testing.T) {
 		xos.Exit(22)
 		return
 	}
-	// Run the test in a subprocess
 	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST=1")
 	output, err := cmd.CombinedOutput()
@@ -59,7 +58,6 @@ func TestExecutionOrderWithCancelExit(t *testing.T) {
 		xos.Exit(22)
 		return
 	}
-	// Run the test in a subprocess
 	cmd := exec.Command(os.Args[0], "-test.run=TestExecutionOrderWithCancelExit")
 	cmd.Env = append(os.Environ(), "EXIT_TEST_WITH_CANCEL=1")
 	output, err := cmd.CombinedOutput()

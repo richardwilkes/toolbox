@@ -14,8 +14,7 @@ import (
 	"unsafe"
 )
 
-// Locale returns the locale set for the user. If that has not been set, then it falls back to the locale set for the
-// system. If that is also unset, then it returns "en_US.UTF-8".
+// Locale returns the user's default locale, falling back to the system default locale and then to "en_US.UTF-8".
 func Locale() string {
 	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	proc := kernel32.NewProc("GetUserDefaultLocaleName")

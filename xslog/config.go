@@ -28,8 +28,8 @@ type Config struct {
 	Console    bool
 }
 
-// AddFlags for configuring logging to the command line. Adds a post-parse function that will setup logging. Note that
-// this automatic handling only works if xflag.Parse is used and not flag.Parse directly.
+// AddFlags adds command-line flags for configuring logging, plus a post-parse function that sets up the default
+// slog logger. The post-parse function only runs if xflag.Parse is used rather than flag.Parse.
 func (c *Config) AddFlags() {
 	c.RotatorCfg.AddFlags()
 	c.LogLevel.AddFlags()
@@ -45,11 +45,8 @@ func (c *Config) AddFlags() {
 		flag.BoolVar(&c.Console, "console", false, i18n.Text("Copy the log output to the console"))
 	}
 	xflag.AddPostParseFunc(LogFlagPriority, func() {
-		// Fan out at the handler level rather than the writer level so each destination auto-detects color support from
-		// its own writer. An io.MultiWriter broadcasts identical bytes to every destination, so a single handler over
-		// it can only ever be all-colored or all-plain -- it cannot produce colored console output plus a plain file.
-		// Each PrettyHandler here auto-detects: DetectKind returns Dumb (no escapes) for the non-terminal rotating file
-		// and a color kind for a TTY stdout.
+		// Fan out at the handler level rather than through an io.MultiWriter so each destination detects color
+		// support from its own writer: the non-terminal rotating file gets no escapes while a TTY stdout gets color.
 		newOpts := func() *PrettyOptions {
 			return &PrettyOptions{
 				HandlerOptions: slog.HandlerOptions{

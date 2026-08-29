@@ -25,9 +25,8 @@ var (
 	longVersionFlag  bool
 )
 
-// AddVersionFlags adds flags for showing the short or long version information to flag.CommandLine. Adds a post-parse
-// function that will print the version information and exit if either of the flags is set. Note that this automatic
-// handling only works if xflag.Parse is used and not flag.Parse directly.
+// AddVersionFlags adds -v and -version flags to flag.CommandLine, along with a post-parse function that prints the
+// short or full version and exits if either is set. This only works when xflag.Parse is used rather than flag.Parse.
 func AddVersionFlags() {
 	flag.BoolVar(&shortVersionFlag, "v", false, i18n.Text("Show the short version and exit"))
 	flag.BoolVar(&longVersionFlag, "version", false, i18n.Text("Show the full version and exit"))

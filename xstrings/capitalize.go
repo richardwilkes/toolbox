@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-// CapitalizeWords capitalizes the first letter of each word in a string, and lowercases the rest. This also trims
-// leading and trailing whitespace, and replaces multiple spaces with a single space.
+// CapitalizeWords uppercases the first character of each word and lowercases the rest. Leading and trailing
+// whitespace is removed and each run of whitespace between words is replaced with a single space.
 func CapitalizeWords(s string) string {
 	words := strings.Fields(s)
 	for i, word := range words {

@@ -11,10 +11,10 @@ package xunicode
 
 import "unicode"
 
-// VowelChecker defines a function that returns true if the specified rune is to be considered a vowel.
+// VowelChecker returns true if the rune is to be considered a vowel.
 type VowelChecker func(rune) bool
 
-// IsVowel is a concrete implementation of VowelChecker.
+// IsVowel is a VowelChecker that accepts a, e, i, o, u and their common accented forms, ignoring case.
 func IsVowel(ch rune) bool {
 	if unicode.IsUpper(ch) {
 		ch = unicode.ToLower(ch)
@@ -31,7 +31,7 @@ func IsVowel(ch rune) bool {
 	}
 }
 
-// IsVowely is a concrete implementation of VowelChecker that includes 'y'.
+// IsVowely is like IsVowel, but also accepts y and ÿ.
 func IsVowely(ch rune) bool {
 	if unicode.IsUpper(ch) {
 		ch = unicode.ToLower(ch)

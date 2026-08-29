@@ -34,7 +34,6 @@ func TestUniquePaths_SinglePath(t *testing.T) {
 	result, err := xfilepath.UniquePaths(tempDir)
 	c.NoError(err)
 	c.Equal(1, len(result))
-	// The result should be the absolute path
 	abs, err := filepath.Abs(tempDir)
 	c.NoError(err)
 	noSymLinks, err := filepath.EvalSymlinks(abs)
@@ -61,7 +60,6 @@ func TestUniquePaths_RelativeAndAbsolute(t *testing.T) {
 	abs, err := filepath.Abs(tempDir)
 	c.NoError(err)
 
-	// Change to a different directory to test relative path
 	originalWd, err := os.Getwd()
 	c.NoError(err)
 	defer func() {
@@ -80,9 +78,9 @@ func TestUniquePaths_RelativeAndAbsolute(t *testing.T) {
 	c.Equal(noSymLinks, result[0])
 }
 
-// TestUniquePaths_DotDotPrefixedChild verifies that a child directory whose name merely begins with ".." (a legal name,
-// not an ancestor reference) is correctly pruned as a subset of its parent. The relative path from parent to child is
-// "..foo", which an over-eager HasPrefix(rel, "..") check mistook for an ascending path, leaving both entries.
+// TestUniquePaths_DotDotPrefixedChild verifies that a child directory whose name merely begins with ".." is pruned as a
+// subset of its parent. The relative path from parent to child is "..foo", which an over-eager HasPrefix(rel, "..")
+// check mistook for an ascending path.
 func TestUniquePaths_DotDotPrefixedChild(t *testing.T) {
 	c := check.New(t)
 	tempDir := t.TempDir()
@@ -111,7 +109,6 @@ func TestUniquePaths_NestedPaths(t *testing.T) {
 	c := check.New(t)
 	tempDir := t.TempDir()
 
-	// Create nested directories
 	subDir := filepath.Join(tempDir, "subdir")
 	c.NoError(os.MkdirAll(subDir, 0o755))
 
@@ -122,7 +119,6 @@ func TestUniquePaths_NestedPaths(t *testing.T) {
 	c.NoError(err)
 	c.Equal(1, len(result))
 
-	// Only the root directory should remain
 	abs, err := filepath.Abs(tempDir)
 	c.NoError(err)
 	noSymLinks, err := filepath.EvalSymlinks(abs)
@@ -149,7 +145,6 @@ func TestUniquePaths_SeparateDirectories(t *testing.T) {
 	noSymLinks2, err := filepath.EvalSymlinks(abs2)
 	c.NoError(err)
 
-	// Both directories should be in the result
 	found1, found2 := false, false
 	for _, path := range result {
 		if path == noSymLinks1 {
@@ -169,7 +164,6 @@ func TestUniquePaths_MixedNestedAndSeparate(t *testing.T) {
 	tempDir2 := t.TempDir()
 	c.NotEqual(tempDir1, tempDir2)
 
-	// Create a subdirectory in tempDir1
 	subDir := filepath.Join(tempDir1, "subdir")
 	c.NoError(os.MkdirAll(subDir, 0o755))
 
@@ -186,7 +180,6 @@ func TestUniquePaths_MixedNestedAndSeparate(t *testing.T) {
 	noSymLinks2, err := filepath.EvalSymlinks(abs2)
 	c.NoError(err)
 
-	// Should contain tempDir1 and tempDir2, but not subDir (subset of tempDir1)
 	found1, found2 := false, false
 	for _, path := range result {
 		if path == noSymLinks1 {
@@ -195,7 +188,6 @@ func TestUniquePaths_MixedNestedAndSeparate(t *testing.T) {
 		if path == noSymLinks2 {
 			found2 = true
 		}
-		// subDir should not be in the result
 		c.NotEqual(filepath.Join(noSymLinks1, "subdir"), path)
 	}
 	c.True(found1)
@@ -209,11 +201,9 @@ func TestUniquePaths_WithSymlinks(t *testing.T) {
 	c := check.New(t)
 	tempDir := t.TempDir()
 
-	// Create a target directory
 	targetDir := filepath.Join(tempDir, "target")
 	c.NoError(os.MkdirAll(targetDir, 0o755))
 
-	// Create a symlink
 	symlinkPath := filepath.Join(tempDir, "symlink")
 	c.NoError(os.Symlink(targetDir, symlinkPath))
 
@@ -221,7 +211,6 @@ func TestUniquePaths_WithSymlinks(t *testing.T) {
 	c.NoError(err)
 	c.Equal(1, len(result))
 
-	// Both should resolve to the same target
 	absTarget, err := filepath.Abs(targetDir)
 	c.NoError(err)
 	noSymLinks, err := filepath.EvalSymlinks(absTarget)
@@ -242,7 +231,6 @@ func TestUniquePaths_CurrentDirectory(t *testing.T) {
 	c.NoError(err)
 	c.Equal(1, len(result))
 
-	// Should resolve to absolute path of current directory
 	cwd, err := os.Getwd()
 	c.NoError(err)
 	// Case-insensitive comparison for Windows
@@ -253,7 +241,6 @@ func TestUniquePaths_ParentDirectory(t *testing.T) {
 	c := check.New(t)
 	tempDir := t.TempDir()
 
-	// Change to temp directory
 	originalWd, err := os.Getwd()
 	c.NoError(err)
 	defer func() {
@@ -265,7 +252,6 @@ func TestUniquePaths_ParentDirectory(t *testing.T) {
 	c.NoError(err)
 	c.Equal(1, len(result))
 
-	// Should resolve to absolute path of parent directory
 	parentDir := filepath.Dir(tempDir)
 	noSymLinks, err := filepath.EvalSymlinks(parentDir)
 	c.NoError(err)
@@ -300,7 +286,6 @@ func TestUniquePaths_ComplexNesting(t *testing.T) {
 	c.NoError(err)
 	c.Equal(1, len(result))
 
-	// Only the root should remain
 	abs, err := filepath.Abs(tempDir)
 	c.NoError(err)
 	noSymLinks, err := filepath.EvalSymlinks(abs)

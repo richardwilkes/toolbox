@@ -18,8 +18,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xnet"
 )
 
-// TestExternalAddressesWithCancelledContext verifies that no network requests are attempted once the context is already
-// canceled, and that nil is returned. This keeps the test hermetic (no outbound traffic).
+// TestExternalAddressesWithCancelledContext verifies that an already-canceled context yields nil without any network
+// requests, keeping the test hermetic.
 func TestExternalAddressesWithCancelledContext(t *testing.T) {
 	c := check.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,7 +31,6 @@ func TestExternalAddressesWithCancelledContext(t *testing.T) {
 
 func TestPrimaryIPAddress(t *testing.T) {
 	c := check.New(t)
-	// PrimaryIPAddress must always return a usable address, falling back to loopback when no route is available.
 	ip := xnet.PrimaryIPAddress()
 	c.NotNil(ip)
 	c.True(ip.To4() != nil || ip.To16() != nil, "expected a valid IPv4 or IPv6 address, got %v", ip)

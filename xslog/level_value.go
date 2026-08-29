@@ -27,12 +27,12 @@ type LevelValue struct {
 	level slog.Level
 }
 
-// Level implements the slog.Leveler interface.
+// Level implements slog.Leveler.
 func (v LevelValue) Level() slog.Level {
 	return v.level
 }
 
-// Set implements the flag.Value interface.
+// Set implements flag.Value.
 func (v *LevelValue) Set(value string) error {
 	return v.level.UnmarshalText([]byte(value))
 }
@@ -41,7 +41,7 @@ func (v LevelValue) String() string {
 	return v.level.String()
 }
 
-// AddFlags adds command-line flags for controlling the log level.
+// AddFlags adds the log-level command-line flag.
 func (v *LevelValue) AddFlags() {
 	flag.Var(v, "log-level", i18n.Text("The level of logging to use. Valid values are: ")+
 		strings.Join([]string{

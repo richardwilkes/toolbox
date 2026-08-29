@@ -149,9 +149,8 @@ var (
 	})
 )
 
-// DataType holds information about a single Uniform Type Identifier (UTI) and its relationship to other UTI's, MIME
-// types, and file extensions. Once registered, no fields within this struct should be modified without first
-// unregistering it.
+// DataType describes a Uniform Type Identifier (UTI) and its relationships to other UTIs, MIME types, and file
+// extensions. Once registered, its fields should not be modified without first unregistering it.
 type DataType struct {
 	UTI        string
 	Parents    []*DataType
@@ -159,8 +158,7 @@ type DataType struct {
 	Extensions []string
 }
 
-// Register the DataType. If the UTI has been previously registered, the old one will first be unregistered and then the
-// new one will be registered.
+// Register the DataType, first unregistering any DataType previously registered under the same UTI.
 func Register(dataType *DataType) *DataType {
 	uti := strings.ToLower(dataType.UTI)
 	lock.Lock()

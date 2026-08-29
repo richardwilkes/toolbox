@@ -71,8 +71,8 @@ func (p *pushWriter) Push(target string, _ *http.PushOptions) error {
 	return nil
 }
 
-// deadlineWriter is an http.ResponseWriter that also supports the per-request deadline methods that
-// http.ResponseController reaches for by descending through Unwrap. It records the deadlines it is given.
+// deadlineWriter is an http.ResponseWriter that records the deadlines set via the per-request deadline methods, which
+// http.ResponseController reaches by descending through Unwrap.
 type deadlineWriter struct {
 	http.ResponseWriter
 	readDeadline  time.Time
@@ -126,9 +126,8 @@ func TestGZipWrapRoundTrip(t *testing.T) {
 }
 
 // TestGZipWrapSniffsContentType verifies that a handler which writes a body but never sets a Content-Type still gets a
-// correctly sniffed Content-Type. Once the wrapper sets Content-Encoding: gzip, net/http stops sniffing the body
-// itself (Go issue #31753), so the wrapper must sniff the uncompressed body before installing gzip; otherwise the
-// response would carry no Content-Type at all.
+// correctly sniffed one. Once Content-Encoding: gzip is set, net/http stops sniffing (Go issue #31753), so the wrapper
+// must sniff the uncompressed body before installing gzip.
 func TestGZipWrapSniffsContentType(t *testing.T) {
 	c := check.New(t)
 	const body = "<!DOCTYPE html><html><head><title>hi</title></head><body>hello</body></html>"
@@ -178,8 +177,7 @@ func TestGZipWrapNoGzipWhenNotAccepted(t *testing.T) {
 }
 
 // TestGZipWrapClearsContentLength verifies that when the response is compressed, a Content-Length the handler set for
-// the uncompressed body is removed, since it no longer matches the (smaller) compressed bytes. Leaving it would make
-// the client wait for bytes that never arrive or treat the response as truncated.
+// the uncompressed body is removed, since it no longer matches the compressed bytes.
 func TestGZipWrapClearsContentLength(t *testing.T) {
 	c := check.New(t)
 	const body = "the quick brown fox jumps over the lazy dog, repeatedly and at length"
@@ -324,8 +322,7 @@ func TestGZipWrapExplicitStatusRoundTrip(t *testing.T) {
 }
 
 // TestGZipWrapEmptyBodyExplicitStatus verifies that a handler which commits a body-bearing status but writes no body is
-// not advertised as gzip and does not emit a gzip stream; an empty response must stay empty rather than becoming a
-// (~20-byte) empty gzip stream.
+// not advertised as gzip and does not emit an (~20-byte) empty gzip stream.
 func TestGZipWrapEmptyBodyExplicitStatus(t *testing.T) {
 	c := check.New(t)
 	handler := xhttp.GZipWrap(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

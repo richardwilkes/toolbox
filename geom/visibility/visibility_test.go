@@ -30,7 +30,6 @@ func TestNew(t *testing.T) {
 	v := visibility.New(bounds, obstructions)
 	c.NotNil(v)
 
-	// Test that the visibility object is created with a copy of the obstructions
 	result := v.SetViewPoint(geom.NewPoint(50, 50))
 	c.NotNil(result)
 }
@@ -53,7 +52,6 @@ func TestNewWithEmptyObstructions(t *testing.T) {
 func TestBreakIntersections(t *testing.T) {
 	c := check.New(t)
 
-	// Test with non-intersecting lines
 	lines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
 		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 10)),
@@ -62,7 +60,6 @@ func TestBreakIntersections(t *testing.T) {
 	result := visibility.BreakIntersections(lines)
 	c.Equal(2, len(result)) // Should remain unchanged
 
-	// Test with intersecting lines
 	intersectingLines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
 		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
@@ -90,7 +87,6 @@ func TestSetViewPointOutsideBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	// Test view point outside bounds
 	result := v.SetViewPoint(geom.NewPoint(-10, -10))
 	c.Nil(result)
 
@@ -111,7 +107,6 @@ func TestSetViewPointInsideBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	// Test view point inside bounds
 	result := v.SetViewPoint(geom.NewPoint(50, 50))
 	c.NotNil(result)
 	c.True(len(result) > 0)
@@ -169,7 +164,6 @@ func TestVisibilityWithObstructionsOutsideBounds(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(10, 10, 80, 80)
-	// Obstructions completely outside bounds
 	obstructions := []geom.Line{
 		geom.NewLine(geom.NewPoint(-10, -10), geom.NewPoint(0, 0)),
 		geom.NewLine(geom.NewPoint(100, 100), geom.NewPoint(110, 110)),
@@ -187,7 +181,6 @@ func TestVisibilityWithPartiallyIntersectingObstructions(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
-	// Obstruction that crosses the boundary
 	obstructions := []geom.Line{
 		geom.NewLine(geom.NewPoint(-10, 50), geom.NewPoint(50, 50)),
 		geom.NewLine(geom.NewPoint(50, -10), geom.NewPoint(50, 110)),
@@ -200,13 +193,10 @@ func TestVisibilityWithPartiallyIntersectingObstructions(t *testing.T) {
 	c.True(len(result) > 4)
 }
 
-// Test utility functions
-
 func TestAngle(t *testing.T) {
 	c := check.New(t)
 
-	// We can't directly test the internal angle function, but we can test indirectly
-	// through the visibility calculations with different viewpoint positions
+	// angle is internal, so it is exercised indirectly through SetViewPoint
 
 	bounds := geom.NewRect(-10, -10, 20, 20)
 	v := visibility.New(bounds, nil)
@@ -242,7 +232,6 @@ func TestIntersectLines(t *testing.T) {
 	result := visibility.BreakIntersections(lines)
 	c.True(len(result) >= 2)
 
-	// Test parallel lines (no intersection)
 	parallelLines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
 		geom.NewLine(geom.NewPoint(0, 1), geom.NewPoint(10, 1)),
@@ -256,7 +245,6 @@ func TestHasIntersection(t *testing.T) {
 	c := check.New(t)
 
 	// Test through BreakIntersections which uses hasIntersection internally
-	// Lines that clearly intersect
 	lines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
 		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
@@ -265,7 +253,6 @@ func TestHasIntersection(t *testing.T) {
 	result := visibility.BreakIntersections(lines)
 	c.True(len(result) > 2) // Should be broken into segments
 
-	// Lines that don't intersect
 	nonIntersectingLines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
 		geom.NewLine(geom.NewPoint(6, 0), geom.NewPoint(10, 0)),
@@ -291,7 +278,7 @@ func TestDirection(t *testing.T) {
 func TestOnLine(t *testing.T) {
 	c := check.New(t)
 
-	// Test collinear segments
+	// Collinear segments exercise onLine through BreakIntersections
 	lines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
 		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
@@ -327,7 +314,6 @@ func TestVisibilityWithNegativeBounds(t *testing.T) {
 func TestBreakIntersectionsWithCollinearLines(t *testing.T) {
 	c := check.New(t)
 
-	// Test with overlapping collinear segments
 	lines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
 		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
@@ -341,7 +327,6 @@ func TestBreakIntersectionsWithCollinearLines(t *testing.T) {
 func TestBreakIntersectionsWithTouchingLines(t *testing.T) {
 	c := check.New(t)
 
-	// Test with lines that touch at endpoints
 	lines := []geom.Line{
 		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
 		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
@@ -355,7 +340,6 @@ func TestVisibilityWithVerySmallObstruction(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
-	// Very small obstruction
 	obstructions := []geom.Line{
 		geom.NewLine(geom.NewPoint(50, 50), geom.NewPoint(50.1, 50.1)),
 	}
@@ -369,7 +353,6 @@ func TestVisibilityWithLargeObstruction(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
-	// Large obstruction that covers most of the area
 	obstructions := []geom.Line{
 		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(90, 10)),
 		geom.NewLine(geom.NewPoint(90, 10), geom.NewPoint(90, 90)),
@@ -382,8 +365,6 @@ func TestVisibilityWithLargeObstruction(t *testing.T) {
 	result := v.SetViewPoint(geom.NewPoint(50, 50))
 	c.NotNil(result)
 }
-
-// Benchmark tests
 
 func BenchmarkNew(b *testing.B) {
 	bounds := geom.NewRect(0, 0, 1000, 1000)
@@ -436,8 +417,6 @@ func BenchmarkSetViewPoint(b *testing.B) {
 	}
 }
 
-// Example tests for documentation
-
 func ExampleNew() {
 	bounds := geom.NewRect(0, 0, 100, 100)
 	obstructions := []geom.Line{
@@ -461,7 +440,6 @@ func ExampleBreakIntersections() {
 		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
 	}
 
-	// Break them at intersection points
 	brokenLines := visibility.BreakIntersections(lines)
 
 	// brokenLines will contain more segments than the original lines
@@ -477,7 +455,6 @@ func ExampleVisibility_SetViewPoint() {
 
 	v := visibility.New(bounds, obstructions)
 
-	// Calculate visibility from this point
 	viewPoint := geom.NewPoint(15, 15)
 	polygon := v.SetViewPoint(viewPoint)
 

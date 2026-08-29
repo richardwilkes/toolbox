@@ -25,7 +25,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-// HasHTTPOrFileURLPrefix returns true if the provided URL has a http, https, or file scheme. The scheme comparison is
+// HasHTTPOrFileURLPrefix returns true if the provided URL has an http, https, or file scheme. The comparison is
 // case-insensitive, since URI schemes are not case-sensitive (RFC 3986).
 func HasHTTPOrFileURLPrefix(urlStr string) bool {
 	return hasSchemePrefix(urlStr, "http://") ||
@@ -45,15 +45,15 @@ func RetrieveData(ctx context.Context, client *http.Client, filePathOrURL string
 }
 
 // RetrieveDataWithLimit behaves like RetrieveData, but returns an error if more than maxBytes would be read. A maxBytes
-// of zero or less means no limit.
+// of zero or less (or math.MaxInt64) means no limit.
 func RetrieveDataWithLimit(ctx context.Context, client *http.Client, filePathOrURL string, maxBytes int64) ([]byte, error) {
 	r, err := StreamData(ctx, client, filePathOrURL)
 	if err != nil {
 		return nil, err
 	}
-	// Drain (within bounds) any body left unread before closing, so an HTTP/1.1 keep-alive connection can be reused
-	// (see StreamData's note). This matters on the over-limit path below, where the LimitReader stops before EOF and
-	// would otherwise leave the body undrained.
+	// Drain (within bounds) any unread body before closing so an HTTP/1.1 keep-alive connection can be reused. This
+	// matters on the over-limit path, where the LimitReader stops before EOF and would otherwise leave the body
+	// undrained.
 	defer xio.DiscardAndCloseIgnoringErrors(r)
 	var reader io.Reader = r
 	enforceLimit := maxBytes > 0 && maxBytes != math.MaxInt64
@@ -71,9 +71,9 @@ func RetrieveDataWithLimit(ctx context.Context, client *http.Client, filePathOrU
 }
 
 // StreamData returns an io.ReadCloser that streams the data from the given file path or URL with scheme file, http, or
-// https. If client is nil and a network request is necessary, the http.DefaultClient will be used. The caller is
-// responsible for closing the returned ReadCloser. Note that for network requests, the entire stream should be read to
-// allow reuse of the underlying connection.
+// https. If client is nil and a network request is necessary, the http.DefaultClient will be used. A non-2xx HTTP
+// status is returned as an error. The caller is responsible for closing the returned ReadCloser; for network requests,
+// the entire stream should be read to allow reuse of the underlying connection.
 func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) (io.ReadCloser, error) {
 	if HasHTTPOrFileURLPrefix(filePathOrURL) {
 		u, err := url.Parse(filePathOrURL)
@@ -104,7 +104,7 @@ func StreamData(ctx context.Context, client *http.Client, filePathOrURL string) 
 			}
 			return rsp.Body, nil
 		default:
-			// Shouldn't be possible to reach this
+			// Unreachable given the HasHTTPOrFileURLPrefix check above.
 			return nil, errs.Newf("invalid url: %s", filePathOrURL)
 		}
 	}
@@ -121,9 +121,8 @@ func fileURLToPath(u *url.URL) (string, error) {
 	host := u.Host
 	p := u.Path
 	if runtime.GOOS == xos.WindowsOS && len(host) == 2 && host[1] == ':' && isASCIILetter(host[0]) {
-		// A file URL incorrectly written as file://C:/path (two slashes rather than three) puts the drive letter in the
-		// host. Fold it back into the path so it is treated as a local drive path rather than an unreachable remote
-		// host.
+		// A file URL written as file://C:/path (two slashes rather than three) puts the drive letter in the host. Fold
+		// it back into the path so it is treated as a local drive rather than an unreachable remote host.
 		p = host + p
 		host = ""
 	}

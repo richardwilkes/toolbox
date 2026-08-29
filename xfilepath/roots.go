@@ -16,7 +16,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// UniquePaths returns a list of unique paths from the given paths, pruning out paths that are a subset of another.
+// UniquePaths returns the given paths made absolute with symlinks resolved, omitting duplicates and any path that lies
+// within another. The order of the result is unspecified.
 func UniquePaths(paths ...string) ([]string, error) {
 	set := make(map[string]struct{}, len(paths))
 	for _, path := range paths {
@@ -59,9 +60,8 @@ func UniquePaths(paths ...string) ([]string, error) {
 	return result, nil
 }
 
-// relAscends reports whether a cleaned relative path (as returned by filepath.Rel) ascends out of its base directory,
-// i.e. it is exactly ".." or begins with a ".." path component. A name that merely starts with ".." (such as "..foo")
-// is an ordinary descendant and must not be mistaken for an ancestor relationship.
+// relAscends reports whether a cleaned relative path (as returned by filepath.Rel) is exactly ".." or begins with a
+// ".." component. A name that merely starts with ".." (such as "..foo") is an ordinary descendant and must not match.
 func relAscends(rel string) bool {
 	return rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }

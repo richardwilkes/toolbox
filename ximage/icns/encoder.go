@@ -39,13 +39,13 @@ type iconInfo struct {
 	iconType [4]byte
 }
 
-// Encode one or more images into an .icns. At least one image must be provided. macOS recommends providing 1024x1024,
-// 512x512, 256x256, 128x128, 64x64, 32x32, and 16x16. Note that sizes other than these will not be considered valid.
+// Encode one or more images into an .icns. At least one image must be provided and each must be square with a size of
+// 1024, 512, 256, 128, 64, 32, or 16 (macOS recommends providing all of them).
 func Encode(w io.Writer, images ...image.Image) error {
 	if len(images) == 0 {
 		return errs.New("must supply at least 1 image")
 	}
-	// Work on a copy so sorting doesn't reorder the caller's backing array as a hidden side effect.
+	// Sort a copy so the caller's slice isn't reordered.
 	images = slices.Clone(images)
 	slices.SortFunc(images, func(a, b image.Image) int {
 		return cmp.Compare(b.Bounds().Dx(), a.Bounds().Dx())

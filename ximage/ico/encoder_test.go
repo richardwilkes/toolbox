@@ -19,8 +19,7 @@ import (
 )
 
 // TestEncodeDoesNotReorderCallerSlice ensures Encode sorts a copy of the variadic images rather than the caller's
-// backing array. The images are supplied in ascending-width order; an in-place sort would permute them into
-// descending-width order, so the slice must read back in its original order after the call.
+// backing array: supplied in ascending-width order, an in-place sort would reverse them.
 func TestEncodeDoesNotReorderCallerSlice(t *testing.T) {
 	c := check.New(t)
 	images := []image.Image{

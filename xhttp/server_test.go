@@ -54,8 +54,7 @@ func newTestServer(c check.Checker, log *bytes.Buffer, handler http.HandlerFunc)
 }
 
 // TestServerPanicBeforeWriteRecordsStatus verifies that when a handler panics before writing anything, the recovery
-// sends a 500 through the StatusWriter so both the client and the access log see status 500. Previously the 500 was
-// written to the raw writer, leaving the StatusWriter (and therefore the log) reporting 200.
+// sends a 500 through the StatusWriter so both the client and the access log see status 500.
 func TestServerPanicBeforeWriteRecordsStatus(t *testing.T) {
 	c := check.New(t)
 	var log bytes.Buffer
@@ -90,8 +89,7 @@ func TestServerPanicAfterWriteDoesNotResend(t *testing.T) {
 }
 
 // TestServerRunReturnsServeError verifies that a serve-time failure (here, a TLS server pointed at non-existent
-// certificate files) is returned from Run itself, not merely stashed away for Error to report. Previously Run always
-// returned nil, so callers doing `if err := srv.Run(); err != nil` never observed serve failures.
+// certificate files) is returned from Run itself, not merely stashed away for Error to report.
 func TestServerRunReturnsServeError(t *testing.T) {
 	c := check.New(t)
 	var log bytes.Buffer
@@ -125,8 +123,6 @@ func TestServerRunReturnsNilOnCleanShutdown(t *testing.T) {
 	c.NoError(s.Error())
 }
 
-// newTestServerWithWriteTimeout builds a server with the given WriteTimeout so tests can exercise the request-context
-// deadline that mirrors the connection's write deadline.
 func newTestServerWithWriteTimeout(c check.Checker, writeTimeout time.Duration, handler http.HandlerFunc) *xhttp.Server {
 	var log bytes.Buffer
 	s, err := xhttp.NewServer(&xhttp.ServerConfig{
@@ -155,9 +151,8 @@ func TestServerWriteTimeoutAnchorsContextDeadlineAtRequestStart(t *testing.T) {
 	after := time.Now()
 
 	c.True(gotOK, "handler context should have a deadline when WriteTimeout is set")
-	// The anchor is the request-start instant captured inside ServeHTTP, which necessarily falls within [before,
-	// after], so the deadline must fall within [before+WriteTimeout, after+WriteTimeout]. This pins the anchor to
-	// request entry rather than to some later point after this method's setup work.
+	// The anchor is the request-start instant captured inside ServeHTTP, which falls within [before, after], so the
+	// deadline must fall within [before+WriteTimeout, after+WriteTimeout].
 	c.False(gotDeadline.Before(before.Add(writeTimeout)), "deadline anchored before the request was received")
 	c.False(gotDeadline.After(after.Add(writeTimeout)), "deadline anchored after the request completed")
 }
@@ -175,9 +170,8 @@ func TestServerNoWriteTimeoutLeavesContextWithoutDeadline(t *testing.T) {
 }
 
 // TestServerWriteTimeoutResetPerRequest verifies that the context deadline is derived fresh for each request rather
-// than drifting across requests. This mirrors a reused keep-alive connection, where net/http re-arms the socket write
-// deadline for every request: a request that arrives after an idle gap must still get the full WriteTimeout budget, not
-// a shrunken remainder.
+// than drifting across requests, mirroring a reused keep-alive connection where net/http re-arms the socket write
+// deadline for every request.
 func TestServerWriteTimeoutResetPerRequest(t *testing.T) {
 	c := check.New(t)
 	const writeTimeout = 200 * time.Millisecond

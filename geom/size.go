@@ -45,7 +45,7 @@ func SizeFromPoint(pt Point) Size {
 	}
 }
 
-// Add returns a new Size which is the result of adding this Size with the provided Size.
+// Add returns the sum of this Size and the provided Size.
 func (s Size) Add(size Size) Size {
 	return Size{
 		Width:  s.Width + size.Width,
@@ -53,7 +53,7 @@ func (s Size) Add(size Size) Size {
 	}
 }
 
-// Sub returns a new Size which is the result of subtracting the provided Size from this Size.
+// Sub returns the result of subtracting the provided Size from this Size.
 func (s Size) Sub(size Size) Size {
 	return Size{
 		Width:  s.Width - size.Width,
@@ -61,7 +61,7 @@ func (s Size) Sub(size Size) Size {
 	}
 }
 
-// Mul returns a new Size which is the result of multiplying this Size by the value.
+// Mul returns this Size with its dimensions multiplied by the value.
 func (s Size) Mul(value float32) Size {
 	return Size{
 		Width:  s.Width * value,
@@ -69,7 +69,7 @@ func (s Size) Mul(value float32) Size {
 	}
 }
 
-// MulSize returns a new Size which is the result of multiplying this Size by the provided Size.
+// MulSize returns this Size with its dimensions multiplied by those of the provided Size.
 func (s Size) MulSize(size Size) Size {
 	return Size{
 		Width:  s.Width * size.Width,
@@ -77,7 +77,7 @@ func (s Size) MulSize(size Size) Size {
 	}
 }
 
-// MulPt returns a new Size which is the result of multiplying this Size by the provided Point.
+// MulPt returns this Size with its width multiplied by the X and its height by the Y of the provided Point.
 func (s Size) MulPt(pt Point) Size {
 	return Size{
 		Width:  s.Width * pt.X,
@@ -85,7 +85,7 @@ func (s Size) MulPt(pt Point) Size {
 	}
 }
 
-// Div returns a new Size which is the result of dividing this Size by the value.
+// Div returns this Size with its dimensions divided by the value.
 func (s Size) Div(value float32) Size {
 	return Size{
 		Width:  s.Width / value,
@@ -93,7 +93,7 @@ func (s Size) Div(value float32) Size {
 	}
 }
 
-// DivSize returns a new Size which is the result of dividing this Size by the provided Size.
+// DivSize returns this Size with its dimensions divided by those of the provided Size.
 func (s Size) DivSize(size Size) Size {
 	return Size{
 		Width:  s.Width / size.Width,
@@ -101,7 +101,7 @@ func (s Size) DivSize(size Size) Size {
 	}
 }
 
-// DivPt returns a new Size which is the result of dividing this Size by the provided Point.
+// DivPt returns this Size with its width divided by the X and its height by the Y of the provided Point.
 func (s Size) DivPt(pt Point) Size {
 	return Size{
 		Width:  s.Width / pt.X,
@@ -125,7 +125,7 @@ func (s Size) Ceil() Size {
 	}
 }
 
-// Min returns the smallest Size between itself and 'other'.
+// Min returns a Size with the smaller width and the smaller height of this Size and 'other'.
 func (s Size) Min(other Size) Size {
 	return Size{
 		Width:  min(s.Width, other.Width),
@@ -133,7 +133,7 @@ func (s Size) Min(other Size) Size {
 	}
 }
 
-// Max returns the largest Size between itself and 'other'.
+// Max returns a Size with the larger width and the larger height of this Size and 'other'.
 func (s Size) Max(other Size) Size {
 	return Size{
 		Width:  max(s.Width, other.Width),

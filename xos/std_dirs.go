@@ -18,7 +18,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// HomeDir returns the current user's home directory. The returned path uses platform separators.
+// HomeDir returns the current user's home directory, falling back to os.TempDir() if it cannot be determined. The
+// returned path uses platform separators.
 func HomeDir() string {
 	var home string
 	switch runtime.GOOS {
@@ -33,9 +34,8 @@ func HomeDir() string {
 	return home
 }
 
-// AppDir returns the absolute path to the logical directory the application resides within. The returned path uses
-// platform separators. For macOS, this means the directory where the .app bundle resides, not the binary that's tucked
-// down inside it.
+// AppDir returns the absolute path of the directory the application resides in, using platform separators. On macOS,
+// this is the directory containing the .app bundle, not the binary tucked inside it.
 func AppDir() (string, error) {
 	path, err := os.Executable()
 	if err != nil {
@@ -49,7 +49,6 @@ func AppDir() (string, error) {
 	}
 	path = filepath.Dir(path)
 	if runtime.GOOS == MacOS {
-		// Account for macOS bundles
 		if i := strings.LastIndex(path, ".app/"); i != -1 {
 			path = filepath.Dir(path[:i])
 		}
@@ -57,8 +56,8 @@ func AppDir() (string, error) {
 	return path, nil
 }
 
-// AppDataDir returns the path to use for user-specific data for the application. The returned path uses platform
-// separators and may need to be created before use.
+// AppDataDir returns the directory for user-specific application data, with AppIdentifier appended if
+// withAppIdentifier is true and it is set. The returned path uses platform separators and may need to be created.
 func AppDataDir(withAppIdentifier bool) string {
 	var dir string
 	switch runtime.GOOS {
@@ -79,8 +78,8 @@ func AppDataDir(withAppIdentifier bool) string {
 	return dir
 }
 
-// AppLogDir returns the application log directory. The returned path uses platform separators and may need to be
-// created before use.
+// AppLogDir returns the application log directory, applying withAppIdentifier as AppDataDir does. The returned path
+// uses platform separators and may need to be created.
 func AppLogDir(withAppIdentifier bool) string {
 	switch runtime.GOOS {
 	case MacOS:

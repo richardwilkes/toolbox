@@ -39,7 +39,7 @@ func TestPoolPutGet(t *testing.T) {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, setting := range info.Settings {
 			if setting.Key == "-race" && setting.Value == "true" {
-				// When -race is enabled, one quarter of the Put requests get randomly dropped, so can't reliably test
+				// With -race enabled, sync.Pool randomly drops a quarter of Puts, so this can't be tested reliably.
 				return
 			}
 		}

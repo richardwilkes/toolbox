@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package term provides terminal utilities.
+// Package xterm provides terminal utilities.
 package xterm
 
 import (
@@ -18,7 +18,7 @@ import (
 	"golang.org/x/term"
 )
 
-// IsTerminal returns true if the writer is a terminal.
+// IsTerminal returns true if 'w' is an *os.File, or an *AnsiWriter wrapping one, that refers to a terminal.
 func IsTerminal(w io.Writer) bool {
 	switch t := w.(type) {
 	case *os.File:
@@ -30,7 +30,7 @@ func IsTerminal(w io.Writer) bool {
 	}
 }
 
-// Size returns the number of columns and rows comprising the terminal.
+// Size returns the number of columns and rows of the terminal 'w' refers to, or 80 and 24 if that can't be determined.
 func Size(w io.Writer) (columns, rows int) {
 	switch t := w.(type) {
 	case *os.File:
@@ -44,7 +44,7 @@ func Size(w io.Writer) (columns, rows int) {
 	return 80, 24
 }
 
-// DetectKind returns the kind of support available in the terminal.
+// DetectKind returns the Kind of terminal 'w' refers to, or Dumb if 'w' is not a terminal.
 func DetectKind(w io.Writer) Kind {
 	if IsTerminal(w) {
 		envTerm := os.Getenv("TERM")
@@ -59,7 +59,8 @@ func DetectKind(w io.Writer) Kind {
 	return Dumb
 }
 
-// RawRead reads a byte from the terminal without requiring the enter/return key to be pressed.
+// RawRead reads a single byte from 'r', temporarily placing it in raw mode if it is a terminal so the enter/return key
+// need not be pressed. 'ok' is false if nothing could be read.
 func RawRead(r io.Reader) (ch byte, ok bool) {
 	var f *os.File
 	if f, ok = r.(*os.File); ok {

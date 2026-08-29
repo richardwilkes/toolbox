@@ -23,15 +23,12 @@ import (
 func TestIsDir(t *testing.T) {
 	c := check.New(t)
 
-	// path is a directory
 	tmpDir := t.TempDir()
 	c.True(xos.IsDir(tmpDir))
 
-	// file does not exist
 	file := filepath.Join(tmpDir, "isdir-regular.txt")
 	c.False(xos.IsDir(file))
 
-	// file exists and is regular
 	c.NoError(os.WriteFile(file, []byte("test content"), 0o644))
 	c.False(xos.IsDir(file))
 }
@@ -39,15 +36,12 @@ func TestIsDir(t *testing.T) {
 func TestFileExists(t *testing.T) {
 	c := check.New(t)
 
-	// path is a directory
 	tmpDir := t.TempDir()
 	c.False(xos.FileExists(tmpDir))
 
-	// file does not exist
 	file := filepath.Join(tmpDir, "fileexists-regular.txt")
 	c.False(xos.FileExists(file))
 
-	// file exists and is regular
 	c.NoError(os.WriteFile(file, []byte("test content"), 0o644))
 	c.True(xos.FileExists(file))
 }
@@ -55,19 +49,15 @@ func TestFileExists(t *testing.T) {
 func TestFileIsReadable(t *testing.T) {
 	c := check.New(t)
 
-	// path is a directory
 	tmpDir := t.TempDir()
 	c.False(xos.FileIsReadable(tmpDir))
 
-	// file does not exist
 	file := filepath.Join(tmpDir, "readable-regular.txt")
 	c.False(xos.FileIsReadable(file))
 
-	// file exists and is readable
 	c.NoError(os.WriteFile(file, []byte("test content"), 0o644))
 	c.True(xos.FileIsReadable(file))
 
-	// file exists but not readable
 	if runtime.GOOS != xos.WindowsOS { // Windows seems to ignore the write-only permission and give it read access too
 		noReadFile := filepath.Join(tmpDir, "not-readable.txt")
 		c.NoError(os.WriteFile(noReadFile, []byte("test content"), 0o200))
@@ -78,22 +68,18 @@ func TestFileIsReadable(t *testing.T) {
 func TestMoveFile(t *testing.T) {
 	c := check.New(t)
 
-	// Test moving a non-existent source file
 	tmpDir := t.TempDir()
 	srcFile := filepath.Join(tmpDir, "source.txt")
 	dstFile := filepath.Join(tmpDir, "dest.txt")
 	c.HasError(xos.MoveFile(srcFile, dstFile))
 
-	// Test moving a directory as source
 	c.HasError(xos.MoveFile(tmpDir, dstFile))
 
-	// Test moving to a directory as destination
 	c.NoError(os.WriteFile(srcFile, []byte("test content"), 0o644))
 	dstDir := filepath.Join(tmpDir, "destdir")
 	c.NoError(os.MkdirAll(dstDir, 0o755))
 	c.HasError(xos.MoveFile(srcFile, dstDir))
 
-	// Test successful move
 	dstFile = filepath.Join(tmpDir, "dest.txt")
 	c.NoError(xos.MoveFile(srcFile, dstFile))
 	c.False(xos.FileExists(srcFile))
@@ -102,7 +88,6 @@ func TestMoveFile(t *testing.T) {
 	c.NoError(err)
 	c.Equal("test content", string(content))
 
-	// Test moving to same file
 	srcFile = filepath.Join(tmpDir, "same.txt")
 	c.NoError(os.WriteFile(srcFile, []byte("same content"), 0o644))
 	c.NoError(xos.MoveFile(srcFile, srcFile))
@@ -133,7 +118,6 @@ func TestCopySymlinkIntoMissingParent(t *testing.T) {
 func TestCopy(t *testing.T) {
 	c := check.New(t)
 
-	// Test copying regular file
 	tmpDir := t.TempDir()
 	srcFile := filepath.Join(tmpDir, "src.txt")
 	dstFile := filepath.Join(tmpDir, "dst.txt")
@@ -144,7 +128,6 @@ func TestCopy(t *testing.T) {
 	c.NoError(err)
 	c.Equal(string(content), string(copiedContent))
 
-	// Test copying directory
 	srcDir := filepath.Join(tmpDir, "srcdir")
 	dstDir := filepath.Join(tmpDir, "dstdir")
 	c.NoError(os.MkdirAll(srcDir, 0o755))
@@ -154,7 +137,6 @@ func TestCopy(t *testing.T) {
 	c.NoError(err)
 	c.Equal(string(content), string(copiedContent))
 
-	// Test copying symlink
 	if runtime.GOOS != xos.WindowsOS { // Windows doesn't support symlinks without special permissions enabled first
 		srcLink := filepath.Join(tmpDir, "link.txt")
 		dstLink := filepath.Join(tmpDir, "copylink.txt")
@@ -168,10 +150,8 @@ func TestCopy(t *testing.T) {
 		c.Equal(origTarget, linkTarget)
 	}
 
-	// Test copying non-existent file
 	c.HasError(xos.Copy(filepath.Join(tmpDir, "nonexistent"), dstFile))
 
-	// Test copying file that is not writable
 	srcFile = filepath.Join(tmpDir, "src-no-write.txt")
 	dstFile = filepath.Join(tmpDir, "dst-no-write.txt")
 	c.NoError(os.WriteFile(srcFile, content, 0o444))
@@ -217,7 +197,6 @@ func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
 	// Mask 0o577 clears the owner write bit (0o755 & 0o577 == 0o555 for dirs, 0o644 & 0o577 == 0o444 for files).
 	c.NoError(xos.CopyWithMask(srcDir, dstDir, 0o577))
 
-	// All content was copied.
 	got, err := os.ReadFile(filepath.Join(dstDir, "file.txt"))
 	c.NoError(err)
 	c.Equal(string(content), string(got))
@@ -225,7 +204,6 @@ func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
 	c.NoError(err)
 	c.Equal(string(content), string(got))
 
-	// Directories carry exactly the masked mode.
 	fi, err := os.Stat(dstDir)
 	c.NoError(err)
 	c.Equal(fs.FileMode(0o555), fi.Mode().Perm())
@@ -233,7 +211,6 @@ func TestCopyWithMaskClearingOwnerWrite(t *testing.T) {
 	c.NoError(err)
 	c.Equal(fs.FileMode(0o555), fi.Mode().Perm())
 
-	// Files carry exactly the masked mode.
 	fi, err = os.Stat(filepath.Join(dstDir, "file.txt"))
 	c.NoError(err)
 	c.Equal(fs.FileMode(0o444), fi.Mode().Perm())

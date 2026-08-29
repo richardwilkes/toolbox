@@ -29,7 +29,6 @@ func TestSleepCompletesNormally(t *testing.T) {
 	elapsed := time.Since(start)
 	c.NoError(err)
 	c.True(elapsed >= duration, "Expected elapsed time to be at least %v, got %v", duration, elapsed)
-	// Allow some tolerance for timing precision
 	c.True(elapsed < duration+20*time.Millisecond, "Expected elapsed time to be less than %v, got %v", duration+20*time.Millisecond, elapsed)
 }
 
@@ -39,7 +38,6 @@ func TestSleepInterruptedByContextCancellation(t *testing.T) {
 	start := time.Now()
 	duration := 100 * time.Millisecond
 
-	// Cancel the context after 10ms
 	go func() {
 		time.Sleep(10 * time.Millisecond)
 		cancel()
@@ -49,9 +47,7 @@ func TestSleepInterruptedByContextCancellation(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.Equal(context.Canceled, err)
-	// Should return much earlier than the full duration
 	c.True(elapsed < duration, "Expected elapsed time to be less than %v, got %v", duration, elapsed)
-	// Should be at least around the cancellation time
 	c.True(elapsed >= 8*time.Millisecond, "Expected elapsed time to be at least 8ms, got %v", elapsed)
 }
 
@@ -68,7 +64,6 @@ func TestSleepInterruptedByContextTimeout(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.Equal(context.DeadlineExceeded, err)
-	// Should return around the timeout duration
 	c.True(elapsed >= timeout, "Expected elapsed time to be at least %v, got %v", timeout, elapsed)
 	c.True(elapsed < duration, "Expected elapsed time to be less than %v, got %v", duration, elapsed)
 }
@@ -82,7 +77,6 @@ func TestSleepWithZeroDuration(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.NoError(err)
-	// Should return immediately
 	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
 }
 
@@ -95,7 +89,6 @@ func TestSleepWithNegativeDuration(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.NoError(err)
-	// Should return immediately for negative durations
 	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
 }
 
@@ -111,13 +104,11 @@ func TestSleepWithAlreadyCancelledContext(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.Equal(context.Canceled, err)
-	// Should return immediately
 	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
 }
 
 func TestSleepWithAlreadyExpiredContext(t *testing.T) {
 	c := check.New(t)
-	// Create a context that expires immediately
 	ctx, cancel := context.WithTimeout(context.Background(), -1*time.Millisecond)
 	defer cancel()
 
@@ -128,7 +119,6 @@ func TestSleepWithAlreadyExpiredContext(t *testing.T) {
 
 	elapsed := time.Since(start)
 	c.Equal(context.DeadlineExceeded, err)
-	// Should return immediately
 	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
 }
 
@@ -140,14 +130,12 @@ func TestSleepConcurrentOperations(t *testing.T) {
 	start := time.Now()
 	errChan := make(chan error, 3)
 
-	// Start multiple sleep operations concurrently
 	for range 3 {
 		go func() {
 			errChan <- xtime.Sleep(ctx, duration)
 		}()
 	}
 
-	// Wait for all to complete
 	for range 3 {
 		err := <-errChan
 		c.NoError(err)

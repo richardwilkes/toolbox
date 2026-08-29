@@ -16,8 +16,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/fixed"
 )
 
-// TestDecimalPlaces verifies, for every Dx type, that Places() reports the expected count and that Multiplier() equals
-// 10^Places(). Computing the expected multiplier independently guards against a typo in the hand-written constants.
+// TestDecimalPlaces checks, for every Dx type, that Places() is as expected and that Multiplier() equals 10^Places(),
+// computed independently to guard against a typo in the hand-written constants.
 func TestDecimalPlaces(t *testing.T) {
 	c := check.New(t)
 	cases := []struct {

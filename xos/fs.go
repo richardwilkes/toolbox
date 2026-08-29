@@ -36,7 +36,7 @@ func FileExists(path string) bool {
 	return false
 }
 
-// FileIsReadable returns true if the path points to a regular file that we have permission to read.
+// FileIsReadable returns true if the path points to a regular file whose owner-read permission bit is set.
 func FileIsReadable(path string) bool {
 	if fi, err := os.Stat(path); err == nil {
 		mode := fi.Mode()
@@ -45,8 +45,8 @@ func FileIsReadable(path string) bool {
 	return false
 }
 
-// MoveFile moves a file in the file system or across volumes, using rename if possible, but falling back to copying the
-// file if not. This will error if either src or dst are not regular files.
+// MoveFile moves src to dst, using rename if possible and falling back to copy-then-remove otherwise. It errors if
+// src, or an existing dst, is not a regular file. If src and dst are the same file, nothing is done.
 func MoveFile(src, dst string) error {
 	srcInfo, err := os.Stat(src)
 	if err != nil {
@@ -86,7 +86,8 @@ func Copy(src, dst string) error {
 	return CopyWithMask(src, dst, 0o777)
 }
 
-// CopyWithMask src to dst. src may be a directory, file, or symlink.
+// CopyWithMask copies src to dst, masking the permission bits of everything it creates with mask. src may be a
+// directory, file, or symlink.
 func CopyWithMask(src, dst string, mask fs.FileMode) error {
 	info, err := os.Lstat(src)
 	if err != nil {
@@ -113,8 +114,8 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 	if f, err = os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, (srcMode&mask)|0o200); err != nil {
 		return errs.Wrap(err)
 	}
-	// Registered first so it runs last (after f has been closed by the defer below): if the copy fails for any reason,
-	// remove the destination so we don't leave a truncated, empty, or incorrectly-permissioned file behind.
+	// Registered first so it runs last, after the defer below has closed f: on failure, remove the destination rather
+	// than leave a truncated, empty, or incorrectly-permissioned file behind.
 	defer func() {
 		if err != nil {
 			_ = os.Remove(dst) //nolint:errcheck // best-effort cleanup; the original error is what matters
@@ -144,9 +145,8 @@ func fileCopy(src, dst string, srcMode, mask fs.FileMode) (err error) {
 
 func dirCopy(srcDir, dstDir string, srcMode, mask fs.FileMode) (err error) {
 	dstMode := srcMode & mask
-	// Force owner rwx while the directory is being populated so children can be created even when the mask clears the
-	// owner's write or execute bits, then restore the intended mode once the contents are in place. This mirrors the
-	// owner-write forcing that fileCopy does for regular files.
+	// Force owner rwx while populating the directory so children can be created even when the mask clears the owner's
+	// write or execute bits, then restore the intended mode, as fileCopy does with owner write.
 	if err = os.MkdirAll(dstDir, dstMode|0o700); err != nil {
 		return errs.Wrap(err)
 	}
@@ -182,8 +182,8 @@ func linkCopy(src, dst string, mask fs.FileMode) error {
 	if err = os.MkdirAll(filepath.Dir(dst), 0o755&mask); err != nil {
 		return errs.Wrap(err)
 	}
-	// Remove any existing destination so the symlink can be recreated, matching the overwrite behavior of the regular
-	// file path (which opens with O_TRUNC). os.Symlink otherwise fails with EEXIST.
+	// os.Symlink fails with EEXIST if dst exists, so remove it first to match the overwrite behavior of the regular-file
+	// path (which opens with O_TRUNC).
 	if err = os.Remove(dst); err != nil && !os.IsNotExist(err) {
 		return errs.Wrap(err)
 	}
@@ -193,9 +193,8 @@ func linkCopy(src, dst string, mask fs.FileMode) error {
 	return nil
 }
 
-// chmodIfSupported changes the mode of the named path, but treats an "operation not supported" error as success.
-// Permission adjustment is best-effort: some filesystems (e.g. certain SMB/CIFS network mounts) don't support chmod and
-// return such an error, which shouldn't abort an otherwise-valid copy.
+// chmodIfSupported changes the mode of the named path, treating an "operation not supported" error as success, since
+// some filesystems (e.g. certain SMB/CIFS mounts) don't support chmod and that shouldn't abort an otherwise-valid copy.
 func chmodIfSupported(name string, mode fs.FileMode) error {
 	if err := os.Chmod(name, mode); err != nil && !errors.Is(err, syscall.ENOTSUP) &&
 		!errors.Is(err, syscall.EOPNOTSUPP) {

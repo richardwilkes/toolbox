@@ -110,22 +110,18 @@ func TestRectCornerPoints(t *testing.T) {
 
 	r := geom.NewRect(10, 20, 30, 40)
 
-	// TopLeft should be (10, 20)
 	topLeft := r.TopLeft()
 	c.Equal(float32(10), topLeft.X)
 	c.Equal(float32(20), topLeft.Y)
 
-	// TopRight should be (40, 20)
 	topRight := r.TopRight()
 	c.Equal(float32(40), topRight.X)
 	c.Equal(float32(20), topRight.Y)
 
-	// BottomRight should be (40, 60)
 	bottomRight := r.BottomRight()
 	c.Equal(float32(40), bottomRight.X)
 	c.Equal(float32(60), bottomRight.Y)
 
-	// BottomLeft should be (10, 60)
 	bottomLeft := r.BottomLeft()
 	c.Equal(float32(10), bottomLeft.X)
 	c.Equal(float32(60), bottomLeft.Y)
@@ -204,18 +200,15 @@ func TestRectIntersect(t *testing.T) {
 
 	intersection := r1.Intersect(r2)
 
-	// Intersection should be (25, 35, 15, 25)
 	c.Equal(float32(25), intersection.X)
 	c.Equal(float32(35), intersection.Y)
 	c.Equal(float32(15), intersection.Width)
 	c.Equal(float32(25), intersection.Height)
 
-	// Non-intersecting rectangles
 	r3 := geom.NewRect(50, 70, 10, 20)
 	noIntersection := r1.Intersect(r3)
 	c.True(noIntersection.Empty())
 
-	// Empty rectangle intersection
 	emptyR := geom.NewRect(10, 20, 0, 40)
 	emptyIntersection := r1.Intersect(emptyR)
 	c.True(emptyIntersection.Empty())
@@ -229,7 +222,6 @@ func TestRectUnion(t *testing.T) {
 
 	union := r1.Union(r2)
 
-	// Union should encompass both rectangles
 	// Left: min(10, 25) = 10
 	// Top: min(20, 35) = 20
 	// Right: max(40, 55) = 55
@@ -240,7 +232,6 @@ func TestRectUnion(t *testing.T) {
 	c.Equal(float32(45), union.Width)
 	c.Equal(float32(55), union.Height)
 
-	// Union with empty rectangle
 	emptyR := geom.NewRect(10, 20, 0, 40)
 	unionWithEmpty := r1.Union(emptyR)
 	c.Equal(r1.X, unionWithEmpty.X)
@@ -248,7 +239,6 @@ func TestRectUnion(t *testing.T) {
 	c.Equal(r1.Width, unionWithEmpty.Width)
 	c.Equal(r1.Height, unionWithEmpty.Height)
 
-	// Union of two empty rectangles
 	empty1 := geom.NewRect(10, 20, 0, 40)
 	empty2 := geom.NewRect(15, 25, -10, 20)
 	emptyUnion := empty1.Union(empty2)
@@ -356,7 +346,6 @@ func TestRectInset(t *testing.T) {
 	c.Equal(float32(25), insetRect.Width)
 	c.Equal(float32(28), insetRect.Height)
 
-	// Test with insets larger than rectangle dimensions
 	largeInsets := geom.NewInsets(50, 40, 50, 40)
 	insetRect2 := r.Inset(largeInsets)
 
@@ -373,7 +362,6 @@ func TestRectString(t *testing.T) {
 	str := r.String()
 	c.Equal("10,20,30,40", str)
 
-	// Test with float
 	rf := geom.NewRect(10.5, 20.7, 30.2, 40.8)
 	strf := rf.String()
 	c.Equal("10.5,20.7,30.2,40.8", strf)
@@ -414,7 +402,6 @@ func TestRectIntersectsLine(t *testing.T) {
 	end6 := geom.NewPoint(15.0, 25.0)
 	c.True(r.IntersectsLine(start6, end6))
 
-	// Test with empty rectangle
 	emptyR := geom.NewRect(10.0, 20.0, 0.0, 40.0)
 	start7 := geom.NewPoint(5.0, 25.0)
 	end7 := geom.NewPoint(15.0, 25.0)

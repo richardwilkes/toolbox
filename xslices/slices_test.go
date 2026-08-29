@@ -20,7 +20,6 @@ import (
 func TestSet(t *testing.T) {
 	c := check.New(t)
 
-	// Test with integers
 	intData := []int{1, 2, 3, 2, 1, 4}
 	intSet := xslices.Set(intData)
 	c.Equal(4, len(intSet))
@@ -35,7 +34,6 @@ func TestSet(t *testing.T) {
 	_, exists = intSet[5]
 	c.False(exists)
 
-	// Test with strings
 	strData := []string{"apple", "banana", "apple", "cherry"}
 	strSet := xslices.Set(strData)
 	c.Equal(3, len(strSet))
@@ -48,7 +46,6 @@ func TestSet(t *testing.T) {
 	_, exists = strSet["orange"]
 	c.False(exists)
 
-	// Test with empty slice
 	emptySet := xslices.Set([]int{})
 	c.Equal(0, len(emptySet))
 }
@@ -56,7 +53,6 @@ func TestSet(t *testing.T) {
 func TestMapFromData(t *testing.T) {
 	c := check.New(t)
 
-	// Test with struct data
 	type person struct {
 		Name string
 		ID   int
@@ -68,21 +64,18 @@ func TestMapFromData(t *testing.T) {
 		{ID: 3, Name: "Charlie"},
 	}
 
-	// Map by ID
 	idMap := xslices.MapFromData(people, func(p person) int { return p.ID })
 	c.Equal(3, len(idMap))
 	c.Equal("Alice", idMap[1].Name)
 	c.Equal("Bob", idMap[2].Name)
 	c.Equal("Charlie", idMap[3].Name)
 
-	// Map by name
 	nameMap := xslices.MapFromData(people, func(p person) string { return p.Name })
 	c.Equal(3, len(nameMap))
 	c.Equal(1, nameMap["Alice"].ID)
 	c.Equal(2, nameMap["Bob"].ID)
 	c.Equal(3, nameMap["Charlie"].ID)
 
-	// Test with duplicate keys (should overwrite)
 	duplicatePeople := []person{
 		{ID: 1, Name: "Alice"},
 		{ID: 1, Name: "Alice2"},
@@ -91,7 +84,6 @@ func TestMapFromData(t *testing.T) {
 	c.Equal(1, len(duplicateMap))
 	c.Equal("Alice2", duplicateMap[1].Name)
 
-	// Test with empty slice
 	emptyMap := xslices.MapFromData([]person{}, func(p person) int { return p.ID })
 	c.Equal(0, len(emptyMap))
 }
@@ -99,7 +91,6 @@ func TestMapFromData(t *testing.T) {
 func TestMapFromKeys(t *testing.T) {
 	c := check.New(t)
 
-	// Test with integer keys
 	keys := []int{1, 2, 3, 4}
 	squareMap := xslices.MapFromKeys(keys, func(k int) int { return k * k })
 	c.Equal(4, len(squareMap))
@@ -108,7 +99,6 @@ func TestMapFromKeys(t *testing.T) {
 	c.Equal(9, squareMap[3])
 	c.Equal(16, squareMap[4])
 
-	// Test with string keys
 	strKeys := []string{"a", "b", "c"}
 	upperMap := xslices.MapFromKeys(strKeys, func(k string) string { return k + "_upper" })
 	c.Equal(3, len(upperMap))
@@ -116,7 +106,6 @@ func TestMapFromKeys(t *testing.T) {
 	c.Equal("b_upper", upperMap["b"])
 	c.Equal("c_upper", upperMap["c"])
 
-	// Test with struct values
 	type info struct {
 		Label string
 		Count int
@@ -131,7 +120,6 @@ func TestMapFromKeys(t *testing.T) {
 	c.Equal(info{Count: 3, Label: "item"}, infoMap[3])
 	c.Equal(info{Count: 4, Label: "item"}, infoMap[4])
 
-	// Test with empty keys
 	emptyMap := xslices.MapFromKeys([]int{}, func(_ int) string { return "empty" })
 	c.Equal(0, len(emptyMap))
 }

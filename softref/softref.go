@@ -21,11 +21,11 @@ type Pool struct {
 	lock sync.Mutex
 }
 
-// Resource is a resource that will be used with a pool.
+// Resource is a resource tracked by a Pool.
 type Resource interface {
 	// Key returns a unique key for this resource. Must never change.
 	Key() string
-	// Release is called when the resource is no longer being referenced by any remaining soft references.
+	// Release is called once no soft references to the resource remain.
 	Release()
 }
 
@@ -40,7 +40,7 @@ type softRef struct {
 	count    int
 }
 
-// DefaultPool is a global default soft reference pool.
+// DefaultPool is the default soft reference pool.
 var DefaultPool = NewPool()
 
 // NewPool creates a new soft reference pool.
@@ -49,6 +49,7 @@ func NewPool() *Pool {
 }
 
 // NewSoftRef returns a SoftRef to the given resource, along with a flag indicating if a reference existed previously.
+// If a resource with the same key is already tracked, the SoftRef refers to that existing resource instead.
 func (p *Pool) NewSoftRef(resource Resource) (ref *SoftRef, existedPreviously bool) {
 	key := resource.Key()
 	p.lock.Lock()
@@ -86,8 +87,8 @@ func (p *Pool) finalizeSoftRef(ref *SoftRef) {
 		slog.Debug("SoftRef finalized for unknown key", "key", ref.Key)
 	}
 	p.lock.Unlock()
-	// Release outside the lock: Release() may be slow or re-enter the pool (e.g. acquire another SoftRef), either of
-	// which would otherwise stall every other pool user or deadlock on the non-reentrant mutex.
+	// Release outside the lock: Release() may be slow or re-enter the pool, which would otherwise stall every other
+	// pool user or deadlock on the non-reentrant mutex.
 	if toRelease != nil {
 		toRelease.Release()
 	}

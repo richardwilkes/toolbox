@@ -18,12 +18,12 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xflag"
 )
 
-// TestParsePostParseOrdering verifies that Parse runs registered post-parse functions ordered by ascending priority,
-// and in registration order within a single priority.
+// TestParsePostParseOrdering verifies that Parse runs post-parse functions in ascending priority order, and in
+// registration order within a priority.
 func TestParsePostParseOrdering(t *testing.T) {
 	c := check.New(t)
 
-	// Parse operates on the global flag.CommandLine and os.Args, so save and restore them.
+	// Parse uses the global flag.CommandLine and os.Args, so save and restore them.
 	savedArgs := os.Args
 	savedCommandLine := flag.CommandLine
 	defer func() {
@@ -42,7 +42,6 @@ func TestParsePostParseOrdering(t *testing.T) {
 
 	xflag.Parse()
 
-	// Flag parsing happened before the post-parse functions ran.
 	c.Equal("supplied", *flagValue)
 	c.Equal([]string{"p-5", "p0", "p10-a", "p10-b"}, order)
 }

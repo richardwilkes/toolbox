@@ -20,8 +20,8 @@ import (
 )
 
 // TestEncodeNRGBASubImageMatchesStandalone ensures the ARGB encoding path reads pixels via the image's bounds rather
-// than walking the raw Pix slice. A sub-image has a stride wider than its width and a Pix slice that starts at a
-// non-zero offset, so identical pixel content must still produce identical output regardless of the backing layout.
+// than the raw Pix slice, so a sub-image (wider stride, non-zero Pix offset) encodes identically to a standalone image
+// with the same pixels.
 func TestEncodeNRGBASubImageMatchesStandalone(t *testing.T) {
 	c := check.New(t)
 	for _, size := range []int{16, 32} { // 16 -> ic04, 32 -> ic05, both exercise createARGBData
@@ -48,8 +48,7 @@ func TestEncodeNRGBASubImageMatchesStandalone(t *testing.T) {
 		c.True(ok)
 		fill(sub)
 
-		// Guard the test itself: the sub-image must actually have a non-tight layout, otherwise it wouldn't exercise
-		// the bug being regression-tested.
+		// Guard the test itself: the sub-image must actually have a non-tight layout.
 		c.NotEqual(sub.Bounds().Dx()*4, sub.Stride)
 
 		var standaloneBuf, subBuf bytes.Buffer
@@ -61,8 +60,7 @@ func TestEncodeNRGBASubImageMatchesStandalone(t *testing.T) {
 }
 
 // TestEncodeDoesNotReorderCallerSlice ensures Encode sorts a copy of the variadic images rather than the caller's
-// backing array. The images are supplied in ascending-width order; an in-place sort would permute them into
-// descending-width order, so the slice must read back in its original order after the call.
+// backing array: supplied in ascending-width order, an in-place sort would reverse them.
 func TestEncodeDoesNotReorderCallerSlice(t *testing.T) {
 	c := check.New(t)
 	images := []image.Image{

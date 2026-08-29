@@ -28,13 +28,13 @@ import (
 
 var _ slog.Handler = &PrettyHandler{}
 
-// PrettyOptions is used to configure the PrettyHandler.
+// PrettyOptions configures a PrettyHandler.
 type PrettyOptions struct {
 	slog.HandlerOptions
 	ColorSupportOverride xterm.Kind
 }
 
-// PrettyHandler is an slog.Handler that outputs a "pretty" format: colorful and supporting formatted stack traces.
+// PrettyHandler is a slog.Handler that writes colorized, human-readable output with formatted stack traces.
 type PrettyHandler struct {
 	handler          slog.Handler
 	sharedBufferLock *sync.Mutex
@@ -92,7 +92,7 @@ func NewPrettyHandler(w io.Writer, opts *PrettyOptions) *PrettyHandler {
 	return h
 }
 
-// Handle implements slog.Handler interface.
+// Handle implements slog.Handler.
 //
 //nolint:gocritic // The API cannot be changed
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
@@ -223,12 +223,12 @@ func (h *PrettyHandler) writeStack(buf []byte, stack []string) []byte {
 	return buf
 }
 
-// Enabled implements slog.Handler interface.
+// Enabled implements slog.Handler.
 func (h *PrettyHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
 
-// WithAttrs implements slog.Handler interface.
+// WithAttrs implements slog.Handler.
 func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
@@ -238,7 +238,7 @@ func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &clone
 }
 
-// WithGroup implements slog.Handler interface.
+// WithGroup implements slog.Handler.
 func (h *PrettyHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return h

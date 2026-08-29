@@ -137,7 +137,8 @@ func (b *InsertBuffer) WriteString(s string) (int, error) {
 	return len(s), nil
 }
 
-// WriteTo writes data to w until the buffer is drained or an error occurs.
+// WriteTo writes the buffer's contents to w, returning io.ErrShortWrite if w accepts fewer bytes. Unlike
+// bytes.Buffer.WriteTo, the buffer is not emptied.
 func (b *InsertBuffer) WriteTo(w io.Writer) (int64, error) {
 	var n int64
 	if nBytes := b.Len(); nBytes > 0 {

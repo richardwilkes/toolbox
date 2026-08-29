@@ -18,7 +18,7 @@ var (
 	romanText   = []string{"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"}
 )
 
-// RomanNumerals converts a number into roman numerals.
+// RomanNumerals converts a positive number into roman numerals. Values less than 1 yield "".
 func RomanNumerals(value int) string {
 	var buffer strings.Builder
 	for value > 0 {

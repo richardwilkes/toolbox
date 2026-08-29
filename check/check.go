@@ -19,9 +19,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xreflect"
 )
 
-// TestingT is an interface that defines the methods required for testing. This allows for testing of the check package
-// itself. This would just be testing.TB, but the Go developers added a private method to prevent the exact thing we
-// want to do.
+// TestingT defines the methods Checker requires. It stands in for testing.TB, whose private method prevents it from
+// being implemented outside the testing package, so that the check package itself can be tested.
 type TestingT interface {
 	Cleanup(func())
 	Error(args ...any)
@@ -50,7 +49,7 @@ type Checker struct {
 	TestingT
 }
 
-// New creates a new Checker. Typically used by calling check.New(t), where t is a *testing.T.
+// New creates a Checker, typically via check.New(t) where t is a *testing.T.
 func New(t TestingT) Checker {
 	return Checker{TestingT: t}
 }
@@ -137,7 +136,7 @@ func (c Checker) NotContains(s, substr string, msgAndArgs ...any) {
 	}
 }
 
-// HasPrefix expects s to have the prefix substr.
+// HasPrefix expects s to start with prefix.
 func (c Checker) HasPrefix(s, prefix string, msgAndArgs ...any) {
 	c.Helper()
 	if !strings.HasPrefix(s, prefix) {
@@ -145,7 +144,7 @@ func (c Checker) HasPrefix(s, prefix string, msgAndArgs ...any) {
 	}
 }
 
-// NoPrefix expects s not to have the prefix substr.
+// NoPrefix expects s not to start with prefix.
 func (c Checker) NoPrefix(s, prefix string, msgAndArgs ...any) {
 	c.Helper()
 	if strings.HasPrefix(s, prefix) {
@@ -186,7 +185,7 @@ func (c Checker) NotPanics(f func(), msgAndArgs ...any) {
 }
 
 func (c Checker) doesPanic(f func()) (panicErr error) {
-	// Can't use xos.PanicRecovery because that would cause an import cycle in some places
+	// Can't use xos.PanicRecovery, as it would create an import cycle
 	defer func() {
 		if recovered := recover(); recovered != nil {
 			err, ok := recovered.(error)

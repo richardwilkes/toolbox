@@ -74,7 +74,7 @@ func TestRotatorPrunesStaleBackupsOnShrink(t *testing.T) {
 	path := filepath.Join(tmpdir, "test")
 	c := check.New(t)
 
-	// Simulate a previous run that retained more backups than the current configuration allows.
+	// Simulate a previous run that retained more backups than the current MaxBackups.
 	const priorBackups = 5
 	for i := 1; i <= priorBackups; i++ {
 		c.NoError(os.WriteFile(fmt.Sprintf("%s-%d%s", path, i, xslog.LogFileExt), []byte("old"), 0o644))
@@ -119,8 +119,8 @@ func TestRotatorOversizedWrite(t *testing.T) {
 	c := check.New(t)
 	c.NotNil(r)
 
-	// A single write larger than MaxSize must still succeed and not loop forever. Run it under a watchdog so a
-	// regression of the infinite-loop bug fails fast instead of hanging the suite.
+	// A single write larger than MaxSize must succeed without looping forever. The watchdog makes a regression fail
+	// fast instead of hanging the suite.
 	big := bytes.Repeat([]byte("a"), maxSize*3)
 	var n int
 	done := make(chan error, 1)

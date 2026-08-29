@@ -7,7 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package rand provides a Randomizer based upon the crypto/rand package.
+// Package xrand provides a Randomizer based upon the crypto/rand package.
 package xrand
 
 import (
@@ -24,8 +24,7 @@ type Randomizer interface {
 	Intn(n int) int
 }
 
-// New returns a Randomizer based on the crypto/rand package. This method returns a shared singleton instance
-// and does not allocate.
+// New returns a shared Randomizer based on the crypto/rand package. It does not allocate.
 func New() Randomizer {
 	return cryptoRandInstance
 }
@@ -38,8 +37,7 @@ func (r *cryptoRand) Intn(n int) int {
 	}
 	un := uint64(n)
 	// Read only as many bits as are needed to represent [0, n) and reject any sample that lands at or above n. Working
-	// in unsigned space avoids the signed-overflow that made -v wrap to a negative result, and rejection sampling keeps
-	// the distribution uniform rather than introducing the modulo bias of a bare v % n.
+	// in unsigned space avoids signed overflow, and rejection sampling avoids the modulo bias of a bare v % n.
 	bitLen := bits.Len64(un - 1)
 	byteLen := (bitLen + 7) / 8
 	mask := (uint64(1) << uint(bitLen)) - 1

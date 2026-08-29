@@ -20,10 +20,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// SafeFile provides safe overwriting of files. Instead of truncating and overwriting the destination file, it creates a
-// temporary file in the same directory, writes to it, then renames the temporary file to the original name when
-// Commit() is called. If Close() is called without calling Commit(), or the Commit() fails, then the original file is
-// left untouched.
+// SafeFile provides safe overwriting of files. Data is written to a temporary file in the same directory, which is
+// renamed to the target name when Commit is called. If Close is called without Commit, or Commit fails, the original
+// file is left untouched.
 type SafeFile struct {
 	*os.File
 	name      string
@@ -55,8 +54,7 @@ func WriteSafeFile(filename string, writer func(io.Writer) error) (err error) {
 	return nil
 }
 
-// CreateSafeFile creates a temporary file in the same directory as filename, which will be renamed to the given
-// filename when calling Commit.
+// CreateSafeFile creates a temporary file in the same directory as filename, which Commit will rename to filename.
 func CreateSafeFile(filename string) (*SafeFile, error) {
 	filename = filepath.Clean(filename)
 	if filename == "" || filename[len(filename)-1] == filepath.Separator {
@@ -77,8 +75,8 @@ func (f *SafeFile) OriginalName() string {
 	return f.name
 }
 
-// Commit the data into the original file and remove the temporary file from disk. Close() may still be called, but will
-// do nothing.
+// Commit renames the temporary file over the original file. It does nothing if already called, and returns
+// os.ErrInvalid if Close was called first. Close may still be called afterward, but does nothing.
 func (f *SafeFile) Commit() error {
 	if f.committed {
 		return nil
@@ -95,10 +93,9 @@ func (f *SafeFile) Commit() error {
 			_ = os.Remove(name) //nolint:errcheck // no need to report this error, too
 		}
 	}()
-	// If we are replacing an existing file, preserve its permission bits. os.CreateTemp created the temporary file with
-	// mode 0600, so without this the rename would silently strip access (e.g. group/other read) the original file had.
-	// Permission preservation is best-effort: some filesystems (e.g. certain SMB/CIFS network mounts) don't support
-	// chmod and return an "operation not supported" error, which shouldn't abort an otherwise-valid save.
+	// Preserve an existing file's permission bits: os.CreateTemp used mode 0600, so the rename would otherwise strip
+	// access (e.g. group/other read) the original had. This is best-effort, since some filesystems (e.g. certain SMB/CIFS
+	// mounts) don't support chmod.
 	var fi os.FileInfo
 	if fi, err = os.Stat(f.name); err == nil {
 		if err = f.Chmod(fi.Mode().Perm()); err != nil && !errors.Is(err, syscall.ENOTSUP) &&
@@ -106,8 +103,7 @@ func (f *SafeFile) Commit() error {
 			return errs.Wrap(err)
 		}
 	}
-	// Flush the data to stable storage before the rename. Without this, a crash immediately after the rename could
-	// leave a correctly-named but empty or partially-written file, defeating the purpose of a safe write.
+	// Sync before the rename so a crash right after it cannot leave a correctly-named but empty or partial file.
 	if err = f.Sync(); err != nil {
 		return errs.Wrap(err)
 	}
@@ -120,8 +116,8 @@ func (f *SafeFile) Commit() error {
 	return nil
 }
 
-// Close the temporary file and remove it, if it hasn't already been committed. If it has been committed, nothing
-// happens.
+// Close closes and removes the temporary file. It does nothing if Commit was already called, and returns os.ErrInvalid
+// if Close was already called.
 func (f *SafeFile) Close() error {
 	if f.committed {
 		return nil

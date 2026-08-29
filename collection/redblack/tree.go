@@ -9,7 +9,7 @@
 
 package redblack
 
-// Tree implements a Red-black Tree, as described here: https://en.wikipedia.org/wiki/Red–black_tree
+// Tree implements a red-black tree: https://en.wikipedia.org/wiki/Red–black_tree
 type Tree[K, V any] struct {
 	root    *node[K, V]
 	compare func(a, b K) int
@@ -63,31 +63,30 @@ func (t *Tree[K, V]) Last() (value V, exists bool) {
 	return n.value, true
 }
 
-// Dump a text version of the tree for debugging purposes.
+// Dump prints a text version of the tree to stdout for debugging.
 func (t *Tree[K, V]) Dump() {
 	t.root.dump(0, "")
 }
 
-// Traverse the tree, calling visitorFunc for each node, in order. If the visitorFunc returns false, the traversal will
-// be aborted.
+// Traverse the tree in order, calling visitorFunc for each node. Traversal stops if visitorFunc returns false.
 func (t *Tree[K, V]) Traverse(visitorFunc func(key K, value V) bool) {
 	t.root.traverse(visitorFunc)
 }
 
-// TraverseStartingAt traverses the tree starting with the first node whose key is equal to or greater than the given
-// key, calling visitorFunc for each node, in order. If the visitorFunc returns false, the traversal will be aborted.
+// TraverseStartingAt calls visitorFunc, in order, for each node whose key is equal to or greater than key. Traversal
+// stops if visitorFunc returns false.
 func (t *Tree[K, V]) TraverseStartingAt(key K, visitorFunc func(key K, value V) bool) {
 	t.root.traverseEqualOrGreater(t.compare, key, visitorFunc)
 }
 
-// ReverseTraverse traverses the tree, calling visitorFunc for each node, in reverse order. If the visitorFunc returns
-// false, the traversal will be aborted.
+// ReverseTraverse traverses the tree in reverse order, calling visitorFunc for each node. Traversal stops if
+// visitorFunc returns false.
 func (t *Tree[K, V]) ReverseTraverse(visitorFunc func(key K, value V) bool) {
 	t.root.reverseTraverse(visitorFunc)
 }
 
-// ReverseTraverseStartingAt traverses the tree starting with the last node whose key is equal to or less than the given
-// key, calling visitorFunc for each node, in order. If the visitorFunc returns false, the traversal will be aborted.
+// ReverseTraverseStartingAt calls visitorFunc, in reverse order, for each node whose key is equal to or less than
+// key. Traversal stops if visitorFunc returns false.
 func (t *Tree[K, V]) ReverseTraverseStartingAt(key K, visitorFunc func(key K, value V) bool) {
 	t.root.traverseEqualOrLess(t.compare, key, visitorFunc)
 }
@@ -209,8 +208,7 @@ func (t *Tree[K, V]) rotateRight(n *node[K, V]) {
 	n.parent = left
 }
 
-// Remove a node from the tree. Note that if the key is not unique within the tree, the first key that matches on
-// traversal will be chosen as the one to remove.
+// Remove a node from the tree. If the key is not unique, the first matching node in traversal order is removed.
 func (t *Tree[K, V]) Remove(key K) {
 	n := t.root.find(t.compare, key)
 	if n == nil {

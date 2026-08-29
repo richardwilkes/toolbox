@@ -51,13 +51,11 @@ func TestCapWithHierarchy(t *testing.T) {
 	child2 := parent.New(1200)
 	grandchild := child1.New(600)
 
-	// Without parent caps
 	c.Equal(1000, parent.Cap(false))
 	c.Equal(800, child1.Cap(false))
 	c.Equal(1200, child2.Cap(false))
 	c.Equal(600, grandchild.Cap(false))
 
-	// With parent caps
 	c.Equal(1000, parent.Cap(true))
 	c.Equal(800, child1.Cap(true))
 	c.Equal(1000, child2.Cap(true)) // Limited by parent
@@ -117,9 +115,8 @@ func TestUseAmountGreaterThanParentCap(t *testing.T) {
 	parent := rate.New(50, time.Second)
 	child := parent.New(100) // The child's own capacity deliberately exceeds the parent's cap.
 
-	// 80 <= the child's own capacity (100) but > its parent-capped effective capacity (50), so it can never be
-	// satisfied and must be rejected promptly rather than queued forever. The watchdog makes a regression of the
-	// infinite-block bug fail fast instead of hanging the suite.
+	// 80 exceeds the parent-capped effective capacity (50), so it can never be satisfied and must be rejected promptly
+	// rather than queued forever.
 	done := child.Use(80)
 	select {
 	case err := <-done:
@@ -137,16 +134,15 @@ func TestQueuedRequestRejectedWhenParentCapLowered(t *testing.T) {
 	parent := rate.New(100, 50*time.Millisecond)
 	child := parent.New(100)
 
-	// Consume all of the parent's capacity this period so the child's request cannot be satisfied immediately and
-	// must wait for the next tick.
+	// Consume all of the parent's capacity so the child's request must wait for the next tick.
 	err := <-parent.Use(100)
 	c.NoError(err)
 
 	// Queue a child request that is valid right now (60 <= the effective cap of 100).
 	done := child.Use(60)
 
-	// Lower the parent's cap below the queued amount before the next period. The request can now never succeed, so the
-	// per-tick re-check must reject it rather than leaving it queued forever.
+	// Lower the parent's cap below the queued amount; the per-tick re-check must now reject the request rather than
+	// leave it queued forever.
 	parent.SetCap(50)
 
 	select {
@@ -174,14 +170,12 @@ func TestUseImmediateSuccess(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(100, time.Second)
 
-	// Should succeed immediately when capacity is available
 	err := <-rl.Use(50)
 	c.NoError(err)
 
 	err = <-rl.Use(30)
 	c.NoError(err)
 
-	// Should still have 20 remaining
 	err = <-rl.Use(20)
 	c.NoError(err)
 
@@ -192,11 +186,9 @@ func TestUseWaiting(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(100, 50*time.Millisecond)
 
-	// Use up all capacity
 	err := <-rl.Use(100)
 	c.NoError(err)
 
-	// This should block until next period
 	start := time.Now()
 	doneCh := rl.Use(50)
 
@@ -217,20 +209,16 @@ func TestUseFIFOOrderingNoFastPathJump(t *testing.T) {
 	rl := rate.New(10, 25*time.Millisecond)
 	defer rl.Close()
 
-	// Consume part of the current period so a full-capacity request cannot be satisfied until the next tick, but
-	// spare capacity still remains this period.
+	// Use part of the period so a full-capacity request must wait for the next tick while spare capacity remains.
 	c.NoError(<-rl.Use(5))
 
-	// Queue a large request that needs the whole capacity; with only 5 units free it must wait for the next period.
 	big := rl.Use(10)
 
-	// Submit smaller requests afterward. Even though 5 units are free right now, FIFO admission must keep these
-	// behind the already-queued large request rather than letting them slip through the fast path.
+	// Even though 5 units are free, FIFO admission must keep these behind the queued large request.
 	small1 := rl.Use(1)
 	small2 := rl.Use(1)
 
-	// They must not have been satisfied immediately ahead of the earlier, larger request. This check runs
-	// synchronously right after submission, well within a single period, so no tick can have intervened.
+	// This runs synchronously right after submission, well within one period, so no tick can have intervened.
 	assertPending := func(ch <-chan error, name string) {
 		select {
 		case <-ch:
@@ -241,7 +229,7 @@ func TestUseFIFOOrderingNoFastPathJump(t *testing.T) {
 	assertPending(small1, "small1")
 	assertPending(small2, "small2")
 
-	// The large request, submitted first, must eventually be served rather than being starved by later requests.
+	// The large request must eventually be served rather than starved by later requests.
 	select {
 	case err := <-big:
 		c.NoError(err)
@@ -249,7 +237,6 @@ func TestUseFIFOOrderingNoFastPathJump(t *testing.T) {
 		t.Fatal("large request was starved and never completed")
 	}
 
-	// The smaller requests still complete on subsequent periods.
 	c.NoError(<-small1)
 	c.NoError(<-small2)
 }
@@ -268,11 +255,9 @@ func TestLastUsed(t *testing.T) {
 	c.NoError(err)
 	c.Equal(0, rl.LastUsed()) // Should still be 0 until reset
 
-	// Wait for reset
 	time.Sleep(60 * time.Millisecond)
 
-	// After reset, last used should reflect previous period usage
-	// We need to trigger the reset by trying to use the limiter
+	// After the reset, LastUsed reflects the previous period's usage.
 	err = <-rl.Use(10)
 	c.NoError(err)
 	c.Equal(50, rl.LastUsed()) // Should show usage from previous period
@@ -286,31 +271,27 @@ func TestHierarchicalLimiters(t *testing.T) {
 	child1 := parent.New(60)
 	child2 := parent.New(80)
 
-	// Use some capacity in child1
 	err := <-child1.Use(40)
 	c.NoError(err)
 
-	// Use some capacity in child2
 	err = <-child2.Use(30)
 	c.NoError(err)
 
-	// Total used should be 70, so child1 should be able to use 20 more to reach its limit
+	// The parent has used 70, so child1 can use 20 more to reach its own limit of 60.
 	err = <-child1.Use(20)
 	c.NoError(err)
 
-	// Now child1 is at its capacity (60), should not be able to use more immediately
+	// child1 is now at its capacity, so this cannot succeed immediately.
 	done := child1.Use(10)
 	select {
 	case err = <-done:
-		// If it returns immediately, it should be an error
 		c.HasError(err)
 		c.Contains(err.Error(), "capacity")
 	case <-time.After(10 * time.Millisecond):
-		// If it's waiting, that's also acceptable behavior for a rate limiter
-		// The request will be queued until the next period
+		// Queued until the next period, which is also acceptable.
 	}
 
-	// child2 should only be able to use 10 more (to reach parent's remaining capacity)
+	// The parent has only 10 left, so child2 can use exactly 10 more.
 	err = <-child2.Use(10)
 	c.NoError(err)
 
@@ -357,7 +338,7 @@ func TestNewOnClosedLimiter(t *testing.T) {
 	c.NotNil(child)
 	c.True(child.Closed())
 
-	// The idiomatic chained call must degrade to a "closed" error rather than panicking on a nil interface.
+	// A chained call must yield a closed error rather than panic on a nil interface.
 	err := <-rl.New(50).Use(10)
 	c.HasError(err)
 }
@@ -369,7 +350,6 @@ func TestConcurrentUse(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make(chan error, 100)
 
-	// Start 100 goroutines trying to use 10 units each
 	for range 100 {
 		wg.Go(func() {
 			err := <-rl.Use(10)
@@ -380,7 +360,6 @@ func TestConcurrentUse(t *testing.T) {
 	wg.Wait()
 	close(errors)
 
-	// Should have exactly 1000 units used (100 * 10)
 	successCount := 0
 	for err := range errors {
 		if err == nil {
@@ -388,7 +367,7 @@ func TestConcurrentUse(t *testing.T) {
 		}
 	}
 
-	// All requests should succeed within the capacity
+	// 100 * 10 = 1000 fits the capacity, so all requests succeed.
 	c.Equal(100, successCount)
 
 	rl.Close()
@@ -398,20 +377,16 @@ func TestWaitingRequestsClearedOnClose(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(100, time.Second)
 
-	// Use up all capacity
 	err := <-rl.Use(100)
 	c.NoError(err)
 
-	// Create a waiting request
 	doneCh := rl.Use(50)
 
-	// Close the limiter
 	go func() {
 		time.Sleep(10 * time.Millisecond)
 		rl.Close()
 	}()
 
-	// The waiting request should get an error
 	select {
 	case err = <-doneCh:
 		c.HasError(err)
@@ -423,21 +398,19 @@ func TestWaitingRequestsClearedOnClose(t *testing.T) {
 
 func TestRateLimitingWithRealTiming(t *testing.T) {
 	c := check.New(t)
-	// Create a limiter that allows 100 units per 100ms
 	rl := rate.New(100, 100*time.Millisecond)
 
 	start := time.Now()
 
-	// Use 100 units immediately
 	err := <-rl.Use(100)
 	c.NoError(err)
 
-	// Next 100 units should wait for the period to reset
+	// The second 100 must wait for the period to reset.
 	err = <-rl.Use(100)
 	c.NoError(err)
 
 	elapsed := time.Since(start)
-	// Should take at least 100ms to complete both requests
+	// Both requests together take at least one period.
 	c.True(elapsed >= 80*time.Millisecond) // Allow some tolerance for timing
 
 	rl.Close()
@@ -448,23 +421,19 @@ func TestHierarchicalConstraints(t *testing.T) {
 	parent := rate.New(100, time.Second)
 	child := parent.New(80)
 
-	// Child should be limited by its own capacity first
 	err := <-child.Use(80)
 	c.NoError(err)
 
-	// Now child is at capacity, but parent still has 20 available
-	// Next request should fail/wait
+	// The child is at capacity even though the parent has 20 left, so this cannot succeed immediately.
 	done := child.Use(10)
 
-	// Since we're not waiting for the period, this should not succeed immediately
 	select {
 	case err = <-done:
-		// If it completes immediately, it should be an error or the limiter is queuing
 		if err != nil {
 			c.Contains(err.Error(), "capacity")
 		}
 	case <-time.After(10 * time.Millisecond):
-		// If it's waiting, that's also acceptable behavior
+		// Queued until the next period, which is also acceptable.
 	}
 
 	parent.Close()

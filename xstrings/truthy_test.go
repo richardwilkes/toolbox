@@ -19,7 +19,6 @@ import (
 func TestIsTruthy(t *testing.T) {
 	c := check.New(t)
 
-	// Test truthy values - lowercase
 	c.True(xstrings.IsTruthy("1"))
 	c.True(xstrings.IsTruthy("t"))
 	c.True(xstrings.IsTruthy("true"))
@@ -27,14 +26,12 @@ func TestIsTruthy(t *testing.T) {
 	c.True(xstrings.IsTruthy("yes"))
 	c.True(xstrings.IsTruthy("on"))
 
-	// Test truthy values - uppercase
 	c.True(xstrings.IsTruthy("T"))
 	c.True(xstrings.IsTruthy("TRUE"))
 	c.True(xstrings.IsTruthy("Y"))
 	c.True(xstrings.IsTruthy("YES"))
 	c.True(xstrings.IsTruthy("ON"))
 
-	// Test truthy values - mixed case
 	c.True(xstrings.IsTruthy("True"))
 	c.True(xstrings.IsTruthy("TRUE"))
 	c.True(xstrings.IsTruthy("tRuE"))
@@ -45,7 +42,6 @@ func TestIsTruthy(t *testing.T) {
 	c.True(xstrings.IsTruthy("ON"))
 	c.True(xstrings.IsTruthy("oN"))
 
-	// Test falsy values - common false representations
 	c.False(xstrings.IsTruthy("0"))
 	c.False(xstrings.IsTruthy("false"))
 	c.False(xstrings.IsTruthy("no"))
@@ -54,10 +50,8 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("NO"))
 	c.False(xstrings.IsTruthy("OFF"))
 
-	// Test empty string
 	c.False(xstrings.IsTruthy(""))
 
-	// Test whitespace strings
 	c.False(xstrings.IsTruthy(" "))
 	c.False(xstrings.IsTruthy("  "))
 	c.False(xstrings.IsTruthy("\t"))
@@ -65,7 +59,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("\r"))
 	c.False(xstrings.IsTruthy(" \t\n\r "))
 
-	// Test truthy values with leading/trailing whitespace (should be false)
 	c.False(xstrings.IsTruthy(" 1"))
 	c.False(xstrings.IsTruthy("1 "))
 	c.False(xstrings.IsTruthy(" 1 "))
@@ -79,7 +72,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("on "))
 	c.False(xstrings.IsTruthy(" on "))
 
-	// Test similar but non-truthy values
 	c.False(xstrings.IsTruthy("11"))
 	c.False(xstrings.IsTruthy("10"))
 	c.False(xstrings.IsTruthy("01"))
@@ -88,7 +80,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("1.0"))
 	c.False(xstrings.IsTruthy("1.1"))
 
-	// Test partial matches
 	c.True(xstrings.IsTruthy("t"))
 	c.False(xstrings.IsTruthy("tr"))
 	c.False(xstrings.IsTruthy("tru"))
@@ -100,7 +91,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("o"))
 	c.False(xstrings.IsTruthy("onn"))
 
-	// Test words containing truthy values
 	c.False(xstrings.IsTruthy("true1"))
 	c.False(xstrings.IsTruthy("1true"))
 	c.False(xstrings.IsTruthy("atrue"))
@@ -114,7 +104,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("aon"))
 	c.False(xstrings.IsTruthy("ona"))
 
-	// Test random strings
 	c.False(xstrings.IsTruthy("hello"))
 	c.False(xstrings.IsTruthy("world"))
 	c.False(xstrings.IsTruthy("test"))
@@ -123,7 +112,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("123"))
 	c.False(xstrings.IsTruthy("hello world"))
 
-	// Test special characters
 	c.False(xstrings.IsTruthy("@"))
 	c.False(xstrings.IsTruthy("#"))
 	c.False(xstrings.IsTruthy("$"))
@@ -137,7 +125,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy(";"))
 	c.False(xstrings.IsTruthy(":"))
 
-	// Test Unicode characters
 	c.False(xstrings.IsTruthy("ñ"))
 	c.False(xstrings.IsTruthy("ü"))
 	c.False(xstrings.IsTruthy("café"))
@@ -146,27 +133,23 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("🎉"))
 	c.False(xstrings.IsTruthy("😀"))
 
-	// Test mathematical symbols
 	c.False(xstrings.IsTruthy("∑"))
 	c.False(xstrings.IsTruthy("∞"))
 	c.False(xstrings.IsTruthy("π"))
 	c.False(xstrings.IsTruthy("α"))
 	c.False(xstrings.IsTruthy("β"))
 
-	// Test currency symbols
 	c.False(xstrings.IsTruthy("$"))
 	c.False(xstrings.IsTruthy("€"))
 	c.False(xstrings.IsTruthy("£"))
 	c.False(xstrings.IsTruthy("¥"))
 
-	// Test programming-related strings
 	c.False(xstrings.IsTruthy("null"))
 	c.False(xstrings.IsTruthy("undefined"))
 	c.False(xstrings.IsTruthy("nil"))
 	c.False(xstrings.IsTruthy("void"))
 	c.False(xstrings.IsTruthy("NaN"))
 
-	// Test other common boolean-like strings that are not truthy
 	c.False(xstrings.IsTruthy("enable"))
 	c.False(xstrings.IsTruthy("enabled"))
 	c.False(xstrings.IsTruthy("disable"))
@@ -178,7 +161,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("fail"))
 	c.False(xstrings.IsTruthy("pass"))
 
-	// Test numeric strings that might be confused with "1"
 	c.False(xstrings.IsTruthy("01"))
 	c.False(xstrings.IsTruthy("10"))
 	c.False(xstrings.IsTruthy("21"))
@@ -186,7 +168,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("100"))
 	c.False(xstrings.IsTruthy("001"))
 
-	// Test strings that contain truthy substrings but are not exact matches
 	c.False(xstrings.IsTruthy("trueish"))
 	c.False(xstrings.IsTruthy("yesno"))
 	c.False(xstrings.IsTruthy("onoff"))
@@ -195,14 +176,12 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("notyes"))
 	c.False(xstrings.IsTruthy("noton"))
 
-	// Test mixed alphanumeric
 	c.False(xstrings.IsTruthy("abc123"))
 	c.False(xstrings.IsTruthy("123abc"))
 	c.False(xstrings.IsTruthy("a1b2c3"))
 	c.False(xstrings.IsTruthy("test123"))
 	c.False(xstrings.IsTruthy("123test"))
 
-	// Test case sensitivity is properly handled
 	c.True(xstrings.IsTruthy("tRuE"))
 	c.True(xstrings.IsTruthy("yEs"))
 	c.True(xstrings.IsTruthy("oN"))
@@ -210,7 +189,6 @@ func TestIsTruthy(t *testing.T) {
 	c.True(xstrings.IsTruthy("YES"))
 	c.True(xstrings.IsTruthy("ON"))
 
-	// Test that function only accepts exact matches
 	c.False(xstrings.IsTruthy("truthy"))
 	c.False(xstrings.IsTruthy("truth"))
 	c.False(xstrings.IsTruthy("truly"))
@@ -218,7 +196,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("onon"))
 	c.False(xstrings.IsTruthy("11"))
 
-	// Test that whitespace is not trimmed
 	c.False(xstrings.IsTruthy(" true"))
 	c.False(xstrings.IsTruthy("true "))
 	c.False(xstrings.IsTruthy(" yes"))
@@ -228,7 +205,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy(" 1"))
 	c.False(xstrings.IsTruthy("1 "))
 
-	// Test tab and newline characters
 	c.False(xstrings.IsTruthy("true\t"))
 	c.False(xstrings.IsTruthy("\ttrue"))
 	c.False(xstrings.IsTruthy("true\n"))
@@ -236,7 +212,6 @@ func TestIsTruthy(t *testing.T) {
 	c.False(xstrings.IsTruthy("true\r"))
 	c.False(xstrings.IsTruthy("\rtrue"))
 
-	// Test empty-like strings
 	c.False(xstrings.IsTruthy(""))
 	c.False(xstrings.IsTruthy(" "))
 	c.False(xstrings.IsTruthy("\t"))

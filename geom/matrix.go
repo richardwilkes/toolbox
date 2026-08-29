@@ -15,7 +15,7 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
-// Matrix provides a 2D matrix.
+// Matrix holds a 2D affine transformation matrix.
 type Matrix struct {
 	ScaleX float32 `json:"scale_x"`
 	SkewX  float32 `json:"skew_x"`
@@ -128,7 +128,6 @@ func (m Matrix) TransformPoint(p Point) Point {
 func (m Matrix) Invert() Matrix {
 	det := m.ScaleX*m.ScaleY - m.SkewX*m.SkewY
 	if det == 0 {
-		// Non-invertible matrix; return identity
 		return NewIdentityMatrix()
 	}
 	invDet := 1 / det

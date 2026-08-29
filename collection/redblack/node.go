@@ -80,8 +80,8 @@ func (n *node[K, V]) traverseEqualOrGreater(compareFunc func(a, b K) int, key K,
 		return true
 	}
 	if compareFunc(key, n.key) <= 0 {
-		// Recurse left even when the keys are equal: the left subtree can hold duplicate keys equal to the search key
-		// that rotations placed there, and they must still be visited. The recursive call filters out any smaller keys.
+		// Recurse left even on an equal key: rotations can place duplicates of the search key in the left subtree,
+		// and they must still be visited. The recursive call filters out any smaller keys.
 		if !n.left.traverseEqualOrGreater(compareFunc, key, visitorFunc) {
 			return false
 		}
@@ -97,8 +97,8 @@ func (n *node[K, V]) traverseEqualOrLess(compareFunc func(a, b K) int, key K, vi
 		return true
 	}
 	if compareFunc(key, n.key) >= 0 {
-		// Recurse right even when the keys are equal: the right subtree can hold duplicate keys equal to the search
-		// key that rotations placed there, and they must still be visited. The recursive call filters out larger keys.
+		// Recurse right even on an equal key: rotations can place duplicates of the search key in the right subtree,
+		// and they must still be visited. The recursive call filters out any larger keys.
 		if !n.right.traverseEqualOrLess(compareFunc, key, visitorFunc) {
 			return false
 		}

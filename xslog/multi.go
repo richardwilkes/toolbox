@@ -73,7 +73,7 @@ func (h *MultiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &MultiHandler{handlers: handlers}
 }
 
-// Handle implements slog.Handler interface.
+// Handle implements slog.Handler.
 //
 //nolint:gocritic // The API cannot be changed
 func (h *MultiHandler) Handle(ctx context.Context, r slog.Record) error {

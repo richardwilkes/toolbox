@@ -24,12 +24,11 @@ type Target interface {
 	HandleNotification(name string, data, producer any)
 }
 
-// BatchTarget defines the methods a target of notifications that wants to be notified when a batch change occurs must
-// implement.
+// BatchTarget is a Target that is also notified when a batch of notifications starts and ends.
 type BatchTarget interface {
 	Target
-	// BatchMode is called both before and after a series of notifications are about to be broadcast. The target is not
-	// guaranteed to have intervening calls to HandleNotification() made to it.
+	// BatchMode is called with true before a batch of notifications begins and with false after it ends. There may be
+	// no intervening calls to HandleNotification().
 	BatchMode(start bool)
 }
 
@@ -62,10 +61,9 @@ func New(recoveryHandler func(error)) *Notifier {
 	}
 }
 
-// Register a target with this notifier. 'priority' is the relative notification priority, with higher values being
-// delivered first. 'names' are the names the target wishes to consume. Names are hierarchical (separated by a .), so
-// specifying a name of "foo.bar" will consume not only a produced name of "foo.bar", but all sub-names, such as
-// "foo.bar.a", but not "foo.barn" or "foo.barn.a".
+// Register a target with this notifier. 'priority' is the relative notification priority; higher values are delivered
+// first. 'names' are the names the target wishes to consume. Names are hierarchical (separated by '.'), so "foo.bar"
+// consumes not only "foo.bar" but also all sub-names such as "foo.bar.a", though not "foo.barn" or "foo.barn.a".
 func (n *Notifier) Register(target Target, priority int, names ...string) {
 	var normalizedNames []string
 	for _, name := range names {
@@ -114,7 +112,7 @@ func (n *Notifier) RegisterFromNotifier(other *Notifier) {
 	if n == other {
 		return
 	}
-	// To avoid a potential deadlock, we make a copy of the other notifier's data first.
+	// Copy the other notifier's data first so both locks are never held at once, avoiding a potential deadlock.
 	other.lock.Lock()
 	batchTargets := make(map[BatchTarget]bool, len(other.batchTargets))
 	maps.Copy(batchTargets, other.batchTargets)
@@ -178,20 +176,20 @@ func (n *Notifier) Enabled() bool {
 	return n.enabled
 }
 
-// SetEnabled sets whether this notifier is enabled or not.
+// SetEnabled sets whether this notifier is enabled.
 func (n *Notifier) SetEnabled(enabled bool) {
 	n.lock.Lock()
 	n.enabled = enabled
 	n.lock.Unlock()
 }
 
-// Notify sends a notification to all interested targets.
+// Notify sends a notification with nil data to all interested targets.
 func (n *Notifier) Notify(name string, producer any) {
 	n.NotifyWithData(name, nil, producer)
 }
 
-// NotifyWithData sends a notification to all interested targets. This is a synchronous notification and will not return
-// until all interested targets handle the notification.
+// NotifyWithData sends a notification to all interested targets. It is synchronous and does not return until all
+// interested targets have handled the notification.
 func (n *Notifier) NotifyWithData(name string, data, producer any) {
 	if n.Enabled() {
 		if name = normalizeName(name); name != "" {
@@ -238,12 +236,12 @@ func (n *Notifier) BatchLevel() int {
 	return n.batchLevel
 }
 
-// StartBatch informs all BatchTargets that a batch of notifications will be starting. If a previous call to this method
-// was made without a call to EndBatch(), then the batch level will be incremented, but no notifications will be made.
+// StartBatch informs all BatchTargets that a batch of notifications is starting. If called again before EndBatch(), the
+// batch level is incremented but no notifications are made.
 //
-// The batch lifecycle is independent of the enabled state: the level is always tracked and the BatchMode(true)/
-// BatchMode(false) brackets are always delivered, so StartBatch and EndBatch stay balanced even if SetEnabled is
-// toggled within a batch. Only Notify/NotifyWithData are suppressed while disabled.
+// The batch lifecycle is independent of the enabled state: the level is always tracked and the BatchMode brackets are
+// always delivered, so StartBatch and EndBatch stay balanced even if SetEnabled is toggled within a batch. Only
+// Notify/NotifyWithData are suppressed while disabled.
 func (n *Notifier) StartBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()
@@ -266,14 +264,13 @@ func (n *Notifier) notifyBatchTarget(target BatchTarget, start bool) {
 	target.BatchMode(start)
 }
 
-// EndBatch informs all BatchTargets that were present when StartBatch() was called that a batch of notifications just
-// finished. If batch level is still greater than zero after being decremented, then no notifications will be made.
+// EndBatch informs the BatchTargets that were present when StartBatch() was called that the batch has finished. If the
+// batch level is still greater than zero after being decremented, no notifications are made.
 func (n *Notifier) EndBatch() {
 	var targets []BatchTarget
 	n.lock.Lock()
-	// Mirror StartBatch unconditionally (independent of the enabled state); the batchLevel > 0 guard simply prevents an
-	// unmatched EndBatch from driving the level negative. Gating this on enabled would strand a batch that began while
-	// enabled but ended after SetEnabled(false), leaving targets stuck in batch mode forever.
+	// Not gated on enabled: that would strand a batch that began while enabled and ended after SetEnabled(false),
+	// leaving targets stuck in batch mode. The level guard only keeps an unmatched EndBatch from going negative.
 	if n.batchLevel > 0 {
 		n.batchLevel--
 		if n.batchLevel == 0 {
@@ -287,7 +284,7 @@ func (n *Notifier) EndBatch() {
 	}
 }
 
-// Reset removes all targets.
+// Reset removes all targets and resets the batch level to zero.
 func (n *Notifier) Reset() {
 	n.lock.Lock()
 	n.batchTargets = make(map[BatchTarget]bool)

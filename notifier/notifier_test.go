@@ -18,7 +18,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/notifier"
 )
 
-// Mock target for testing
 type mockTarget struct {
 	notifications []notification
 	mu            sync.Mutex
@@ -54,7 +53,6 @@ func (mt *mockTarget) reset() {
 	mt.notifications = nil
 }
 
-// Mock batch target for testing
 type mockBatchTarget struct {
 	batchStarts []bool
 	mockTarget
@@ -74,9 +72,7 @@ func (mbt *mockBatchTarget) getBatchStarts() []bool {
 	return result
 }
 
-// Test recovery handler
 func testRecoveryHandler(_ error) {
-	// Do nothing for tests
 }
 
 func TestNew(t *testing.T) {
@@ -102,10 +98,8 @@ func TestRegisterAndNotify(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register target for "test" notifications
 	n.Register(target, 0, "test")
 
-	// Send notification
 	n.Notify("test", "producer")
 
 	notifications := target.getNotifications()
@@ -137,7 +131,6 @@ func TestRegisterMultipleNames(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register for multiple names
 	n.Register(target, 0, "foo", "bar")
 
 	n.Notify("foo", "producer1")
@@ -155,10 +148,8 @@ func TestHierarchicalNames(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register for parent name
 	n.Register(target, 0, "foo")
 
-	// Notify with child names
 	n.Notify("foo.bar", "producer1")
 	n.Notify("foo.bar.baz", "producer2")
 	n.Notify("foo.other", "producer3")
@@ -178,14 +169,12 @@ func TestPriority(t *testing.T) {
 	target2 := &mockTarget{}
 	target3 := &mockTarget{}
 
-	// Register with different priorities
 	n.Register(target1, 1, "test")  // medium priority
 	n.Register(target2, 10, "test") // high priority
 	n.Register(target3, 0, "test")  // low priority
 
 	n.Notify("test", "producer")
 
-	// All should receive notification
 	c.Equal(1, len(target1.getNotifications()))
 	c.Equal(1, len(target2.getNotifications()))
 	c.Equal(1, len(target3.getNotifications()))
@@ -201,7 +190,6 @@ func TestUnregister(t *testing.T) {
 	n.Notify("test", "producer")
 	c.Equal(1, len(target.getNotifications()))
 
-	// Unregister and notify again
 	n.Unregister(target)
 	target.reset()
 	n.Notify("test", "producer")
@@ -214,7 +202,6 @@ func TestUnregisterNonExistent(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Should not panic when unregistering non-existent target
 	n.Unregister(target)
 	c.True(true) // Just verify we got here without panicking
 }
@@ -227,7 +214,6 @@ func TestBatchTarget(t *testing.T) {
 
 	n.Register(target, 0, "test")
 
-	// Start batch
 	n.StartBatch()
 	c.Equal(1, n.BatchLevel())
 
@@ -235,14 +221,12 @@ func TestBatchTarget(t *testing.T) {
 	c.Equal(1, len(batchStarts))
 	c.True(batchStarts[0])
 
-	// Send notifications during batch
 	n.Notify("test", "producer1")
 	n.Notify("test", "producer2")
 
 	notifications := target.getNotifications()
 	c.Equal(2, len(notifications))
 
-	// End batch
 	n.EndBatch()
 	c.Equal(0, n.BatchLevel())
 
@@ -260,23 +244,19 @@ func TestNestedBatch(t *testing.T) {
 
 	n.Register(target, 0, "test")
 
-	// Start nested batches
 	n.StartBatch()
 	c.Equal(1, n.BatchLevel())
 	n.StartBatch()
 	c.Equal(2, n.BatchLevel())
 
-	// Should only get one batch start notification
 	batchStarts := target.getBatchStarts()
 	c.Equal(1, len(batchStarts))
 	c.True(batchStarts[0])
 
-	// End first batch - should still be in batch mode
 	n.EndBatch()
 	c.Equal(1, n.BatchLevel())
 	c.Equal(1, len(target.getBatchStarts())) // No new batch notifications
 
-	// End second batch - should exit batch mode
 	n.EndBatch()
 	c.Equal(0, n.BatchLevel())
 
@@ -293,15 +273,12 @@ func TestEnabledDisabled(t *testing.T) {
 
 	n.Register(target, 0, "test")
 
-	// Disable notifier
 	n.SetEnabled(false)
 	c.False(n.Enabled())
 
-	// Should not receive notifications when disabled
 	n.Notify("test", "producer")
 	c.Equal(0, len(target.getNotifications()))
 
-	// Re-enable
 	n.SetEnabled(true)
 	c.True(n.Enabled())
 
@@ -319,7 +296,7 @@ func TestBatchWhenDisabled(t *testing.T) {
 	n.SetEnabled(false)
 
 	// The batch lifecycle is independent of the enabled state: the level is still tracked and the BatchMode brackets
-	// are still delivered, so StartBatch/EndBatch remain balanced regardless of enablement.
+	// are still delivered, so StartBatch/EndBatch stay balanced.
 	n.StartBatch()
 	c.Equal(1, n.BatchLevel())
 	c.Equal([]bool{true}, target.getBatchStarts())
@@ -333,10 +310,9 @@ func TestBatchWhenDisabled(t *testing.T) {
 	c.Equal([]bool{true, false}, target.getBatchStarts())
 }
 
-// TestEndBatchAfterDisable verifies that a batch begun while enabled is properly ended (level returns to 0 and
-// BatchMode(false) is delivered) even if the notifier is disabled before EndBatch is called. Previously EndBatch was
-// gated on the enabled flag, so disabling mid-batch stranded the batch: the level stayed at 1 forever and targets
-// never received the matching BatchMode(false).
+// TestEndBatchAfterDisable verifies that a batch begun while enabled still ends properly (level returns to 0 and
+// BatchMode(false) is delivered) when the notifier is disabled before EndBatch is called. EndBatch used to be gated on
+// the enabled flag, which stranded the batch at level 1 with no matching BatchMode(false).
 func TestEndBatchAfterDisable(t *testing.T) {
 	c := check.New(t)
 	n := notifier.New(testRecoveryHandler)
@@ -352,7 +328,7 @@ func TestEndBatchAfterDisable(t *testing.T) {
 	c.Equal(0, n.BatchLevel(), "batch level must drop to 0 even though the notifier was disabled mid-batch")
 	c.Equal([]bool{true, false}, target.getBatchStarts(), "matching BatchMode(false) must still be delivered")
 
-	// Re-enabling must yield a clean, fully balanced batch rather than a level stuck above 0.
+	// Re-enabling must yield a fully balanced batch rather than a level stuck above 0.
 	n.SetEnabled(true)
 	n.StartBatch()
 	c.Equal(1, n.BatchLevel())
@@ -361,8 +337,7 @@ func TestEndBatchAfterDisable(t *testing.T) {
 	c.Equal([]bool{true, false, true, false}, target.getBatchStarts())
 }
 
-// TestEndBatchAfterDisableNested verifies the same balance property holds when the disable happens partway through a
-// nested batch.
+// TestEndBatchAfterDisableNested verifies the same balance holds when the disable happens inside a nested batch.
 func TestEndBatchAfterDisableNested(t *testing.T) {
 	c := check.New(t)
 	n := notifier.New(testRecoveryHandler)
@@ -391,14 +366,11 @@ func TestRegisterFromNotifier(t *testing.T) {
 	target1 := &mockTarget{}
 	target2 := &mockBatchTarget{}
 
-	// Register targets in first notifier
 	n1.Register(target1, 5, "foo", "bar")
 	n1.Register(target2, 10, "baz")
 
-	// Copy registrations to second notifier
 	n2.RegisterFromNotifier(n1)
 
-	// Test that notifications work in second notifier
 	n2.Notify("foo", "producer1")
 	n2.Notify("baz", "producer2")
 
@@ -413,21 +385,17 @@ func TestRegisterFromNotifierMerge(t *testing.T) {
 	n2 := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register target in both notifiers with different names
 	n1.Register(target, 5, "foo")
 	n2.Register(target, 10, "bar")
 
-	// Copy registrations from n1 to n2 (should merge)
 	n2.RegisterFromNotifier(n1)
 
-	// Target should now receive notifications for both "foo" and "bar"
 	n2.Notify("foo", "producer1")
 	n2.Notify("bar", "producer2")
 
 	notifications := target.getNotifications()
 	c.Equal(2, len(notifications))
 
-	// Should have received both notifications
 	names := make(map[string]bool)
 	for _, notif := range notifications {
 		names[notif.name] = true
@@ -444,7 +412,6 @@ func TestRegisterFromSameNotifier(t *testing.T) {
 
 	n.Register(target, 0, "test")
 
-	// Should be safe to register from self
 	n.RegisterFromNotifier(n)
 
 	n.Notify("test", "producer")
@@ -462,12 +429,10 @@ func TestReset(t *testing.T) {
 	n.Register(batchTarget, 0, "test")
 	n.StartBatch()
 
-	// Reset should clear everything
 	n.Reset()
 
 	c.Equal(0, n.BatchLevel())
 
-	// Notifications should not be received after reset
 	n.Notify("test", "producer")
 	c.Equal(0, len(target.getNotifications()))
 	c.Equal(0, len(batchTarget.getNotifications()))
@@ -479,10 +444,8 @@ func TestEmptyNames(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register with empty names
 	n.Register(target, 0, "", ".", "...")
 
-	// Should not receive any notifications
 	n.Notify("test", "producer")
 	c.Equal(0, len(target.getNotifications()))
 }
@@ -495,7 +458,6 @@ func TestNameNormalization(t *testing.T) {
 
 	n.Register(target, 0, "foo.bar")
 
-	// These should all be normalized to "foo.bar"
 	n.Notify("foo..bar", "producer1")
 	n.Notify(".foo.bar.", "producer2")
 	n.Notify("foo...bar", "producer3")
@@ -515,7 +477,6 @@ func TestNotifyEmptyName(t *testing.T) {
 
 	n.Register(target, 0, "test")
 
-	// Empty names should not trigger notifications
 	n.Notify("", "producer")
 	n.Notify(".", "producer")
 	n.Notify("...", "producer")
@@ -535,7 +496,6 @@ func TestConcurrentAccess(t *testing.T) {
 	numGoroutines := 10
 	numNotifications := 100
 
-	// Concurrent notifications
 	for range numGoroutines {
 		wg.Go(func() {
 			for j := range numNotifications {
@@ -544,7 +504,6 @@ func TestConcurrentAccess(t *testing.T) {
 		})
 	}
 
-	// Concurrent registrations/unregistrations
 	wg.Go(func() {
 		for range 10 {
 			newTarget := &mockTarget{}
@@ -556,7 +515,6 @@ func TestConcurrentAccess(t *testing.T) {
 
 	wg.Wait()
 
-	// Should have received all notifications
 	notifications := target.getNotifications()
 	c.Equal(numGoroutines*numNotifications, len(notifications))
 }
@@ -571,14 +529,11 @@ func TestPanicRecovery(t *testing.T) {
 
 	n := notifier.New(recoveryHandler)
 
-	// Create a target that panics
 	panicTarget := &panicTarget{}
 	n.Register(panicTarget, 0, "test")
 
-	// Should not panic when target panics
 	n.Notify("test", "producer")
 
-	// Recovery handler should have been called
 	c.Equal(1, len(recoveredErrors))
 }
 
@@ -592,15 +547,12 @@ func TestBatchTargetPanicRecovery(t *testing.T) {
 
 	n := notifier.New(recoveryHandler)
 
-	// Create a batch target that panics
 	panicBatchTarget := &panicBatchTarget{}
 	n.Register(panicBatchTarget, 0, "test")
 
-	// Should not panic when batch target panics
 	n.StartBatch()
 	n.EndBatch()
 
-	// Recovery handler should have been called twice (start and end)
 	c.Equal(2, len(recoveredErrors))
 }
 
@@ -610,10 +562,8 @@ func TestHierarchicalNotMatching(t *testing.T) {
 	n := notifier.New(testRecoveryHandler)
 	target := &mockTarget{}
 
-	// Register for "foo.bar"
 	n.Register(target, 0, "foo.bar")
 
-	// These should NOT match
 	n.Notify("foo", "producer1")      // Parent doesn't match child registration
 	n.Notify("foo.barn", "producer2") // Similar but different
 	n.Notify("foobar", "producer3")   // No dot separator
@@ -626,7 +576,6 @@ func TestMultipleTargetsPriority(t *testing.T) {
 
 	n := notifier.New(testRecoveryHandler)
 
-	// Create targets that record order of execution
 	var executionOrder []string
 	var mu sync.Mutex
 
@@ -645,28 +594,24 @@ func TestMultipleTargetsPriority(t *testing.T) {
 	target2 := createTarget("high")
 	target3 := createTarget("medium")
 
-	// Register with different priorities (higher values get notified first)
 	n.Register(target1, 1, "test")  // low priority
 	n.Register(target2, 10, "test") // high priority
 	n.Register(target3, 5, "test")  // medium priority
 
 	n.Notify("test", "producer")
 
-	// Should be executed in priority order: high, medium, low
 	c.Equal(3, len(executionOrder))
 	c.Equal("high", executionOrder[0])
 	c.Equal("medium", executionOrder[1])
 	c.Equal("low", executionOrder[2])
 }
 
-// Target that panics on notification
 type panicTarget struct{}
 
 func (pt *panicTarget) HandleNotification(_ string, _, _ any) {
 	panic("test panic")
 }
 
-// Batch target that panics on batch mode
 type panicBatchTarget struct {
 	panicTarget
 }
@@ -675,7 +620,6 @@ func (pbt *panicBatchTarget) BatchMode(_ bool) {
 	panic("batch panic")
 }
 
-// Target that records execution order
 type orderTarget struct {
 	onNotify func()
 	name     string

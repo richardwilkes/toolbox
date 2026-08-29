@@ -9,8 +9,7 @@
 
 package xos
 
-// Must is a helper function that takes a value of any type and an error. If the error is nil, it returns the value; if
-// the error is non-nil, it panics.
+// Must returns v, or panics with err if err is not nil.
 func Must[T any](v T, err error) T {
 	if err != nil {
 		panic(err)

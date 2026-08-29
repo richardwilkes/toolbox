@@ -69,8 +69,8 @@ func IntFromFloat64(f float64) Int {
 		if f < minIntFloat {
 			return MinInt
 		}
-		// Convert the magnitude as a Uint, then negate. This avoids converting a negative float64 directly to a
-		// uint64, which is implementation-defined when the value is out of range and differs between amd64 and arm64.
+		// Convert the magnitude as a Uint, then negate: converting a negative float64 directly to uint64 is
+		// implementation-defined when the value is out of range and differs between amd64 and arm64.
 		return Int(UintFromFloat64(-f)).Neg()
 	default:
 		if f > maxRepresentableIntFloat {
@@ -133,7 +133,7 @@ func IntFromString(s string) (Int, error) {
 	return IntFromBigInt(b), nil
 }
 
-// IntFromStringNoCheck creates an Int from a string. Unlike IntFromString, this allows any string as input.
+// IntFromStringNoCheck is like IntFromString, but returns 0 for invalid input.
 func IntFromStringNoCheck(s string) Int {
 	i, _ := IntFromString(s) //nolint:errcheck // Failure results in 0
 	return i
@@ -187,7 +187,7 @@ func (i Int) AsFloat64() float64 {
 	return Uint(i).AsFloat64()
 }
 
-// IsUint returns true if this value can be represented as an Uint without any loss.
+// IsUint returns true if this value can be represented as a Uint without any loss.
 func (i Int) IsUint() bool {
 	return i.hi&signBit == 0
 }
@@ -528,7 +528,7 @@ func (i Int) Mul64(n int64) Int {
 	return i.Mul(IntFrom64(n))
 }
 
-// Div returns i / n. If n == 0, a divide by zero panic will occur.
+// Div returns i / n. Panics if n == 0.
 func (i Int) Div(n Int) Int {
 	qSign := 1
 	if i.LessThan(Int{}) {
@@ -547,7 +547,7 @@ func (i Int) Div(n Int) Int {
 	return q
 }
 
-// Div64 returns i / n. If n == 0, a divide by zero panic will occur.
+// Div64 returns i / n. Panics if n == 0.
 func (i Int) Div64(n int64) Int {
 	qSign := 1
 	if i.LessThan(Int{}) {
@@ -566,7 +566,7 @@ func (i Int) Div64(n int64) Int {
 	return q
 }
 
-// DivMod returns both the result of i / n as well i % n. If n == 0, a divide by zero panic will occur.
+// DivMod returns i / n and i % n. Panics if n == 0.
 func (i Int) DivMod(n Int) (q, r Int) {
 	qSign := 1
 	rSign := 1
@@ -592,7 +592,7 @@ func (i Int) DivMod(n Int) (q, r Int) {
 	return q, r
 }
 
-// DivMod64 returns both the result of i / n as well i % n. If n == 0, a divide by zero panic will occur.
+// DivMod64 returns i / n and i % n. Panics if n == 0.
 func (i Int) DivMod64(n int64) (q, r Int) {
 	var hi uint64
 	if n < 0 {
@@ -601,13 +601,13 @@ func (i Int) DivMod64(n int64) (q, r Int) {
 	return i.DivMod(Int{hi: hi, lo: uint64(n)})
 }
 
-// Mod returns i % n. If n == 0, a divide by zero panic will occur.
+// Mod returns i % n. Panics if n == 0.
 func (i Int) Mod(n Int) (r Int) {
 	_, r = i.DivMod(n)
 	return r
 }
 
-// Mod64 returns i % n. If n == 0, a divide by zero panic will occur.
+// Mod64 returns i % n. Panics if n == 0.
 func (i Int) Mod64(n int64) (r Int) {
 	_, r = i.DivMod64(n)
 	return r
@@ -658,8 +658,7 @@ func (i *Int) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Float64 implements json.Number. Intentionally always returns an error, as we never want to emit floating point values
-// into json for Int.
+// Float64 implements json.Number. It always returns an error, as Int must never be emitted as a floating point value.
 func (i Int) Float64() (float64, error) {
 	return 0, errNoFloat64
 }

@@ -37,7 +37,7 @@ func PointFromSize(size Size) Point {
 	}
 }
 
-// Add returns a new Point which is the result of adding this Point with the provided Point.
+// Add returns the sum of this Point and the provided Point.
 func (p Point) Add(pt Point) Point {
 	return Point{
 		X: p.X + pt.X,
@@ -45,7 +45,7 @@ func (p Point) Add(pt Point) Point {
 	}
 }
 
-// Sub returns a new Point which is the result of subtracting the provided Point from this Point.
+// Sub returns the result of subtracting the provided Point from this Point.
 func (p Point) Sub(pt Point) Point {
 	return Point{
 		X: p.X - pt.X,
@@ -53,7 +53,7 @@ func (p Point) Sub(pt Point) Point {
 	}
 }
 
-// Mul returns a new Point which is the result of multiplying the coordinates of this point by the value.
+// Mul returns this Point with its coordinates multiplied by the value.
 func (p Point) Mul(value float32) Point {
 	return Point{
 		X: p.X * value,
@@ -61,8 +61,7 @@ func (p Point) Mul(value float32) Point {
 	}
 }
 
-// MulPt returns a new Point which is the result of multiplying the coordinates of this point by the coordinates of the
-// provided Point.
+// MulPt returns this Point with its coordinates multiplied by those of the provided Point.
 func (p Point) MulPt(pt Point) Point {
 	return Point{
 		X: p.X * pt.X,
@@ -70,8 +69,7 @@ func (p Point) MulPt(pt Point) Point {
 	}
 }
 
-// MulSize returns a new Point which is the result of multiplying the coordinates of this point by the dimensions of the
-// provided Size.
+// MulSize returns this Point with X multiplied by the width and Y by the height of the provided Size.
 func (p Point) MulSize(size Size) Point {
 	return Point{
 		X: p.X * size.Width,
@@ -79,7 +77,7 @@ func (p Point) MulSize(size Size) Point {
 	}
 }
 
-// Div returns a new Point which is the result of dividing the coordinates of this point by the value.
+// Div returns this Point with its coordinates divided by the value.
 func (p Point) Div(value float32) Point {
 	return Point{
 		X: p.X / value,
@@ -87,8 +85,7 @@ func (p Point) Div(value float32) Point {
 	}
 }
 
-// DivPt returns a new Point which is the result of dividing the coordinates of this point by the coordinates of the
-// provided Point.
+// DivPt returns this Point with its coordinates divided by those of the provided Point.
 func (p Point) DivPt(pt Point) Point {
 	return Point{
 		X: p.X / pt.X,
@@ -96,8 +93,7 @@ func (p Point) DivPt(pt Point) Point {
 	}
 }
 
-// DivSize returns a new Point which is the result of dividing the coordinates of this point by the dimensions of the
-// provided Size.
+// DivSize returns this Point with X divided by the width and Y by the height of the provided Size.
 func (p Point) DivSize(size Size) Point {
 	return Point{
 		X: p.X / size.Width,
@@ -105,7 +101,7 @@ func (p Point) DivSize(size Size) Point {
 	}
 }
 
-// Neg returns a new Point that holds the negated coordinates of this Point.
+// Neg returns this Point with its coordinates negated.
 func (p Point) Neg() Point {
 	return Point{
 		X: -p.X,
@@ -113,7 +109,7 @@ func (p Point) Neg() Point {
 	}
 }
 
-// Floor returns a new Point which is aligned to integer coordinates by using Floor on them.
+// Floor returns this Point with its coordinates floored.
 func (p Point) Floor() Point {
 	return Point{
 		X: xmath.Floor(p.X),
@@ -121,7 +117,7 @@ func (p Point) Floor() Point {
 	}
 }
 
-// Ceil returns a new Point which is aligned to integer coordinates by using Ceil() on them.
+// Ceil returns this Point with its coordinates ceiled.
 func (p Point) Ceil() Point {
 	return Point{
 		X: xmath.Ceil(p.X),
@@ -155,7 +151,7 @@ func (p Point) EqualWithin(pt Point, tolerance float32) bool {
 	return xmath.EqualWithin(p.X, pt.X, tolerance) && xmath.EqualWithin(p.Y, pt.Y, tolerance)
 }
 
-// String implements the fmt.Stringer interface.
+// String implements fmt.Stringer.
 func (p Point) String() string {
 	return fmt.Sprintf("%#v,%#v", p.X, p.Y)
 }

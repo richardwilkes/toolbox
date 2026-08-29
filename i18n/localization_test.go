@@ -54,7 +54,6 @@ func TestEmptyTranslation(t *testing.T) {
 	Language = "fr"
 	Languages = nil
 	c.Equal("", Text("Hello"))
-	// A key with no translation in any language still falls back to the original text.
 	c.Equal("Missing", Text("Missing"))
 	// An empty translation in the primary language must not be skipped in favor of a fallback language.
 	langMap["fr_fr"] = map[string]string{"Hello": "Bonjour"}
@@ -73,12 +72,11 @@ func TestAltLocalization(t *testing.T) {
 	c.Equal("Hello!", Text("Hello!"))
 }
 
-// TestLoadRejectsTrailingContent verifies that a key or value line with content after the closing quote is rejected
-// with a warning rather than silently truncated, while well-formed lines still round-trip.
+// TestLoadRejectsTrailingContent verifies that key and value lines with content after the closing quote are rejected
+// with a warning rather than truncated.
 func TestLoadRejectsTrailingContent(t *testing.T) {
 	c := check.New(t)
 
-	// Capture the warnings load() emits.
 	var logBuf bytes.Buffer
 	restore := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logBuf, &slog.HandlerOptions{Level: slog.LevelWarn})))
@@ -103,12 +101,10 @@ func TestLoadRejectsTrailingContent(t *testing.T) {
 	// The malformed line must not register a truncated "foo" key.
 	_, hasFoo := translations["foo"]
 	c.False(hasFoo)
-	// The well-formed pair still round-trips.
 	c.Equal("translated", translations["good"])
-	// A warning was logged for the invalid key.
 	c.Contains(logBuf.String(), "ignoring invalid key")
 
-	// Sanity check: a value line with trailing content is likewise rejected, leaving the key without a value.
+	// A value line with trailing content is likewise rejected, leaving the key without a value.
 	logBuf.Reset()
 	c.NoError(os.WriteFile(filepath.Join(dir, "badvalue.i18n"), []byte("k:\"key\"\nv:\"val\" extra\n"), 0o600))
 	load("badvalue.i18n")

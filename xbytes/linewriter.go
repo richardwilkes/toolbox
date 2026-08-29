@@ -22,9 +22,8 @@ var (
 	_ io.ByteWriter   = &LineWriter{}
 )
 
-// LineWriter buffers its input into lines before sending each line to an output function without the trailing line
-// feed. Each line passed to the output function is a fresh copy, so the callback may retain it without it being
-// overwritten by subsequent lines.
+// LineWriter buffers its input into lines and passes each one, without the trailing line feed, to an output function.
+// Each line is a fresh copy, so the callback may retain it.
 type LineWriter struct {
 	buffer *bytes.Buffer
 	out    func([]byte)

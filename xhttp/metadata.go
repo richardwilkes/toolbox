@@ -23,7 +23,7 @@ const metadataKey ctxKey = 1
 type Metadata struct {
 	// Logger holds the logger for the request.
 	Logger *slog.Logger
-	// User holds the user that made the request, if any. Populated by the basicauth middleware.
+	// User holds the user that made the request, if any. Populated by BasicAuthWrap.
 	User string
 	// LogMsg will be used as the message in the final log call for the request if it isn't empty.
 	LogMsg string
@@ -41,15 +41,14 @@ func MetadataFromRequest(req *http.Request) *Metadata {
 	return nil
 }
 
-// SetMetadataLogMsg sets the LogMsg field of the Metadata in the request context.
-// If there is no Metadata in the request, it does nothing.
+// SetMetadataLogMsg sets the LogMsg field of the request's Metadata, if any.
 func SetMetadataLogMsg(req *http.Request, msg string) {
 	if md := MetadataFromRequest(req); md != nil {
 		md.LogMsg = msg
 	}
 }
 
-// LoggerForRequest returns a logger for use with the request.
+// LoggerForRequest returns the logger from the request's Metadata, or slog.Default() if there is none.
 func LoggerForRequest(r *http.Request) *slog.Logger {
 	var logger *slog.Logger
 	if md := MetadataFromRequest(r); md != nil {

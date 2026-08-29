@@ -18,9 +18,9 @@ import (
 
 const utf8BOM = '\uFEFF'
 
-// NewBOMStripper strips a leading UTF-8 BOM marker from the input. The reader that is returned will be the same as the
-// one passed in if it was a *bufio.Reader, otherwise, the original reader will be wrapped with a *bufio.Reader and
-// returned.
+// NewBOMStripper strips a leading UTF-8 BOM from r. The returned reader is r itself if it is already a *bufio.Reader;
+// otherwise r is wrapped in a new one. An error (wrapping io.EOF for empty input) is returned if the first rune cannot
+// be read.
 func NewBOMStripper(r io.Reader) (*bufio.Reader, error) {
 	buffer, ok := r.(*bufio.Reader)
 	if !ok {

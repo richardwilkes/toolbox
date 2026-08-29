@@ -178,8 +178,8 @@ func TestLineWriter(t *testing.T) {
 	c.Equal(fs.ErrClosed, err)
 }
 
-// TestLineWriterRetainedSlices verifies that a callback which retains the raw []byte it receives sees each line's own
-// content, rather than every retained slice aliasing the writer's reused buffer and ending up showing the last line.
+// TestLineWriterRetainedSlices verifies that a callback retaining the raw []byte it receives sees each line's own
+// content rather than the writer's reused buffer.
 func TestLineWriterRetainedSlices(t *testing.T) {
 	c := check.New(t)
 

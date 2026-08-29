@@ -47,8 +47,7 @@ func colorSupport(envTerm string) Kind {
 	if term256Matcher.MatchString(envTerm) {
 		return Color8
 	}
-	// A non-empty COLORTERM (any other value) is a hint of at least basic color support. An empty value carries no
-	// information, so it is not treated as a hint.
+	// Any other non-empty COLORTERM value hints at basic color support.
 	if envColorTerm != "" || term16Matcher.MatchString(envTerm) {
 		return Color4
 	}

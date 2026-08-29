@@ -163,8 +163,8 @@ func (r Rect) Align() Rect {
 	return Rect{Point: r.Point.Floor(), Size: r.Size.Ceil()}
 }
 
-// Expand returns a new Rect that expands this Rect to encompass the provided Point. If the Rect has a negative width or
-// height, then the Rect's upper-left corner will be set to the Point and its width and height will be set to 0.
+// Expand returns a new Rect that expands this Rect to encompass the provided Point. If this Rect has a negative width
+// or height, the result has its upper-left corner at the Point and a width and height of 0.
 func (r Rect) Expand(pt Point) Rect {
 	if r.Width < 0 || r.Height < 0 {
 		return Rect{Point: pt}

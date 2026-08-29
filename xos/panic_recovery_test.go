@@ -24,7 +24,6 @@ func TestPanicRecovery_NoPanic(t *testing.T) {
 	var called bool
 	func() {
 		defer xos.PanicRecovery(func(_ error) { called = true })
-		// Normal execution, no panic
 	}()
 	c := check.New(t)
 	c.False(called)

@@ -32,16 +32,15 @@ const (
 )
 
 var (
-	// Dir is the directory to scan for localization files. This will occur only once, the first time a call to Text()
-	// is made. If you do not set this prior to the first call, a directory in the same location as the executable with
-	// "_i18n" appended to the executable name (sans any extension) will be used.
+	// Dir is the directory to scan for localization files. The scan happens once, on the first call to Text() that
+	// uses the default localization mechanism. If Dir is empty at that point, the executable's path (symlinks
+	// resolved, extension removed) with "_i18n" appended is used.
 	Dir string
-	// Language is the language that should be used for text returned from calls to Text(). It is initialized to the
-	// result of calling Locale(). You may set this at runtime, forcing a particular language for all subsequent calls
-	// to Text().
+	// Language is the language used by Text(). It is initialized to Locale() and may be set at runtime to force a
+	// particular language for subsequent calls.
 	Language = Locale()
-	// Languages is a slice of languages to fall back to should the one specified in the Language variable not be
-	// available. It is initialized to the value of the LANGUAGE environment variable.
+	// Languages lists fallback languages, tried in order, for text that has no translation in Language. It is
+	// initialized from the LANGUAGE environment variable, split on ':'.
 	Languages    = strings.Split(os.Getenv("LANGUAGE"), ":")
 	altLocalizer atomic.Pointer[localizer]
 	once         sync.Once
@@ -54,8 +53,8 @@ type localizer struct {
 	Text func(string) string
 }
 
-// SetLocalizer sets the function to use for localizing text. If this is not set or explicitly set to nil, the default
-// localization mechanism will be used.
+// SetLocalizer sets the function Text() uses to localize text. If unset or nil, the default localization mechanism is
+// used.
 func SetLocalizer(f func(string) string) {
 	var trampoline *localizer
 	if f != nil {

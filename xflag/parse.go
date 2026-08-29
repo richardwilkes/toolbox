@@ -17,9 +17,8 @@ import (
 
 var postParseFuncs = make(map[int][]func())
 
-// Parse parses the command-line flags from [os.Args][1:]. Must be called after all flags are defined and before flags
-// are accessed by the program. Before returning, this will call any post-parse functions added with
-// xflag.AddPostParseFunc().
+// Parse parses the command-line flags from os.Args[1:], then calls any post-parse functions added with
+// AddPostParseFunc. Must be called after all flags are defined and before flags are accessed by the program.
 func Parse() {
 	flag.Parse()
 	if len(postParseFuncs) > 0 {
@@ -31,9 +30,8 @@ func Parse() {
 	}
 }
 
-// AddPostParseFunc adds a function to be called after xflag.Parse() has been called. The priority determines the order
-// in which post-parse functions are called. Within a given priority, functions are called in the order they were added.
-// Lower priority numbers are called first, so a priority of 0 will be called before a priority of 1.
+// AddPostParseFunc adds a function to be called after Parse has parsed the flags. Functions run in ascending priority
+// order, and in the order they were added within a priority.
 func AddPostParseFunc(priority int, f func()) {
 	postParseFuncs[priority] = append(postParseFuncs[priority], f)
 }

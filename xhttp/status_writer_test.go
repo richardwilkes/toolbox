@@ -20,8 +20,7 @@ import (
 )
 
 // TestStatusWriterUnwrapReachesDeadlines verifies that http.ResponseController can reach the underlying writer's
-// deadline methods through the StatusWriter, which it can only do if StatusWriter implements Unwrap. Since the server
-// wraps every response in a StatusWriter, this is what keeps per-request deadline control working for handlers.
+// deadline methods through the StatusWriter, which it can only do if StatusWriter implements Unwrap.
 func TestStatusWriterUnwrapReachesDeadlines(t *testing.T) {
 	c := check.New(t)
 	underlying := &deadlineWriter{ResponseWriter: httptest.NewRecorder()}

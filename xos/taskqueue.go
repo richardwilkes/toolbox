@@ -16,18 +16,17 @@ import (
 
 // TaskQueueConfig provides configuration for a TaskQueue.
 type TaskQueueConfig struct {
-	// RecoveryHandler is the recovery handler to use for tasks that panic. If the handler is nil, the panic will be
-	// logged as an error.
+	// RecoveryHandler receives, as an error, any panic raised by a task. If nil, the panic is logged.
 	RecoveryHandler func(error)
-	// Depth controls the maximum depth of the queue. Calls to Submit() will block when this number of tasks are already
-	// pending execution. Zero or less means to use an unbounded queue.
+	// Depth limits the number of tasks queued awaiting a worker; beyond it, Submit blocks once a small internal buffer
+	// fills. Zero or less means unbounded.
 	Depth int
-	// Workers controls the number of workers that will simultaneously process tasks. If set to 1, tasks submitted to
-	// the queue will be executed serially. If set to less than 1, the number of logical CPUs + 1 will be used instead.
+	// Workers is the number of workers processing tasks concurrently; 1 executes tasks serially. Less than 1 means to
+	// use the number of logical CPUs + 1.
 	Workers int
 }
 
-// TaskQueue holds the queue information.
+// TaskQueue executes submitted tasks asynchronously on a pool of workers.
 type TaskQueue struct {
 	in              chan func()
 	done            chan bool
@@ -38,7 +37,7 @@ type TaskQueue struct {
 	closed          bool
 }
 
-// NewTaskQueue creates an asynchronous queue which executes the tasks submitted to it.
+// NewTaskQueue creates a queue that asynchronously executes the tasks submitted to it. A nil config uses the defaults.
 func NewTaskQueue(config *TaskQueueConfig) *TaskQueue {
 	if config == nil {
 		config = &TaskQueueConfig{}
@@ -58,9 +57,8 @@ func NewTaskQueue(config *TaskQueueConfig) *TaskQueue {
 	return q
 }
 
-// Submit a task to be run. Returns true if the task was accepted into the queue, or false if the queue has already been
-// shut down, in which case the task is dropped and will not run. Safe to call concurrently, including concurrently with
-// or after Shutdown().
+// Submit queues a task to be run. Returns true if it was accepted, or false if the queue has already been shut down, in
+// which case the task is dropped. Safe to call concurrently, including concurrently with or after Shutdown.
 func (q *TaskQueue) Submit(task func()) bool {
 	q.lock.RLock()
 	defer q.lock.RUnlock()
@@ -71,8 +69,8 @@ func (q *TaskQueue) Submit(task func()) bool {
 	return true
 }
 
-// Shutdown the queue. Does not return until all pending tasks have completed. After it returns, further calls to
-// Submit() are rejected. Safe to call more than once and concurrently; every call blocks until completion.
+// Shutdown closes the queue and returns once all pending tasks have completed, after which Submit rejects tasks. Safe
+// to call more than once and concurrently; every call blocks until completion.
 func (q *TaskQueue) Shutdown() {
 	q.lock.Lock()
 	if !q.closed {
@@ -86,20 +84,17 @@ func (q *TaskQueue) Shutdown() {
 func (q *TaskQueue) process() {
 	var received, processed uint64
 
-	// Setup backlog
 	var backlog []func()
 	if q.depth > 1 {
 		backlog = make([]func(), 0, q.depth-1)
 	}
 
-	// Setup workers
 	ready := make(chan bool, q.workers)
 	tasks := make(chan func(), q.workers)
 	for range q.workers {
 		go q.work(tasks, ready)
 	}
 
-	// Main processing loop
 outer:
 	for {
 	inner:

@@ -20,14 +20,13 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 )
 
-// customError is a simple error type for testing typed nil interfaces
+// customError exists to test typed nil interfaces.
 type customError struct{}
 
 func (e *customError) Error() string {
 	return "custom error"
 }
 
-// mockTestingT implements the TestingT interface for testing purposes
 type mockTestingT struct {
 	errors []string
 	failed bool
@@ -318,13 +317,11 @@ func TestTrue(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case
 	checker.True(true)
 	if mock.failed {
 		t.Error("Expected True(true) to pass")
 	}
 
-	// Test failing case
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.True(false)
@@ -340,13 +337,11 @@ func TestFalse(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case
 	checker.False(false)
 	if mock.failed {
 		t.Error("Expected False(false) to pass")
 	}
 
-	// Test failing case
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.False(true)
@@ -498,13 +493,11 @@ func TestNoError(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case
 	checker.NoError(nil)
 	if mock.failed {
 		t.Error("Expected NoError(nil) to pass")
 	}
 
-	// Test failing case
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	testErr := errors.New("test error")
@@ -521,14 +514,12 @@ func TestHasError(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case
 	testErr := errors.New("test error")
 	checker.HasError(testErr)
 	if mock.failed {
 		t.Error("Expected HasError(error) to pass")
 	}
 
-	// Test failing case
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.HasError(nil)
@@ -544,7 +535,6 @@ func TestPanics(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case - function that panics
 	checker.Panics(func() {
 		panic("test panic")
 	})
@@ -552,11 +542,9 @@ func TestPanics(t *testing.T) {
 		t.Error("Expected Panics to pass for panicking function")
 	}
 
-	// Test failing case - function that doesn't panic
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.Panics(func() {
-		// Do nothing - no panic
 	})
 	if !mock.failed {
 		t.Error("Expected Panics to fail for non-panicking function")
@@ -570,15 +558,12 @@ func TestNotPanics(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test passing case - function that doesn't panic
 	checker.NotPanics(func() {
-		// Do nothing - no panic
 	})
 	if mock.failed {
 		t.Error("Expected NotPanics to pass for non-panicking function")
 	}
 
-	// Test failing case - function that panics
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.NotPanics(func() {
@@ -596,7 +581,6 @@ func TestPanicsWithError(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// Test with error panic
 	checker.Panics(func() {
 		panic(errors.New("error panic"))
 	})
@@ -604,7 +588,6 @@ func TestPanicsWithError(t *testing.T) {
 		t.Error("Expected Panics to pass for error panic")
 	}
 
-	// Test with string panic
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.Panics(func() {
@@ -647,9 +630,7 @@ func TestErrorMessageFormatting(t *testing.T) {
 	}
 }
 
-// Additional edge case tests
 func TestEdgeCases(t *testing.T) {
-	// Test with empty slices vs nil slices
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
@@ -661,7 +642,6 @@ func TestEdgeCases(t *testing.T) {
 		t.Error("Expected Equal to fail for empty slice vs nil slice")
 	}
 
-	// Test with different types that have same string representation
 	mock = newMockTestingT()
 	checker = check.New(mock)
 
@@ -706,7 +686,6 @@ func TestByteSliceHandling(t *testing.T) {
 }
 
 func TestNilChecksWithInterfaces(t *testing.T) {
-	// Test various nil interface scenarios
 	var nilError error
 	var nilStringer fmt.Stringer
 	var nonNilError error = (*customError)(nil) // typed nil
@@ -714,7 +693,6 @@ func TestNilChecksWithInterfaces(t *testing.T) {
 	mock := newMockTestingT()
 	checker := check.New(mock)
 
-	// All these should be considered nil
 	checker.Nil(nilError)
 	checker.Nil(nilStringer)
 	checker.Nil((*int)(nil))
@@ -725,7 +703,6 @@ func TestNilChecksWithInterfaces(t *testing.T) {
 		t.Errorf("Expected all nil checks to pass, but got errors: %v", mock.errors)
 	}
 
-	// This typed nil should also be considered nil
 	mock = newMockTestingT()
 	checker = check.New(mock)
 	checker.Nil(nonNilError)
@@ -735,7 +712,6 @@ func TestNilChecksWithInterfaces(t *testing.T) {
 }
 
 func TestPanicRecovery(t *testing.T) {
-	// Test various panic types
 	tests := []struct { //nolint:govet // Don't care about field alignment in tests
 		name      string
 		panicFunc func()

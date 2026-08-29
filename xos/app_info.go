@@ -21,38 +21,36 @@ import (
 )
 
 var (
-	// AppCmdName holds the application's name as specified on the command line.
+	// AppCmdName holds the base name of the executable, or "<unknown>" if it cannot be determined.
 	AppCmdName string
 	// AppName holds the name of the application. By default, this is the same as AppCmdName.
 	AppName string
-	// CopyrightStartYear holds the starting year to place in the copyright banner. If not set explicitly, will be set
-	// to the year of the "vcs.time" build tag.
+	// CopyrightStartYear holds the starting year to place in the copyright banner. If not set explicitly, it is the year
+	// of the "vcs.time" build setting, or the current year if that is unavailable.
 	CopyrightStartYear string
-	// CopyrightEndYear holds the ending year to place in the copyright banner. If not set explicitly, will be set to
-	// the year of the "vcs.time" build tag.
+	// CopyrightEndYear holds the ending year to place in the copyright banner. If not set explicitly, it is the year of
+	// the "vcs.time" build setting, or the current year if that is unavailable.
 	CopyrightEndYear string
 	// CopyrightHolder holds the name of the copyright holder.
 	CopyrightHolder string
-	// License holds the license the software is being distributed under. This is intended to be a simple one line
-	// description, such as "Mozilla Public License 2.0" and not the full license itself.
+	// License holds a one-line description of the license the software is distributed under, such as "Mozilla Public
+	// License 2.0", not the full license text.
 	License string
-	// AppVersion holds the application's version information. If not set explicitly, will be the version of the main
-	// module or "0.0" if that isn't available. Unfortunately, this automatic setting only works for binaries created
-	// using `go install <package>@<version>`.
+	// AppVersion holds the application's version. If not set explicitly, it is the main module's version (without a
+	// leading 'v'), or "0.0" if that is unavailable. The module version is only available in binaries built with
+	// `go install <package>@<version>`.
 	AppVersion string
-	// VCSName holds the name of the version control system and is set to the value of the build tag "vcs".
+	// VCSName holds the name of the version control system, from the "vcs" build setting.
 	VCSName string
-	// VCSVersion holds the vcs revision and is set to the value of the build tag "vcs.revision".
+	// VCSVersion holds the VCS revision, from the "vcs.revision" build setting.
 	VCSVersion string
-	// VCSModified is true if the "vcs.modified" build tag is true.
+	// VCSModified is true if the "vcs.modified" build setting is true.
 	VCSModified bool
-	// BuildNumber holds the build number. If not set explicitly, will be generated from the value of the build tag
-	// "vcs.time".
+	// BuildNumber holds the build number. If not set explicitly, it is the "vcs.time" build setting (or the current time
+	// if that is unavailable) formatted as YYYYMMDDhhmmss.
 	BuildNumber string
-	// AppIdentifier holds the uniform type identifier (UTI) for the application. This should contain only alphanumeric
-	// (A-Z,a-z,0-9), hyphen (-), and period (.) characters. The string should also be in reverse-DNS format. For
-	// example, if your company’s domain is ajax.com and you create an application named Hello, you could assign the
-	// string com.ajax.Hello as your AppIdentifier.
+	// AppIdentifier holds the application's uniform type identifier (UTI), in reverse-DNS form and containing only
+	// alphanumeric (A-Z, a-z, 0-9), hyphen (-), and period (.) characters, e.g. "com.ajax.Hello".
 	AppIdentifier string
 )
 
@@ -112,14 +110,13 @@ func init() {
 	}
 }
 
-// ShortAppVersion returns the app version. If the code was built from a dirty version of a VCS checkout, a trailing '~'
-// character will be added.
+// ShortAppVersion returns AppVersion, with a trailing '~' if VCSModified is true.
 func ShortAppVersion() string {
 	return markAppVersionModified(AppVersion)
 }
 
-// LongAppVersion returns a combination of the app version and the build number. If the code was built from a dirty
-// version of a VCS checkout, a trailing '~' character will be added.
+// LongAppVersion returns AppVersion and BuildNumber joined by '-' (or just AppVersion if BuildNumber is empty), with a
+// trailing '~' if VCSModified is true.
 func LongAppVersion() string {
 	version := AppVersion
 	if BuildNumber != "" {

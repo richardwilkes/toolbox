@@ -15,17 +15,17 @@ import (
 	"net/http"
 )
 
-// BasicAuthWrap wraps the given handler, providing basic HTTP authentication. Populates the User field of Metadata and
-// adjusts the logger within the Metadata to add a user attribute.
+// BasicAuthWrap wraps the given handler, providing basic HTTP authentication. On success, it sets the User field of the
+// request's Metadata (if present) and adds a user attribute to its logger.
 func BasicAuthWrap(next http.Handler, lookup func(user, realm string) ([]byte, bool), hasher func(input string) []byte, realm string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if user, pw, ok := r.BasicAuth(); ok {
 			hashed := hasher(pw)
 			stored, found := lookup(user, realm)
 			if !found {
-				// Compare against a same-length dummy so the comparison cost doesn't reveal whether the user exists.
-				// Without this, an unknown user yields a length mismatch that lets subtle.ConstantTimeCompare return
-				// early, producing a timing side channel usable for username enumeration.
+				// Compare against a same-length dummy so an unknown user costs the same as a wrong password; otherwise
+				// the length mismatch lets subtle.ConstantTimeCompare return early, a timing side channel that enables
+				// username enumeration.
 				stored = make([]byte, len(hashed))
 			}
 			passwordMatch := subtle.ConstantTimeCompare(hashed, stored) == 1

@@ -87,12 +87,12 @@ func Num64[T ~int64 | ~uint64 | ~int | ~uint](crc uint64, data T) uint64 {
 	return crc64.Update(crc, crcTable, buffer[:])
 }
 
-// Float32 writes the given 64-bit float to the hash.
+// Float32 returns the CRC-64 value for the given data starting with the given crc value.
 func Float32[T ~float32](crc uint64, data T) uint64 {
 	return Num32(crc, math.Float32bits(float32(data)))
 }
 
-// Float64 writes the given 64-bit float to the hash.
+// Float64 returns the CRC-64 value for the given data starting with the given crc value.
 func Float64[T ~float64](crc uint64, data T) uint64 {
 	return Num64(crc, math.Float64bits(float64(data)))
 }

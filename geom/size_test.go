@@ -97,7 +97,6 @@ func TestSizeFloor(t *testing.T) {
 	c.Equal(float32(10), result.Width)
 	c.Equal(float32(20), result.Height)
 
-	// Test with negative values
 	s2 := geom.NewSize(-10.7, -20.2)
 	result2 := s2.Floor()
 
@@ -114,7 +113,6 @@ func TestSizeCeil(t *testing.T) {
 	c.Equal(float32(11), result.Width)
 	c.Equal(float32(21), result.Height)
 
-	// Test with negative values
 	s2 := geom.NewSize(-10.7, -20.2)
 	result2 := s2.Ceil()
 
@@ -132,7 +130,6 @@ func TestSizeMin(t *testing.T) {
 	c.Equal(float32(10), result.Width)  // min(10, 15)
 	c.Equal(float32(20), result.Height) // min(25, 20)
 
-	// Test with equal values
 	s3 := geom.NewSize(10, 20)
 	s4 := geom.NewSize(10, 20)
 	result2 := s3.Min(s4)
@@ -151,7 +148,6 @@ func TestSizeMax(t *testing.T) {
 	c.Equal(float32(15), result.Width)  // max(10, 15)
 	c.Equal(float32(25), result.Height) // max(25, 20)
 
-	// Test with equal values
 	s3 := geom.NewSize(10, 20)
 	s4 := geom.NewSize(10, 20)
 	result2 := s3.Max(s4)

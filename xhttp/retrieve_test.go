@@ -130,17 +130,14 @@ func TestRetrieveDataWithLimit(t *testing.T) {
 	content := []byte("0123456789") // 10 bytes
 	c.NoError(os.WriteFile(file, content, 0o600))
 
-	// Under the limit.
 	data, err := xhttp.RetrieveDataWithLimit(context.Background(), nil, file, 100)
 	c.NoError(err)
 	c.Equal(content, data)
 
-	// Exactly at the limit.
 	data, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, int64(len(content)))
 	c.NoError(err)
 	c.Equal(content, data)
 
-	// Over the limit.
 	_, err = xhttp.RetrieveDataWithLimit(context.Background(), nil, file, int64(len(content))-1)
 	c.HasError(err)
 
@@ -168,8 +165,8 @@ func TestRetrieveDataWithLimit_HTTPOverLimitDrainsForReuse(t *testing.T) {
 	_, err := xhttp.RetrieveDataWithLimit(context.Background(), client, server.URL, 16)
 	c.HasError(err)
 
-	// Because the over-limit body was drained before the connection was closed, the keep-alive connection is returned to
-	// the idle pool and the follow-up request reuses it rather than dialing a new one.
+	// Because the over-limit body was drained before the connection was closed, the keep-alive connection is returned
+	// to the idle pool and the follow-up request reuses it rather than dialing a new one.
 	var reused bool
 	trace := &httptrace.ClientTrace{
 		GotConn: func(info httptrace.GotConnInfo) { reused = info.Reused },
@@ -194,7 +191,6 @@ func TestRetrieveData_HTTP(t *testing.T) {
 
 func TestRetrieveData_HTTPS(t *testing.T) {
 	c := check.New(t)
-	// Use httptest.Server (http, not https), but test the code path
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Write([]byte("hello https")) //nolint:errcheck // Can't fail for test, so no need to check
 	}))

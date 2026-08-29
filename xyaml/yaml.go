@@ -22,7 +22,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Load YAML data from the specified path.
+// Load decodes the YAML file at 'path' into 'data'.
 func Load(path string, data any) error {
 	f, err := os.Open(path)
 	if err != nil {
@@ -31,7 +31,7 @@ func Load(path string, data any) error {
 	return load(f, path, data)
 }
 
-// LoadFS YAML data from the specified filesystem path.
+// LoadFS decodes the YAML file at 'path' within 'fsys' into 'data'.
 func LoadFS(fsys fs.FS, path string, data any) error {
 	f, err := fsys.Open(path)
 	if err != nil {
@@ -48,8 +48,7 @@ func load(r io.ReadCloser, path string, data any) error {
 	return nil
 }
 
-// Save YAML data to the specified path. This will use xos.WriteSafeFile so that a failure does not overwrite any
-// original file that may have been present.
+// Save encodes 'data' as YAML to 'path' via xos.WriteSafeFile, so a failure does not overwrite an existing file.
 func Save(path string, data any) error {
 	if err := xos.WriteSafeFile(path, func(w io.Writer) error {
 		encoder := yaml.NewEncoder(w)

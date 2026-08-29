@@ -54,7 +54,8 @@ func JSONResponse(w http.ResponseWriter, req *http.Request, statusCode int, data
 	}
 }
 
-// ExtractJSONBody extracts the body and tries to marshal it from JSON into the data parameter.
+// ExtractJSONBody decodes the request body as JSON into data (with numbers as json.Number), then drains and closes the
+// body.
 func ExtractJSONBody(req *http.Request, data any) error {
 	defer xio.DiscardAndCloseIgnoringErrors(req.Body)
 	decoder := json.NewDecoder(req.Body)
@@ -62,8 +63,8 @@ func ExtractJSONBody(req *http.Request, data any) error {
 	return decoder.Decode(data)
 }
 
-// ClientIP looks at the X-Forwarded-For, Forwarded, and RemoteAddr headers (in that order) to determine the client's
-// actual IP address.
+// ClientIP determines the client's IP address from the X-Forwarded-For header, the Forwarded header, or RemoteAddr, in
+// that order. Returns nil if none yields a valid IP.
 func ClientIP(req *http.Request) net.IP {
 	if xForwardedFor := req.Header.Get("X-Forwarded-For"); xForwardedFor != "" {
 		// X-Forwarded-For can contain multiple values, we take the first one.

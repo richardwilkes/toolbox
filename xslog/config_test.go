@@ -47,7 +47,7 @@ func TestConfig(t *testing.T) {
 		xos.Exit(0)
 	}
 
-	// Run test 1 (console enabled, no options on command line) in subprocesses
+	// Case 1: console enabled, no command-line options
 	c := check.New(t)
 	tmpLogFile := filepath.Join(c.TempDir(), "xslog_test1")
 	cmd := exec.Command(os.Args[0], "-test.run=TestConfig")
@@ -60,7 +60,7 @@ func TestConfig(t *testing.T) {
 	c.NoError(err)
 	c.Contains(string(data), expectedMsgFragment)
 
-	// Run test 2 (console enabled, -quiet on command line) in subprocesses
+	// Case 2: console enabled, -quiet
 	tmpLogFile = filepath.Join(c.TempDir(), "xslog_test2")
 	cmd = exec.Command(os.Args[0], "-test.run=TestConfig")
 	cmd.Env = append(os.Environ(), "XSLOG_FLAGS_TEST=2", "XSLOG_PATH_TEST="+tmpLogFile)
@@ -71,7 +71,7 @@ func TestConfig(t *testing.T) {
 	c.NoError(err)
 	c.Contains(string(data), expectedMsgFragment)
 
-	// Run test 3 (console enabled, -q on command line) in subprocesses
+	// Case 3: console enabled, -q
 	tmpLogFile = filepath.Join(c.TempDir(), "xslog_test3")
 	cmd = exec.Command(os.Args[0], "-test.run=TestConfig")
 	cmd.Env = append(os.Environ(), "XSLOG_FLAGS_TEST=3", "XSLOG_PATH_TEST="+tmpLogFile)
@@ -82,7 +82,7 @@ func TestConfig(t *testing.T) {
 	c.NoError(err)
 	c.Contains(string(data), expectedMsgFragment)
 
-	// Run test 4 (console not enabled, no options on command line) in subprocesses
+	// Case 4: console not enabled, no command-line options
 	tmpLogFile = filepath.Join(c.TempDir(), "xslog_test4")
 	cmd = exec.Command(os.Args[0], "-test.run=TestConfig")
 	cmd.Env = append(os.Environ(), "XSLOG_FLAGS_TEST=4", "XSLOG_PATH_TEST="+tmpLogFile)
@@ -93,7 +93,7 @@ func TestConfig(t *testing.T) {
 	c.NoError(err)
 	c.Contains(string(data), expectedMsgFragment)
 
-	// Run test 5 (console not enabled, -console on command line) in subprocesses
+	// Case 5: console not enabled, -console
 	tmpLogFile = filepath.Join(c.TempDir(), "xslog_test5")
 	cmd = exec.Command(os.Args[0], "-test.run=TestConfig")
 	cmd.Env = append(os.Environ(), "XSLOG_FLAGS_TEST=5", "XSLOG_PATH_TEST="+tmpLogFile)

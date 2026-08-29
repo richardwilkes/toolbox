@@ -26,9 +26,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
-// TestPrettyHandlerNoColorForNonTerminal verifies that a handler over a non-terminal writer (such as a log file)
-// auto-detects Dumb and emits no ANSI escape sequences, while a handler with an explicit color ColorSupportOverride
-// does emit them.
+// TestPrettyHandlerNoColorForNonTerminal verifies that a handler over a non-terminal writer emits no ANSI escapes,
+// while one with an explicit color ColorSupportOverride does.
 func TestPrettyHandlerNoColorForNonTerminal(t *testing.T) {
 	c := check.New(t)
 
@@ -112,9 +111,8 @@ func TestPrettyHandlerStackTrace(t *testing.T) {
 	c.Contains(buf.String(), "\n    [main.main] play/main.go:32\n    [runtime.main] runtime/proc.go:283")
 }
 
-// TestPrettyHandlerDerivedStackTrace verifies that a handler derived via WithAttrs/WithGroup still emits the stack
-// trace carried by its own records. The JSON handler's stack-capturing ReplaceAttr closure is bound to the original
-// handler, so a derived clone must share the capture slot rather than reading its own empty copy.
+// TestPrettyHandlerDerivedStackTrace verifies that handlers derived via WithAttrs/WithGroup still emit stack traces.
+// The JSON handler's ReplaceAttr closure is bound to the original handler, so clones must share its capture slot.
 func TestPrettyHandlerDerivedStackTrace(t *testing.T) {
 	c := check.New(t)
 	for _, derive := range []struct {
@@ -138,7 +136,7 @@ func TestPrettyHandlerDerivedStackTrace(t *testing.T) {
 }
 
 // TestPrettyHandlerDerivedStackTraceNoLeak verifies that a stack trace handled by a derived clone does not leak into a
-// later, unrelated record handled by the base handler.
+// later record handled by the base handler.
 func TestPrettyHandlerDerivedStackTraceNoLeak(t *testing.T) {
 	c := check.New(t)
 	var buf bytes.Buffer

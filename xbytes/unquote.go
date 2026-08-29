@@ -13,8 +13,8 @@ import (
 	"unicode/utf8"
 )
 
-// Unquote strips up to one set of surrounding single or double quotes from the bytes and returns them. For a more
-// capable version that supports different quoting types and unescaping, consider using strconv.Unquote().
+// Unquote strips one set of matching surrounding single or double quotes, if present. For unescaping and other quoting
+// types, consider strconv.Unquote.
 func Unquote(text []byte) []byte {
 	if len(text) > 1 {
 		if ch1, _ := utf8.DecodeRune(text); ch1 == '"' || ch1 == '\'' {

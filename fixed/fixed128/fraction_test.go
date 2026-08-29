@@ -42,30 +42,24 @@ func TestFractionFunctions(t *testing.T) {
 func testFractionFunctions[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test NewFraction
-	frac := fixed128.NewFraction[T]("3/4") // 3/4
-	// The precision depends on the decimal places of T
+	frac := fixed128.NewFraction[T]("3/4")
 	result := frac.Value().String()
-	c.True(strings.HasPrefix(result, "0.7")) // Should be 0.75 or 0.7 depending on precision
+	c.True(strings.HasPrefix(result, "0.7")) // 0.75, or 0.7 for D1
 
-	// Test Normalize - only handles negative denominators and zero division
-	frac2 := fixed128.NewFraction[T]("6/-8") // 6/-8 should become -6/8
+	frac2 := fixed128.NewFraction[T]("6/-8")
 	frac2.Normalize()
 	c.Equal("-6/8", frac2.String()) // Normalize doesn't reduce fractions, just fixes sign
 
-	// Test with positive denominator
 	frac3 := fixed128.NewFraction[T]("6/8")
 	frac3.Normalize()
-	c.Equal("6/8", frac3.String()) // Should remain unchanged
+	c.Equal("6/8", frac3.String())
 
-	// Test StringWithSign for fractions
 	posFrac := fixed128.NewFraction[T]("1/2")
 	c.Equal("+1/2", posFrac.StringWithSign())
 
 	negFrac := fixed128.NewFraction[T]("-1/2")
 	c.Equal("-1/2", negFrac.StringWithSign())
 
-	// Test JSON marshaling/unmarshaling for fractions
 	data, err := json.Marshal(posFrac)
 	c.NoError(err)
 	c.Equal(`"1/2"`, string(data))
@@ -88,12 +82,10 @@ func TestAdditionalFractionEdgeCases(t *testing.T) {
 func testAdditionalFractionEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test fraction with denominator = 1
 	wholeFrac := fixed128.NewFraction[T]("5")
 	c.Equal("5", wholeFrac.String())
 	c.Equal("+5", wholeFrac.StringWithSign())
 
-	// Test fraction JSON unmarshaling error
 	var frac fixed128.Fraction[T]
 	err := json.Unmarshal([]byte("invalid json"), &frac)
 	c.HasError(err)

@@ -14,7 +14,8 @@ import (
 	"strconv"
 )
 
-// Kind represents the kind of terminal in use.
+// Kind represents the kind of terminal in use. Its methods return the escape sequence for the described operation, or
+// an empty string if the kind doesn't support it.
 type Kind int
 
 // Possible terminal kinds.
@@ -35,7 +36,7 @@ const (
 var ansi256ToAnsi16 = []uint8{
 	// Standard colors
 	30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97,
-	// Colors
+	// 6x6x6 color cube
 	30, 30, 30, 34, 34, 34, 30, 30, 34, 34, 34, 34, 32, 32, 90, 34, 34, 34,
 	32, 32, 36, 36, 36, 36, 32, 32, 36, 36, 36, 36, 32, 32, 92, 36, 36, 36,
 	30, 30, 30, 34, 34, 34, 30, 30, 90, 34, 34, 34, 32, 90, 90, 90, 94, 94,
@@ -66,8 +67,7 @@ func (k Kind) Reset() string {
 	return "\033[m"
 }
 
-// Up moves the cursor up 'count' rows. If this would put it beyond the top edge of the screen, it will instead go to
-// the top edge of the screen.
+// Up moves the cursor up 'count' rows, stopping at the top edge of the screen.
 func (k Kind) Up(count int) string {
 	if k == Dumb {
 		return ""
@@ -75,8 +75,7 @@ func (k Kind) Up(count int) string {
 	return start + strconv.Itoa(count) + "A"
 }
 
-// Down moves the cursor down 'count' rows. If this would put it beyond the bottom edge of the screen, it will instead
-// go to the bottom edge of the screen.
+// Down moves the cursor down 'count' rows, stopping at the bottom edge of the screen.
 func (k Kind) Down(count int) string {
 	if k == Dumb {
 		return ""
@@ -84,8 +83,7 @@ func (k Kind) Down(count int) string {
 	return start + strconv.Itoa(count) + "B"
 }
 
-// Right moves the cursor right 'count' columns. If this would put it beyond the right edge of the screen, it will
-// instead go to the right edge of the screen.
+// Right moves the cursor right 'count' columns, stopping at the right edge of the screen.
 func (k Kind) Right(count int) string {
 	if k == Dumb {
 		return ""
@@ -93,8 +91,7 @@ func (k Kind) Right(count int) string {
 	return start + strconv.Itoa(count) + "C"
 }
 
-// Left moves the cursor left 'count' columns. If this would put it beyond the left edge of the screen, it will instead
-// go to the left edge of the screen.
+// Left moves the cursor left 'count' columns, stopping at the left edge of the screen.
 func (k Kind) Left(count int) string {
 	if k == Dumb {
 		return ""
@@ -110,7 +107,7 @@ func (k Kind) Position(row, column int) string {
 	return start + strconv.Itoa(row) + ";" + strconv.Itoa(column) + "H"
 }
 
-// Clear the screen and position the cursor at row 1, column 1.
+// Clear clears the screen.
 func (k Kind) Clear() string {
 	if k == Dumb {
 		return ""
@@ -198,7 +195,7 @@ func (k Kind) Bold() string {
 	return "\033[1m"
 }
 
-// NoBold turns off bold text formatting.
+// NoBold turns off bold and dim text formatting.
 func (k Kind) NoBold() string {
 	if k == Dumb {
 		return ""
@@ -214,7 +211,7 @@ func (k Kind) Dim() string {
 	return "\033[2m"
 }
 
-// NoDim turns off dim text formatting.
+// NoDim turns off dim and bold text formatting.
 func (k Kind) NoDim() string {
 	return k.NoBold()
 }

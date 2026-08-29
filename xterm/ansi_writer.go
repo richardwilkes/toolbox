@@ -24,9 +24,8 @@ var (
 	_ io.ByteWriter   = &AnsiWriter{}
 )
 
-// ansiSequenceMatcher matches ANSI CSI escape sequences (color/style as well as cursor movement, erase, etc.) so their
-// zero-width bytes aren't counted when measuring visible text width. A CSI sequence is the introducer (ESC [) followed
-// by any parameter bytes, any intermediate bytes, and a single final byte in the range '@' to '~'.
+// ansiSequenceMatcher matches ANSI CSI escape sequences (ESC [ followed by parameter bytes, intermediate bytes, and a
+// final byte in the range '@' to '~') so their zero-width bytes aren't counted when measuring visible text width.
 var ansiSequenceMatcher = regexp.MustCompile(`\033\[[0-9;?]*[\x20-\x2f]*[\x40-\x7e]`)
 
 // AnsiWriter provides support for ANSI terminal escape sequences.
@@ -35,18 +34,17 @@ type AnsiWriter struct {
 	kind Kind
 }
 
-// NewAnsiWriter creates a new writer capable of emitting ANSI escape sequences for terminal control as well as color
-// for those terminals that support it.
+// NewAnsiWriter creates a new AnsiWriter for 'w', detecting its terminal kind with DetectKind.
 func NewAnsiWriter(w io.Writer) *AnsiWriter {
 	return &AnsiWriter{w: w, kind: DetectKind(w)}
 }
 
-// Kind returns the term.Kind that this writer has been configured for.
+// Kind returns the Kind this writer is configured for.
 func (a *AnsiWriter) Kind() Kind {
 	return a.kind
 }
 
-// SetKind overrides the automatically detected terminal kind with the specified one.
+// SetKind overrides the detected terminal kind. Invalid kinds are logged and ignored.
 func (a *AnsiWriter) SetKind(kind Kind) {
 	if kind < Dumb || kind > Color24 {
 		errs.Log(errs.Newf("invalid terminal kind %d", kind))
@@ -65,26 +63,22 @@ func (a *AnsiWriter) Reset() {
 	a.writeString(a.kind.Reset())
 }
 
-// Up moves the cursor up 'count' rows. If this would put it beyond the top edge of the screen, it will instead go to
-// the top edge of the screen.
+// Up moves the cursor up 'count' rows, stopping at the top edge of the screen.
 func (a *AnsiWriter) Up(count int) {
 	a.writeString(a.kind.Up(count))
 }
 
-// Down moves the cursor down 'count' rows. If this would put it beyond the bottom edge of the screen, it will instead
-// go to the bottom edge of the screen.
+// Down moves the cursor down 'count' rows, stopping at the bottom edge of the screen.
 func (a *AnsiWriter) Down(count int) {
 	a.writeString(a.kind.Down(count))
 }
 
-// Right moves the cursor right 'count' columns. If this would put it beyond the right edge of the screen, it will
-// instead go to the right edge of the screen.
+// Right moves the cursor right 'count' columns, stopping at the right edge of the screen.
 func (a *AnsiWriter) Right(count int) {
 	a.writeString(a.kind.Right(count))
 }
 
-// Left moves the cursor left 'count' columns. If this would put it beyond the left edge of the screen, it will instead
-// go to the left edge of the screen.
+// Left moves the cursor left 'count' columns, stopping at the left edge of the screen.
 func (a *AnsiWriter) Left(count int) {
 	a.writeString(a.kind.Left(count))
 }
@@ -94,7 +88,7 @@ func (a *AnsiWriter) Position(row, column int) {
 	a.writeString(a.kind.Position(row, column))
 }
 
-// Clear the screen and position the cursor at row 1, column 1.
+// Clear clears the screen.
 func (a *AnsiWriter) Clear() {
 	a.writeString(a.kind.Clear())
 }
@@ -149,7 +143,7 @@ func (a *AnsiWriter) Bold() {
 	a.writeString(a.kind.Bold())
 }
 
-// NoBold turns off bold text formatting.
+// NoBold turns off bold and dim text formatting.
 func (a *AnsiWriter) NoBold() {
 	a.writeString(a.kind.NoBold())
 }
@@ -159,7 +153,7 @@ func (a *AnsiWriter) Dim() {
 	a.writeString(a.kind.Dim())
 }
 
-// NoDim turns off dim text formatting.
+// NoDim turns off dim and bold text formatting.
 func (a *AnsiWriter) NoDim() {
 	a.writeString(a.kind.NoDim())
 }
@@ -438,12 +432,12 @@ func (a *AnsiWriter) BgRGB(r, g, b uint8) {
 	a.writeString(a.kind.BgRGB(r, g, b))
 }
 
-// Write implements the io.Writer interface.
+// Write implements io.Writer.
 func (a *AnsiWriter) Write(p []byte) (n int, err error) {
 	return a.w.Write(p)
 }
 
-// WriteString implements the io.StringWriter interface.
+// WriteString implements io.StringWriter.
 func (a *AnsiWriter) WriteString(s string) (n int, err error) {
 	return io.WriteString(a.w, s)
 }
@@ -452,7 +446,7 @@ func (a *AnsiWriter) writeString(s string) {
 	_, _ = io.WriteString(a.w, s) //nolint:errcheck // We don't care about the error here.
 }
 
-// WriteByte implements the io.ByteWriter interface.
+// WriteByte implements io.ByteWriter.
 func (a *AnsiWriter) WriteByte(c byte) error {
 	_, err := a.w.Write([]byte{c})
 	return err
@@ -462,7 +456,8 @@ func (a *AnsiWriter) writeByte(c byte) {
 	_, _ = a.w.Write([]byte{c}) //nolint:errcheck // We don't care about the error here.
 }
 
-// WrapText prints the 'prefix' to 'out' and then wraps 'text' in the remaining space.
+// WrapText writes 'prefix' followed by 'text' word-wrapped to the width of the underlying terminal, with continuation
+// lines indented to the visible width of 'prefix'.
 func (a *AnsiWriter) WrapText(prefix, text string) {
 	a.writeString(prefix)
 	avail, _ := Size(a.w)

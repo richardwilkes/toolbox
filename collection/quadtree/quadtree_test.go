@@ -100,7 +100,6 @@ func TestEmptyQuadTree(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Test empty quadtree behavior
 	c.Equal(0, q.Size())
 	c.Equal(0, len(q.All()))
 	c.False(q.ContainsPoint(geom.Point{}))
@@ -108,7 +107,6 @@ func TestEmptyQuadTree(t *testing.T) {
 	c.False(q.Intersects(geom.NewRect(0, 0, 1, 1)))
 	c.False(q.ContainedByRect(geom.NewRect(0, 0, 100, 100)))
 
-	// Test find methods on empty tree
 	c.Equal(0, len(q.FindContainsPoint(geom.Point{})))
 	c.Equal(0, len(q.FindContainsRect(geom.NewRect(0, 0, 1, 1))))
 	c.Equal(0, len(q.FindIntersects(geom.NewRect(0, 0, 1, 1))))
@@ -119,7 +117,6 @@ func TestInsertEmptyNode(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Insert node with empty bounds
 	emptyNode := newNode(0, 0, 0, 0)
 	q.Insert(emptyNode)
 	c.Equal(0, q.Size()) // Empty nodes should not be inserted
@@ -138,19 +135,16 @@ func TestRemove(t *testing.T) {
 	q.Insert(n3)
 	c.Equal(3, q.Size())
 
-	// Remove existing node
 	q.Remove(n2)
 	c.Equal(2, q.Size())
 	c.False(slices.Contains(q.All(), n2))
 	c.True(slices.Contains(q.All(), n1))
 	c.True(slices.Contains(q.All(), n3))
 
-	// Remove non-existing node (should not change size)
 	nonExisting := newNode(100, 100, 10, 10)
 	q.Remove(nonExisting)
 	c.Equal(2, q.Size())
 
-	// Remove remaining nodes
 	q.Remove(n1)
 	q.Remove(n3)
 	c.Equal(0, q.Size())
@@ -161,13 +155,11 @@ func TestClear(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Add some nodes
 	for i := range 10 {
 		q.Insert(newNode(float32(i*10), float32(i*10), 5, 5))
 	}
 	c.Equal(10, q.Size())
 
-	// Clear and verify
 	q.Clear()
 	c.Equal(0, q.Size())
 	c.Equal(0, len(q.All()))
@@ -177,24 +169,20 @@ func TestClear(t *testing.T) {
 func TestThreshold(t *testing.T) {
 	c := check.New(t)
 
-	// Test default threshold (Threshold field starts at 0, internal threshold() method returns default)
 	q1 := &quadtree.QuadTree[*node]{}
 	c.Equal(0, q1.Threshold) // Field is 0 by default
 
-	// Test custom threshold
 	q2 := &quadtree.QuadTree[*node]{Threshold: 10}
 	c.Equal(10, q2.Threshold)
 
-	// Test threshold below minimum (should use default internally)
+	// A threshold below the minimum falls back to the default internally
 	q3 := &quadtree.QuadTree[*node]{Threshold: 2}
 	c.Equal(2, q3.Threshold) // Field value is preserved
 
-	// Test that internal threshold logic works by triggering reorganization
-	// Add enough nodes to trigger reorganization behavior
+	// Insert enough nodes to exercise the internal threshold
 	for i := range quadtree.DefaultQuadTreeThreshold * 2 {
 		q3.Insert(newNode(float32(i), 0, 1, 1))
 	}
-	// If internal threshold is working correctly, the tree should handle this without issues
 	c.True(q3.Size() > 0)
 }
 
@@ -207,13 +195,11 @@ func TestIntersects(t *testing.T) {
 	q.Insert(n1)
 	q.Insert(n2)
 
-	// Test intersections
 	c.True(q.Intersects(geom.NewRect(5, 5, 10, 10)))      // Overlaps with n1
 	c.True(q.Intersects(geom.NewRect(20, 20, 10, 10)))    // Overlaps with n2
 	c.True(q.Intersects(geom.NewRect(0, 0, 30, 30)))      // Overlaps both
 	c.False(q.Intersects(geom.NewRect(100, 100, 10, 10))) // No overlap
 
-	// Test FindIntersects
 	intersects1 := q.FindIntersects(geom.NewRect(5, 5, 10, 10))
 	c.True(slices.Contains(intersects1, n1))
 
@@ -242,7 +228,6 @@ func TestContainedByRect(t *testing.T) {
 	c.True(slices.Contains(contained, n1))
 	c.False(slices.Contains(contained, n2))
 
-	// Test with container that contains nothing
 	smallContainer := geom.NewRect(100, 100, 5, 5)
 	c.False(q.ContainedByRect(smallContainer))
 	c.Equal(0, len(q.FindContainedByRect(smallContainer)))
@@ -252,7 +237,6 @@ func TestReorganize(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Add nodes that will initially be outside
 	nodes := make([]*node, 0, 10)
 	for i := range 10 {
 		n := newNode(float32(i*100), float32(i*100), 10, 10)
@@ -263,7 +247,6 @@ func TestReorganize(t *testing.T) {
 	initialSize := q.Size()
 	c.Equal(10, initialSize)
 
-	// Reorganize and verify all nodes are still present
 	q.Reorganize()
 	c.Equal(initialSize, q.Size())
 
@@ -272,7 +255,6 @@ func TestReorganize(t *testing.T) {
 		c.True(slices.Contains(all, n))
 	}
 
-	// Test reorganize with empty tree
 	q.Clear()
 	q.Reorganize()
 	c.Equal(0, q.Size())
@@ -297,38 +279,30 @@ func TestMatchedMethods(t *testing.T) {
 
 	matcher := &testMatcher{target: n1}
 
-	// Test MatchedContainsPoint
 	c.True(q.MatchedContainsPoint(matcher, geom.NewPoint(5, 5)))    // n1 contains point
 	c.False(q.MatchedContainsPoint(matcher, geom.NewPoint(25, 25))) // n2 contains point but doesn't match
 
-	// Test FindMatchedContainsPoint
 	matched := q.FindMatchedContainsPoint(matcher, geom.NewPoint(5, 5))
 	c.Equal(1, len(matched))
 	c.Equal(n1, matched[0])
 
-	// Test MatchedIntersects
 	c.True(q.MatchedIntersects(matcher, geom.NewRect(5, 5, 10, 10)))
 	c.False(q.MatchedIntersects(matcher, geom.NewRect(25, 25, 10, 10)))
 
-	// Test FindMatchedIntersects
 	matchedIntersects := q.FindMatchedIntersects(matcher, geom.NewRect(0, 0, 30, 30))
 	c.Equal(1, len(matchedIntersects))
 	c.Equal(n1, matchedIntersects[0])
 
-	// Test MatchedContainsRect
 	c.True(q.MatchedContainsRect(matcher, geom.NewRect(2, 2, 5, 5)))
 	c.False(q.MatchedContainsRect(matcher, geom.NewRect(22, 22, 5, 5)))
 
-	// Test FindMatchedContainsRect
 	matchedContains := q.FindMatchedContainsRect(matcher, geom.NewRect(2, 2, 5, 5))
 	c.Equal(1, len(matchedContains))
 	c.Equal(n1, matchedContains[0])
 
-	// Test MatchedContainedByRect
 	c.True(q.MatchedContainedByRect(matcher, geom.NewRect(0, 0, 50, 50)))
 	c.False(q.MatchedContainedByRect(matcher, geom.NewRect(5, 5, 3, 3)))
 
-	// Test FindMatchedContainedByRect
 	matchedContainedBy := q.FindMatchedContainedByRect(matcher, geom.NewRect(0, 0, 50, 50))
 	c.Equal(1, len(matchedContainedBy))
 	c.Equal(n1, matchedContainedBy[0])
@@ -338,7 +312,6 @@ func TestLargeDataset(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Insert many nodes to test tree subdivision
 	nodeCount := quadtree.DefaultQuadTreeThreshold * 10
 	nodes := make([]*node, 0, nodeCount)
 
@@ -355,18 +328,16 @@ func TestLargeDataset(t *testing.T) {
 
 	c.Equal(nodeCount, q.Size())
 
-	// Test that all nodes are findable
 	all := q.All()
 	c.Equal(nodeCount, len(all))
 	for _, n := range nodes {
 		c.True(slices.Contains(all, n))
 	}
 
-	// Test spatial queries work correctly
 	queryRect := geom.NewRect(100, 100, 200, 200)
 	intersecting := q.FindIntersects(queryRect)
 
-	// Verify results by checking manually
+	// Verify no false positives
 	for _, n := range intersecting {
 		c.True(n.Bounds().Intersects(queryRect))
 	}
@@ -383,24 +354,20 @@ func TestEdgeCases(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Test with nodes at exact boundaries
 	n1 := newNode(0, 0, 10, 10)
 	n2 := newNode(10, 10, 10, 10) // Touches corner of n1
 	q.Insert(n1)
 	q.Insert(n2)
 
-	// Test point queries at boundaries
 	c.True(q.ContainsPoint(geom.NewPoint(0, 0)))    // Corner of n1
 	c.True(q.ContainsPoint(geom.NewPoint(10, 10)))  // Corner of both
 	c.False(q.ContainsPoint(geom.NewPoint(20, 20))) // Outside both
 
-	// Test with very small nodes
 	tiny := newNode(100, 100, 0.001, 0.001)
 	q.Insert(tiny)
 	c.True(q.ContainsPoint(geom.NewPoint(100, 100)))
 	c.False(q.ContainsPoint(geom.NewPoint(100.1, 100.1)))
 
-	// Test with very large nodes
 	huge := newNode(-1000, -1000, 2000, 2000)
 	q.Insert(huge)
 	c.True(q.ContainsPoint(geom.NewPoint(500, 500)))
@@ -430,12 +397,10 @@ func TestTreeSubdivision(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create a scenario that forces tree subdivision
-	// Start with a node that will establish the root bounds
 	initialNode := newNode(50, 50, 10, 10)
 	q.Insert(initialNode)
 
-	// Add many nodes within the same area to force subdivision
+	// Add enough nodes in a small area to force subdivision
 	for i := range quadtree.DefaultQuadTreeThreshold + 10 {
 		x := 50 + float32(i%8)*1.5 // Spread nodes in a small area
 		y := 50 + float32(i/8)*1.5
@@ -443,23 +408,18 @@ func TestTreeSubdivision(t *testing.T) {
 		q.Insert(n)
 	}
 
-	// Now test find methods that should traverse the tree structure
 	searchRect := geom.NewRect(50, 50, 20, 20)
 
-	// Test FindContainsPoint with tree traversal
 	found := q.FindContainsPoint(geom.NewPoint(55, 55))
 	c.True(len(found) > 0)
 
-	// Test FindContainsRect with tree traversal
 	smallRect := geom.NewRect(51, 51, 0.5, 0.5)
 	containing := q.FindContainsRect(smallRect)
 	c.True(len(containing) > 0)
 
-	// Test FindIntersects with tree traversal
 	intersecting := q.FindIntersects(searchRect)
 	c.True(len(intersecting) > 0)
 
-	// Test FindContainedByRect with tree traversal
 	largeRect := geom.NewRect(45, 45, 30, 30)
 	contained := q.FindContainedByRect(largeRect)
 	c.True(len(contained) > 0)
@@ -469,54 +429,44 @@ func TestMatchedMethodsWithTreeTraversal(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create nodes that will force tree subdivision
 	target1 := newNode(25, 25, 10, 10)
 	target2 := newNode(75, 75, 10, 10)
 	q.Insert(target1)
 	q.Insert(target2)
 
-	// Add many other nodes to force tree creation
+	// Add enough other nodes to force subdivision
 	for i := range quadtree.DefaultQuadTreeThreshold + 5 {
 		x := float32(i%10) * 10
 		y := float32(i/10) * 10
 		q.Insert(newNode(x, y, 5, 5))
 	}
 
-	// Create matcher that only matches our target nodes
 	matcher := &multiTargetMatcher{targets: []*node{target1, target2}}
 
-	// Test MatchedContainsPoint with tree traversal
 	c.True(q.MatchedContainsPoint(matcher, geom.NewPoint(30, 30))) // In target1
 	c.False(q.MatchedContainsPoint(matcher, geom.NewPoint(5, 5)))  // Not in targets
 
-	// Test FindMatchedContainsPoint with tree traversal
 	matchedPoints := q.FindMatchedContainsPoint(matcher, geom.NewPoint(80, 80))
 	c.Equal(1, len(matchedPoints))
 	c.Equal(target2, matchedPoints[0])
 
-	// Test MatchedIntersects with tree traversal
 	testRect := geom.NewRect(20, 20, 20, 20)
 	c.True(q.MatchedIntersects(matcher, testRect))
 
-	// Test FindMatchedIntersects with tree traversal
 	matchedIntersects := q.FindMatchedIntersects(matcher, testRect)
 	c.True(len(matchedIntersects) > 0)
 	c.True(slices.Contains(matchedIntersects, target1))
 
-	// Test MatchedContainsRect with tree traversal
 	smallRect := geom.NewRect(26, 26, 5, 5)
 	c.True(q.MatchedContainsRect(matcher, smallRect))
 
-	// Test FindMatchedContainsRect with tree traversal
 	matchedContains := q.FindMatchedContainsRect(matcher, smallRect)
 	c.Equal(1, len(matchedContains))
 	c.Equal(target1, matchedContains[0])
 
-	// Test MatchedContainedByRect with tree traversal
 	largeRect := geom.NewRect(20, 20, 20, 20)
 	c.True(q.MatchedContainedByRect(matcher, largeRect))
 
-	// Test FindMatchedContainedByRect with tree traversal
 	matchedContainedBy := q.FindMatchedContainedByRect(matcher, largeRect)
 	c.Equal(1, len(matchedContainedBy))
 	c.Equal(target1, matchedContainedBy[0])
@@ -534,19 +484,16 @@ func TestNodeBoundsMethod(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create a scenario that forces internal node creation
+	// Add enough nodes to force subdivision
 	for i := range quadtree.DefaultQuadTreeThreshold + 5 {
 		x := float32(i%10) * 2
 		y := float32(i/10) * 2
 		q.Insert(newNode(x, y, 1, 1))
 	}
 
-	// Force reorganization to ensure internal structure
 	q.Reorganize()
 	c.True(q.Size() > 0)
 
-	// The node.Bounds() method should be called during various operations
-	// Test operations that would call internal node bounds
 	searchRect := geom.NewRect(0, 0, 5, 5)
 	intersects := q.FindIntersects(searchRect)
 	c.True(len(intersects) >= 0) //nolint:gocritic // This is a valid test for the number of intersects
@@ -561,21 +508,18 @@ func TestNodeBoundsMethod(t *testing.T) {
 func TestThresholdEdgeCases(t *testing.T) {
 	c := check.New(t)
 
-	// Test with threshold exactly at minimum
 	q1 := &quadtree.QuadTree[*node]{Threshold: quadtree.MinQuadTreeThreshold}
 	c.Equal(quadtree.MinQuadTreeThreshold, q1.Threshold)
 
-	// Test with threshold below minimum (should use default internally)
+	// A threshold below the minimum falls back to the default internally
 	q2 := &quadtree.QuadTree[*node]{Threshold: 1}
 	c.Equal(1, q2.Threshold) // Field preserves the value
 
-	// Add nodes to trigger threshold logic
 	for i := range 10 {
 		q2.Insert(newNode(float32(i*100), float32(i*100), 5, 5))
 	}
 	c.Equal(10, q2.Size())
 
-	// Test with negative threshold
 	q3 := &quadtree.QuadTree[*node]{Threshold: -5}
 	for i := range 5 {
 		q3.Insert(newNode(float32(i), 0, 1, 1))
@@ -587,11 +531,9 @@ func TestComplexTreeOperations(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create a complex tree structure with multiple levels
 	nodes := make([]*node, 0, 200)
 	r := rand.New(rand.NewPCG(123, 456)) //nolint:gosec // Yes, it is ok to use a weak prng here
 
-	// Add nodes in a specific pattern that will create deep subdivisions
 	for i := range 200 {
 		// Create clusters of nodes to force subdivision
 		cluster := i / 20
@@ -606,11 +548,9 @@ func TestComplexTreeOperations(t *testing.T) {
 
 	c.Equal(200, q.Size())
 
-	// Test that all query methods work correctly with complex tree
 	testRect := geom.NewRect(25, 25, 50, 50)
 	testPoint := geom.NewPoint(50, 50)
 
-	// Test all find methods
 	containsPoint := q.FindContainsPoint(testPoint)
 	c.True(len(containsPoint) >= 0) //nolint:gocritic // This is a valid test for the number of containsPoint
 
@@ -623,7 +563,6 @@ func TestComplexTreeOperations(t *testing.T) {
 	containedBy := q.FindContainedByRect(geom.NewRect(0, 0, 500, 500))
 	c.Equal(200, len(containedBy)) // All nodes should be contained
 
-	// Test bulk removal
 	removeCount := 0
 	for i, n := range nodes {
 		if i%3 == 0 { // Remove every third node
@@ -633,7 +572,6 @@ func TestComplexTreeOperations(t *testing.T) {
 	}
 	c.Equal(200-removeCount, q.Size())
 
-	// Test reorganization after removals
 	q.Reorganize()
 	c.Equal(200-removeCount, q.Size())
 }
@@ -642,7 +580,6 @@ func TestPointOnBoundaries(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Add nodes that share boundaries
 	n1 := newNode(0, 0, 10, 10)
 	n2 := newNode(10, 0, 10, 10)  // Shares right edge with n1
 	n3 := newNode(0, 10, 10, 10)  // Shares bottom edge with n1
@@ -653,18 +590,15 @@ func TestPointOnBoundaries(t *testing.T) {
 	q.Insert(n3)
 	q.Insert(n4)
 
-	// Test boundary points
 	c.True(q.ContainsPoint(geom.NewPoint(0, 0)))   // Corner
 	c.True(q.ContainsPoint(geom.NewPoint(10, 0)))  // Edge point
 	c.True(q.ContainsPoint(geom.NewPoint(0, 10)))  // Edge point
 	c.True(q.ContainsPoint(geom.NewPoint(10, 10))) // Corner shared by multiple
 
-	// Test with matcher on boundaries
 	matcher := &testMatcher{target: n1}
 	c.True(q.MatchedContainsPoint(matcher, geom.NewPoint(5, 5)))
 	c.False(q.MatchedContainsPoint(matcher, geom.NewPoint(15, 15)))
 
-	// Test find methods on boundaries
 	boundaryPoints := []geom.Point{
 		{X: 0, Y: 0},
 		{X: 10, Y: 0},
@@ -686,7 +620,6 @@ func TestEmptyRectInsertionScenarios(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Test various empty rectangle scenarios
 	emptyWidth := newNode(10, 10, 0, 5)
 	emptyHeight := newNode(10, 10, 5, 0)
 	emptyBoth := newNode(10, 10, 0, 0)
@@ -699,7 +632,6 @@ func TestEmptyRectInsertionScenarios(t *testing.T) {
 	// Empty rectangles should not be inserted
 	c.Equal(initialSize, q.Size())
 
-	// But valid rectangles should still work
 	validNode := newNode(10, 10, 5, 5)
 	q.Insert(validNode)
 	c.Equal(initialSize+1, q.Size())
@@ -708,8 +640,6 @@ func TestEmptyRectInsertionScenarios(t *testing.T) {
 func TestDifferentNumericTypes(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different float types - the constraint limits us to Float types
-	// Test with explicit float32 operations
 	q64 := &quadtree.QuadTree[*node]{}
 	n64_1 := newNode(0.5, 0.5, 10.5, 10.5)
 	n64_2 := newNode(15.7, 15.3, 5.2, 5.8)
@@ -731,7 +661,6 @@ func TestNilRootScenarios(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Test all methods on empty tree (nil root)
 	c.False(q.ContainsPoint(geom.NewPoint(0, 0)))
 	c.False(q.ContainsRect(geom.NewRect(0, 0, 10, 10)))
 	c.False(q.Intersects(geom.NewRect(0, 0, 10, 10)))
@@ -742,7 +671,6 @@ func TestNilRootScenarios(t *testing.T) {
 	c.Equal(0, len(q.FindIntersects(geom.NewRect(0, 0, 10, 10))))
 	c.Equal(0, len(q.FindContainedByRect(geom.NewRect(0, 0, 100, 100))))
 
-	// Test matched methods on empty tree
 	matcher := &testMatcher{target: newNode(0, 0, 1, 1)}
 	c.False(q.MatchedContainsPoint(matcher, geom.NewPoint(0, 0)))
 	c.False(q.MatchedContainsRect(matcher, geom.NewRect(0, 0, 1, 1)))
@@ -759,11 +687,9 @@ func TestReorganizeWithEmptyTree(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Reorganize empty tree
 	q.Reorganize()
 	c.Equal(0, q.Size())
 
-	// Add some nodes, clear, then reorganize
 	q.Insert(newNode(0, 0, 10, 10))
 	q.Insert(newNode(20, 20, 10, 10))
 	c.Equal(2, q.Size())
@@ -779,21 +705,17 @@ func TestInsertNodeThatDoesNotFitInRoot(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Insert first node to establish root bounds
 	n1 := newNode(10, 10, 10, 10)
 	q.Insert(n1)
 
-	// Insert node that's completely outside root bounds
 	n2 := newNode(100, 100, 10, 10)
 	q.Insert(n2)
 
-	// Both should be present
 	c.Equal(2, q.Size())
 	all := q.All()
 	c.True(slices.Contains(all, n1))
 	c.True(slices.Contains(all, n2))
 
-	// The outside node should be in the outside list
 	c.True(q.ContainsPoint(geom.NewPoint(105, 105)))
 }
 
@@ -804,7 +726,6 @@ func TestTreeOperationsWithSingleNode(t *testing.T) {
 	n := newNode(5, 5, 10, 10)
 	q.Insert(n)
 
-	// Test all operations with single node
 	c.True(q.ContainsPoint(geom.NewPoint(10, 10)))
 	c.False(q.ContainsPoint(geom.NewPoint(20, 20)))
 
@@ -817,7 +738,6 @@ func TestTreeOperationsWithSingleNode(t *testing.T) {
 	c.True(q.ContainedByRect(geom.NewRect(0, 0, 20, 20)))
 	c.False(q.ContainedByRect(geom.NewRect(6, 6, 5, 5)))
 
-	// Test find methods
 	found := q.FindContainsPoint(geom.NewPoint(10, 10))
 	c.Equal(1, len(found))
 	c.Equal(n, found[0])
@@ -839,8 +759,6 @@ func TestInternalNodeMethods(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create a tree structure that will exercise internal node methods
-	// Add nodes in specific locations to force tree subdivision and test internal methods
 	baseNodes := []*node{
 		newNode(10, 10, 5, 5),
 		newNode(20, 10, 5, 5),
@@ -859,22 +777,15 @@ func TestInternalNodeMethods(t *testing.T) {
 		q.Insert(newNode(x, y, 1, 1))
 	}
 
-	// Test scenarios that will exercise node.intersects() and node.containedByRect()
-	// These methods return bool and may have branches not covered
-
-	// Test case where intersects returns false at node level
 	noIntersectRect := geom.NewRect(100, 100, 5, 5)
 	c.False(q.Intersects(noIntersectRect))
 
-	// Test case where containedByRect returns false at node level
 	noContainRect := geom.NewRect(5, 5, 2, 2)
 	c.False(q.ContainedByRect(noContainRect))
 
-	// Test edge case where rect intersects node bounds but no contents intersect
 	edgeRect := geom.NewRect(8, 8, 1, 1)
 	q.Intersects(edgeRect) // Exercise the intersects path
 
-	// Test edge case for containedByRect where rect intersects but doesn't contain
 	edgeContainRect := geom.NewRect(9, 9, 1, 1)
 	q.ContainedByRect(edgeContainRect) // Exercise the containedByRect path
 }
@@ -883,9 +794,6 @@ func TestCoverageGaps(t *testing.T) {
 	c := check.New(t)
 	q := &quadtree.QuadTree[*node]{}
 
-	// Create specific scenarios to hit the remaining uncovered branches
-
-	// Test threshold method with exactly at minimum threshold
 	q.Threshold = quadtree.MinQuadTreeThreshold
 	for i := range quadtree.MinQuadTreeThreshold + 1 {
 		q.Insert(newNode(float32(i), 0, 1, 1))
@@ -894,23 +802,19 @@ func TestCoverageGaps(t *testing.T) {
 
 	q.Clear()
 
-	// Test Intersects and ContainedByRect with root but no matches
 	q.Insert(newNode(50, 50, 10, 10))
 
-	// Test Intersects with root present but no intersection
 	c.False(q.Intersects(geom.NewRect(0, 0, 10, 10)))
 
-	// Test ContainedByRect with root present but nothing contained
 	c.False(q.ContainedByRect(geom.NewRect(55, 55, 2, 2)))
 
-	// Add nodes to create tree structure and test matched methods edge cases
+	// Add enough nodes to force subdivision
 	for i := range quadtree.DefaultQuadTreeThreshold + 5 {
 		x := 50 + float32(i%5)*2
 		y := 50 + float32(i/5)*2
 		q.Insert(newNode(x, y, 1, 1))
 	}
 
-	// Test matched methods where matcher returns false for all in a subtree
 	alwaysFalseMatcher := &alwaysFalseMatcher{}
 
 	c.False(q.MatchedIntersects(alwaysFalseMatcher, geom.NewRect(50, 50, 20, 20)))

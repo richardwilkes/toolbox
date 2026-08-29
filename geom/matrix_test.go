@@ -57,7 +57,6 @@ func TestNewScaleMatrix(t *testing.T) {
 func TestNewRotationMatrix(t *testing.T) {
 	c := check.New(t)
 
-	// Test 90 degree rotation
 	m := geom.NewRotationMatrix(90)
 
 	// cos(90) = 0, sin(90) = 1
@@ -87,7 +86,6 @@ func TestMatrixTranslate(t *testing.T) {
 	c.Equal(float32(0), m.TransX)
 	c.Equal(float32(0), m.TransY)
 
-	// Test cumulative translation
 	translated2 := translated.Translate(5, 7)
 	c.Equal(float32(15), translated2.TransX)
 	c.Equal(float32(27), translated2.TransY)
@@ -134,7 +132,6 @@ func TestMatrixRotate(t *testing.T) {
 func TestMatrixMultiply(t *testing.T) {
 	c := check.New(t)
 
-	// Test identity multiplication
 	identity := geom.NewIdentityMatrix()
 	translation := geom.NewTranslationMatrix(10, 20)
 
@@ -146,7 +143,6 @@ func TestMatrixMultiply(t *testing.T) {
 	c.Equal(translation.ScaleY, result1.ScaleY)
 	c.Equal(translation.TransY, result1.TransY)
 
-	// Test scale and translation combination
 	scale := geom.NewScaleMatrix(2, 3)
 	combined := scale.Multiply(translation)
 
@@ -161,7 +157,6 @@ func TestMatrixMultiply(t *testing.T) {
 func TestMatrixTransformPoint(t *testing.T) {
 	c := check.New(t)
 
-	// Test identity transformation
 	identity := geom.NewIdentityMatrix()
 	p := geom.NewPoint(5.0, 7.0)
 	result := identity.TransformPoint(p)
@@ -169,21 +164,19 @@ func TestMatrixTransformPoint(t *testing.T) {
 	c.Equal(float32(5), result.X)
 	c.Equal(float32(7), result.Y)
 
-	// Test translation
 	translation := geom.NewTranslationMatrix(10, 20)
 	result2 := translation.TransformPoint(p)
 
 	c.Equal(float32(15), result2.X) // 5 + 10
 	c.Equal(float32(27), result2.Y) // 7 + 20
 
-	// Test scaling
 	scale := geom.NewScaleMatrix(2, 3)
 	result3 := scale.TransformPoint(p)
 
 	c.Equal(float32(10), result3.X) // 5 * 2
 	c.Equal(float32(21), result3.Y) // 7 * 3
 
-	// Test 90-degree rotation (point (1,0) should become (0,1))
+	// A 90-degree rotation takes (1,0) to (0,1)
 	rotation := geom.NewRotationMatrix(90)
 	p2 := geom.NewPoint(1.0, 0.0)
 	result4 := rotation.TransformPoint(p2)
@@ -191,7 +184,6 @@ func TestMatrixTransformPoint(t *testing.T) {
 	c.True(xmath.Abs(result4.X) < 0.0001)     // Should be ~0
 	c.True(xmath.Abs(result4.Y-1.0) < 0.0001) // Should be ~1
 
-	// Test combined transformations
 	combined := geom.NewTranslationMatrix(5, 5).Scale(2, 2)
 	p3 := geom.NewPoint(3.0, 4.0)
 	result5 := combined.TransformPoint(p3)
@@ -207,7 +199,6 @@ func TestMatrixString(t *testing.T) {
 	str := m.String()
 	c.Equal("1,0,10,0,1,20", str)
 
-	// Test with decimals
 	m2 := geom.NewScaleMatrix(1.5, 2.5)
 	str2 := m2.String()
 	c.Equal("1.5,0,0,0,2.5,0", str2)

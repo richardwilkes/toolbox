@@ -30,7 +30,7 @@ func NewLine(start, end Point) Line {
 	}
 }
 
-// Intersects returns true if this line intersects with the other line.
+// Intersects returns true if this line intersects the other line.
 func (l Line) Intersects(other Line) bool {
 	return len(l.Intersection(other)) > 0
 }
@@ -41,21 +41,19 @@ func (l Line) Intersection(other Line) []Point {
 	return LineIntersection(l.Start, l.End, other.Start, other.End)
 }
 
-// DistanceToPoint returns the the distance from the provided point to this line. The distance measured is the distance
-// between the specified point and the closest point between the line's end points. If the specified point intersects
-// the line in between the end points, this function returns 0.
+// DistanceToPoint returns the distance from the point to the nearest point on this line segment, which is 0 if the
+// point lies on the segment.
 func (l Line) DistanceToPoint(pt Point) float32 {
 	return PointSegmentDistance(l.Start, l.End, pt)
 }
 
-// DistanceToPointSquared returns the square of the distance from the provided point to this line. The distance measured
-// is the distance between the specified point and the closest point between the line's end points. If the specified
-// point intersects the line in between the end points, this function returns 0.
+// DistanceToPointSquared returns the square of the distance from the point to the nearest point on this line segment,
+// which is 0 if the point lies on the segment.
 func (l Line) DistanceToPointSquared(pt Point) float32 {
 	return PointSegmentDistanceSquared(l.Start, l.End, pt)
 }
 
-// Bounds returns the bounding rectangle of this Line. This includes a slight bit of expansion to compensate for
+// Bounds returns the bounding rectangle of this Line, expanded by LineBoundsEpsilon on each side to compensate for
 // floating-point imprecision.
 func (l Line) Bounds() Rect {
 	minX := min(l.Start.X, l.End.X)
@@ -146,16 +144,14 @@ func LineIntersection(a1, a2, b1, b2 Point) []Point {
 	return nil
 }
 
-// PointSegmentDistance returns the distance from a point to a line segment. The distance measured is the distance
-// between the specified point and the closest point between the specified end points. If the specified point intersects
-// the line segment in between the end points, this function returns 0.
+// PointSegmentDistance returns the distance from p to the nearest point on the segment from s1 to s2, which is 0 if p
+// lies on the segment.
 func PointSegmentDistance(s1, s2, p Point) float32 {
 	return xmath.Sqrt(PointSegmentDistanceSquared(s1, s2, p))
 }
 
-// PointSegmentDistanceSquared returns the square of the distance from a point to a line segment. The distance measured
-// is the distance between the specified point and the closest point between the specified end points. If the specified
-// point intersects the line segment in between the end points, this function returns 0.
+// PointSegmentDistanceSquared returns the square of the distance from p to the nearest point on the segment from s1 to
+// s2, which is 0 if p lies on the segment.
 func PointSegmentDistanceSquared(s1, s2, p Point) float32 {
 	vx := s2.X - s1.X
 	vy := s2.Y - s1.Y

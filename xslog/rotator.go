@@ -28,25 +28,24 @@ const LogFileExt = ".log"
 
 var _ io.WriteCloser = &rotatingWriter{}
 
-// Rotator provides configuration for creating a io.WriteCloser via a call to its NewWriteCloser() method that will
-// rotate a log file when it exceeds a certain size. You can also use the method AddFlags() to add command-line options
-// to control the log rotation.
+// Rotator configures the size-rotated log file io.WriteCloser created by NewWriteCloser. AddFlags adds command-line
+// options for these settings.
 type Rotator struct {
-	// Path specifies the file to write logs to. Backup log files will be retained in the same directory. Leave empty to
-	// use the default log path.
+	// Path is the log file to write to; LogFileExt is appended if not already present. Backups are kept in the same
+	// directory. Leave empty to use the default log path.
 	Path string
-	// MaxSize sets the maximum size of the log file before it gets rotated. Defaults to 10 MiB.
+	// MaxSize is the size in bytes at which the log file is rotated. Defaults to 10 MiB.
 	MaxSize int64
-	// MaxBackups sets the maximum number of old log files to retain. Defaults to 1.
+	// MaxBackups is the maximum number of old log files to retain. Defaults to 1.
 	MaxBackups int
-	// DirMode sets the permission bits to use when creating directories. Defaults to 0o755.
+	// DirMode is the permission bits used when creating directories. Defaults to 0o755.
 	DirMode os.FileMode
-	// FileMode sets the permission bits to use when creating files. Defaults to 0o644.
+	// FileMode is the permission bits used when creating files. Defaults to 0o644.
 	FileMode os.FileMode
 }
 
-// NewWriteCloser creates a new io.WriteCloser that will write to the log file specified in the configuration. It will
-// create the file if it does not exist when needed, and will rotate the log file when it exceeds the maximum size.
+// NewWriteCloser returns an io.WriteCloser that creates the log file on first write and rotates it when a write would
+// reach MaxSize. The receiver is normalized first; a nil receiver uses the defaults.
 func (r *Rotator) NewWriteCloser() io.WriteCloser {
 	var w rotatingWriter
 	if r != nil {
@@ -69,8 +68,8 @@ func (r *Rotator) AddFlags() {
 		i18n.Text("The maximum `number` of old logs files to retain"))
 }
 
-// Normalize ensures that the configuration is valid. It sets defaults for any fields that are not set. It is not
-// necessary to call this, but might be useful if you want to programmatically determine the default values.
+// Normalize fills in defaults for any unset fields. Calling it is optional, but useful for determining the default
+// values.
 func (r *Rotator) Normalize() {
 	if r.Path == "" {
 		r.Path = filepath.Join(xos.AppLogDir(true), xos.AppCmdName+LogFileExt)
@@ -117,8 +116,8 @@ retry:
 		}
 		r.file = file
 	}
-	// Only rotate a file that already has content. A single write that is itself >= MaxSize must still be written to an
-	// otherwise-empty file; rotating in that case would reset the size to 0 and loop forever without making progress.
+	// Only rotate a file that already has content. A single write >= MaxSize into an empty file must still be written;
+	// rotating would reset the size to 0 and loop forever without making progress.
 	if r.size > 0 && r.size+int64(len(b)) >= r.cfg.MaxSize {
 		if err := r.rotate(); err != nil {
 			return 0, err
@@ -153,8 +152,8 @@ func (r *rotatingWriter) rotate() error {
 			return errs.Wrap(err)
 		}
 	}
-	// Remove the oldest retained backup along with any higher-numbered backups left behind by a previous run that used
-	// a larger MaxBackups. Backups are always consecutive, so the first missing slot ends the sweep.
+	// Remove the oldest backup and any higher-numbered ones left by a previous run with a larger MaxBackups. Backups
+	// are consecutive, so the first missing slot ends the sweep.
 	for n := r.cfg.MaxBackups; ; n++ {
 		if err := os.Remove(r.pathFor(n)); err != nil {
 			if os.IsNotExist(err) {

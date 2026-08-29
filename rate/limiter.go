@@ -7,8 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package rate provides rate limiting which supports a hierarchy of limiters,
-// each capped by their parent.
+// Package rate provides rate limiting which supports a hierarchy of limiters, each capped by their parent.
 package rate
 
 import (
@@ -20,12 +19,13 @@ import (
 
 // Limiter provides a rate limiter.
 type Limiter interface {
-	// New returns a new limiter that is subordinate to this limiter, meaning that its cap rate is also capped by its
-	// parent. A capacity less than 1 is treated as 1. If this limiter is closed, it returns itself (a closed limiter)
-	// so that chained calls report the closed state rather than panicking on a nil interface.
+	// New returns a child limiter whose effective capacity is also capped by this limiter's. A capacity less than 1 is
+	// treated as 1. If this limiter is closed, it returns itself so that chained calls report the closed state rather
+	// than panicking on a nil interface.
 	New(capacity int) Limiter
 
-	// Cap returns the capacity per time period.
+	// Cap returns the capacity per time period. If applyParentCaps is true, the result is also capped by every
+	// ancestor's capacity.
 	Cap(applyParentCaps bool) int
 
 	// SetCap sets the capacity. A capacity less than 1 is treated as 1.
@@ -34,8 +34,7 @@ type Limiter interface {
 	// LastUsed returns the capacity used in the last time period.
 	LastUsed() int
 
-	// Use returns a channel that will return nil when the request is successful, or an error if the request cannot be
-	// fulfilled.
+	// Use returns a channel that receives nil once the request is granted, or an error if it cannot be fulfilled.
 	Use(amount int) <-chan error
 
 	// Closed returns true if the limiter is closed.
@@ -69,8 +68,8 @@ type request struct {
 	amount  int
 }
 
-// New creates a new top-level rate limiter. 'capacity' is the number of units (bytes, for example) allowed to be used
-// in a particular time 'period'. A capacity less than 1 is treated as 1.
+// New creates a top-level rate limiter that allows 'capacity' units (bytes, for example) per 'period'. A capacity less
+// than 1 is treated as 1.
 func New(capacity int, period time.Duration) Limiter {
 	c := &controller{
 		ticker: time.NewTicker(period),
@@ -124,8 +123,8 @@ func (l *limiter) New(capacity int) Limiter {
 	l.controller.lock.Lock()
 	defer l.controller.lock.Unlock()
 	if l.closed {
-		// A closed limiter can have no children. Return it (a closed limiter) rather than nil so that chained calls
-		// such as parent.New(n).Use(...) report the closed state instead of panicking on a nil interface.
+		// Return the closed limiter itself rather than nil so that chained calls such as parent.New(n).Use(...) report
+		// the closed state instead of panicking on a nil interface.
 		return l
 	}
 	child := &limiter{
@@ -146,8 +145,7 @@ func (l *limiter) Cap(applyParentCaps bool) int {
 	return l.capacity
 }
 
-// cappedCapacity returns the effective capacity of this limiter after applying the smaller of any ancestor capacities.
-// The controller lock must be held.
+// cappedCapacity returns this limiter's capacity capped by every ancestor's capacity. The controller lock must be held.
 func (l *limiter) cappedCapacity() int {
 	capacity := l.capacity
 	for p := l.parent; p != nil; p = p.parent {
@@ -191,9 +189,8 @@ func (l *limiter) Use(amount int) <-chan error {
 		done <- errs.Newf("Amount (%d) is greater than capacity (%d)", amount, capacity)
 		return done
 	}
-	// Preserve FIFO ordering by only taking the fast path when no requests are already waiting. Otherwise a steady
-	// stream of smaller requests could keep slipping through the fast path and consuming capacity ahead of an
-	// earlier, larger request that is stuck in the queue, delaying or starving it.
+	// Take the fast path only when nothing is queued, preserving FIFO order. Otherwise a steady stream of smaller
+	// requests could keep consuming capacity ahead of an earlier, larger queued request and starve it.
 	if len(l.controller.waiting) == 0 && l.tryConsume(amount) {
 		l.controller.lock.Unlock()
 		done <- nil
@@ -208,9 +205,8 @@ func (l *limiter) Use(amount int) <-chan error {
 	return done
 }
 
-// tryConsume attempts to reserve amount against this limiter and all of its ancestors, reporting whether it succeeded.
-// On success, the amount is added to the used count of this limiter and each ancestor. The controller lock must be
-// held.
+// tryConsume adds amount to the used count of this limiter and all of its ancestors if every one of them has room,
+// reporting whether it did so. The controller lock must be held.
 func (l *limiter) tryConsume(amount int) bool {
 	available := l.capacity - l.used
 	for p := l.parent; p != nil; p = p.parent {

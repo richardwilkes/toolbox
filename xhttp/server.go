@@ -37,12 +37,12 @@ const DefaultStopGracePeriod = 5 * time.Second
 
 // ServerConfig holds configuration for an HTTP server.
 type ServerConfig struct {
-	// Handler is the root HTTP handler to use.
+	// Handler is the root HTTP handler to use. If nil, a new http.ServeMux is used.
 	Handler http.Handler
 	// Logger is the logger to use. If nil, slog.Default() will be used.
 	Logger *slog.Logger
-	// TLSConfig optionally provides a TLS configuration for use by ServeTLS and ListenAndServeTLS. Note that this value
-	// is cloned by ServeTLS and ListenAndServeTLS, so it's not possible to modify the configuration with methods like
+	// TLSConfig optionally provides a TLS configuration for use by ServeTLS and ListenAndServeTLS. This value is cloned
+	// by ServeTLS and ListenAndServeTLS, so it's not possible to modify the configuration with methods like
 	// tls.Config.SetSessionTicketKeys.
 	TLSConfig *tls.Config
 	// CertFile optionally provides a cert file to use for TLS connections. Must be paired with a KeyFile.
@@ -82,7 +82,7 @@ type ServerConfig struct {
 	DisableGeneralOptionsHandler bool
 }
 
-// Server manages a http server.
+// Server manages an HTTP server.
 type Server struct {
 	server          *http.Server
 	originalHandler http.Handler
@@ -99,7 +99,7 @@ type Server struct {
 	stopGracePeriod time.Duration
 }
 
-// NewServer creates a new http service. The server is not started until you call Run.
+// NewServer creates a new HTTP server. It is not started until Run is called.
 func NewServer(cfg *ServerConfig) (*Server, error) {
 	port := cfg.Port
 	if port < 1 || port > 65535 {
@@ -285,9 +285,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}()
 	defer xos.PanicRecovery(func(err error) {
 		logger.Error("recovered from panic in handler", "error", err)
-		// Write the 500 through the StatusWriter so the status is recorded for the access log, but only if no header
-		// has been committed yet; otherwise the response has already started and a further WriteHeader would be ignored
-		// and logged as superfluous.
+		// Send the 500 through the StatusWriter so the access log records it, but only if no header has been committed
+		// yet; otherwise a further WriteHeader would be ignored and logged as superfluous.
 		if !sw.HeaderWritten() {
 			sw.WriteHeader(http.StatusInternalServerError)
 		}
@@ -295,12 +294,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := metadataInContext(req.Context(), md)
 	if s.server.WriteTimeout > 0 {
 		// Give the request context a deadline mirroring the connection's write deadline so handlers that only watch
-		// ctx.Done() still observe the write timeout. net/http (re)arms the socket write deadline to WriteTimeout from
-		// the instant each request's header finishes being read, which is immediately before this handler is entered,
-		// so we anchor to the request's start time rather than calling time.Now() again after this method's own setup
-		// work. Because the deadline is derived per invocation and ServeHTTP runs once per request, it is reset for
-		// every request on a reused keep-alive connection, tracking the socket's per-request write deadline rather than
-		// drifting or expiring early.
+		// ctx.Done() still observe the write timeout. net/http arms the socket write deadline when each request's
+		// header finishes being read, immediately before this handler is entered, so anchor to the request's start
+		// time rather than a later time.Now(). Since this runs once per request, the deadline is reset for every
+		// request on a reused keep-alive connection rather than drifting or expiring early.
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithDeadline(ctx, started.Add(s.server.WriteTimeout))
 		defer cancel()

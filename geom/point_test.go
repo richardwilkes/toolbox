@@ -19,12 +19,10 @@ import (
 func TestNewPoint(t *testing.T) {
 	c := check.New(t)
 
-	// Test int point
 	p := geom.NewPoint(3, 4)
 	c.Equal(float32(3), p.X)
 	c.Equal(float32(4), p.Y)
 
-	// Test float point
 	pf := geom.NewPoint(3.5, 4.7)
 	c.Equal(float32(3.5), pf.X)
 	c.Equal(float32(4.7), pf.Y)
@@ -85,7 +83,6 @@ func TestPointDiv(t *testing.T) {
 	c.Equal(float32(3), result.X)
 	c.Equal(float32(4), result.Y)
 
-	// Test with float
 	pf := geom.NewPoint(7.0, 9.0)
 	resultf := pf.Div(2.0)
 
@@ -116,7 +113,6 @@ func TestPointFloor(t *testing.T) {
 	c.Equal(float32(3), result.X)
 	c.Equal(float32(4), result.Y)
 
-	// Test with negative values
 	p2 := geom.NewPoint(-3.7, -4.2)
 	result2 := p2.Floor()
 
@@ -133,7 +129,6 @@ func TestPointCeil(t *testing.T) {
 	c.Equal(float32(4), result.X)
 	c.Equal(float32(5), result.Y)
 
-	// Test with negative values
 	p2 := geom.NewPoint(-3.7, -4.2)
 	result2 := p2.Ceil()
 
@@ -212,7 +207,6 @@ func TestPointIn(t *testing.T) {
 	p6 := geom.NewPoint(5, 15)
 	c.False(p6.In(rect))
 
-	// Test with empty rectangle
 	emptyRect := geom.NewRect(10, 20, 0, 40)
 	p7 := geom.NewPoint(15, 25)
 	c.False(p7.In(emptyRect))
@@ -234,7 +228,6 @@ func TestPointEqualWithin(t *testing.T) {
 	p3 := geom.NewPoint(3.0, 4.0)
 	c.True(p1.EqualWithin(p3, 0.0))
 
-	// Test with negative coordinates
 	p4 := geom.NewPoint(-3.0, -4.0)
 	p5 := geom.NewPoint(-3.05, -4.02)
 	c.True(p4.EqualWithin(p5, 0.1))
@@ -247,7 +240,6 @@ func TestPointString(t *testing.T) {
 	str := p.String()
 	c.Equal("3,4", str)
 
-	// Test with float
 	pf := geom.NewPoint(3.5, 4.7)
 	strf := pf.String()
 	c.Equal("3.5,4.7", strf)

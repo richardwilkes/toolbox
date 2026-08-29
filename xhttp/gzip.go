@@ -49,10 +49,10 @@ func GZipWrap(next http.Handler) http.Handler {
 	})
 }
 
-// acceptsGzip reports whether the Accept-Encoding header value indicates the client accepts the gzip encoding. It
-// parses the comma-separated codings and their optional q-values per RFC 7231, so an explicit refusal ("gzip;q=0") is
-// honored and gzip is only matched as a whole coding (not as a substring of, e.g., "x-gzip"). When gzip is not named
-// explicitly, a wildcard ("*") with a non-zero q-value also makes it acceptable.
+// acceptsGzip reports whether the Accept-Encoding header value accepts the gzip encoding. Codings and their optional
+// q-values are parsed per RFC 7231, so an explicit refusal ("gzip;q=0") is honored and gzip only matches as a whole
+// coding (not as a substring of, e.g., "x-gzip"). When gzip is not named, a wildcard ("*") with a non-zero q-value
+// also accepts it.
 func acceptsGzip(acceptEncoding string) bool {
 	gzipQ := -1.0 // q-value of an explicit "gzip" coding, or -1 if absent
 	starQ := -1.0 // q-value of a "*" wildcard coding, or -1 if absent
@@ -97,10 +97,9 @@ func (w *gzipResponseWriter) Write(data []byte) (int, error) {
 		w.WriteHeader(http.StatusOK)
 	}
 	if !w.committed {
-		// Defer committing (and thus the compress-or-not decision) until there is actual body data. This keeps an
-		// empty-body response from gaining a Content-Encoding: gzip header and an (empty) gzip stream in place of its
-		// Content-Length, and ensures a leading zero-length write does not disable compression for the bytes that
-		// follow it.
+		// Defer the commit (and the compress-or-not decision) until body data arrives, so an empty-body response keeps
+		// its Content-Length instead of gaining a gzip header and an empty gzip stream, and a leading zero-length
+		// write doesn't disable compression for the bytes that follow.
 		if len(data) == 0 {
 			return 0, nil
 		}
@@ -113,10 +112,8 @@ func (w *gzipResponseWriter) Write(data []byte) (int, error) {
 }
 
 // WriteHeader implements http.ResponseWriter. It records the final status but defers forwarding it to the underlying
-// writer until the response is committed, which happens on the first non-empty Write, a Flush, or when the handler
-// returns. Deferring the commit lets the compress-or-not decision be made once it is known whether the response
-// actually carries a body, so a body-less response is sent unmodified rather than being advertised as gzip and emitted
-// as a gzip stream.
+// writer until the response is committed (on the first non-empty Write, a Flush, or when the handler returns), so the
+// compress-or-not decision can be made once it is known whether the response carries a body.
 func (w *gzipResponseWriter) WriteHeader(status int) {
 	// 1xx responses are interim; the final status arrives in a later call, so forward them without committing.
 	if status >= http.StatusContinue && status < http.StatusOK {
@@ -130,12 +127,11 @@ func (w *gzipResponseWriter) WriteHeader(status int) {
 }
 
 // commit forwards the recorded status and headers to the underlying writer exactly once. When useGzip is true and the
-// response is permitted to carry a body that the handler has not already encoded (not a 204 No Content or 304 Not
-// Modified, and no existing Content-Encoding), it installs gzip compression: overwriting an existing Content-Encoding
-// or wrapping already-encoded bytes in a second gzip stream would corrupt the content, so those cases are left
-// untouched. When gzip is installed, the handler's Content-Length describes the uncompressed body and no longer matches
-// the compressed bytes, so it is dropped and the response is sent with chunked transfer encoding. The body slice, when
-// non-nil, is the first chunk of the uncompressed body and is used to sniff a Content-Type before gzip is installed.
+// response may carry a body the handler has not already encoded (not 204 No Content or 304 Not Modified, and no
+// existing Content-Encoding), gzip is installed; overwriting an existing Content-Encoding or double-encoding the bytes
+// would corrupt the content, so those cases are left untouched. Installing gzip drops the handler's Content-Length,
+// which described the uncompressed body, so the response is sent with chunked transfer encoding. A non-empty body (the
+// first chunk of the uncompressed body) is used to sniff a Content-Type before gzip is installed.
 func (w *gzipResponseWriter) commit(useGzip bool, body []byte) {
 	if w.committed {
 		return
@@ -144,10 +140,9 @@ func (w *gzipResponseWriter) commit(useGzip bool, body []byte) {
 	if useGzip && w.status != http.StatusNoContent && w.status != http.StatusNotModified &&
 		w.w.Header().Get("Content-Encoding") == "" {
 		header := w.w.Header()
-		// net/http skips its automatic Content-Type sniffing once Content-Encoding is set (see Go issue #31753), and
-		// sniffing the compressed bytes would be wrong anyway, so sniff the uncompressed body ourselves here to
-		// preserve the Content-Type a handler relies on being detected automatically. http.DetectContentType only
-		// examines the first 512 bytes, so the first body chunk is enough.
+		// net/http skips its automatic Content-Type sniffing once Content-Encoding is set (Go issue #31753), and
+		// sniffing compressed bytes would be wrong anyway, so sniff the uncompressed body here. http.DetectContentType
+		// only examines the first 512 bytes, so the first chunk is enough.
 		if len(body) > 0 && header.Get("Content-Type") == "" {
 			header.Set("Content-Type", http.DetectContentType(body))
 		}
@@ -158,9 +153,8 @@ func (w *gzipResponseWriter) commit(useGzip bool, body []byte) {
 	w.w.WriteHeader(w.status)
 }
 
-// finish runs after the wrapped handler returns. It forwards the status of a response the handler committed to (via
-// WriteHeader) but never gave a body, doing so without a gzip stream so the response keeps its Content-Length, and
-// closes the gzip writer if one was installed.
+// finish runs after the wrapped handler returns. It forwards the status of a response given a WriteHeader but no body
+// (without gzip, so the response keeps its Content-Length) and closes the gzip writer if one was installed.
 func (w *gzipResponseWriter) finish(req *http.Request) {
 	if w.wroteHeader && !w.committed {
 		w.commit(false, nil)
@@ -171,9 +165,8 @@ func (w *gzipResponseWriter) finish(req *http.Request) {
 }
 
 // Flush implements http.Flusher. A flush signals a streaming body, so it commits the response (installing gzip
-// compression) if that has not already happened, then flushes any buffered compressed data to the underlying writer
-// before flushing the underlying writer itself, so streaming responses such as Server-Sent Events reach the client
-// promptly.
+// compression) if that has not already happened, then flushes buffered compressed data and the underlying writer so
+// streaming responses such as Server-Sent Events reach the client promptly.
 func (w *gzipResponseWriter) Flush() {
 	if !w.wroteHeader {
 		w.WriteHeader(http.StatusOK)
@@ -209,7 +202,7 @@ func (w *gzipResponseWriter) Push(target string, opts *http.PushOptions) error {
 
 // Unwrap returns the wrapped http.ResponseWriter so that http.ResponseController can reach optional interfaces this
 // writer does not implement itself, such as deadline control (SetReadDeadline/SetWriteDeadline) and EnableFullDuplex.
-// Flush is intentionally implemented here (rather than delegated via Unwrap) so the gzip stream is flushed correctly.
+// Flush is implemented here rather than delegated via Unwrap so the gzip stream is flushed too.
 func (w *gzipResponseWriter) Unwrap() http.ResponseWriter {
 	return w.w
 }

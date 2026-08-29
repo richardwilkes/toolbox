@@ -9,7 +9,7 @@
 
 package xslices
 
-// Set creates a new set from data, using its values as the keys for a map.
+// Set returns a map using the values of 'data' as its keys.
 func Set[K comparable](data []K) map[K]struct{} {
 	m := make(map[K]struct{})
 	for _, v := range data {
@@ -18,7 +18,7 @@ func Set[K comparable](data []K) map[K]struct{} {
 	return m
 }
 
-// MapFromData creates a new map from data, assigning keys using the provided keyFunc.
+// MapFromData returns a map of the values in 'data', keyed by 'keyFunc'.
 func MapFromData[K comparable, V any](data []V, keyFunc func(V) K) map[K]V {
 	m := make(map[K]V)
 	for _, v := range data {
@@ -27,7 +27,7 @@ func MapFromData[K comparable, V any](data []V, keyFunc func(V) K) map[K]V {
 	return m
 }
 
-// MapFromKeys creates a new map from the keys, assigning data for each key using the provided dataFunc.
+// MapFromKeys returns a map of 'keys' with each value supplied by 'dataFunc'.
 func MapFromKeys[K comparable, V any](keys []K, dataFunc func(K) V) map[K]V {
 	m := make(map[K]V)
 	for _, k := range keys {

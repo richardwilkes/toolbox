@@ -59,12 +59,10 @@ func (m *mockReadCloser) Close() error {
 func TestCloseIgnoringErrors(t *testing.T) {
 	c := check.New(t)
 
-	// Test successful close
 	closer := &mockCloser{shouldError: false}
 	xio.CloseIgnoringErrors(closer)
 	c.True(closer.closed)
 
-	// Test close with error (should be ignored)
 	closerWithError := &mockCloser{shouldError: true}
 	xio.CloseIgnoringErrors(closerWithError)
 	c.True(closerWithError.closed)
@@ -73,7 +71,6 @@ func TestCloseIgnoringErrors(t *testing.T) {
 func TestDiscardAndCloseIgnoringErrors(t *testing.T) {
 	c := check.New(t)
 
-	// Test with data to discard
 	data := []byte("test data")
 	rc := &mockReadCloser{
 		data:   data,
@@ -156,18 +153,15 @@ func TestDiscardAndCloseIgnoringErrors_TimeBound(t *testing.T) {
 func TestCloseLoggingAnyError(t *testing.T) {
 	c := check.New(t)
 
-	// Test successful close (no logging)
 	closer := &mockCloser{shouldError: false}
 	xio.CloseLoggingErrors(closer)
 	c.True(closer.closed)
 
-	// Create a buffer to capture log output
 	oldLogger := slog.Default()
 	defer func() { slog.SetDefault(oldLogger) }()
 	var buf bytes.Buffer
 	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})))
 
-	// Test close with error
 	closerWithError := &mockCloser{shouldError: true}
 	xio.CloseLoggingErrors(closerWithError)
 	c.True(closerWithError.closed)
@@ -177,17 +171,14 @@ func TestCloseLoggingAnyError(t *testing.T) {
 func TestCloseLoggingAnyErrorTo(t *testing.T) {
 	c := check.New(t)
 
-	// Create a buffer to capture log output
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	// Test successful close (no logging)
 	closer := &mockCloser{shouldError: false}
 	xio.CloseLoggingErrorsTo(logger, closer)
 	c.True(closer.closed)
 	c.Equal("", buf.String())
 
-	// Test close with error (should log)
 	buf.Reset()
 	closerWithError := &mockCloser{shouldError: true}
 	xio.CloseLoggingErrorsTo(logger, closerWithError)

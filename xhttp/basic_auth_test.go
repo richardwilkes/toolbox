@@ -69,10 +69,9 @@ func TestBasicAuthWrap(t *testing.T) {
 	}
 }
 
-// TestBasicAuthWrapConstantWork guards the timing-side-channel fix: the supplied password must be hashed and compared
-// regardless of whether the user exists, and an unknown user must be indistinguishable from a known user with a wrong
-// password. If the middleware short-circuited (e.g. skipped hashing or the comparison when the user was not found), it
-// would leak user existence through timing and this test would catch the regression.
+// TestBasicAuthWrapConstantWork guards the timing-side-channel fix: the supplied password must be hashed exactly once
+// regardless of whether the user exists, and the rejection of an unknown user must be identical to that of a known user
+// with a wrong password.
 func TestBasicAuthWrapConstantWork(t *testing.T) {
 	c := check.New(t)
 

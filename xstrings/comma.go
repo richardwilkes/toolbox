@@ -17,19 +17,18 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
-// CommaInt returns text version of the value that uses commas for every 3 orders of magnitude.
+// CommaInt formats the value with a comma inserted every three digits.
 func CommaInt[T xmath.Integer](value T) string {
 	return CommaFromStringNum(fmt.Sprintf("%d", value))
 }
 
-// CommaFloat returns text version of the value that uses commas for every 3 orders of magnitude.
+// CommaFloat formats the value with a comma inserted every three digits of the integer part.
 func CommaFloat[T xmath.Float](value T) string {
 	return CommaFromStringNum(strconv.FormatFloat(float64(value), 'f', -1, 64))
 }
 
-// CommaFromStringNum returns a revised version of the numeric input string that uses commas for every 3 orders of
-// magnitude. Note that this function assumes the input is nothing more than an optional leading sign followed by
-// digits.
+// CommaFromStringNum inserts a comma every three digits into the integer part of a numeric string. The input must
+// consist of an optional leading sign, digits, and an optional decimal point followed by more digits.
 func CommaFromStringNum(s string) string {
 	if s == "" {
 		return ""

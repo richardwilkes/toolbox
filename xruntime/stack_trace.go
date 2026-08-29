@@ -17,10 +17,8 @@ import (
 	"strings"
 )
 
-// StackFuncPrefixesToFilter is a list of function prefixes to filter out of the stack trace.
-//
-// This variable is not used in a thread-safe manner, so any alterations should be done before any goroutines are
-// started.
+// StackFuncPrefixesToFilter is a list of function prefixes to filter out of stack traces. Alterations are not
+// thread-safe and should be made before any goroutines are started.
 var StackFuncPrefixesToFilter = []string{
 	"runtime.",
 	"testing.",
@@ -29,15 +27,16 @@ var StackFuncPrefixesToFilter = []string{
 	"github.com/richardwilkes/toolbox/v2/errs.Wrap",
 }
 
-// StackTrace returns a slice of strings, each of which is a text representation of a frame in the stack trace. 'skip'
-// is the number of stack frames to skip before processing, with 0 identifying the caller of StackTrace.
+// StackTrace returns a text representation of each frame in the stack trace. 'skip' is the number of stack frames to
+// skip before processing, with 0 identifying the caller of StackTrace.
 func StackTrace(skip int) []string {
 	var pcs [128]uintptr
 	n := runtime.Callers(skip+2, pcs[:])
 	return PCsToStackTrace(pcs[:n])
 }
 
-// PCsToStackTrace converts a slice of program counters (PCs) into a slice of strings representing the stack trace.
+// PCsToStackTrace converts a slice of program counters into a text representation of each frame, omitting those whose
+// function matches an entry in StackFuncPrefixesToFilter.
 func PCsToStackTrace(pcs []uintptr) []string {
 	stack := make([]string, 0, len(pcs))
 	frames := runtime.CallersFrames(pcs)

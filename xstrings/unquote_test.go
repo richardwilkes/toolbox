@@ -20,110 +20,87 @@ import (
 func TestUnquote(t *testing.T) {
 	c := check.New(t)
 
-	// Test with double quotes
 	c.Equal("hello", xstrings.Unquote(`"hello"`))
 	c.Equal("world", xstrings.Unquote(`"world"`))
 	c.Equal("", xstrings.Unquote(`""`))
 
-	// Test with single quotes
 	c.Equal("hello", xstrings.Unquote("'hello'"))
 	c.Equal("world", xstrings.Unquote("'world'"))
 	c.Equal("", xstrings.Unquote("''"))
 
-	// Test with mixed quotes (should not unquote)
 	c.Equal("'hello\"", xstrings.Unquote("'hello\""))
 	c.Equal("\"hello'", xstrings.Unquote("\"hello'"))
 
-	// Test with no quotes
 	c.Equal("hello", xstrings.Unquote("hello"))
 	c.Equal("world", xstrings.Unquote("world"))
 
-	// Test with single character
 	c.Equal("a", xstrings.Unquote("a"))
 	c.Equal("\"", xstrings.Unquote("\""))
 	c.Equal("'", xstrings.Unquote("'"))
 
-	// Test with empty string
 	c.Equal("", xstrings.Unquote(""))
 
-	// Test with only opening quote
 	c.Equal("\"hello", xstrings.Unquote("\"hello"))
 	c.Equal("'hello", xstrings.Unquote("'hello"))
 
-	// Test with only closing quote
 	c.Equal("hello\"", xstrings.Unquote("hello\""))
 	c.Equal("hello'", xstrings.Unquote("hello'"))
 
-	// Test with quotes in the middle
 	c.Equal("he\"llo", xstrings.Unquote("he\"llo"))
 	c.Equal("he'llo", xstrings.Unquote("he'llo"))
 
-	// Test with escaped quotes (should still unquote outer quotes)
 	c.Equal("he\\\"llo", xstrings.Unquote("\"he\\\"llo\""))
 	c.Equal("he\\'llo", xstrings.Unquote("'he\\'llo'"))
 
-	// Test with nested quotes
 	c.Equal("'hello'", xstrings.Unquote("\"'hello'\""))
 	c.Equal("\"hello\"", xstrings.Unquote("'\"hello\"'"))
 
-	// Test with multiple quotes at start/end
 	c.Equal("\"hello\"", xstrings.Unquote("\"\"hello\"\""))
 	c.Equal("'hello'", xstrings.Unquote("''hello''"))
 
-	// Test with Unicode content
 	c.Equal("café", xstrings.Unquote("\"café\""))
 	c.Equal("北京", xstrings.Unquote("'北京'"))
 	c.Equal("🚀🎉", xstrings.Unquote("\"🚀🎉\""))
 
-	// Test with special characters
 	c.Equal("hello\nworld", xstrings.Unquote("\"hello\nworld\""))
 	c.Equal("hello\tworld", xstrings.Unquote("'hello\tworld'"))
 	c.Equal("hello\\world", xstrings.Unquote("\"hello\\world\""))
 
-	// Test with whitespace
 	c.Equal(" hello ", xstrings.Unquote("\" hello \""))
 	c.Equal("\thello\t", xstrings.Unquote("'\thello\t'"))
 
-	// Test with numeric content
 	c.Equal("123", xstrings.Unquote("\"123\""))
 	c.Equal("3.14", xstrings.Unquote("'3.14'"))
 
-	// Test with JSON-like content
 	c.Equal("{\"key\":\"value\"}", xstrings.Unquote("\"{\"key\":\"value\"}\""))
 
-	// Test with very long content
 	var longContent strings.Builder
 	for i := range 1000 {
 		longContent.WriteString(string(rune('a' + (i % 26))))
 	}
 	c.Equal(longContent.String(), xstrings.Unquote("\""+longContent.String()+"\""))
 
-	// Test Unicode quote characters (should not be processed)
 	unicodeQuotes := "\u201chello\u201d" // Unicode left/right double quotes
 	c.Equal(unicodeQuotes, xstrings.Unquote(unicodeQuotes))
 
 	leftQuote := "\u2018hello\u2019" // Unicode left/right single quotes
 	c.Equal(leftQuote, xstrings.Unquote(leftQuote))
 
-	// Test with various quote-like characters
 	backticks := "`hello`"
 	c.Equal(backticks, xstrings.Unquote(backticks))
 
 	guillemets := "«hello»"
 	c.Equal(guillemets, xstrings.Unquote(guillemets))
 
-	// Test with mathematical symbols that might look like quotes
 	primes := "′hello′"
 	c.Equal(primes, xstrings.Unquote(primes))
 
 	doublePrimes := "″hello″"
 	c.Equal(doublePrimes, xstrings.Unquote(doublePrimes))
 
-	// Test with control characters
 	withNull := "\x00hello\x00"
 	c.Equal(withNull, xstrings.Unquote(withNull))
 
-	// Test with very short strings
 	oneChar := "a"
 	c.Equal(oneChar, xstrings.Unquote(oneChar))
 

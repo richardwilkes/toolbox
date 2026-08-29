@@ -55,7 +55,7 @@ func (f Fraction[T]) Value() Int[T] {
 	return n.Numerator.Div(n.Denominator)
 }
 
-// Add two fractions together and return the result.
+// Add returns f + other.
 func (f Fraction[T]) Add(other Fraction[T]) Fraction[T] {
 	n := f
 	n.Normalize()
@@ -67,7 +67,7 @@ func (f Fraction[T]) Add(other Fraction[T]) Fraction[T] {
 	}
 }
 
-// Sub subtracts other from f and return the result.
+// Sub returns f - other.
 func (f Fraction[T]) Sub(other Fraction[T]) Fraction[T] {
 	n := f
 	n.Normalize()
@@ -79,7 +79,7 @@ func (f Fraction[T]) Sub(other Fraction[T]) Fraction[T] {
 	}
 }
 
-// Mul multiplies two fractions together and return the result.
+// Mul returns f * other.
 func (f Fraction[T]) Mul(other Fraction[T]) Fraction[T] {
 	n := f
 	n.Normalize()
@@ -91,7 +91,7 @@ func (f Fraction[T]) Mul(other Fraction[T]) Fraction[T] {
 	}
 }
 
-// Div divides f by other and return the result.
+// Div returns f / other.
 func (f Fraction[T]) Div(other Fraction[T]) Fraction[T] {
 	n := f
 	n.Normalize()
@@ -103,8 +103,8 @@ func (f Fraction[T]) Div(other Fraction[T]) Fraction[T] {
 	}
 }
 
-// Simplify the fraction, returning a new Fraction. If the numerator or denominator cannot be represented as an int, the
-// original fraction is returned.
+// Simplify returns the fraction normalized and reduced by the GCD of its numerator and denominator. If either cannot
+// be represented as an int, the fraction is returned normalized but not reduced.
 func (f Fraction[T]) Simplify() Fraction[T] {
 	n := f
 	n.Normalize()
@@ -125,7 +125,7 @@ func (f Fraction[T]) Simplify() Fraction[T] {
 	return n
 }
 
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is not negative.
 func (f Fraction[T]) StringWithSign() string {
 	n := f
 	n.Normalize()

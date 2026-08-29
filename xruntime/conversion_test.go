@@ -18,11 +18,10 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xruntime"
 )
 
-// TestPtrFromUintptrHeapRoundTrip round-trips a pinned Go heap pointer through a uintptr, the pattern used when one
-// of our own pinned Go objects is handed back to us by the OS, as happens with COM callbacks. Under checkptr
-// instrumentation (enabled by -race), a direct uintptr-to-unsafe.Pointer conversion of such a value aborts the whole
-// test binary with "fatal error: checkptr: pointer arithmetic result points to invalid allocation", so this test both
-// verifies the conversion is correct and guards against regressing to an instrumented conversion.
+// TestPtrFromUintptrHeapRoundTrip round-trips a pinned Go heap pointer through a uintptr, the pattern used when one of
+// our own pinned Go objects is handed back to us by the OS. Under checkptr instrumentation (enabled by -race), a direct
+// uintptr-to-unsafe.Pointer conversion of such a value aborts the test binary, so this also guards against regressing
+// to an instrumented conversion.
 func TestPtrFromUintptrHeapRoundTrip(t *testing.T) {
 	c := check.New(t)
 	var pin runtime.Pinner
@@ -37,7 +36,7 @@ func TestPtrFromUintptrHeapRoundTrip(t *testing.T) {
 	c.Equal(17, *v)
 }
 
-// namedUintptr verifies the ~uintptr constraint accepts types based on uintptr, such as OS handle aliases.
+// namedUintptr stands in for an OS handle alias, exercising the ~uintptr constraint.
 type namedUintptr uintptr
 
 func TestPtrFromUintptrNamedType(t *testing.T) {

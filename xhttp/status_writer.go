@@ -52,10 +52,10 @@ func (w *StatusWriter) BytesWritten() int {
 	return w.bytes
 }
 
-// HeaderWritten returns true if a response header has been committed, either explicitly via WriteHeader() or implicitly
-// by the first call to Write(). Once this is true, a further WriteHeader() call would be ignored by the underlying
-// writer (and logged as superfluous), so callers such as panic recovery can use it to decide whether it is still
-// possible to set a status.
+// HeaderWritten returns true once a response header has been committed, either explicitly via WriteHeader() or
+// implicitly by the first Write() that reaches the underlying writer. After that, a further WriteHeader() would be
+// ignored (and logged as superfluous), so callers such as panic recovery can use this to decide whether a status can
+// still be set.
 func (w *StatusWriter) HeaderWritten() bool {
 	return w.wroteHeader
 }
@@ -65,7 +65,8 @@ func (w *StatusWriter) Header() http.Header {
 	return w.w.Header()
 }
 
-// Write implements http.ResponseWriter.
+// Write implements http.ResponseWriter. For HEAD requests, the data is discarded (and not counted) but reported as
+// written.
 func (w *StatusWriter) Write(data []byte) (int, error) {
 	if w.headOp {
 		return len(data), nil
@@ -107,7 +108,7 @@ func (w *StatusWriter) Push(target string, opts *http.PushOptions) error {
 }
 
 // Unwrap returns the wrapped http.ResponseWriter so that http.ResponseController can reach optional interfaces it does
-// not implement itself, such as deadline control (SetReadDeadline/SetWriteDeadline), EnableFullDuplex, and FlushError.
+// not implement itself, such as deadline control (SetReadDeadline/SetWriteDeadline) and EnableFullDuplex.
 func (w *StatusWriter) Unwrap() http.ResponseWriter {
 	return w.w
 }

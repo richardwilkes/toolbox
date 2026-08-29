@@ -66,8 +66,8 @@ func TestIntnWithinRange(t *testing.T) {
 			c.True(v >= 0 && v < n, "Intn(%d) returned out-of-range value %d", n, v)
 			seen[v] = true
 		}
-		// With this many samples over a small range, we expect more than one distinct value, which guards against a
-		// stuck generator returning a constant.
+		// Over a small range, this many samples should produce more than one distinct value, guarding against a stuck
+		// generator returning a constant.
 		if n <= 1000 {
 			c.True(len(seen) > 1, "Intn(%d) only ever produced %d distinct value(s)", n, len(seen))
 		}
@@ -75,8 +75,7 @@ func TestIntnWithinRange(t *testing.T) {
 }
 
 // TestIntnNeverNegativeWithAdversarialBytes feeds the byte pattern for int64's most-negative value (0x80 in the high
-// byte). The old implementation reconstructed this as a signed int, negated it (which overflows back to the same
-// negative value), and returned a negative result for n >= 2^56; the unsigned implementation must stay in range.
+// byte), which a signed reconstruction would negate back onto itself and return as a negative result for n >= 2^56.
 func TestIntnNeverNegativeWithAdversarialBytes(t *testing.T) {
 	c := check.New(t)
 	if bits.UintSize < 64 {

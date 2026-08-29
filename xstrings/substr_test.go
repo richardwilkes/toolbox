@@ -62,13 +62,11 @@ func TestLastN(t *testing.T) {
 func TestTruncate(t *testing.T) {
 	c := check.New(t)
 
-	// Test empty string
 	c.Equal("", xstrings.Truncate("", 5, true))
 	c.Equal("", xstrings.Truncate("", 5, false))
 	c.Equal("", xstrings.Truncate("", 0, true))
 	c.Equal("", xstrings.Truncate("", 0, false))
 
-	// Test string shorter than count (no truncation needed)
 	c.Equal("hello", xstrings.Truncate("hello", 10, true))
 	c.Equal("hello", xstrings.Truncate("hello", 10, false))
 	c.Equal("test", xstrings.Truncate("test", 4, true))
@@ -76,13 +74,11 @@ func TestTruncate(t *testing.T) {
 	c.Equal("ab", xstrings.Truncate("ab", 5, true))
 	c.Equal("ab", xstrings.Truncate("ab", 5, false))
 
-	// Test string equal to count (no truncation needed)
 	c.Equal("hello", xstrings.Truncate("hello", 5, true))
 	c.Equal("hello", xstrings.Truncate("hello", 5, false))
 	c.Equal("test", xstrings.Truncate("test", 4, true))
 	c.Equal("test", xstrings.Truncate("test", 4, false))
 
-	// Test keepFirst = true (truncate from end, ellipsis at end)
 	c.Equal("hel…", xstrings.Truncate("hello", 3, true))
 	c.Equal("hel…", xstrings.Truncate("hello world", 3, true))
 	c.Equal("h…", xstrings.Truncate("hello", 1, true))
@@ -90,7 +86,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("a…", xstrings.Truncate("abcdef", 1, true))
 	c.Equal("ab…", xstrings.Truncate("abcdef", 2, true))
 
-	// Test keepFirst = false (truncate from start, ellipsis at start)
 	c.Equal("…llo", xstrings.Truncate("hello", 3, false))
 	c.Equal("…rld", xstrings.Truncate("hello world", 3, false))
 	c.Equal("…o", xstrings.Truncate("hello", 1, false))
@@ -98,19 +93,16 @@ func TestTruncate(t *testing.T) {
 	c.Equal("…f", xstrings.Truncate("abcdef", 1, false))
 	c.Equal("…ef", xstrings.Truncate("abcdef", 2, false))
 
-	// Test with count = 0
 	c.Equal("…", xstrings.Truncate("hello", 0, true))
 	c.Equal("…", xstrings.Truncate("hello", 0, false))
 	c.Equal("…", xstrings.Truncate("hello world", 0, true))
 	c.Equal("…", xstrings.Truncate("hello world", 0, false))
 
-	// Test with negative count
 	c.Equal("…", xstrings.Truncate("hello", -1, true))
 	c.Equal("…", xstrings.Truncate("hello", -1, false))
 	c.Equal("…", xstrings.Truncate("hello world", -5, true))
 	c.Equal("…", xstrings.Truncate("hello world", -5, false))
 
-	// Test with Unicode characters
 	c.Equal("café", xstrings.Truncate("café", 4, true))
 	c.Equal("café", xstrings.Truncate("café", 4, false))
 	c.Equal("caf…", xstrings.Truncate("café", 3, true))
@@ -118,7 +110,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("c…", xstrings.Truncate("café", 1, true))
 	c.Equal("…é", xstrings.Truncate("café", 1, false))
 
-	// Test with emoji and complex Unicode
 	c.Equal("hello 🚀 world", xstrings.Truncate("hello 🚀 world", 13, true))
 	c.Equal("hello 🚀 world", xstrings.Truncate("hello 🚀 world", 13, false))
 	c.Equal("hello 🚀 …", xstrings.Truncate("hello 🚀 world", 8, true))
@@ -126,7 +117,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("hel…", xstrings.Truncate("hello 🚀 world", 3, true))
 	c.Equal("…rld", xstrings.Truncate("hello 🚀 world", 3, false))
 
-	// Test with single character strings
 	c.Equal("a", xstrings.Truncate("a", 1, true))
 	c.Equal("a", xstrings.Truncate("a", 1, false))
 	c.Equal("a", xstrings.Truncate("a", 5, true))
@@ -134,7 +124,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("…", xstrings.Truncate("a", 0, true))
 	c.Equal("…", xstrings.Truncate("a", 0, false))
 
-	// Test with special characters
 	c.Equal("hello\nworld", xstrings.Truncate("hello\nworld", 11, true))
 	c.Equal("hello\nworld", xstrings.Truncate("hello\nworld", 11, false))
 	c.Equal("hello\n…", xstrings.Truncate("hello\nworld", 6, true))
@@ -142,7 +131,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("hell…", xstrings.Truncate("hello\tworld", 4, true))
 	c.Equal("…orld", xstrings.Truncate("hello\tworld", 4, false))
 
-	// Test with numbers and symbols
 	c.Equal("123456789", xstrings.Truncate("123456789", 9, true))
 	c.Equal("123456789", xstrings.Truncate("123456789", 9, false))
 	c.Equal("12345…", xstrings.Truncate("123456789", 5, true))
@@ -150,7 +138,6 @@ func TestTruncate(t *testing.T) {
 	c.Equal("test@exam…", xstrings.Truncate("test@example.com", 9, true))
 	c.Equal("…ample.com", xstrings.Truncate("test@example.com", 9, false))
 
-	// Test with whitespace
 	c.Equal("  hello  ", xstrings.Truncate("  hello  ", 9, true))
 	c.Equal("  hello  ", xstrings.Truncate("  hello  ", 9, false))
 	c.Equal("  hel…", xstrings.Truncate("  hello  ", 5, true))
@@ -158,20 +145,17 @@ func TestTruncate(t *testing.T) {
 	c.Equal(" …", xstrings.Truncate("  hello  ", 1, true))
 	c.Equal("… ", xstrings.Truncate("  hello  ", 1, false))
 
-	// Test edge case: exactly one more character than count
 	c.Equal("hell…", xstrings.Truncate("hello", 4, true))
 	c.Equal("…ello", xstrings.Truncate("hello", 4, false))
 	c.Equal("hel…", xstrings.Truncate("hell", 3, true))
 	c.Equal("…ell", xstrings.Truncate("hell", 3, false))
 
-	// Test with very long strings
 	longString := "This is a very long string that contains many words and should test how the truncate function handles extended content with proper ellipsis placement"
 	c.Equal("This is a very…", xstrings.Truncate(longString, 14, true))
 	c.Equal("…psis placement", xstrings.Truncate(longString, 14, false))
 	c.Equal("This…", xstrings.Truncate(longString, 4, true))
 	c.Equal("…ment", xstrings.Truncate(longString, 4, false))
 
-	// Test with international characters
 	c.Equal("Ñoño test", xstrings.Truncate("Ñoño test", 9, true))
 	c.Equal("Ñoño test", xstrings.Truncate("Ñoño test", 9, false))
 	c.Equal("Ñoño…", xstrings.Truncate("Ñoño test", 4, true))

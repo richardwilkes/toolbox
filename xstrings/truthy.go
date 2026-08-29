@@ -11,7 +11,7 @@ package xstrings
 
 import "strings"
 
-// IsTruthy returns true for "truthy" values, i.e. ones that should be interpreted as true.
+// IsTruthy returns true if in, ignoring case, is one of "1", "t", "y", "true", "yes", or "on".
 func IsTruthy(in string) bool {
 	switch strings.ToLower(in) {
 	case "1", "t", "y", "true", "yes", "on":

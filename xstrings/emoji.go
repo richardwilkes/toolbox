@@ -11,7 +11,7 @@ package xstrings
 
 import "regexp"
 
-// SelectEmojiRegex identifies emoji runs.
+// SelectEmojiRegex matches a single emoji code point, including ZWJ, variation selectors, and modifiers.
 var SelectEmojiRegex = regexp.MustCompile(`[\x{200D}\x{203C}\x{2049}\x{20E3}\x{2122}\x{2139}\x{2194}-\x{2199}` +
 	`\x{21A9}-\x{21AA}\x{231A}-\x{231B}\x{2328}\x{2388}\x{23CF}\x{23E9}-\x{23F3}\x{23F8}-\x{23FA}\x{24C2}` +
 	`\x{25AA}-\x{25AB}\x{25B6}\x{25C0}\x{25FB}-\x{25FE}\x{2600}-\x{2605}\x{2607}-\x{2612}\x{2614}-\x{2705}` +

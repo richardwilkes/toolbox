@@ -7,8 +7,7 @@
 // This Source Code Form is "Incompatible With Secondary Licenses", as
 // defined by the Mozilla Public License, version 2.0.
 
-// Package errs implements a detailed error object that provides stack traces
-// with source locations, along with nested causes, if any.
+// Package errs provides an error type that records a stack trace with source locations and any nested causes.
 package errs
 
 import (
@@ -36,7 +35,7 @@ type ErrorWrapper interface {
 	WrappedErrors() []error
 }
 
-// StackError contains methods with the stack trace and message.
+// StackError contains methods for accessing the message and stack trace.
 type StackError interface {
 	error
 	Message() string
@@ -60,8 +59,7 @@ func (e *Error) CloneWithPrefixMessage(prefix string) error {
 	return &revised
 }
 
-// Wrap an error and turn it into a detailed error. If error is already a detailed error or nil, it will be returned
-// as-is.
+// Wrap an error in a detailed error. A nil cause, or one whose chain already holds an *Error, is returned as-is.
 func Wrap(cause error) error {
 	if xreflect.IsNil(cause) {
 		return nil
@@ -78,14 +76,14 @@ func Wrap(cause error) error {
 	}
 }
 
-// WrapTyped wraps an error and turns it into a detailed error. If error is already a detailed error or nil, it will be
-// returned as-is. This method returns the error as an *Error. Use Wrap() to receive a generic error.
+// WrapTyped wraps an error in a detailed error, returned as an *Error. A nil cause, or one that is itself an *Error, is
+// returned as-is; unlike Wrap, an error that merely wraps an *Error is wrapped again.
 func WrapTyped(cause error) *Error {
 	if xreflect.IsNil(cause) {
 		return nil
 	}
-	// Intentionally not checking to see if there is a deeper wrapped *Error as the error must be wrapped again in order
-	// to avoid losing information and still return an *Error
+	// A deeper wrapped *Error is deliberately not looked for, since the error must be wrapped again to return an *Error
+	// without losing information.
 	//nolint:errorlint // See note above
 	if err, ok := cause.(*Error); ok {
 		return err
@@ -207,7 +205,7 @@ func (e *Error) Count() int {
 	return count
 }
 
-// Message returns the message attached to this error.
+// Message returns this error's message, or a list of all the messages if multiple errors were appended.
 func (e *Error) Message() string {
 	if e.next == nil {
 		return e.message
@@ -228,9 +226,8 @@ func (e *Error) Error() string {
 	return e.Detail()
 }
 
-// Detail returns the fully detailed error message, which includes the primary message, the call stack, and potentially
-// one or more chained causes. Note that any included stack trace will be only for the first error in the case where
-// multiple errors were accumulated into one via calls to .Append().
+// Detail returns the message, the call stack, and any chained causes. When multiple errors were accumulated via
+// Append(), only the first error's stack trace and cause are included.
 func (e *Error) Detail() string {
 	msg := e.Message()
 	stack := e.StackTrace()
@@ -246,7 +243,7 @@ func (e *Error) Detail() string {
 	}
 }
 
-// StackTrace returns just the stack trace portion of the message.
+// StackTrace returns the stack trace portion of the message, including any chained causes.
 func (e *Error) StackTrace() string {
 	var buffer strings.Builder
 	stack := strings.Join(xruntime.PCsToStackTrace(e.stack), "\n    ")
@@ -274,7 +271,7 @@ func (e *Error) RawStackTrace() []uintptr {
 	return e.stack
 }
 
-// ErrorOrNil returns an error interface if this Error represents one or more errors, or nil if it is empty.
+// ErrorOrNil returns this error, or nil if it is empty.
 func (e *Error) ErrorOrNil() error {
 	if e.empty() {
 		return nil
@@ -286,7 +283,7 @@ func (e *Error) empty() bool {
 	return e == nil || (e.message == "" && e.stack == nil && e.cause == nil && e.next == nil)
 }
 
-// WrappedErrors returns the contained errors.
+// WrappedErrors returns a detached copy of each contained error.
 func (e *Error) WrappedErrors() []error {
 	result := make([]error, 0, e.Count())
 	err := e

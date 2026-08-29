@@ -39,11 +39,9 @@ var (
 	}
 )
 
-// ExternalIPAddress returns your IP address as seen by external sites. It does this by querying a list of websites that
-// will return your IP address as they see it. The first valid IP address returned by any of them is used. timeout
-// bounds how long each individual site request may take. If no valid IP address is returned from any of the sites, nil
-// is returned. Sites that usually return IPv4 addresses are queried first, then those that usually return IPv6
-// addresses.
+// ExternalIPAddress returns your IP address as seen by external sites, by querying websites that report it. The IPv4
+// sites are tried first (see ExternalIPv4Address), then the IPv6 sites (see ExternalIPv6Address). timeout bounds each
+// individual site request. If no site returns a valid IP address, nil is returned.
 func ExternalIPAddress(ctx context.Context, timeout time.Duration) net.IP {
 	if v4 := ExternalIPv4Address(ctx, timeout); v4 != nil {
 		return v4
@@ -51,18 +49,16 @@ func ExternalIPAddress(ctx context.Context, timeout time.Duration) net.IP {
 	return ExternalIPv6Address(ctx, timeout)
 }
 
-// ExternalIPv4Address returns your IPv4 address as seen by external sites. It does this by querying a list of websites
-// that will return your IPv4 address as they see it. The sites are queried concurrently and the first valid IPv4
-// address returned by any of them is used. timeout bounds how long each individual site request may take. If no valid
-// IPv4 address is returned from any of the sites, nil is returned.
+// ExternalIPv4Address returns your IPv4 address as seen by external sites. A list of websites that report it is queried
+// concurrently and the first valid IPv4 address returned is used. timeout bounds each individual site request. If no
+// site returns a valid IPv4 address, nil is returned.
 func ExternalIPv4Address(ctx context.Context, timeout time.Duration) net.IP {
 	return externalIPAddress(ctx, timeout, v4Sites, true)
 }
 
-// ExternalIPv6Address returns your IPv6 address as seen by external sites. It does this by querying a list of websites
-// that will return your IPv6 address as they see it. The sites are queried concurrently and the first valid IPv6
-// address returned by any of them is used. timeout bounds how long each individual site request may take. If no valid
-// IPv6 address is returned from any of the sites, nil is returned.
+// ExternalIPv6Address returns your IPv6 address as seen by external sites. A list of websites that report it is queried
+// concurrently and the first valid IPv6 address returned is used. timeout bounds each individual site request. If no
+// site returns a valid IPv6 address, nil is returned.
 func ExternalIPv6Address(ctx context.Context, timeout time.Duration) net.IP {
 	return externalIPAddress(ctx, timeout, v6Sites, false)
 }
@@ -114,9 +110,9 @@ func externalIPAddress(ctx context.Context, timeout time.Duration, sites []strin
 	return nil
 }
 
-// PrimaryIPAddress returns the primary IP address.
+// PrimaryIPAddress returns the local IP address used to reach external hosts, or 127.0.0.1 if it cannot be determined.
 func PrimaryIPAddress() net.IP {
-	// Since we're using udp, no connection will actually be made. We just need an external IP address.
+	// A UDP dial sends nothing; it just selects the local address that would be used to reach an external host.
 	if conn, err := net.Dial("udp", "8.8.8.8:80"); err == nil {
 		defer xio.CloseIgnoringErrors(conn)
 		if localAddr, ok := conn.LocalAddr().(*net.UDPAddr); ok {

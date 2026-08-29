@@ -126,8 +126,7 @@ func parseToBigInt(s string) (*big.Int, error) {
 	var b *big.Int
 	var ok bool
 	if strings.ContainsAny(s, "Ee") {
-		// Given a floating-point value with an exponent, which technically isn't valid input, but we'll try to convert
-		// it anyway.
+		// Input with an exponent is parsed as a big.Float and accepted only if it is integral.
 		var f *big.Float
 		f, ok = new(big.Float).SetString(s)
 		if ok && !f.IsInt() {
@@ -145,7 +144,7 @@ func parseToBigInt(s string) (*big.Int, error) {
 	return b, nil
 }
 
-// UintFromStringNoCheck creates a Uint from a string. Unlike UintFromString, this allows any string as input.
+// UintFromStringNoCheck is like UintFromString, but returns 0 for invalid input.
 func UintFromStringNoCheck(s string) Uint {
 	out, _ := UintFromString(s) //nolint:errcheck // Failure results in 0
 	return out
@@ -211,10 +210,9 @@ func (u Uint) AsFloat64() float64 {
 	if u.hi == 0 {
 		return float64(u.lo)
 	}
-	// The value needs more than 64 bits, so it can't fit in a float64's 53-bit significand. Computing it as
-	// float64(hi)*2^64 + float64(lo) would round twice (once per operand) and can land 1 ULP off. Instead, round the
-	// true 128-bit value to the nearest float64 with a single round-to-nearest, ties-to-even step: keep the top 53
-	// bits and decide the rounding from the bits being dropped.
+	// More than 64 bits won't fit in a float64's 53-bit significand, and float64(hi)*2^64 + float64(lo) would round
+	// twice (once per operand) and can land 1 ULP off. Instead, round the true 128-bit value once (nearest, ties to
+	// even): keep the top 53 bits and decide the rounding from the bits being dropped.
 	drop := uint(u.BitLen() - 53) // in [12, 75] since BitLen is in [65, 128] here
 	m := u.RightShift(drop).lo    // the top 53 significand bits; fits in a uint64
 	if u.Bit(int(drop)-1) == 1 {  // round bit set
@@ -381,7 +379,7 @@ func (u Uint) LessThanOrEqual64(n uint64) bool {
 	return u.hi == 0 && u.lo <= n
 }
 
-// BitLen returns the length of the absolute value of u in bits. The bit length of 0 is 0.
+// BitLen returns the number of bits required to represent u. The bit length of 0 is 0.
 func (u Uint) BitLen() int {
 	if u.hi != 0 {
 		return bits.Len64(u.hi) + 64
@@ -394,8 +392,7 @@ func (u Uint) OnesCount() int {
 	return bits.OnesCount64(u.hi) + bits.OnesCount64(u.lo)
 }
 
-// Bit returns the value of the i'th bit of x. That is, it returns (x>>i)&1. If the bit index is less than 0 or greater
-// than 127, zero will be returned.
+// Bit returns the value of the i'th bit of u, i.e. (u>>i)&1. Returns 0 if i is less than 0 or greater than 127.
 func (u Uint) Bit(i int) uint {
 	switch {
 	case i < 0 || i > 127:
@@ -407,8 +404,8 @@ func (u Uint) Bit(i int) uint {
 	}
 }
 
-// SetBit returns a Uint with u's i'th bit set to b (0 or 1). Values of b that are not 0 will be treated as 1. If the
-// bit index is less than 0 or greater than 127, nothing will happen.
+// SetBit returns u with its i'th bit set to b; any non-zero b is treated as 1. If i is less than 0 or greater than 127,
+// u is returned unchanged.
 func (u Uint) SetBit(i int, b uint) Uint {
 	if i < 0 || i > 127 {
 		return u
@@ -570,7 +567,7 @@ func (u Uint) Mul64(n uint64) (dest Uint) {
 	}
 }
 
-// Div returns u / n. If n == 0, a divide by zero panic will occur.
+// Div returns u / n. Panics if n == 0.
 func (u Uint) Div(n Uint) Uint {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
@@ -609,7 +606,7 @@ func (u Uint) Div(n Uint) Uint {
 	return q
 }
 
-// Div64 returns u / n. If n == 0, a divide by zero panic will occur.
+// Div64 returns u / n. Panics if n == 0.
 func (u Uint) Div64(n uint64) Uint {
 	if n == 0 {
 		panic(divByZero)
@@ -649,7 +646,7 @@ func (u Uint) Div64(n uint64) Uint {
 	return q
 }
 
-// DivMod returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
+// DivMod returns u / n and u % n. Panics if n == 0.
 func (u Uint) DivMod(n Uint) (q, r Uint) {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
@@ -690,7 +687,7 @@ func (u Uint) DivMod(n Uint) (q, r Uint) {
 	return u.divmod128bin(n, uLeading0, nLeading0)
 }
 
-// DivMod64 returns both the result of u / n as well u % n. If n == 0, a divide by zero panic will occur.
+// DivMod64 returns u / n and u % n. Panics if n == 0.
 func (u Uint) DivMod64(n uint64) (q, r Uint) {
 	if n == 0 {
 		panic(divByZero)
@@ -731,7 +728,7 @@ func (u Uint) DivMod64(n uint64) (q, r Uint) {
 	return u.divmod128bin(Uint{lo: n}, uLeading0, nLeading0)
 }
 
-// Mod returns u % n. If n == 0, a divide by zero panic will occur.
+// Mod returns u % n. Panics if n == 0.
 func (u Uint) Mod(n Uint) Uint {
 	var nLoLeading0, nHiLeading0, nLeading0 uint
 	if n.hi == 0 {
@@ -770,7 +767,7 @@ func (u Uint) Mod(n Uint) Uint {
 	return r
 }
 
-// Mod64 returns u % n. If n == 0, a divide by zero panic will occur.
+// Mod64 returns u % n. Panics if n == 0.
 func (u Uint) Mod64(n uint64) Uint {
 	if n == 0 {
 		panic(divByZero)
@@ -939,8 +936,7 @@ func (u *Uint) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Float64 implements json.Number. Intentionally always returns an error, as we never want to emit floating point values
-// into json for Uint.
+// Float64 implements json.Number. It always returns an error, as Uint must never be emitted as a floating point value.
 func (u Uint) Float64() (float64, error) {
 	return 0, errNoFloat64
 }

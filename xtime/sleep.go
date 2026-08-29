@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// Sleep for the specified Duration or until the context is done.
+// Sleep sleeps for 'd' or until 'ctx' is done, in which case ctx.Err() is returned.
 func Sleep(ctx context.Context, d time.Duration) error {
 	timer := time.NewTimer(d)
 	defer timer.Stop()

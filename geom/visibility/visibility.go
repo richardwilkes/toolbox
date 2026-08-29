@@ -86,9 +86,9 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 	return lines
 }
 
-// SetViewPoint sets a view point and generates a polygon with the unobstructed visible area.
+// SetViewPoint returns the polygon of the unobstructed area visible from viewPt, or nil if viewPt is outside the bounds
+// or no area is visible.
 func (v *Visibility) SetViewPoint(viewPt geom.Point) []geom.Point {
-	// If the view point is not within the bounding area, there is no visible area
 	if !viewPt.In(v.bounds) {
 		return nil
 	}
@@ -122,7 +122,6 @@ func (v *Visibility) SetViewPoint(viewPt geom.Point) []geom.Point {
 		lines = collectLines(line, intersections, lines, &v.bounds)
 	}
 
-	// Add the viewport bounds to the line list
 	lines = append(lines,
 		geom.NewLine(v.bounds.Point, v.bounds.TopRight()),
 		geom.NewLine(v.bounds.TopRight(), v.bounds.BottomRight()),

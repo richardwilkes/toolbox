@@ -30,11 +30,11 @@ const (
 	streamCounterSize     = 4         // Per-chunk counter; prefix + counter + 1-byte final flag fill the 12-byte nonce
 )
 
-// EncryptStreamWithPublicKey copies 'in' to 'out', encrypting the bytes along the way using authenticated encryption. A
-// fresh random AES-256 key is generated for each call and sealed to publicKey with RSA-OAEP. The data is then processed
-// in chunks, each sealed with AES-GCM, so any tampering, reordering, or truncation of the output stream is detected
-// when it is decrypted. The output stream is larger than the input stream by publicKey.Size() + 7 bytes, plus a 16-byte
-// authentication tag for every 64KB chunk of input (with a minimum of one chunk, so empty input still produces output).
+// EncryptStreamWithPublicKey copies 'in' to 'out', encrypting the bytes along the way. A fresh random AES-256 key is
+// generated per call and sealed to publicKey with RSA-OAEP; the data is then sealed in chunks with AES-GCM, so any
+// tampering, reordering, or truncation is detected when it is decrypted. The output is larger than the input by
+// publicKey.Size() + 7 bytes, plus a 16-byte authentication tag for every 64KB chunk of input (with a minimum of one
+// chunk, so empty input still produces output).
 func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.PublicKey) error {
 	encryptionKey := make([]byte, streamKeySize)
 	if _, err := io.ReadFull(rand.Reader, encryptionKey); err != nil {
@@ -94,9 +94,9 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 
 // DecryptStreamWithPrivateKey copies 'in' to 'out', decrypting the bytes along the way and verifying their integrity.
 // It reverses EncryptStreamWithPublicKey: the AES-256 key is recovered with RSA-OAEP and each chunk is opened with
-// AES-GCM. An error is returned, and no further plaintext is written, if any chunk fails authentication, which happens
-// if the stream was modified, reordered, or truncated. The output stream is smaller than the input stream by
-// privateKey.Size() + 7 bytes, plus a 16-byte authentication tag for every chunk.
+// AES-GCM. If any chunk fails authentication (the stream was modified, reordered, or truncated), an error is returned
+// and no further plaintext is written. The output is smaller than the input by privateKey.Size() + 7 bytes, plus a
+// 16-byte authentication tag for every chunk.
 func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.PrivateKey) error {
 	encryptedEncryptionKey := make([]byte, privateKey.Size())
 	if _, err := io.ReadFull(in, encryptedEncryptionKey); err != nil {
@@ -153,7 +153,7 @@ func DecryptStreamWithPrivateKey(in io.Reader, out io.Writer, privateKey *rsa.Pr
 	}
 }
 
-// newStreamAEAD creates the AES-GCM AEAD used to seal and open individual stream chunks.
+// newStreamAEAD returns the AES-GCM AEAD used to seal and open stream chunks.
 func newStreamAEAD(key []byte) (cipher.AEAD, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -166,9 +166,8 @@ func newStreamAEAD(key []byte) (cipher.AEAD, error) {
 	return gcm, nil
 }
 
-// fillStreamNonce writes the per-chunk counter and final-chunk flag into the portion of the nonce that follows the
-// random per-stream prefix. Binding the counter and flag into the nonce makes reordering, dropping, duplicating, or
-// truncating chunks fail authentication.
+// fillStreamNonce writes the chunk counter and final-chunk flag into the nonce after the random per-stream prefix.
+// Binding them into the nonce makes reordered, dropped, duplicated, or truncated chunks fail authentication.
 func fillStreamNonce(nonce []byte, counter uint32, last bool) {
 	binary.BigEndian.PutUint32(nonce[streamNoncePrefixSize:streamNoncePrefixSize+streamCounterSize], counter)
 	if last {

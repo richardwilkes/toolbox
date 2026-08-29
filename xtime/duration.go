@@ -19,9 +19,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// ParseDuration parses the duration string, as produced by FormatDuration(). The fractional seconds component, if
-// present, is interpreted as a decimal fraction of a second (so ".5" is 500ms and ".05" is 50ms), accepting more or
-// fewer than the three digits FormatDuration emits; digits beyond nanosecond resolution are truncated.
+// ParseDuration parses a duration string in the format produced by FormatDuration. The fractional seconds component,
+// if present, is a decimal fraction of a second (".5" is 500ms, ".05" is 50ms) and may have any number of digits;
+// those beyond nanosecond resolution are truncated.
 func ParseDuration(duration string) (time.Duration, error) {
 	parts := strings.Split(strings.TrimSpace(duration), ":")
 	if len(parts) != 3 {
@@ -69,8 +69,8 @@ func ParseDuration(duration string) (time.Duration, error) {
 	return total, nil
 }
 
-// addDurationComponent adds count*unit to sum, reporting whether the multiplication or addition overflowed. Both count
-// and sum are assumed to be non-negative, as guaranteed by ParseDuration's component validation.
+// addDurationComponent adds count*unit to sum, returning false if the multiplication or addition overflowed. Both
+// count and sum must be non-negative.
 func addDurationComponent(sum time.Duration, count int, unit time.Duration) (time.Duration, bool) {
 	product := time.Duration(count) * unit
 	if product/unit != time.Duration(count) {
@@ -83,9 +83,8 @@ func addDurationComponent(sum time.Duration, count int, unit time.Duration) (tim
 	return total, true
 }
 
-// parseFractionalSeconds interprets the digits following the decimal point of the seconds field as a decimal fraction
-// of a second, returning the equivalent number of nanoseconds. The digit positions matter: "5" yields 500ms and "05"
-// yields 50ms. Only digits are accepted (no sign) and any beyond nanosecond resolution (more than 9) are truncated.
+// parseFractionalSeconds converts the digits following the decimal point of the seconds field into nanoseconds: "5"
+// yields 500ms and "05" yields 50ms. Only digits are accepted, and any beyond the ninth are truncated.
 func parseFractionalSeconds(frac string) (int, error) {
 	if frac == "" {
 		return 0, errs.New("Invalid fractional second format")
@@ -108,7 +107,8 @@ func parseFractionalSeconds(frac string) (int, error) {
 	return nanos, nil
 }
 
-// FormatDuration formats the duration as either "0:00:00" or "0:00:00.000". Negative durations are treated as zero.
+// FormatDuration formats the duration as "0:00:00", or "0:00:00.000" if 'includeMillis' is true. Negative durations
+// are treated as zero.
 func FormatDuration(duration time.Duration, includeMillis bool) string {
 	if duration < 0 {
 		duration = 0
@@ -125,16 +125,14 @@ func FormatDuration(duration time.Duration, includeMillis bool) string {
 	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
 
-// DurationToCode turns a time.Duration into more human-readable text required for code than a simple number of
-// nanoseconds. The result is always a valid Go expression: zero yields "0" and negative durations are wrapped in a
-// leading negation, e.g. "-(5 * time.Second)".
+// DurationToCode returns the duration as a readable Go expression, e.g. "2 * time.Hour + 30 * time.Second". Zero
+// yields "0" and negative durations are negated, e.g. "-(5 * time.Second)".
 func DurationToCode(duration time.Duration) string {
 	switch {
 	case duration == 0:
 		return "0"
 	case duration == math.MinInt64:
-		// Negating math.MinInt64 overflows back to itself, which would recurse forever, so emit the raw value. It
-		// remains a valid Go expression.
+		// Negating math.MinInt64 overflows back to itself and would recurse forever, so emit the raw value instead.
 		return "time.Duration(" + strconv.FormatInt(int64(duration), 10) + ")"
 	case duration < 0:
 		return "-(" + DurationToCode(-duration) + ")"

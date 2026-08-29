@@ -35,7 +35,7 @@ func NewFraction[T fixed.Dx](s string) Fraction[T] {
 	return f
 }
 
-// Normalize the fraction, eliminating any division by zero and ensuring a positive denominator.
+// Normalize the fraction, turning one with a zero denominator into 0/1 and ensuring a positive denominator.
 func (f *Fraction[T]) Normalize() {
 	var zero Int[T]
 	if f.Denominator == zero {
@@ -55,7 +55,7 @@ func (f Fraction[T]) Value() Int[T] {
 	return n.Numerator.Div(n.Denominator)
 }
 
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive.
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is not negative.
 func (f Fraction[T]) StringWithSign() string {
 	n := f
 	n.Normalize()

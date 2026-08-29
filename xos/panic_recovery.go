@@ -15,8 +15,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/errs"
 )
 
-// PanicRecovery provides an easy way to run code that may panic. If the handler is nil, the panic will be logged as an
-// error.
+// PanicRecovery recovers from a panic when deferred, passing it to 'handler' as an error, or logging it if 'handler'
+// is nil.
 //
 // Typical usage:
 //
@@ -40,7 +40,7 @@ func PanicRecovery(handler func(error)) {
 	}
 }
 
-// SafeCall calls the provided function, safely wrapped by xos.PanicRecovery().
+// SafeCall calls f with PanicRecovery(handler) deferred.
 func SafeCall(f func(), handler func(error)) {
 	defer PanicRecovery(handler)
 	f()

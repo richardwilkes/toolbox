@@ -23,9 +23,9 @@ func Split(path string) []string {
 	sep := string(filepath.Separator)
 	volName := filepath.VolumeName(path)
 	if volName != "" && strings.Trim(volName, sep) == "" {
-		// On Windows, filepath.Clean() reduces a path made up of nothing but separators (e.g. "//") to `\\`, which
-		// filepath.VolumeName() then reports as a volume name even though it names neither a host nor a share. It
-		// isn't a real volume, so discard it and treat what remains as a plain root.
+		// On Windows, filepath.Clean reduces a path of nothing but separators (e.g. "//") to `\\`, which
+		// filepath.VolumeName reports as a volume name even though it names neither a host nor a share. Discard it and
+		// treat what remains as a plain root.
 		volName = ""
 		path = sep
 	} else {

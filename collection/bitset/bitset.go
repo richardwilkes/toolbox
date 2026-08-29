@@ -42,7 +42,7 @@ func (b *BitSet) Copy(other *BitSet) {
 	copy(b.data, other.data)
 }
 
-// Equal returns true if this BitSet is equal to 'other'.
+// Equal returns true if 'other' is non-nil and has the same set bits and underlying storage length as this BitSet.
 func (b *BitSet) Equal(other *BitSet) bool {
 	if other == nil {
 		return false
@@ -139,10 +139,9 @@ func (b *BitSet) ClearRange(start, end int) {
 	if i1 > maximum {
 		return
 	}
-	// endWord is the word actually containing 'end'. The loop bound i2 is capped to the allocated storage, so when
-	// 'end' lies beyond it, i2 < endWord; in that case the capped final word is wholly inside the range and must be
-	// cleared in full, i.e. its hi bound is bitIndexMask rather than (end & bitIndexMask). Comparing against endWord
-	// (not i2) keeps that distinction.
+	// endWord is the word containing 'end', while i2 is capped to the allocated storage. When 'end' lies beyond the
+	// storage, i2 < endWord and the capped final word is wholly inside the range, so its hi bound must remain
+	// bitIndexMask rather than (end & bitIndexMask); comparing against endWord (not i2) preserves that.
 	endWord := end >> addressBitsPerWord
 	i2 := min(endWord, maximum)
 	for i := i1; i <= i2; i++ {
@@ -221,7 +220,7 @@ func (b *BitSet) Or(other *BitSet) {
 	}
 }
 
-// Xor changes this BitSet in place to the bitwise XOR (exclusive OR) of itself and 'other'.
+// Xor changes this BitSet in place to the bitwise XOR of itself and 'other'.
 func (b *BitSet) Xor(other *BitSet) {
 	b.EnsureCapacity(len(other.data))
 	for i, word := range other.data {
@@ -230,18 +229,17 @@ func (b *BitSet) Xor(other *BitSet) {
 	}
 }
 
-// FirstSet returns the first set bit. If no bits are set, then -1 is returned.
+// FirstSet returns the index of the first set bit, or -1 if no bits are set.
 func (b *BitSet) FirstSet() int {
 	return b.NextSet(0)
 }
 
-// LastSet returns the last set bit. If no bits are set, then -1 is returned.
+// LastSet returns the index of the last set bit, or -1 if no bits are set.
 func (b *BitSet) LastSet() int {
 	return b.PreviousSet(len(b.data) << addressBitsPerWord)
 }
 
-// PreviousSet returns the previous set bit starting from 'start'. If no bits are set at or before 'start', then -1 is
-// returned.
+// PreviousSet returns the index of the last set bit at or before 'start', or -1 if there is none.
 func (b *BitSet) PreviousSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -261,7 +259,7 @@ func (b *BitSet) PreviousSet(start int) int {
 	return -1
 }
 
-// NextSet returns the next set bit starting from 'start'. If no bits are set at or beyond 'start', then -1 is returned.
+// NextSet returns the index of the first set bit at or after 'start', or -1 if there is none.
 func (b *BitSet) NextSet(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -277,8 +275,7 @@ func (b *BitSet) NextSet(start int) int {
 	return -1
 }
 
-// PreviousClear returns the previous clear bit starting from 'start'. If no bits are clear at or before 'start', then
-// -1 is returned.
+// PreviousClear returns the index of the last clear bit at or before 'start', or -1 if there is none.
 func (b *BitSet) PreviousClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -296,7 +293,7 @@ func (b *BitSet) PreviousClear(start int) int {
 	return -1
 }
 
-// NextClear returns the next clear bit starting from 'start'.
+// NextClear returns the index of the first clear bit at or after 'start'.
 func (b *BitSet) NextClear(start int) int {
 	validateBitSetIndex(start)
 	i := start >> addressBitsPerWord
@@ -312,7 +309,7 @@ func (b *BitSet) NextClear(start int) int {
 	return max(maximum*dataBitsPerWord, start)
 }
 
-// Trim the BitSet down to the minimum required to store the set bits.
+// Trim the underlying storage to the minimum needed to hold the set bits.
 func (b *BitSet) Trim() {
 	size := len(b.data)
 	for i := size - 1; i >= 0; i-- {
@@ -329,8 +326,8 @@ func (b *BitSet) Trim() {
 	b.data = nil
 }
 
-// EnsureCapacity ensures that the BitSet has enough underlying storage to accommodate setting a bit as high as index
-// position 'words' x 64 - 1 without needing to allocate more storage.
+// EnsureCapacity ensures the underlying storage holds at least 'words' words, so that any bit with an index below
+// 'words' * 64 can be set without further allocation.
 func (b *BitSet) EnsureCapacity(words int) {
 	size := len(b.data)
 	if words > size {
@@ -344,7 +341,7 @@ func (b *BitSet) EnsureCapacity(words int) {
 	}
 }
 
-// Data returns a copy of the underlying storage.
+// Data trims the BitSet, then returns a copy of the underlying storage.
 func (b *BitSet) Data() []uint64 {
 	b.Trim()
 	data := make([]uint64, len(b.data))
@@ -352,7 +349,7 @@ func (b *BitSet) Data() []uint64 {
 	return data
 }
 
-// Load replaces the current data with the bits set in 'data'.
+// Load replaces the current contents with a trimmed copy of 'data'.
 func (b *BitSet) Load(data []uint64) {
 	b.data = make([]uint64, len(data))
 	copy(b.data, data)

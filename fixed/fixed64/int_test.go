@@ -73,9 +73,8 @@ func testConversion[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromInteger[T](int8(-2)))
 }
 
-// TestFromFloatRounds verifies that FromFloat rounds the float64 representation to the target precision rather than
-// truncating it. A direct float multiply truncates 0.29*100 == 28.999999999999996 down to 0.28; these are the ordinary
-// inputs the previous implementation got wrong.
+// TestFromFloatRounds verifies that FromFloat rounds away float64 representation noise rather than truncating it: a
+// direct float multiply turns 0.29*100 into 28.999999999999996, which truncates to 0.28.
 func TestFromFloatRounds(t *testing.T) {
 	c := check.New(t)
 	c.Equal("0.29", fixed64.FromFloat[fixed.D2](0.29).String())
@@ -88,7 +87,7 @@ func TestFromFloatRounds(t *testing.T) {
 }
 
 // TestFromFloatMatchesFixed128 verifies that fixed64.FromFloat and fixed128.FromFloat agree across precisions and many
-// ordinary float inputs, which they did not when fixed64 truncated.
+// ordinary float inputs.
 func TestFromFloatMatchesFixed128(t *testing.T) {
 	checkFromFloatMatchesFixed128[fixed.D1](t)
 	checkFromFloatMatchesFixed128[fixed.D2](t)
@@ -395,13 +394,11 @@ func testMinMax[T fixed.Dx](t *testing.T) {
 	b := fixed64.FromInteger[T](10)
 	negativeA := fixed64.FromInteger[T](-5)
 
-	// Test Min
 	c.Equal(a, a.Min(b))
 	c.Equal(a, b.Min(a))
 	c.Equal(negativeA, negativeA.Min(a))
 	c.Equal(a, a.Min(a))
 
-	// Test Max
 	c.Equal(b, a.Max(b))
 	c.Equal(b, b.Max(a))
 	c.Equal(a, negativeA.Max(a))
@@ -424,12 +421,10 @@ func testIncDec[T fixed.Dx](t *testing.T) {
 	one := fixed64.FromInteger[T](1)
 	negativeOne := fixed64.FromInteger[T](-1)
 
-	// Test Inc
 	c.Equal(one, zero.Inc())
 	c.Equal(fixed64.FromInteger[T](2), one.Inc())
 	c.Equal(zero, negativeOne.Inc())
 
-	// Test Dec
 	c.Equal(negativeOne, zero.Dec())
 	c.Equal(zero, one.Dec())
 	c.Equal(fixed64.FromInteger[T](-2), negativeOne.Dec())
@@ -447,7 +442,6 @@ func TestAs(t *testing.T) {
 func testAs[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test integer conversions
 	intVal := fixed64.FromInteger[T](42)
 	c.Equal(int(42), intVal.AsInteger[int]())
 	c.Equal(int8(42), intVal.AsInteger[int8]())
@@ -460,14 +454,12 @@ func testAs[T fixed.Dx](t *testing.T) {
 	c.Equal(uint32(42), intVal.AsInteger[uint32]())
 	c.Equal(uint64(42), intVal.AsInteger[uint64]())
 
-	// Test float conversions
 	floatVal := fixed64.FromStringForced[T]("3.1")
 	f32Result := floatVal.AsFloat[float32]()
 	f64Result := floatVal.AsFloat[float64]()
 	c.True(f32Result > 3.0 && f32Result < 3.2)
 	c.True(f64Result > 3.0 && f64Result < 3.2)
 
-	// Test negative values
 	negVal := fixed64.FromInteger[T](-10)
 	c.Equal(int(-10), negVal.AsInteger[int]())
 	c.Equal(float64(-10.0), negVal.AsFloat[float64]())
@@ -485,7 +477,6 @@ func TestCheckedAs(t *testing.T) {
 func testCheckedAs[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test successful conversions
 	intVal := fixed64.FromInteger[T](42)
 	result, err := intVal.AsIntegerChecked[int]()
 	c.NoError(err)
@@ -495,12 +486,10 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	c.NoError(err)
 	c.Equal(float64(42.0), floatResult)
 
-	// Test conversion that should fail (fractional part)
 	fracVal := fixed64.FromStringForced[T]("42.5")
 	_, err = fracVal.AsIntegerChecked[int]()
 	c.HasError(err)
 
-	// Float conversion should succeed for fractional values
 	floatResult, err = fracVal.AsFloatChecked[float64]()
 	c.NoError(err)
 	c.True(floatResult > 42.4 && floatResult < 42.6)
@@ -511,12 +500,10 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	c.NoError(err)
 	c.Equal(float64(1000000), floatResult)
 
-	// Small destination types should work when the value fits...
 	smallResult, err := fixed64.FromInteger[T](100).AsIntegerChecked[int8]()
 	c.NoError(err)
 	c.Equal(int8(100), smallResult)
 
-	// ...and fail when it does not
 	_, err = fixed64.FromInteger[T](200).AsIntegerChecked[int8]()
 	c.HasError(err)
 }
@@ -592,7 +579,6 @@ func testMarshalText[T fixed.Dx](t *testing.T) {
 	c.NoError(err)
 	c.Equal(val, unmarshaled)
 
-	// Test with quoted text
 	err = unmarshaled.UnmarshalText([]byte(`"123.4"`))
 	c.NoError(err)
 	c.Equal(val, unmarshaled)
@@ -612,15 +598,12 @@ func testUnmarshalErrors[T fixed.Dx](t *testing.T) {
 
 	var val fixed64.Int[T]
 
-	// Test invalid JSON
 	err := val.UnmarshalJSON([]byte("invalid"))
 	c.HasError(err)
 
-	// Test invalid text
 	err = val.UnmarshalText([]byte("invalid"))
 	c.HasError(err)
 
-	// Test invalid YAML
 	err = val.UnmarshalYAML(func(any) error {
 		return fmt.Errorf("test error")
 	})
@@ -639,71 +622,59 @@ func TestFromStringEdgeCases(t *testing.T) {
 func testFromStringEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test empty string
 	_, err := fixed64.FromString[T]("")
 	c.HasError(err)
 
-	// Test string with commas
 	val, err := fixed64.FromString[T]("1,234.5")
 	c.NoError(err)
 	c.Equal("1234.5", val.String())
 
-	// Test scientific notation
 	val, err = fixed64.FromString[T]("1.23e2")
 	c.NoError(err)
 	c.Equal("123", val.String())
 
-	// Test negative scientific notation
 	val, err = fixed64.FromString[T]("-1.23E2")
 	c.NoError(err)
 	c.Equal("-123", val.String())
 
-	// Test invalid scientific notation
 	_, err = fixed64.FromString[T]("1.23ez")
 	c.HasError(err)
 
-	// Test invalid integer part
 	_, err = fixed64.FromString[T]("abc.123")
 	c.HasError(err)
 
-	// Test invalid decimal part
 	_, err = fixed64.FromString[T]("123.abc")
 	c.HasError(err)
 
-	// Test negative zero
 	val, err = fixed64.FromString[T]("-0")
 	c.NoError(err)
 	c.Equal("0", val.String())
 
-	// Test negative zero with decimal
 	val, err = fixed64.FromString[T]("-0.000")
 	c.NoError(err)
 	c.Equal("0", val.String())
 
-	// Test just decimal point
 	val, err = fixed64.FromString[T](".5")
 	c.NoError(err)
 	c.Equal("0.5", val.String())
 
-	// Test just minus sign
 	val, err = fixed64.FromString[T]("-.5")
 	c.NoError(err)
 	c.Equal("-0.5", val.String())
 
-	// Test very long decimal precision (should be truncated)
 	val, err = fixed64.FromString[T]("0.123456789012345678901234567890")
 	c.NoError(err)
 	// Just verify it doesn't panic and produces a reasonable result
 	c.NotEqual("", val.String())
 	c.HasPrefix(val.String(), "0.1")
 
-	// Test values that parse as integers but overflow once scaled
+	// Integers that overflow once scaled by the multiplier
 	_, err = fixed64.FromString[T]("9223372036854775807")
 	c.HasError(err)
 	_, err = fixed64.FromString[T]("-9223372036854775807")
 	c.HasError(err)
 
-	// Test that the extremes round-trip
+	// The extremes round-trip
 	val, err = fixed64.FromString[T](fixed64.Maximum[T]().String())
 	c.NoError(err)
 	c.Equal(fixed64.Maximum[T](), val)
@@ -751,15 +722,12 @@ func TestCeilEdgeCases(t *testing.T) {
 func testCeilEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test negative fractional value
 	negFrac := fixed64.FromStringForced[T]("-2.5")
 	c.Equal(fixed64.FromInteger[T](-2), negFrac.Ceil())
 
-	// Test zero
 	zero := fixed64.FromInteger[T](0)
 	c.Equal(zero, zero.Ceil())
 
-	// Test negative zero
 	negZero := fixed64.FromStringForced[T]("-0.0")
 	c.Equal(fixed64.FromInteger[T](0), negZero.Ceil())
 }
@@ -776,15 +744,12 @@ func TestStringEdgeCases(t *testing.T) {
 func testStringEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test negative fractional with zero integer part
 	negFrac := fixed64.FromStringForced[T]("-0.5")
 	c.Equal("-0.5", negFrac.String())
 
-	// Test positive fractional with zero integer part
 	posFrac := fixed64.FromStringForced[T]("0.5")
 	c.Equal("0.5", posFrac.String())
 
-	// Test trailing zeros removal
 	val := fixed64.FromStringForced[T]("1.2000")
 	c.Equal("1.2", val.String())
 }
@@ -801,21 +766,17 @@ func TestAdditionalEdgeCases(t *testing.T) {
 func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
 
-	// Test CheckedAs with float conversion that should fail
 	val := fixed64.FromStringForced[T]("999999999999999999.9")
 	_, _ = val.AsFloatChecked[float32]() //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
 	c.NotNil(val)
 
-	// Test YAML unmarshaling with string data
 	var intVal fixed64.Int[T]
 	err := intVal.UnmarshalYAML(func(v any) error {
 		*v.(*string) = "42" //nolint:errcheck // This is just a test, we know it will succeed
 		return nil
 	})
-	// This should handle the string value correctly
 	c.NoError(err)
 
-	// Test YAML unmarshaling with unmarshaling error
 	err = intVal.UnmarshalYAML(func(any) error {
 		return fmt.Errorf("unmarshal error")
 	})
@@ -837,8 +798,7 @@ func TestMulOverflow(t *testing.T) {
 }
 
 // TestOutOfRangeSaturates verifies that a value too large for the type to hold converts to Maximum/Minimum rather than
-// to 0. FromFloat used to discard the conversion error and hand back 0, which turned the largest possible input into
-// the smallest possible result — the exact opposite of what was asked for, and silently.
+// to 0.
 func TestOutOfRangeSaturates(t *testing.T) {
 	testOutOfRangeSaturates[fixed.D1](t)
 	testOutOfRangeSaturates[fixed.D2](t)
@@ -874,8 +834,7 @@ func testOutOfRangeSaturates[T fixed.Dx](t *testing.T) {
 
 // TestFromStringOutOfRangeReportsAndSaturates verifies that FromString reports an out-of-range value while still
 // handing back the saturated bound, so that FromStringForced — which discards the error — is left with the nearest
-// representable value instead of 0. It also covers the exponent path, which used to route through FromFloat and
-// silently return 0 with no error at all.
+// representable value instead of 0. It also covers the exponent path.
 func TestFromStringOutOfRangeReportsAndSaturates(t *testing.T) {
 	c := check.New(t)
 	maximum := fixed64.Maximum[fixed.D4]()

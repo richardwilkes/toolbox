@@ -47,7 +47,7 @@ func Encode(w io.Writer, images ...image.Image) error {
 	if len(images) == 0 {
 		return errs.New("must supply at least 1 image")
 	}
-	// Work on a copy so sorting doesn't reorder the caller's backing array as a hidden side effect.
+	// Sort a copy so the caller's slice isn't reordered.
 	images = slices.Clone(images)
 	slices.SortFunc(images, func(a, b image.Image) int {
 		return cmp.Compare(b.Bounds().Dx(), a.Bounds().Dx())

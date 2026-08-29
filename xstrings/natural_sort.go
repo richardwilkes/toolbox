@@ -13,34 +13,17 @@ import (
 	"slices"
 )
 
-// NaturalLess compares two strings using natural ordering. This means that "a2" < "a12".
-//
-// Non-digit sequences and numbers are compared separately. The former are compared byte-wise, while the latter are
-// compared numerically (except that the number of leading zeros is used as a tie-breaker, so "2" < "02").
-//
-// Limitations:
-//   - only ASCII digits (0-9) are considered.
-//
-// Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
-//
-// Note that the caseInsensitive flag causes an initial case-insensitive comparison, but if the strings are equal
-// after that, the comparison falls back to case-sensitive.
+// NaturalLess reports whether s1 sorts before s2 in natural order. See NaturalCmp.
 func NaturalLess(s1, s2 string, caseInsensitive bool) bool {
 	return NaturalCmp(s1, s2, caseInsensitive) < 0
 }
 
-// NaturalCmp compares two strings using natural ordering. This means that "a2" < "a12".
-//
-// Non-digit sequences and numbers are compared separately. The former are compared byte-wise, while the latter are
-// compared numerically (except that the number of leading zeros is used as a tie-breaker, so "2" < "02").
-//
-// Limitations:
-//   - only ASCII digits (0-9) are considered.
+// NaturalCmp compares two strings using natural ordering, so "a2" < "a12", and returns -1, 0, or 1. Non-digit
+// sequences are compared byte-wise and digit sequences numerically, with the number of leading zeros as a
+// tie-breaker, so "2" < "02". Only ASCII digits are recognized. When caseInsensitive is true, ASCII letters are first
+// compared ignoring case; if the strings are equal that way, the comparison falls back to case-sensitive.
 //
 // Original algorithm: https://github.com/fvbommel/util/blob/master/sortorder/natsort.go
-//
-// Note that the caseInsensitive flag causes an initial case-insensitive comparison, but if the strings are equal
-// after that, the comparison falls back to case-sensitive.
 func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 	i1 := 0
 	i2 := 0
@@ -56,7 +39,7 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 			}
 			return 1
 		case !d1: // && !d2, because d1 == d2
-			// UTF-8 compares byte-wise-lexicographically, no need to decode code-points.
+			// UTF-8 byte order matches code point order, so no decoding is needed.
 			if caseInsensitive {
 				if c1 >= 'a' && c1 <= 'z' {
 					c1 -= 'a' - 'A'
@@ -74,14 +57,12 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 			i1++
 			i2++
 		default: // Digits
-			// Eat zeros.
 			for i1 < len(s1) && s1[i1] == '0' {
 				i1++
 			}
 			for i2 < len(s2) && s2[i2] == '0' {
 				i2++
 			}
-			// Eat all digits.
 			nz1, nz2 := i1, i2
 			for i1 < len(s1) && s1[i1] >= '0' && s1[i1] <= '9' {
 				i1++
@@ -89,22 +70,22 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 			for i2 < len(s2) && s2[i2] >= '0' && s2[i2] <= '9' {
 				i2++
 			}
-			// If lengths of numbers with non-zero prefix differ, the shorter one is less.
+			// After stripping leading zeros, the shorter number is less.
 			if len1, len2 := i1-nz1, i2-nz2; len1 != len2 {
 				if len1 < len2 {
 					return -1
 				}
 				return 1
 			}
-			// If they're not equal, string comparison is correct.
+			// Same length, so string comparison is numeric comparison.
 			if nr1, nr2 := s1[nz1:i1], s2[nz2:i2]; nr1 != nr2 {
 				if nr1 < nr2 {
 					return -1
 				}
 				return 1
 			}
-			// Otherwise, the one with less zeros is less. Because everything up to the number is equal, comparing the
-			// index after the zeros is sufficient.
+			// Same number, so fewer leading zeros is less. Everything before the number is equal, so comparing the
+			// indices after the zeros suffices.
 			if nz1 != nz2 {
 				if nz1 < nz2 {
 					return -1
@@ -112,10 +93,9 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 				return 1
 			}
 		}
-		// They're identical so far, so continue comparing.
 	}
-	// So far they are identical. At least one is ended. If the other continues, it sorts last. If they are the same
-	// length and the caseInsensitive flag was set, compare again, but without the flag.
+	// Identical so far and at least one has ended, so the longer sorts last. If the same length and caseInsensitive,
+	// compare again case-sensitively.
 	switch {
 	case len(s1) == len(s2):
 		if caseInsensitive {
@@ -129,12 +109,12 @@ func NaturalCmp(s1, s2 string, caseInsensitive bool) int {
 	}
 }
 
-// SortStringsNaturalAscending sorts a slice of strings using NaturalLess in least to most order.
+// SortStringsNaturalAscending sorts the slice in ascending order using NaturalCmp with caseInsensitive true.
 func SortStringsNaturalAscending(in []string) {
 	slices.SortFunc(in, func(a, b string) int { return NaturalCmp(a, b, true) })
 }
 
-// SortStringsNaturalDescending sorts a slice of strings using NaturalLess in most to least order.
+// SortStringsNaturalDescending sorts the slice in descending order using NaturalCmp with caseInsensitive true.
 func SortStringsNaturalDescending(in []string) {
 	slices.SortFunc(in, func(a, b string) int { return NaturalCmp(b, a, true) })
 }

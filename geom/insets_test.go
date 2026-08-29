@@ -133,7 +133,6 @@ func TestInsetsDiv(t *testing.T) {
 	c.Equal(float32(4), result.Bottom) // 12 / 3
 	c.Equal(float32(5), result.Right)  // 15 / 3
 
-	// Test with float
 	insetsF := geom.NewInsets(7.0, 9.0, 11.0, 13.0)
 	resultF := insetsF.Div(2.0)
 
@@ -182,7 +181,6 @@ func TestInsetsString(t *testing.T) {
 	str := insets.String()
 	c.Equal("1,2,3,4", str)
 
-	// Test with float
 	insetsF := geom.NewInsets(1.5, 2.7, 3.2, 4.8)
 	strF := insetsF.String()
 	c.Equal("1.5,2.7,3.2,4.8", strF)

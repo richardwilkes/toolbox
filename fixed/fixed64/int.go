@@ -57,35 +57,34 @@ func FromInteger[T fixed.Dx, FROM xmath.Integer](value FROM) Int[T] {
 	return Int[T](int64(value) * Multiplier[T]())
 }
 
-// FromFloat creates a new value. A value whose magnitude is too large for the type to hold saturates to Maximum() or
-// Minimum(), as an infinity does and as Mul() and Div() do when their result overflows; NaN converts to 0. Note that
-// returning 0 for an out-of-range value — which this once did, by discarding the conversion error — silently turned the
-// largest possible input into the smallest possible result.
+// FromFloat creates a new value. A value whose magnitude is too large for the type to hold, including an infinity,
+// saturates to Maximum() or Minimum(), as Mul() and Div() do when their result overflows; NaN converts to 0.
 func FromFloat[T fixed.Dx, FROM xmath.Float](value FROM) Int[T] {
 	f, _ := fromFloat[T](float64(value)) //nolint:errcheck // The saturated value is the documented result
 	return f
 }
 
 // fromFloat converts a float64, returning the saturated value along with an error if it falls outside the range the
-// type can represent. That lets FromFloat accept the saturation while FromString reports the failure.
+// type can represent, so that FromFloat can accept the saturation while FromString reports the failure.
 func fromFloat[T fixed.Dx](value float64) (Int[T], error) {
 	switch {
 	case math.IsNaN(value):
-		// big.Float.SetFloat64 panics on a NaN, so it has to be turned away before the conversion below.
+		// big.Float.SetFloat64 panics on a NaN, so it must be rejected before the conversion below.
 		return 0, errs.New("NaN is not a valid value")
 	case math.IsInf(value, 1):
 		return Maximum[T](), errs.New("value out of range: +Inf")
 	case math.IsInf(value, -1):
 		return Minimum[T](), errs.New("value out of range: -Inf")
 	}
-	// Convert through a decimal string with one extra digit of precision so the result is rounded rather than
-	// truncated. A direct float multiply such as 0.29 * 100 yields 28.999999999999996, which truncates to 0.28; routing
-	// through big.Float (as fixed128 does) rounds the representation noise away and keeps the two precisions in
-	// agreement. Text('f') never emits an exponent, so this cannot recurse back through FromString's exponent path.
+	// Convert through a decimal string with one extra digit of precision so that float representation noise is
+	// rounded away rather than truncated into the result: a direct multiply such as 0.29 * 100 yields
+	// 28.999999999999996, which truncates to 0.28. Routing through big.Float (as fixed128 does) keeps the two
+	// precisions in agreement. Text('f') never emits an exponent, so this cannot recurse back through FromString's
+	// exponent path.
 	return FromString[T](new(big.Float).SetPrec(64).SetFloat64(value).Text('f', MaxDecimalDigits[T]()+1))
 }
 
-// saturated returns the bound that a value falling outside the representable range is clamped to.
+// saturated returns the bound an out-of-range value is clamped to.
 func saturated[T fixed.Dx](neg bool) Int[T] {
 	if neg {
 		return Minimum[T]()
@@ -93,18 +92,17 @@ func saturated[T fixed.Dx](neg bool) Int[T] {
 	return Maximum[T]()
 }
 
-// FromString creates a new value from a string. A value that falls outside the range the type can represent is reported
-// as an error, with the saturated bound returned alongside it, so that a caller which ignores the error (such as
-// FromStringForced) is left holding the nearest representable value rather than 0.
+// FromString creates a new value from a string. An out-of-range value is reported as an error, with the saturated bound
+// returned alongside it, so that a caller which ignores the error (such as FromStringForced) gets the nearest
+// representable value rather than 0.
 func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if str == "" {
 		return 0, errs.New("empty string is not valid")
 	}
 	str = strings.ReplaceAll(str, ",", "")
 	if strings.ContainsAny(str, "Ee") {
-		// Given a floating-point value with an exponent, which technically isn't valid input, but we'll try to convert
-		// it anyway. A range error from ParseFloat still yields an infinity, which saturates in fromFloat, so only a
-		// malformed value is turned away here.
+		// An exponent technically isn't valid input, but try to convert it anyway. A range error from ParseFloat still
+		// yields an infinity, which fromFloat saturates, so only a malformed value is rejected here.
 		f, err := strconv.ParseFloat(str, 64)
 		if err != nil && !errors.Is(err, strconv.ErrRange) {
 			return 0, errs.Wrap(err)
@@ -126,8 +124,8 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	case strings.HasPrefix(intPart, "+"):
 		intPart = intPart[1:]
 	}
-	// The magnitude is accumulated as a uint64 so that overflow can be detected; the limit gains one for negative
-	// values, since the minimum value has a magnitude one greater than the maximum value.
+	// The magnitude is accumulated as a uint64 so that overflow can be detected; the limit is one greater for negative
+	// values, since Minimum() has a magnitude one greater than Maximum().
 	limit := uint64(math.MaxInt64)
 	if neg {
 		limit++
@@ -137,7 +135,7 @@ func FromString[T fixed.Dx](str string) (Int[T], error) {
 	if intPart != "" {
 		if value, err = strconv.ParseUint(intPart, 10, 64); err != nil {
 			// A magnitude too large for a uint64 is out of range rather than malformed, so it saturates like any other
-			// out-of-range value instead of collapsing to 0.
+			// out-of-range value.
 			if errors.Is(err, strconv.ErrRange) {
 				return saturated[T](neg), errs.Newf("value out of range: %s", str)
 			}
@@ -243,16 +241,14 @@ func (f Int[T]) AsFloatChecked[TO xmath.Float]() (TO, error) {
 	return n, nil
 }
 
-// Add adds this value to the passed-in value, returning a new value. Note that this method is only provided to make
-// text templates easier to use with these objects, since you can just add two Int[T] values together like they were
-// primitive types.
+// Add returns this value plus the passed-in value. It exists only to make text templates easier to use, since Int[T]
+// values can be added directly.
 func (f Int[T]) Add(value Int[T]) Int[T] {
 	return f + value
 }
 
-// Sub subtracts the passed-in value from this value, returning a new value. Note that this method is only provided to
-// make text templates easier to use with these objects, since you can just subtract two Int[T] values together like
-// they were primitive types.
+// Sub returns this value minus the passed-in value. It exists only to make text templates easier to use, since Int[T]
+// values can be subtracted directly.
 func (f Int[T]) Sub(value Int[T]) Int[T] {
 	return f - value
 }
@@ -271,7 +267,7 @@ func (f Int[T]) mul64(value, div Int[T]) Int[T] {
 		return result / div
 	}
 	// The product overflowed int64, so compute it exactly in 128-bit space. The final value may still exceed the int64
-	// range, in which case saturate to Maximum()/Minimum() rather than letting AsInt64() wrap to a garbage value.
+	// range, in which case saturate to Maximum()/Minimum() rather than letting AsInt64() wrap.
 	r := num128.IntFrom64(int64(f)).Mul(num128.IntFrom64(int64(value))).Div(num128.IntFrom64(int64(div)))
 	if r.GreaterThan(num128.IntFrom64(math.MaxInt64)) {
 		return Maximum[T]()
@@ -313,7 +309,6 @@ func (f Int[T]) Floor() Int[T] {
 	v := f.Trunc()
 	if f < 0 && f != v {
 		mult := Int[T](Multiplier[T]())
-		// The whole-number floor of values just above Minimum() is not representable, so saturate to Minimum().
 		if v < Minimum[T]()+mult {
 			return Minimum[T]()
 		}
@@ -328,7 +323,6 @@ func (f Int[T]) Ceil() Int[T] {
 	v := f.Trunc()
 	if f > 0 && f != v {
 		mult := Int[T](Multiplier[T]())
-		// The whole-number ceiling of values just below Maximum() is not representable, so saturate to Maximum().
 		if v > Maximum[T]()-mult {
 			return Maximum[T]()
 		}
@@ -345,13 +339,11 @@ func (f Int[T]) Round() Int[T] {
 	value := f.Trunc()
 	rem := f - value
 	if rem >= one/2 {
-		// The rounded result near Maximum() is not representable, so saturate to Maximum().
 		if value > Maximum[T]()-one {
 			return Maximum[T]()
 		}
 		value += one
 	} else if rem <= -(one / 2) {
-		// The rounded result near Minimum() is not representable, so saturate to Minimum().
 		if value < Minimum[T]()+one {
 			return Minimum[T]()
 		}
@@ -386,7 +378,7 @@ func (f Int[T]) Dec() Int[T] {
 	return f - Int[T](Multiplier[T]())
 }
 
-// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is positive
+// CommaWithSign returns the same as Comma(), but prefixes the value with a '+' if it is not negative.
 func (f Int[T]) CommaWithSign() string {
 	if f >= 0 {
 		return "+" + f.Comma()
@@ -394,12 +386,12 @@ func (f Int[T]) CommaWithSign() string {
 	return f.Comma()
 }
 
-// Comma returns the same as String(), but with commas for values of 1000 and greater.
+// Comma returns the same as String(), but with commas separating thousands in the integer portion.
 func (f Int[T]) Comma() string {
 	return xstrings.CommaFromStringNum(f.String())
 }
 
-// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is positive
+// StringWithSign returns the same as String(), but prefixes the value with a '+' if it is not negative.
 func (f Int[T]) StringWithSign() string {
 	if f >= 0 {
 		return "+" + f.String()

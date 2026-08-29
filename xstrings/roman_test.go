@@ -19,7 +19,6 @@ import (
 func TestToRoman(t *testing.T) {
 	c := check.New(t)
 
-	// Test basic single digits (1-9)
 	c.Equal("I", xstrings.RomanNumerals(1))
 	c.Equal("II", xstrings.RomanNumerals(2))
 	c.Equal("III", xstrings.RomanNumerals(3))
@@ -30,38 +29,31 @@ func TestToRoman(t *testing.T) {
 	c.Equal("VIII", xstrings.RomanNumerals(8))
 	c.Equal("IX", xstrings.RomanNumerals(9))
 
-	// Test tens
 	c.Equal("X", xstrings.RomanNumerals(10))
 	c.Equal("XI", xstrings.RomanNumerals(11))
 	c.Equal("XIV", xstrings.RomanNumerals(14))
 
-	// Test numbers in the 30s and 40s
 	c.Equal("XXXIX", xstrings.RomanNumerals(39))
 	c.Equal("XL", xstrings.RomanNumerals(40))
 	c.Equal("XLI", xstrings.RomanNumerals(41))
 	c.Equal("XLIX", xstrings.RomanNumerals(49))
 
-	// Test 50s
 	c.Equal("L", xstrings.RomanNumerals(50))
 	c.Equal("LI", xstrings.RomanNumerals(51))
 
-	// Test numbers in the 80s and 90s
 	c.Equal("LXXXIX", xstrings.RomanNumerals(89))
 	c.Equal("XC", xstrings.RomanNumerals(90))
 	c.Equal("XCIX", xstrings.RomanNumerals(99))
 
-	// Test hundreds
 	c.Equal("C", xstrings.RomanNumerals(100))
 	c.Equal("CCCXCIX", xstrings.RomanNumerals(399))
 	c.Equal("CD", xstrings.RomanNumerals(400))
 	c.Equal("CDXCIX", xstrings.RomanNumerals(499))
 
-	// Test 500s
 	c.Equal("D", xstrings.RomanNumerals(500))
 	c.Equal("DCCCXCIX", xstrings.RomanNumerals(899))
 	c.Equal("CM", xstrings.RomanNumerals(900))
 
-	// Test complex historical dates
 	c.Equal("MCMLXVII", xstrings.RomanNumerals(1967))
 	c.Equal("MMXXI", xstrings.RomanNumerals(2021))
 }

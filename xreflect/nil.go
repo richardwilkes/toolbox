@@ -11,7 +11,8 @@ package xreflect
 
 import "reflect"
 
-// IsNil returns true if the interface is nil or if the value it points to is nil.
+// IsNil returns true if 'i' is nil or holds a nil channel, function, interface, map, pointer, slice, or unsafe
+// pointer.
 func IsNil(i any) bool {
 	if i == nil {
 		return true

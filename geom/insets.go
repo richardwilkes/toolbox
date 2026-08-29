@@ -41,7 +41,7 @@ func NewUniformInsets(amount float32) Insets {
 	}
 }
 
-// NewSymmetricInsets returns an Insets whose edges match their opposite edge.
+// NewSymmetricInsets returns an Insets whose left and right edges are h and whose top and bottom edges are v.
 func NewSymmetricInsets(h, v float32) Insets {
 	return Insets{
 		Top:    v,
@@ -67,7 +67,7 @@ func NewVerticalInsets(amount float32) Insets {
 	}
 }
 
-// Add returns a new Insets which is the result of adding this Insets with the provided Insets.
+// Add returns the sum of this Insets and the provided Insets.
 func (i Insets) Add(in Insets) Insets {
 	return Insets{
 		Top:    i.Top + in.Top,
@@ -77,7 +77,7 @@ func (i Insets) Add(in Insets) Insets {
 	}
 }
 
-// Sub returns a new Insets which is the result of subtracting the provided Insets from this Insets.
+// Sub returns the result of subtracting the provided Insets from this Insets.
 func (i Insets) Sub(in Insets) Insets {
 	return Insets{
 		Top:    i.Top - in.Top,
@@ -87,7 +87,7 @@ func (i Insets) Sub(in Insets) Insets {
 	}
 }
 
-// Mul returns a new Insets which is the result of multiplying the values of this Insets by the value.
+// Mul returns this Insets with each edge multiplied by the value.
 func (i Insets) Mul(value float32) Insets {
 	return Insets{
 		Top:    i.Top * value,
@@ -97,7 +97,7 @@ func (i Insets) Mul(value float32) Insets {
 	}
 }
 
-// Div returns a new Insets which is the result of dividing the values of this Insets by the value.
+// Div returns this Insets with each edge divided by the value.
 func (i Insets) Div(value float32) Insets {
 	return Insets{
 		Top:    i.Top / value,
@@ -107,7 +107,7 @@ func (i Insets) Div(value float32) Insets {
 	}
 }
 
-// Size returns the Size of the Insets.
+// Size returns Width() and Height() as a Size.
 func (i Insets) Size() Size {
 	return NewSize(i.Width(), i.Height())
 }

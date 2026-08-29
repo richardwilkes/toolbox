@@ -70,7 +70,6 @@ func TestSoftRef(t *testing.T) {
 	lookFor(c, get.key, ch)
 }
 
-// inertRes is a resource whose Release does nothing.
 type inertRes struct {
 	key string
 }
@@ -78,8 +77,8 @@ type inertRes struct {
 func (r *inertRes) Key() string { return r.key }
 func (r *inertRes) Release()    {}
 
-// reentrantRes re-enters its pool from within Release by acquiring another SoftRef. With the old implementation this
-// ran while the finalizer goroutine held the pool lock, deadlocking on the non-reentrant mutex.
+// reentrantRes re-enters its pool from within Release by acquiring another SoftRef. This deadlocked when the finalizer
+// held the pool lock across Release.
 type reentrantRes struct {
 	pool *softref.Pool
 	done chan struct{}
@@ -99,7 +98,7 @@ func TestSoftRefReleaseReentrantNoDeadlock(t *testing.T) {
 	p := softref.NewPool()
 	done := make(chan struct{})
 
-	// Create and immediately drop the only reference, so the finalizer will run Release(), which re-enters the pool.
+	// Drop the only reference so the finalizer runs Release(), which re-enters the pool.
 	func() {
 		sr, existed := p.NewSoftRef(&reentrantRes{pool: p, key: "reentrant", done: done})
 		c.False(existed)

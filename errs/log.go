@@ -21,27 +21,27 @@ import (
 // StackTraceKey is the key used for logging the stack trace.
 const StackTraceKey = "stack"
 
-// Log an error with a stack trace.
+// Log an error with a stack trace to the default logger.
 func Log(err error, args ...any) {
 	log(context.Background(), slog.LevelError, slog.Default(), WrapTyped(err), args...)
 }
 
-// LogContext logs an error with a stack trace.
+// LogContext logs an error with a stack trace to the default logger.
 func LogContext(ctx context.Context, err error, args ...any) {
 	log(ctx, slog.LevelError, slog.Default(), WrapTyped(err), args...)
 }
 
-// LogTo logs an error with a stack trace.
+// LogTo logs an error with a stack trace to logger.
 func LogTo(logger *slog.Logger, err error, args ...any) {
 	log(context.Background(), slog.LevelError, logger, WrapTyped(err), args...)
 }
 
-// LogContextTo logs an error with a stack trace.
+// LogContextTo logs an error with a stack trace to logger.
 func LogContextTo(ctx context.Context, logger *slog.Logger, err error, args ...any) {
 	log(ctx, slog.LevelError, logger, WrapTyped(err), args...)
 }
 
-// LogWithLevel logs an error with a stack trace.
+// LogWithLevel logs an error with a stack trace to logger at the given level.
 func LogWithLevel(ctx context.Context, level slog.Level, logger *slog.Logger, err error, args ...any) {
 	log(ctx, level, logger, WrapTyped(err), args...)
 }
@@ -77,27 +77,27 @@ func createRecord(level slog.Level, err *Error) slog.Record {
 	return r
 }
 
-// LogAttrs logs an error with a stack trace.
+// LogAttrs logs an error with a stack trace and attributes to the default logger.
 func LogAttrs(err error, attrs ...slog.Attr) {
 	logAttrs(context.Background(), slog.LevelError, slog.Default(), WrapTyped(err), attrs...)
 }
 
-// LogAttrsContext logs an error with a stack trace.
+// LogAttrsContext logs an error with a stack trace and attributes to the default logger.
 func LogAttrsContext(ctx context.Context, err error, attrs ...slog.Attr) {
 	logAttrs(ctx, slog.LevelError, slog.Default(), WrapTyped(err), attrs...)
 }
 
-// LogAttrsTo logs an error with a stack trace.
+// LogAttrsTo logs an error with a stack trace and attributes to logger.
 func LogAttrsTo(logger *slog.Logger, err error, attrs ...slog.Attr) {
 	logAttrs(context.Background(), slog.LevelError, logger, WrapTyped(err), attrs...)
 }
 
-// LogAttrsContextTo logs an error with a stack trace.
+// LogAttrsContextTo logs an error with a stack trace and attributes to logger.
 func LogAttrsContextTo(ctx context.Context, logger *slog.Logger, err error, attrs ...slog.Attr) {
 	logAttrs(ctx, slog.LevelError, logger, WrapTyped(err), attrs...)
 }
 
-// LogAttrsWithLevel logs an error with a stack trace.
+// LogAttrsWithLevel logs an error with a stack trace and attributes to logger at the given level.
 func LogAttrsWithLevel(ctx context.Context, level slog.Level, logger *slog.Logger, err error, attrs ...slog.Attr) {
 	logAttrs(ctx, level, logger, WrapTyped(err), attrs...)
 }

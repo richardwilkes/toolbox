@@ -22,9 +22,8 @@ type boundsNode struct {
 
 func (n boundsNode) Bounds() geom.Rect { return n.Rect }
 
-// TestSplitQuadrants verifies that splitting a non-square node produces four correctly-sized
-// quadrants. A square node would mask a width/height mix-up in the top-left child, so a
-// deliberately wide rect is used here.
+// TestSplitQuadrants verifies that splitting a non-square node produces four correctly-sized quadrants. A square node
+// would mask a width/height mix-up in the top-left child, so a deliberately wide rect is used.
 func TestSplitQuadrants(t *testing.T) {
 	c := check.New(t)
 
@@ -46,10 +45,9 @@ func TestSplitQuadrants(t *testing.T) {
 	c.Equal(geom.NewRect(hw, hh, hw, hh), n.children[3].rect) // bottom-right
 }
 
-// TestStraddlingContentsAccumulate documents the degenerate-input behavior described on splitIfNeeded and the QuadTree
-// type: objects whose bounds straddle a cell's center line fit none of the children, so they pile into a single cell
-// that cannot subdivide further. This verifies both that such input produces exactly that shape and that queries over
-// the degenerate cell still return correct results despite scanning it linearly.
+// TestStraddlingContentsAccumulate verifies the degenerate-input behavior described on splitIfNeeded and QuadTree:
+// objects straddling a cell's center line fit none of the children, so they pile into a single cell that cannot
+// subdivide further, and queries over that cell still return correct results.
 func TestStraddlingContentsAccumulate(t *testing.T) {
 	c := check.New(t)
 
@@ -58,8 +56,7 @@ func TestStraddlingContentsAccumulate(t *testing.T) {
 		rect:      geom.NewRect(0, 0, 100, 100),
 		threshold: threshold,
 	}
-	// Every object is centered on (50, 50) — the cell's center — so none can descend into any child, no matter how
-	// many are inserted or how far past the threshold the cell grows.
+	// Every object is centered on the cell's center (50, 50), so none can descend into a child regardless of count.
 	const count = 3 * threshold
 	for i := range count {
 		half := float32(i + 1)

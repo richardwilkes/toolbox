@@ -23,13 +23,13 @@ func Bool[T ~bool](h hash.Hash, data T) {
 	_, _ = h.Write(buffer[:])
 }
 
-// BytesWithLen writes the given length plus bytes to the hash.
+// BytesWithLen writes the length of data (via Num64) followed by data to the hash.
 func BytesWithLen[T ~[]byte](h hash.Hash, data T) {
 	Num64(h, len(data))
 	_, _ = h.Write(data)
 }
 
-// StringWithLen writes the given length plus string to the hash.
+// StringWithLen writes the length of data (via Num64) followed by data to the hash.
 func StringWithLen[T ~string](h hash.Hash, data T) {
 	Num64(h, len(data))
 	_, _ = h.Write([]byte(data))
@@ -77,7 +77,7 @@ func Num64[T ~int64 | ~uint64 | ~int | ~uint](h hash.Hash, data T) {
 	_, _ = h.Write(buffer[:])
 }
 
-// Float32 writes the given 64-bit float to the hash.
+// Float32 writes the given 32-bit float to the hash.
 func Float32[T ~float32](h hash.Hash, data T) {
 	Num32(h, math.Float32bits(float32(data)))
 }

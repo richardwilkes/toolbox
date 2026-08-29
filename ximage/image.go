@@ -15,9 +15,8 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// Stack a set of images on top of each other, producing a new image. The first image in the series will be on the
-// bottom and the last will be on the top. If the images are of different sizes, the resulting image will be the size of
-// the largest image and all other images will be centered within that area.
+// Stack a set of images on top of each other, producing a new image. The first image is on the bottom and the last on
+// top. The result is as wide as the widest image and as tall as the tallest, with each image centered within it.
 func Stack(images ...image.Image) image.Image {
 	var width, height int
 	for _, img := range images {
@@ -45,10 +44,9 @@ type ImageAt struct {
 	Origin image.Point
 }
 
-// StackAt stacks a set of images on top of each other, producing a new image. The first image in the series will be on
-// the bottom and the last will be on the top. The resulting image will be the size of the largest area covered based on
-// each image's size plus origin. Note that if an origin has a negative value, it will be normalized such that the
-// largest negative will become the new origin for the resulting image.
+// StackAt stacks a set of images on top of each other, producing a new image. The first image is on the bottom and the
+// last on top. The result is sized to the largest area covered by each image's size plus origin. Negative origins are
+// normalized so that the most negative becomes the origin of the result.
 func StackAt(images ...*ImageAt) image.Image {
 	var x, y, width, height int
 	for _, img := range images {
@@ -76,7 +74,8 @@ func StackAt(images ...*ImageAt) image.Image {
 	return base
 }
 
-// Scale an image.
+// Scale returns img scaled to the given width and height using Catmull-Rom interpolation, or img itself if it already
+// has that size.
 func Scale(img image.Image, width, height int) image.Image {
 	bounds := img.Bounds()
 	w := bounds.Dx()

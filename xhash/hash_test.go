@@ -24,14 +24,12 @@ func TestBool(t *testing.T) {
 	h1 := sha256.New()
 	h2 := sha256.New()
 
-	// Test that different boolean values produce different hashes
 	xhash.Bool(h1, true)
 	xhash.Bool(h2, false)
 	hash1 := h1.Sum(nil)
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same boolean values produce same hashes
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Bool(h3, true)
@@ -40,7 +38,6 @@ func TestBool(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with custom boolean type
 	type CustomBool bool
 	h5 := sha256.New()
 	h6 := sha256.New()
@@ -54,7 +51,6 @@ func TestBool(t *testing.T) {
 func TestBytesWithLen(t *testing.T) {
 	c := check.New(t)
 
-	// Test with empty byte slice
 	h1 := sha256.New()
 	h2 := sha256.New()
 	emptyBytes := []byte{}
@@ -64,7 +60,6 @@ func TestBytesWithLen(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.Equal(hash1, hash2)
 
-	// Test with different byte slices
 	h3 := sha256.New()
 	h4 := sha256.New()
 	data1 := []byte("hello")
@@ -75,7 +70,6 @@ func TestBytesWithLen(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.NotEqual(hash3, hash4)
 
-	// Test that length is included in hash (same content, different length should be different)
 	h5 := sha256.New()
 	h6 := sha256.New()
 	data3 := []byte("test")
@@ -86,7 +80,6 @@ func TestBytesWithLen(t *testing.T) {
 	hash6 := h6.Sum(nil)
 	c.NotEqual(hash5, hash6)
 
-	// Test with custom byte slice type
 	type CustomBytes []byte
 	h7 := sha256.New()
 	h8 := sha256.New()
@@ -100,7 +93,6 @@ func TestBytesWithLen(t *testing.T) {
 func TestStringWithLen(t *testing.T) {
 	c := check.New(t)
 
-	// Test with empty string
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.StringWithLen(h1, "")
@@ -109,7 +101,6 @@ func TestStringWithLen(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.Equal(hash1, hash2)
 
-	// Test with different strings
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.StringWithLen(h3, "hello")
@@ -118,7 +109,6 @@ func TestStringWithLen(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.NotEqual(hash3, hash4)
 
-	// Test that length is included (strings with same prefix but different length)
 	h5 := sha256.New()
 	h6 := sha256.New()
 	xhash.StringWithLen(h5, "test")
@@ -127,7 +117,6 @@ func TestStringWithLen(t *testing.T) {
 	hash6 := h6.Sum(nil)
 	c.NotEqual(hash5, hash6)
 
-	// Test with Unicode strings
 	h7 := sha256.New()
 	h8 := sha256.New()
 	xhash.StringWithLen(h7, "héllo")
@@ -136,7 +125,6 @@ func TestStringWithLen(t *testing.T) {
 	hash8 := h8.Sum(nil)
 	c.NotEqual(hash7, hash8)
 
-	// Test that string and equivalent bytes produce same hash
 	h9 := sha256.New()
 	h10 := sha256.New()
 	testStr := "test string"
@@ -146,7 +134,6 @@ func TestStringWithLen(t *testing.T) {
 	hash10 := h10.Sum(nil)
 	c.Equal(hash9, hash10)
 
-	// Test with custom string type
 	type CustomString string
 	h11 := sha256.New()
 	h12 := sha256.New()
@@ -160,7 +147,6 @@ func TestStringWithLen(t *testing.T) {
 func TestNum8(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different 8-bit values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Num8(h1, int8(42))
@@ -169,7 +155,6 @@ func TestNum8(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Num8(h3, uint8(100))
@@ -178,7 +163,6 @@ func TestNum8(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with boundary values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -192,7 +176,6 @@ func TestNum8(t *testing.T) {
 	hash7 := h7.Sum(nil)
 	hash8 := h8.Sum(nil)
 
-	// All should be different
 	c.NotEqual(hash5, hash6)
 	c.NotEqual(hash5, hash7)
 	c.NotEqual(hash5, hash8)
@@ -200,7 +183,6 @@ func TestNum8(t *testing.T) {
 	c.NotEqual(hash6, hash8)
 	c.NotEqual(hash7, hash8)
 
-	// Test that int8 and uint8 with same bit pattern produce same hash
 	h9 := sha256.New()
 	h10 := sha256.New()
 	xhash.Num8(h9, int8(-1))    // 0xFF
@@ -209,7 +191,6 @@ func TestNum8(t *testing.T) {
 	hash10 := h10.Sum(nil)
 	c.Equal(hash9, hash10)
 
-	// Test with custom 8-bit types
 	type CustomInt8 int8
 	type CustomUint8 uint8
 	h11 := sha256.New()
@@ -228,7 +209,6 @@ func TestNum8(t *testing.T) {
 func TestNum16(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different 16-bit values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Num16(h1, int16(1000))
@@ -237,7 +217,6 @@ func TestNum16(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Num16(h3, uint16(12345))
@@ -246,7 +225,6 @@ func TestNum16(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with boundary values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -260,7 +238,6 @@ func TestNum16(t *testing.T) {
 	hash7 := h7.Sum(nil)
 	hash8 := h8.Sum(nil)
 
-	// All should be different
 	c.NotEqual(hash5, hash6)
 	c.NotEqual(hash5, hash7)
 	c.NotEqual(hash5, hash8)
@@ -268,17 +245,14 @@ func TestNum16(t *testing.T) {
 	c.NotEqual(hash6, hash8)
 	c.NotEqual(hash7, hash8)
 
-	// Test little-endian encoding
+	// Num16 writes [0x34, 0x12] (little-endian); this only checks that output is produced.
 	h9 := sha256.New()
 	xhash.Num16(h9, uint16(0x1234))
-	// Should write bytes [0x34, 0x12] (little-endian)
 	h10 := crc32.NewIEEE()
 	_, _ = h10.Write([]byte{0x34, 0x12})
-	// We can't directly compare since different hash algorithms, but verify it writes something
 	hash9 := h9.Sum(nil)
 	c.NotEqual(len(hash9), 0)
 
-	// Test that int16 and uint16 with same bit pattern produce same hash
 	h11 := sha256.New()
 	h12 := sha256.New()
 	xhash.Num16(h11, int16(-1))     // 0xFFFF
@@ -287,7 +261,6 @@ func TestNum16(t *testing.T) {
 	hash12 := h12.Sum(nil)
 	c.Equal(hash11, hash12)
 
-	// Test with custom 16-bit types
 	type CustomInt16 int16
 	h13 := sha256.New()
 	h14 := sha256.New()
@@ -301,7 +274,6 @@ func TestNum16(t *testing.T) {
 func TestNum32(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different 32-bit values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Num32(h1, int32(100000))
@@ -310,7 +282,6 @@ func TestNum32(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Num32(h3, uint32(123456789))
@@ -319,7 +290,6 @@ func TestNum32(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with boundary values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -333,7 +303,6 @@ func TestNum32(t *testing.T) {
 	hash7 := h7.Sum(nil)
 	hash8 := h8.Sum(nil)
 
-	// All should be different
 	c.NotEqual(hash5, hash6)
 	c.NotEqual(hash5, hash7)
 	c.NotEqual(hash5, hash8)
@@ -341,14 +310,12 @@ func TestNum32(t *testing.T) {
 	c.NotEqual(hash6, hash8)
 	c.NotEqual(hash7, hash8)
 
-	// Test little-endian encoding
+	// Num32 writes [0x78, 0x56, 0x34, 0x12] (little-endian); this only checks that output is produced.
 	h9 := sha256.New()
 	xhash.Num32(h9, uint32(0x12345678))
-	// Should write bytes [0x78, 0x56, 0x34, 0x12] (little-endian)
 	hash9 := h9.Sum(nil)
 	c.NotEqual(len(hash9), 0)
 
-	// Test that int32 and uint32 with same bit pattern produce same hash
 	h10 := sha256.New()
 	h11 := sha256.New()
 	xhash.Num32(h10, int32(-1))          // 0xFFFFFFFF
@@ -357,7 +324,6 @@ func TestNum32(t *testing.T) {
 	hash11 := h11.Sum(nil)
 	c.Equal(hash10, hash11)
 
-	// Test with custom 32-bit types
 	type CustomInt32 int32
 	h12 := sha256.New()
 	h13 := sha256.New()
@@ -371,7 +337,6 @@ func TestNum32(t *testing.T) {
 func TestNum64(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different 64-bit values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Num64(h1, int64(1000000000000))
@@ -380,7 +345,6 @@ func TestNum64(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Num64(h3, uint64(123456789012345))
@@ -389,7 +353,6 @@ func TestNum64(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with boundary values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -403,7 +366,6 @@ func TestNum64(t *testing.T) {
 	hash7 := h7.Sum(nil)
 	hash8 := h8.Sum(nil)
 
-	// All should be different
 	c.NotEqual(hash5, hash6)
 	c.NotEqual(hash5, hash7)
 	c.NotEqual(hash5, hash8)
@@ -411,7 +373,6 @@ func TestNum64(t *testing.T) {
 	c.NotEqual(hash6, hash8)
 	c.NotEqual(hash7, hash8)
 
-	// Test with int and uint types (which are 64-bit on 64-bit systems typically)
 	h9 := sha256.New()
 	h10 := sha256.New()
 	h11 := sha256.New()
@@ -424,14 +385,13 @@ func TestNum64(t *testing.T) {
 	c.Equal(hash9, hash10)
 	c.Equal(hash9, hash11)
 
-	// Test little-endian encoding
+	// Num64 writes [0xF0, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12] (little-endian); this only checks that output is
+	// produced.
 	h12 := sha256.New()
 	xhash.Num64(h12, uint64(0x123456789ABCDEF0))
-	// Should write bytes [0xF0, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12] (little-endian)
 	hash12 := h12.Sum(nil)
 	c.NotEqual(len(hash12), 0)
 
-	// Test that int64 and uint64 with same bit pattern produce same hash
 	h13 := sha256.New()
 	h14 := sha256.New()
 	xhash.Num64(h13, int64(-1))                    // 0xFFFFFFFFFFFFFFFF
@@ -440,7 +400,6 @@ func TestNum64(t *testing.T) {
 	hash14 := h14.Sum(nil)
 	c.Equal(hash13, hash14)
 
-	// Test with custom 64-bit types
 	type CustomInt64 int64
 	type CustomUint64 uint64
 	type CustomInt int
@@ -465,7 +424,6 @@ func TestNum64(t *testing.T) {
 func TestFloat32(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different float32 values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Float32(h1, float32(3.14159))
@@ -474,7 +432,6 @@ func TestFloat32(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Float32(h3, float32(1.23456))
@@ -483,7 +440,6 @@ func TestFloat32(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with special float values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -505,12 +461,10 @@ func TestFloat32(t *testing.T) {
 
 	// +0.0 and -0.0 have different bit representations
 	c.NotEqual(hash5, hash6)
-	// +Inf and -Inf should be different
 	c.NotEqual(hash7, hash8)
 	// NaN values should have same hash (same bit representation)
 	c.Equal(hash9, hash10)
 
-	// Test boundary values
 	h11 := sha256.New()
 	h12 := sha256.New()
 	h13 := sha256.New()
@@ -525,7 +479,6 @@ func TestFloat32(t *testing.T) {
 	c.NotEqual(hash11, hash13)
 	c.NotEqual(hash12, hash13)
 
-	// Test that the hash is based on IEEE 754 bit representation
 	h14 := sha256.New()
 	h15 := sha256.New()
 	testValue := float32(1.5)
@@ -536,7 +489,6 @@ func TestFloat32(t *testing.T) {
 	hash15 := h15.Sum(nil)
 	c.Equal(hash14, hash15)
 
-	// Test with custom float32 type
 	type CustomFloat32 float32
 	h16 := sha256.New()
 	h17 := sha256.New()
@@ -550,7 +502,6 @@ func TestFloat32(t *testing.T) {
 func TestFloat64(t *testing.T) {
 	c := check.New(t)
 
-	// Test with different float64 values
 	h1 := sha256.New()
 	h2 := sha256.New()
 	xhash.Float64(h1, 3.141592653589793)
@@ -559,7 +510,6 @@ func TestFloat64(t *testing.T) {
 	hash2 := h2.Sum(nil)
 	c.NotEqual(hash1, hash2)
 
-	// Test that same values produce same hash
 	h3 := sha256.New()
 	h4 := sha256.New()
 	xhash.Float64(h3, 1.2345678901234567)
@@ -568,7 +518,6 @@ func TestFloat64(t *testing.T) {
 	hash4 := h4.Sum(nil)
 	c.Equal(hash3, hash4)
 
-	// Test with special float values
 	h5 := sha256.New()
 	h6 := sha256.New()
 	h7 := sha256.New()
@@ -590,12 +539,10 @@ func TestFloat64(t *testing.T) {
 
 	// +0.0 and -0.0 have different bit representations
 	c.NotEqual(hash5, hash6)
-	// +Inf and -Inf should be different
 	c.NotEqual(hash7, hash8)
 	// NaN values should have same hash (same bit representation)
 	c.Equal(hash9, hash10)
 
-	// Test boundary values
 	h11 := sha256.New()
 	h12 := sha256.New()
 	h13 := sha256.New()
@@ -610,7 +557,6 @@ func TestFloat64(t *testing.T) {
 	c.NotEqual(hash11, hash13)
 	c.NotEqual(hash12, hash13)
 
-	// Test that the hash is based on IEEE 754 bit representation
 	h14 := sha256.New()
 	h15 := sha256.New()
 	testValue := 1.5
@@ -621,7 +567,6 @@ func TestFloat64(t *testing.T) {
 	hash15 := h15.Sum(nil)
 	c.Equal(hash14, hash15)
 
-	// Test with custom float64 type
 	type CustomFloat64 float64
 	h16 := sha256.New()
 	h17 := sha256.New()
@@ -635,7 +580,6 @@ func TestFloat64(t *testing.T) {
 func TestConsistencyAcrossHashers(t *testing.T) {
 	c := check.New(t)
 
-	// Test that the same data produces the same result across different hash implementations
 	data := []byte("test data")
 
 	h1 := sha256.New()
@@ -644,13 +588,10 @@ func TestConsistencyAcrossHashers(t *testing.T) {
 	xhash.BytesWithLen(h1, data)
 	xhash.BytesWithLen(h2, data)
 
-	// The actual hash values will be different due to different algorithms,
-	// but the data written should be the same length (8 bytes for length + data)
-	// We can't directly verify this, but we ensure no panics occur
+	// The sums differ by algorithm, so only verify that both hashers accept the writes and produce output.
 	hash1 := h1.Sum(nil)
 	hash2 := h2.Sum(nil)
 
-	// Just verify they produced some output
 	c.NotEqual(len(hash1), 0)
 	c.NotEqual(len(hash2), 0)
 }

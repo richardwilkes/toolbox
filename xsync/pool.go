@@ -16,7 +16,7 @@ type Pool[T any] struct {
 	internalPool *sync.Pool
 }
 
-// NewPool creates a new, empty, Pool.
+// NewPool creates a new, empty Pool. Panics if 'newFunc' is nil.
 func NewPool[T any](newFunc func() T) (p Pool[T]) {
 	if newFunc == nil {
 		panic("newFunc must not be nil")

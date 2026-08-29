@@ -29,8 +29,7 @@ func TestConformsTo(t *testing.T) {
 func TestByExtension(t *testing.T) {
 	c := check.New(t)
 
-	// The built-in data types must be reachable by their file extensions. This was broken when byExtension was
-	// populated from MimeTypes rather than Extensions.
+	// Regression check: byExtension was once mistakenly populated from MimeTypes rather than Extensions.
 	c.Equal([]*uti.DataType{uti.JSON}, uti.ByExtension(".json"))
 	c.Equal([]*uti.DataType{uti.PlainText}, uti.ByExtension(".txt"))
 	c.Equal([]*uti.DataType{uti.PNG}, uti.ByExtension(".png"))
@@ -38,7 +37,7 @@ func TestByExtension(t *testing.T) {
 	// Lookup is case-insensitive.
 	c.Equal([]*uti.DataType{uti.JSON}, uti.ByExtension(".JSON"))
 
-	// Unknown extensions, and the MIME-type strings the old buggy code mistakenly used as keys, return nil.
+	// Unknown extensions, including MIME-type strings, return nil.
 	c.Nil(uti.ByExtension(".no-such-extension"))
 	c.Nil(uti.ByExtension("application/json"))
 }
@@ -54,13 +53,11 @@ func TestRegisterUnregisterExtension(t *testing.T) {
 		MimeTypes:  []string{"application/x-uti-test"},
 		Extensions: []string{".uti-test-ext"},
 	})
-	// Register must index the extension (exercises the byExtension build loop).
 	c.Equal([]*uti.DataType{dt}, uti.ByExtension(".uti-test-ext"))
 	c.Equal([]*uti.DataType{dt}, uti.ByMimeType("application/x-uti-test"))
 	c.Equal(dt, uti.ByUTI("test.uti.custom"))
 
 	uti.Unregister(dt)
-	// Unregister must remove the extension entry (exercises the byExtension cleanup loop).
 	c.Equal(0, len(uti.ByExtension(".uti-test-ext")))
 	c.Equal(0, len(uti.ByMimeType("application/x-uti-test")))
 	c.Nil(uti.ByUTI("test.uti.custom"))

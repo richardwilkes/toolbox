@@ -20,8 +20,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-// StdAllCaps provides the standard list of words that golint expects to be capitalized, found in the variable
-// 'commonInitialisms' in https://github.com/golang/lint/blob/master/lint.go#L771-L808
+// StdAllCaps is the list of initialisms golint expects to be all caps, from 'commonInitialisms' in
+// https://github.com/golang/lint/blob/master/lint.go#L771-L808
 var StdAllCaps = MustNewAllCaps(
 	"acl",
 	"api",
@@ -63,12 +63,12 @@ var StdAllCaps = MustNewAllCaps(
 	"xss",
 )
 
-// AllCaps holds information for transforming text with ToCamelCaseWithExceptions.
+// AllCaps holds the words that ToCamelCaseWithExceptions forces to all caps.
 type AllCaps struct {
 	regex *regexp.Regexp
 }
 
-// NewAllCaps takes a list of words that should be all uppercase when part of a camel-cased string.
+// NewAllCaps creates an AllCaps from words that should be all uppercase when part of a camel-cased string.
 func NewAllCaps(in ...string) (*AllCaps, error) {
 	var buffer strings.Builder
 	for _, str := range in {
@@ -84,8 +84,7 @@ func NewAllCaps(in ...string) (*AllCaps, error) {
 	return &AllCaps{regex: r}, nil
 }
 
-// MustNewAllCaps takes a list of words that should be all uppercase when part of a camel-cased string. Failure to
-// create the AllCaps object causes the program to exit.
+// MustNewAllCaps is like NewAllCaps, but panics if the AllCaps cannot be created.
 func MustNewAllCaps(in ...string) *AllCaps {
 	return xos.Must(NewAllCaps(in...))
 }
@@ -109,7 +108,7 @@ func ToCamelCase(in string) string {
 	return string(out)
 }
 
-// ToCamelCaseWithExceptions converts a string to CamelCase, but forces certain words to all caps.
+// ToCamelCaseWithExceptions converts a string to CamelCase, forcing the words in exceptions to all caps.
 func ToCamelCaseWithExceptions(in string, exceptions *AllCaps) string {
 	out := ToCamelCase(in)
 	pos := 0

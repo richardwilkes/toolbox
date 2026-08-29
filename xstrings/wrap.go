@@ -14,9 +14,9 @@ import (
 	"unicode/utf8"
 )
 
-// Wrap text to a certain length, giving it an optional prefix on each line. Words will not be broken, even if they
-// exceed the maximum column size and instead will extend past the desired length. Column counts are measured in runes,
-// not bytes, so multibyte text wraps at its visible width.
+// Wrap text to maxColumns, prefixing each line with prefix. Words are never broken, so a word longer than the
+// available width extends past maxColumns. Columns are counted in runes, not bytes, so multibyte text wraps at its
+// visible width.
 func Wrap(prefix, text string, maxColumns int) string {
 	var buffer strings.Builder
 	prefixLen := utf8.RuneCountInString(prefix)

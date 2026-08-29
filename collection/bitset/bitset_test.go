@@ -96,8 +96,8 @@ func TestBitSet(t *testing.T) {
 }
 
 // TestBitSetClearRangeBeyondStorage verifies that ClearRange fully clears its final allocated word when 'end' lies
-// beyond the backing storage. Previously the loop bound was capped to the last allocated word but the per-word "last
-// bit" was still derived from 'end', so the capped final word was only partially cleared, leaving set bits behind.
+// beyond the backing storage. Previously that word's hi bound was still derived from 'end', so it was only partially
+// cleared, leaving set bits behind.
 func TestBitSetClearRangeBeyondStorage(t *testing.T) {
 	c := check.New(t)
 	var bs BitSet
@@ -106,8 +106,7 @@ func TestBitSetClearRangeBeyondStorage(t *testing.T) {
 	c.False(bs.State(230), "bit 230 must be cleared")
 	c.Equal(0, bs.Count())
 
-	// A single set bit in the capped final word, cleared by a range that both starts and ends beyond storage in the
-	// same final word's span.
+	// A single set bit in the capped final word, cleared by a range that starts in that word and ends beyond storage.
 	bs.Reset()
 	bs.Set(200)
 	bs.ClearRange(200, 100000)
@@ -115,12 +114,12 @@ func TestBitSetClearRangeBeyondStorage(t *testing.T) {
 	c.Equal(0, bs.Count())
 }
 
-// TestBitSetClearRangeBruteForce differentially checks ClearRange against a straightforward per-bit reference across
-// many start/end pairs, including ranges that extend well past the allocated storage.
+// TestBitSetClearRangeBruteForce checks ClearRange against a per-bit reference across many start/end pairs, including
+// ranges that extend well past the allocated storage.
 func TestBitSetClearRangeBruteForce(t *testing.T) {
 	c := check.New(t)
-	// Keep the set bits within a few words (highest is 255, so words 0..3 are allocated) but drive 'end' far past that
-	// allocation so the capped-final-word path is exercised with set bits beyond (end & bitIndexMask).
+	// The set bits stay within words 0..3 (highest is 255) while 'end' runs far past that allocation, so the
+	// capped-final-word path is exercised with set bits beyond (end & bitIndexMask).
 	const setLimit = 255
 	const endLimit = 600
 	for start := 0; start <= setLimit; start += 7 {
@@ -150,15 +149,12 @@ func TestBitSetClearRangeBruteForce(t *testing.T) {
 func TestBitSetEqual(t *testing.T) {
 	c := check.New(t)
 
-	// Test nil comparison
 	var bs1 BitSet
 	c.False(bs1.Equal(nil))
 
-	// Test empty BitSets
 	var bs2 BitSet
 	c.True(bs1.Equal(&bs2))
 
-	// Test same BitSets with same bits set
 	bs1.Set(5)
 	bs1.Set(10)
 	bs1.Set(100)
@@ -168,17 +164,16 @@ func TestBitSetEqual(t *testing.T) {
 	bs2.Set(100)
 	c.True(bs1.Equal(&bs2))
 
-	// Test different set counts
 	bs2.Set(200)
 	c.False(bs1.Equal(&bs2))
 
-	// Test same count but different bits
+	// Same count but different bits
 	bs1.Clear(5)
 	bs1.Set(200)
 	bs2.Clear(10)
 	c.False(bs1.Equal(&bs2))
 
-	// Test different underlying data lengths but same logical content
+	// Same bits but different storage lengths
 	var bs3, bs4 BitSet
 	bs3.Set(5)
 	bs4.Set(5)
@@ -188,14 +183,11 @@ func TestBitSetEqual(t *testing.T) {
 	bs3.EnsureCapacity(2)
 	c.True(bs3.Equal(&bs4))
 
-	// Test self equality
 	c.True(bs1.Equal(&bs1))
 
-	// Test cloned BitSets
 	bs5 := bs1.Clone()
 	c.True(bs1.Equal(bs5))
 
-	// Test copied BitSets
 	var bs6 BitSet
 	bs6.Copy(&bs1)
 	c.True(bs1.Equal(&bs6))
@@ -204,14 +196,12 @@ func TestBitSetEqual(t *testing.T) {
 func TestBitSetLoad(t *testing.T) {
 	c := check.New(t)
 
-	// Test loading empty data
 	var bs BitSet
 	bs.Set(5) // Set some bits first
 	bs.Load([]uint64{})
 	c.Equal(0, bs.Count())
 	c.Nil(bs.data)
 
-	// Test loading single word with some bits set
 	bs.Load([]uint64{0b1010001})
 	c.Equal(3, bs.Count())
 	c.True(bs.State(0))
@@ -222,7 +212,6 @@ func TestBitSetLoad(t *testing.T) {
 	c.False(bs.State(5))
 	c.True(bs.State(6))
 
-	// Test loading multiple words
 	data := []uint64{
 		0b1100000000000000000000000000000000000000000000000000000000000001, // word 0: bits 0 and 62, 63
 		0b0000000000000000000000000000000000000000000000000000000000001010, // word 1: bits 65 and 67
@@ -244,7 +233,6 @@ func TestBitSetLoad(t *testing.T) {
 	c.False(bs.State(254))
 	c.Equal(data, bs.Data())
 
-	// Test loading data with trailing zeros (should be trimmed)
 	dataWithZeros := []uint64{0b101, 0, 0, 0}
 	bs.Load(dataWithZeros)
 	c.Equal(2, bs.Count())
@@ -252,19 +240,16 @@ func TestBitSetLoad(t *testing.T) {
 	c.True(bs.State(2))
 	c.Equal(1, len(bs.data)) // Should be trimmed to 1 word
 
-	// Test loading all zeros
 	bs.Load([]uint64{0, 0, 0})
 	c.Equal(0, bs.Count())
 	c.Nil(bs.data) // Should be trimmed to nil
 
-	// Test loading max uint64
 	bs.Load([]uint64{^uint64(0)})
 	c.Equal(64, bs.Count())
 	for i := range 64 {
 		c.True(bs.State(i))
 	}
 
-	// Test that Load replaces existing data completely
 	bs.Set(100)
 	bs.Set(200)
 	originalCount := bs.Count()
@@ -277,17 +262,15 @@ func TestBitSetLoad(t *testing.T) {
 	c.False(bs.State(100))
 	c.False(bs.State(200))
 
-	// Test loading nil data (should behave like empty slice)
 	bs.Load(nil)
 	c.Equal(0, bs.Count())
 	c.Nil(bs.data)
 }
 
-// checkBitSetContents verifies that 'bs' has exactly the bits listed in 'indexes' set and no others. It checks the
-// state of each expected bit, verifies Count() against both the expected number of bits and an independent tally made
-// by walking the set bits with NextSet(), and compares 'bs' to an expected BitSet built purely from Set() calls. The
-// Equal() comparison is made on trimmed copies, since Equal() also compares the underlying storage lengths, which
-// legitimately vary with how the storage happened to be grown. 'indexes' must not contain duplicates.
+// checkBitSetContents verifies that 'bs' has exactly the bits in 'indexes' set: each is set, Count() matches both
+// len(indexes) and a tally made by walking NextSet(), and a trimmed clone equals a BitSet built from Set() calls.
+// Trimming is needed because Equal() also compares storage lengths, which vary with how storage was grown. 'indexes'
+// must not contain duplicates.
 func checkBitSetContents(c check.Checker, bs *BitSet, label string, indexes ...int) {
 	c.Helper()
 	var expected BitSet
@@ -317,7 +300,6 @@ func checkBitSetContents(c check.Checker, bs *BitSet, label string, indexes ...i
 func TestBitSetAnd(t *testing.T) {
 	c := check.New(t)
 
-	// Overlapping sets within a single word
 	var bs1, bs2 BitSet
 	bs1.Set(1)
 	bs1.Set(2)
@@ -329,7 +311,6 @@ func TestBitSetAnd(t *testing.T) {
 	bs1.And(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, single word", 3, 4)
 
-	// Overlapping sets spanning multiple words
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{0, 65, 70, 130, 200} {
@@ -341,7 +322,6 @@ func TestBitSetAnd(t *testing.T) {
 	bs1.And(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, multiple words", 65, 130)
 
-	// Disjoint sets
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{1, 3, 70, 129} {
@@ -353,7 +333,6 @@ func TestBitSetAnd(t *testing.T) {
 	bs1.And(&bs2)
 	checkBitSetContents(c, &bs1, "disjoint")
 
-	// The receiver has more words than 'other', so the bits beyond the last word of 'other' must be cleared
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{10, 100, 150, 250} {
@@ -367,7 +346,6 @@ func TestBitSetAnd(t *testing.T) {
 	c.False(bs1.State(250), "bit 250 lies beyond the last word of 'other' and must be cleared")
 	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 10, 100)
 
-	// 'other' has more words than the receiver; the receiver must not grow
 	bs1.Reset()
 	bs2.Reset()
 	bs1.Set(5)
@@ -381,7 +359,6 @@ func TestBitSetAnd(t *testing.T) {
 	c.Equal(words, len(bs1.data), "And must not grow the receiver")
 	checkBitSetContents(c, &bs1, "'other' larger than receiver", 5, 70)
 
-	// An empty receiver
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 200} {
@@ -391,7 +368,6 @@ func TestBitSetAnd(t *testing.T) {
 	c.Nil(bs1.data, "And must not allocate storage for an empty receiver")
 	checkBitSetContents(c, &bs1, "empty receiver")
 
-	// An empty 'other'
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 130, 200} {
@@ -400,13 +376,11 @@ func TestBitSetAnd(t *testing.T) {
 	bs1.And(&bs2)
 	checkBitSetContents(c, &bs1, "empty 'other'")
 
-	// Both empty
 	bs1.Reset()
 	bs2.Reset()
 	bs1.And(&bs2)
 	checkBitSetContents(c, &bs1, "both empty")
 
-	// Aliased call
 	bs1.Reset()
 	for _, index := range []int{3, 70, 130, 255} {
 		bs1.Set(index)
@@ -418,7 +392,6 @@ func TestBitSetAnd(t *testing.T) {
 func TestBitSetOr(t *testing.T) {
 	c := check.New(t)
 
-	// Overlapping sets within a single word
 	var bs1, bs2 BitSet
 	bs1.Set(1)
 	bs1.Set(2)
@@ -429,7 +402,6 @@ func TestBitSetOr(t *testing.T) {
 	bs1.Or(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, single word", 1, 2, 3, 4, 5)
 
-	// Overlapping sets spanning multiple words
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{0, 65, 70, 130, 200} {
@@ -441,7 +413,6 @@ func TestBitSetOr(t *testing.T) {
 	bs1.Or(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, multiple words", 0, 65, 70, 130, 131, 200, 255)
 
-	// Disjoint sets
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{0, 64, 129} {
@@ -453,7 +424,6 @@ func TestBitSetOr(t *testing.T) {
 	bs1.Or(&bs2)
 	checkBitSetContents(c, &bs1, "disjoint", 0, 1, 64, 65, 129, 130)
 
-	// The receiver has more words than 'other'; the bits beyond the last word of 'other' must be left alone
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 200} {
@@ -466,7 +436,6 @@ func TestBitSetOr(t *testing.T) {
 	c.Equal(words, len(bs1.data), "Or must not grow the receiver when 'other' is smaller")
 	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 5, 6, 70, 200)
 
-	// 'other' has more words than the receiver, so the receiver must grow
 	bs1.Reset()
 	bs2.Reset()
 	bs1.Set(5)
@@ -478,7 +447,6 @@ func TestBitSetOr(t *testing.T) {
 	c.True(bs1.State(130), "bit 130 came from the extra words of 'other'")
 	checkBitSetContents(c, &bs1, "'other' larger than receiver", 5, 130)
 
-	// An empty receiver
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 200} {
@@ -487,7 +455,6 @@ func TestBitSetOr(t *testing.T) {
 	bs1.Or(&bs2)
 	checkBitSetContents(c, &bs1, "empty receiver", 5, 70, 200)
 
-	// An empty 'other'
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 130, 200} {
@@ -498,13 +465,11 @@ func TestBitSetOr(t *testing.T) {
 	c.Equal(words, len(bs1.data), "Or with an empty 'other' must not grow the receiver")
 	checkBitSetContents(c, &bs1, "empty 'other'", 5, 70, 130, 200)
 
-	// Both empty
 	bs1.Reset()
 	bs2.Reset()
 	bs1.Or(&bs2)
 	checkBitSetContents(c, &bs1, "both empty")
 
-	// Aliased call
 	bs1.Reset()
 	for _, index := range []int{3, 70, 130, 255} {
 		bs1.Set(index)
@@ -516,7 +481,6 @@ func TestBitSetOr(t *testing.T) {
 func TestBitSetXor(t *testing.T) {
 	c := check.New(t)
 
-	// Overlapping sets within a single word
 	var bs1, bs2 BitSet
 	bs1.Set(1)
 	bs1.Set(2)
@@ -527,7 +491,6 @@ func TestBitSetXor(t *testing.T) {
 	bs1.Xor(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, single word", 1, 2, 4, 5)
 
-	// Overlapping sets spanning multiple words
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{0, 65, 70, 130, 200} {
@@ -539,7 +502,6 @@ func TestBitSetXor(t *testing.T) {
 	bs1.Xor(&bs2)
 	checkBitSetContents(c, &bs1, "overlapping, multiple words", 0, 70, 131, 200, 255)
 
-	// Disjoint sets
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{0, 64, 129} {
@@ -551,7 +513,6 @@ func TestBitSetXor(t *testing.T) {
 	bs1.Xor(&bs2)
 	checkBitSetContents(c, &bs1, "disjoint", 0, 1, 64, 65, 129, 130)
 
-	// The receiver has more words than 'other'; the bits beyond the last word of 'other' must be left alone
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 200} {
@@ -565,7 +526,6 @@ func TestBitSetXor(t *testing.T) {
 	c.Equal(words, len(bs1.data), "Xor must not grow the receiver when 'other' is smaller")
 	checkBitSetContents(c, &bs1, "receiver larger than 'other'", 70, 71, 200)
 
-	// 'other' has more words than the receiver, so the receiver must grow
 	bs1.Reset()
 	bs2.Reset()
 	bs1.Set(5)
@@ -577,7 +537,6 @@ func TestBitSetXor(t *testing.T) {
 	c.True(bs1.State(130), "bit 130 came from the extra words of 'other'")
 	checkBitSetContents(c, &bs1, "'other' larger than receiver", 130)
 
-	// An empty receiver
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 200} {
@@ -586,7 +545,6 @@ func TestBitSetXor(t *testing.T) {
 	bs1.Xor(&bs2)
 	checkBitSetContents(c, &bs1, "empty receiver", 5, 70, 200)
 
-	// An empty 'other'
 	bs1.Reset()
 	bs2.Reset()
 	for _, index := range []int{5, 70, 130, 200} {
@@ -597,13 +555,11 @@ func TestBitSetXor(t *testing.T) {
 	c.Equal(words, len(bs1.data), "Xor with an empty 'other' must not grow the receiver")
 	checkBitSetContents(c, &bs1, "empty 'other'", 5, 70, 130, 200)
 
-	// Both empty
 	bs1.Reset()
 	bs2.Reset()
 	bs1.Xor(&bs2)
 	checkBitSetContents(c, &bs1, "both empty")
 
-	// Aliased call: a BitSet XOR'd with itself must be empty
 	bs1.Reset()
 	for _, index := range []int{3, 70, 130, 255} {
 		bs1.Set(index)
@@ -614,13 +570,12 @@ func TestBitSetXor(t *testing.T) {
 	checkBitSetContents(c, &bs1, "aliased")
 }
 
-// TestBitSetLogicalOpsBruteForce differentially checks And, Or and Xor against straightforward per-bit references
-// across a variety of receiver and argument shapes, including empty sets and both orderings of "one side has more
-// words than the other".
+// TestBitSetLogicalOpsBruteForce checks And, Or and Xor against per-bit references across a variety of receiver and
+// argument shapes, including empty sets and both orderings of which side has more words.
 func TestBitSetLogicalOpsBruteForce(t *testing.T) {
 	c := check.New(t)
-	// The specs are (step, highest) pairs; a step of 0 produces an empty set. The highest values straddle the word
-	// boundaries at 64, 128, 192 and 256 so that the various word-length combinations are exercised.
+	// The specs are (step, highest) pairs; a step of 0 produces an empty set. The highest values are chosen so the sets
+	// span one to four words, with 63 and 64 on either side of the first word boundary.
 	specs := [][2]int{{0, 0}, {1, 5}, {3, 63}, {1, 64}, {7, 130}, {5, 255}, {64, 255}}
 	build := func(spec [2]int) (*BitSet, map[int]bool) {
 		bs := &BitSet{}

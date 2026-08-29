@@ -20,8 +20,8 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
-// SetUsage replaces any existing Usage function on the given flagSet with one that provides more information. You may
-// pass in nil for the flagSet to use the default flag set (flag.CommandLine).
+// SetUsage replaces the Usage function of flagSet with one that provides more information. A nil flagSet means
+// flag.CommandLine.
 func SetUsage(flagSet *flag.FlagSet, description, argsUsage string) {
 	if flagSet == nil {
 		flagSet = flag.CommandLine
