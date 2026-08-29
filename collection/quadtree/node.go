@@ -13,6 +13,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
+// Compile-time assertion that *node[N] satisfies the Node constraint.
+func _[N Node](_ Matcher[*node[N]]) {}
+
 type node[N Node] struct {
 	children  [4]*node[N]
 	contents  []N

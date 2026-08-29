@@ -42,12 +42,12 @@ func (n *node[K, V]) find(compareFunc func(a, b K) int, key K) *node[K, V] {
 	case result > 0:
 		return n.right.find(compareFunc, key)
 	default:
-		// Always return the left-most one in the case of multiple matches
-		cur := n
-		for cur.left != nil && compareFunc(key, cur.left.key) == 0 {
-			cur = cur.left
+		// Always return the left-most one in the case of multiple matches. Duplicates may be anywhere within the left
+		// subtree, not just along the left-child chain, so search it recursively.
+		if leftMost := n.left.find(compareFunc, key); leftMost != nil {
+			return leftMost
 		}
-		return cur
+		return n
 	}
 }
 

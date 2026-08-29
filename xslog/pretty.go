@@ -40,9 +40,9 @@ type PrettyHandler struct {
 	sharedBufferLock *sync.Mutex
 	buffer           *bytes.Buffer // Protected by sharedBufferLock
 	sharedWriterLock *sync.Mutex
-	w                io.Writer  // Protected by sharedWriterLock
-	stack            *[]string  // Protected by sharedBufferLock; shared by pointer so clones and the JSON handler's
-	kind             xterm.Kind // ReplaceAttr closure (bound to the original handler) all read and write the same slot
+	w                io.Writer // Protected by sharedWriterLock
+	stack            *[]string // Protected by sharedBufferLock; shared by pointer so clones and the JSON handler's ReplaceAttr closure (bound to the original handler) all read and write the same slot
+	kind             xterm.Kind
 	addSource        bool
 }
 

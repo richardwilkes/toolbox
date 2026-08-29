@@ -13,6 +13,8 @@ package redblack_test
 import (
 	"cmp"
 	"fmt"
+	"math/rand/v2"
+	"slices"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -300,6 +302,50 @@ func TestDuplicateKeys(t *testing.T) {
 	rbt.Remove(10)
 	c.Equal(0, rbt.Count())
 	c.True(rbt.Empty())
+}
+
+func TestDuplicateKeysRandomized(t *testing.T) {
+	c := check.New(t)
+	r := rand.New(rand.NewPCG(1972, 5150)) //nolint:gosec // Yes, it is ok to use a weak prng here
+	for range 1000 {
+		rbt := redblack.New[int, int](cmp.Compare[int])
+		for i := range 12 {
+			rbt.Insert(r.IntN(6), i)
+		}
+		keys, values := collect(rbt)
+		for key := range 6 {
+			i := slices.Index(keys, key)
+			value, exists := rbt.Get(key)
+			if i == -1 {
+				c.False(exists)
+				continue
+			}
+			c.True(exists)
+			c.Equal(values[i], value)
+		}
+		// Each removal must take out the first match in traversal order and leave the rest untouched.
+		for len(keys) != 0 {
+			i := slices.Index(keys, keys[r.IntN(len(keys))])
+			rbt.Remove(keys[i])
+			keys = slices.Delete(keys, i, i+1)
+			values = slices.Delete(values, i, i+1)
+			if len(keys) == 0 {
+				keys, values = nil, nil
+			}
+			actualKeys, actualValues := collect(rbt)
+			c.Equal(keys, actualKeys)
+			c.Equal(values, actualValues)
+		}
+	}
+}
+
+func collect(rbt *redblack.Tree[int, int]) (keys, values []int) {
+	rbt.Traverse(func(key, value int) bool {
+		keys = append(keys, key)
+		values = append(values, value)
+		return true
+	})
+	return keys, values
 }
 
 func TestTraversalEarlyTermination(t *testing.T) {
