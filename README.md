@@ -80,6 +80,8 @@ use standard library code, the package has been named the same as the standard l
 
 - **`xjson`** - Enhanced JSON handling utilities for parsing and marshaling with additional features.
 
+- **`xmaps`** - Map utilities, such as flipping a map's keys and values.
+
 - **`xnet`** - Network utilities for address manipulation and network-related operations.
 
 - **`xos`** - Operating system utilities including application information, browser launching, filesystem operations,
