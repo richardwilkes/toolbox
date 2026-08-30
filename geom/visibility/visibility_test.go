@@ -13,6 +13,7 @@ import (
 	"cmp"
 	"math"
 	"slices"
+	"sync"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -32,7 +33,7 @@ func TestNew(t *testing.T) {
 	v := visibility.New(bounds, obstructions)
 	c.NotNil(v)
 
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 }
 
@@ -46,7 +47,7 @@ func TestNewWithEmptyObstructions(t *testing.T) {
 	c.NotNil(v)
 
 	// With no obstructions, the entire bounds should be visible
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 	c.Equal(4, len(result))
 }
@@ -79,7 +80,7 @@ func TestBreakIntersectionsWithEmptySlice(t *testing.T) {
 	c.Equal(0, len(result))
 }
 
-func TestSetViewPointOutsideBounds(t *testing.T) {
+func TestPolygonFromOutsideBounds(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
@@ -89,17 +90,17 @@ func TestSetViewPointOutsideBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	result := v.SetViewPoint(geom.NewPoint(-10, -10))
+	result := v.PolygonFrom(geom.NewPoint(-10, -10))
 	c.Nil(result)
 
-	result = v.SetViewPoint(geom.NewPoint(110, 110))
+	result = v.PolygonFrom(geom.NewPoint(110, 110))
 	c.Nil(result)
 
-	result = v.SetViewPoint(geom.NewPoint(50, 110))
+	result = v.PolygonFrom(geom.NewPoint(50, 110))
 	c.Nil(result)
 }
 
-func TestSetViewPointInsideBounds(t *testing.T) {
+func TestPolygonFromInsideBounds(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
@@ -109,12 +110,12 @@ func TestSetViewPointInsideBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 	c.True(len(result) > 0)
 }
 
-func TestSetViewPointOnBounds(t *testing.T) {
+func TestPolygonFromOnBounds(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
@@ -124,12 +125,12 @@ func TestSetViewPointOnBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	c.NotNil(v.SetViewPoint(geom.NewPoint(0, 0)))
-	c.Nil(v.SetViewPoint(geom.NewPoint(100, 100)))
-	c.NotNil(v.SetViewPoint(geom.NewPoint(50, 0)))
+	c.NotNil(v.PolygonFrom(geom.NewPoint(0, 0)))
+	c.Nil(v.PolygonFrom(geom.NewPoint(100, 100)))
+	c.NotNil(v.PolygonFrom(geom.NewPoint(50, 0)))
 }
 
-func TestSetViewPointWithComplexObstructions(t *testing.T) {
+func TestPolygonFromWithComplexObstructions(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
@@ -144,12 +145,12 @@ func TestSetViewPointWithComplexObstructions(t *testing.T) {
 	v := visibility.New(bounds, obstructions)
 
 	// Test view point that should create a shadow
-	result := v.SetViewPoint(geom.NewPoint(20, 20))
+	result := v.PolygonFrom(geom.NewPoint(20, 20))
 	c.NotNil(result)
 	c.True(len(result) > 4)
 }
 
-func TestSetViewPointWithNoObstructions(t *testing.T) {
+func TestPolygonFromWithNoObstructions(t *testing.T) {
 	c := check.New(t)
 
 	bounds := geom.NewRect(0, 0, 100, 100)
@@ -157,7 +158,7 @@ func TestSetViewPointWithNoObstructions(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 	c.Equal(4, len(result)) // Should be exactly the 4 corners of the bounds
 }
@@ -173,7 +174,7 @@ func TestVisibilityWithObstructionsOutsideBounds(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 	// Should get a clean rectangle since obstructions are outside
 	c.Equal(4, len(result))
@@ -190,7 +191,7 @@ func TestVisibilityWithPartiallyIntersectingObstructions(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 
-	result := v.SetViewPoint(geom.NewPoint(25, 25))
+	result := v.PolygonFrom(geom.NewPoint(25, 25))
 	c.NotNil(result)
 	c.True(len(result) > 4)
 }
@@ -198,11 +199,11 @@ func TestVisibilityWithPartiallyIntersectingObstructions(t *testing.T) {
 func TestAngle(t *testing.T) {
 	c := check.New(t)
 
-	// angle is internal, so it is exercised indirectly through SetViewPoint
+	// angle is internal, so it is exercised indirectly through PolygonFrom
 
 	bounds := geom.NewRect(-10, -10, 20, 20)
 	v := visibility.New(bounds, nil)
-	result := v.SetViewPoint(geom.NewPoint(0, 0))
+	result := v.PolygonFrom(geom.NewPoint(0, 0))
 	c.NotNil(result)
 	c.Equal(4, len(result))
 }
@@ -218,7 +219,7 @@ func TestDistSqrd(t *testing.T) {
 	}
 
 	v := visibility.New(bounds, obstructions)
-	result := v.SetViewPoint(geom.NewPoint(5, 5))
+	result := v.PolygonFrom(geom.NewPoint(5, 5))
 	c.NotNil(result)
 }
 
@@ -297,7 +298,7 @@ func TestVisibilityWithZeroBounds(t *testing.T) {
 	var obstructions []geom.Line
 
 	v := visibility.New(bounds, obstructions)
-	c.Nil(v.SetViewPoint(geom.NewPoint(0, 0)))
+	c.Nil(v.PolygonFrom(geom.NewPoint(0, 0)))
 }
 
 func TestVisibilityWithNegativeBounds(t *testing.T) {
@@ -309,7 +310,7 @@ func TestVisibilityWithNegativeBounds(t *testing.T) {
 	}
 
 	v := visibility.New(bounds, obstructions)
-	result := v.SetViewPoint(geom.NewPoint(0, 0))
+	result := v.PolygonFrom(geom.NewPoint(0, 0))
 	c.NotNil(result)
 }
 
@@ -426,7 +427,7 @@ func TestVisibilityWithVerySmallObstruction(t *testing.T) {
 	}
 
 	v := visibility.New(bounds, obstructions)
-	result := v.SetViewPoint(geom.NewPoint(25, 25))
+	result := v.PolygonFrom(geom.NewPoint(25, 25))
 	c.NotNil(result)
 }
 
@@ -443,11 +444,84 @@ func TestVisibilityWithLargeObstruction(t *testing.T) {
 
 	v := visibility.New(bounds, obstructions)
 	// View point inside the large obstruction
-	result := v.SetViewPoint(geom.NewPoint(50, 50))
+	result := v.PolygonFrom(geom.NewPoint(50, 50))
 	c.NotNil(result)
 }
 
-func TestSetViewPointIsScaleInvariant(t *testing.T) {
+func TestPolygonFromHasNoDuplicateVertices(t *testing.T) {
+	c := check.New(t)
+
+	bounds := geom.NewRect(0, 0, 100, 100)
+	for _, tc := range []struct {
+		name        string
+		obstruction geom.Line
+		viewPt      geom.Point
+	}{
+		{"wall across the middle", geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50)), geom.NewPoint(50, 25)},
+		{
+			"view point on a wall endpoint",
+			geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50)),
+			geom.NewPoint(0, 50),
+		},
+		{"view point on a wall", geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(100, 100)), geom.NewPoint(50, 50)},
+		{"wall along a bounds edge", geom.NewLine(geom.NewPoint(20, 0), geom.NewPoint(80, 0)), geom.NewPoint(50, 50)},
+	} {
+		result := visibility.New(bounds, []geom.Line{tc.obstruction}).PolygonFrom(tc.viewPt)
+		c.True(len(result) > 2, "%s: only %d vertices", tc.name, len(result))
+		for i := range result {
+			// The closing edge is implicit, so the wrap-around pair has to be distinct too.
+			j := (i + 1) % len(result)
+			c.NotEqual(result[i], result[j], "%s: zero-length edge at %d in %v", tc.name, i, result)
+		}
+	}
+}
+
+func TestBreakIntersectionsWithDuplicateLines(t *testing.T) {
+	c := check.New(t)
+
+	// Skipping the self-comparison by value equality would make each of the two identical lines skip the other as
+	// well, leaving both of them uncut by anything they overlap.
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+	})))
+}
+
+func TestPolygonFromIsConcurrencySafe(t *testing.T) {
+	c := check.New(t)
+
+	// A Visibility is documented as immutable once built, so this asserts the property the documentation promises.
+	// The suite runs under -race, which is what makes the test meaningful.
+	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
+		geom.NewLine(geom.NewPoint(40, 40), geom.NewPoint(60, 40)),
+		geom.NewLine(geom.NewPoint(60, 40), geom.NewPoint(60, 60)),
+		geom.NewLine(geom.NewPoint(60, 60), geom.NewPoint(40, 60)),
+		geom.NewLine(geom.NewPoint(40, 60), geom.NewPoint(40, 40)),
+	})
+	viewPt := geom.NewPoint(20, 20)
+	want := v.PolygonFrom(viewPt)
+	results := make([][]geom.Point, 8)
+	var wg sync.WaitGroup
+	for i := range results {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			results[i] = v.PolygonFrom(viewPt)
+		}()
+	}
+	wg.Wait()
+	for i := range results {
+		c.Equal(want, results[i], "goroutine %d disagreed", i)
+	}
+}
+
+func TestPolygonFromIsScaleInvariant(t *testing.T) {
 	c := check.New(t)
 
 	// The same scene, expressed at wildly different scales, has to produce the same polygon shape. A tolerance fixed
@@ -462,7 +536,7 @@ func TestSetViewPointIsScaleInvariant(t *testing.T) {
 			geom.NewLine(geom.NewPoint(size*0.6, size*0.6), geom.NewPoint(size*0.4, size*0.6)),
 			geom.NewLine(geom.NewPoint(size*0.4, size*0.6), geom.NewPoint(size*0.4, size*0.4)),
 		})
-		result := v.SetViewPoint(geom.NewPoint(size*0.2, size*0.2))
+		result := v.PolygonFrom(geom.NewPoint(size*0.2, size*0.2))
 		c.Equal(8, len(result), "bounds size %v", size)
 		ratio := polygonArea(result) / (float64(size) * float64(size))
 		c.True(math.Abs(ratio-wantRatio) < 0.001, "bounds size %v: area ratio %v, want %v", size, ratio, wantRatio)
@@ -511,7 +585,7 @@ func BenchmarkBreakIntersections(b *testing.B) {
 	}
 }
 
-func BenchmarkSetViewPoint(b *testing.B) {
+func BenchmarkPolygonFrom(b *testing.B) {
 	bounds := geom.NewRect(0, 0, 1000, 1000)
 	obstructions := make([]geom.Line, 20)
 	for i := range obstructions {
@@ -526,7 +600,7 @@ func BenchmarkSetViewPoint(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		v.SetViewPoint(viewPoint)
+		v.PolygonFrom(viewPoint)
 	}
 }
 
@@ -538,7 +612,7 @@ func ExampleNew() {
 	}
 
 	v := visibility.New(bounds, obstructions)
-	polygon := v.SetViewPoint(geom.NewPoint(10, 10))
+	polygon := v.PolygonFrom(geom.NewPoint(10, 10))
 
 	if polygon != nil {
 		// Use the visibility polygon for rendering, collision detection, etc.
@@ -559,7 +633,7 @@ func ExampleBreakIntersections() {
 	_ = len(brokenLines) // Will be > 2
 }
 
-func ExampleVisibility_SetViewPoint() {
+func ExampleVisibility_PolygonFrom() {
 	bounds := geom.NewRect(0, 0, 100, 100)
 	obstructions := []geom.Line{
 		geom.NewLine(geom.NewPoint(30, 30), geom.NewPoint(70, 30)),
@@ -569,7 +643,7 @@ func ExampleVisibility_SetViewPoint() {
 	v := visibility.New(bounds, obstructions)
 
 	viewPoint := geom.NewPoint(15, 15)
-	polygon := v.SetViewPoint(viewPoint)
+	polygon := v.PolygonFrom(viewPoint)
 
 	// polygon contains the vertices of the visibility area
 	for _, vertex := range polygon {
