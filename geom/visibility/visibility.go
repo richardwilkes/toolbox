@@ -39,6 +39,8 @@ func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
 }
 
 // BreakIntersections breaks the lines at their intersections, returning a new slice of lines that do not intersect.
+// Collinear lines that overlap each other are split at the ends of the shared portion, and that shared portion is
+// returned only once.
 func BreakIntersections(lines []geom.Line) []geom.Line {
 	var qt quadtree.QuadTree[geom.Line]
 	for _, line := range lines {
@@ -51,16 +53,33 @@ func BreakIntersections(lines []geom.Line) []geom.Line {
 			if line == one {
 				continue
 			}
-			if hasIntersection(line.Start, line.End, one.Start, one.End) {
-				pt, intersects := intersectLines(line.Start, line.End, one.Start, one.End)
-				if intersects && !pt.EqualWithin(line.Start, epsilon) && !pt.EqualWithin(line.End, epsilon) {
+			// geom.LineIntersection is used rather than the local intersectLines because it returns both endpoints of
+			// the shared portion when the two segments are collinear and overlap, a case that cannot be expressed as a
+			// single infinite-line intersection point.
+			for _, pt := range geom.LineIntersection(line.Start, line.End, one.Start, one.End) {
+				if !pt.EqualWithin(line.Start, epsilon) && !pt.EqualWithin(line.End, epsilon) {
 					intersections = append(intersections, pt)
 				}
 			}
 		}
 		revised = collectLines(line, intersections, revised, nil)
 	}
-	return slices.Clip(revised)
+	// A collinear overlap is broken out of each of the lines that contained it, so the shared portion appears more than
+	// once. Drop those exact duplicates, since coincident lines would otherwise still intersect each other.
+	seen := make(map[geom.Line]struct{}, len(revised))
+	deduped := revised[:0]
+	for _, line := range revised {
+		key := line
+		if key.End.X < key.Start.X || (key.End.X == key.Start.X && key.End.Y < key.Start.Y) {
+			key.Start, key.End = key.End, key.Start
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		deduped = append(deduped, line)
+	}
+	return slices.Clip(deduped)
 }
 
 func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line, viewPort *geom.Rect) []geom.Line {
@@ -74,13 +93,19 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 				endIndex = i
 			}
 		}
-		if viewPort == nil || viewPort.IntersectsLine(start, intersections[endIndex]) {
-			lines = append(lines, geom.NewLine(start, intersections[endIndex]))
-		}
-		start = intersections[endIndex]
+		end := intersections[endIndex]
 		intersections = slices.Delete(intersections, endIndex, endIndex+1)
+		// Three or more lines meeting at a single point yield that point once per line, so skip any repeat of the
+		// current start rather than emitting a zero-length segment.
+		if end.EqualWithin(start, epsilon) {
+			continue
+		}
+		if viewPort == nil || viewPort.IntersectsLine(start, end) {
+			lines = append(lines, geom.NewLine(start, end))
+		}
+		start = end
 	}
-	if viewPort == nil || viewPort.IntersectsLine(start, line.End) {
+	if !line.End.EqualWithin(start, epsilon) && (viewPort == nil || viewPort.IntersectsLine(start, line.End)) {
 		lines = append(lines, geom.NewLine(start, line.End))
 	}
 	return lines

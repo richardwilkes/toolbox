@@ -10,7 +10,9 @@
 package visibility_test
 
 import (
+	"cmp"
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -322,6 +324,85 @@ func TestBreakIntersectionsWithCollinearLines(t *testing.T) {
 
 	result := visibility.BreakIntersections(lines)
 	c.True(len(result) >= len(lines))
+}
+
+func TestBreakIntersectionsSplitsCollinearOverlaps(t *testing.T) {
+	c := check.New(t)
+
+	// Partial overlap: each line must be split at the point where the other one starts or ends, and the shared portion
+	// must appear only once.
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
+		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(10, 0), geom.NewPoint(15, 0)),
+	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
+	})))
+
+	// Full containment: the enclosing line must be split at both ends of the enclosed one.
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(2, 0)),
+		geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
+		geom.NewLine(geom.NewPoint(8, 0), geom.NewPoint(10, 0)),
+	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
+	})))
+
+	// Diagonal overlap, to be sure the split is not limited to axis-aligned input.
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20)),
+	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(20, 20)),
+	})))
+}
+
+func TestBreakIntersectionsWithConcurrentLines(t *testing.T) {
+	c := check.New(t)
+
+	// Three lines meeting at (5,5) yield that same intersection point more than once per line, which must not turn into
+	// zero-length segments.
+	result := visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 10)),
+	})
+	for _, one := range result {
+		c.NotEqual(one.Start, one.End, "zero-length segment %v", one)
+	}
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 10)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+	}, normalizedLines(result))
+}
+
+// normalizedLines returns the lines with each one's endpoints in a canonical order and the lines themselves sorted, so
+// that a set of lines can be compared without depending on the order the algorithm happens to produce.
+func normalizedLines(lines []geom.Line) []geom.Line {
+	result := make([]geom.Line, len(lines))
+	for i, one := range lines {
+		if one.End.X < one.Start.X || (one.End.X == one.Start.X && one.End.Y < one.Start.Y) {
+			one.Start, one.End = one.End, one.Start
+		}
+		result[i] = one
+	}
+	slices.SortFunc(result, func(a, b geom.Line) int {
+		return cmp.Or(
+			cmp.Compare(a.Start.X, b.Start.X),
+			cmp.Compare(a.Start.Y, b.Start.Y),
+			cmp.Compare(a.End.X, b.End.X),
+			cmp.Compare(a.End.Y, b.End.Y),
+		)
+	})
+	return result
 }
 
 func TestBreakIntersectionsWithTouchingLines(t *testing.T) {
