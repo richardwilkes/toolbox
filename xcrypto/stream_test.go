@@ -101,20 +101,26 @@ func TestDecryptStreamDetectsTruncation(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
 	c.NoError(err)
 	publicKey := &privateKey.PublicKey
-	// Use more than one chunk so that truncation leaves at least one intact chunk ahead of the cut.
+	// Use more than one chunk so that truncation leaves at least one intact chunk ahead of the cut. This encrypts to
+	// two 64KB chunks followed by a 512-byte final chunk, each carrying a 16-byte authentication tag.
 	plaintext := make([]byte, 2*64*1024+512)
 	_, err = crypto_rand.Read(plaintext)
 	c.NoError(err)
 	var encrypted bytes.Buffer
 	c.NoError(xcrypto.EncryptStreamWithPublicKey(bytes.NewReader(plaintext), &encrypted, publicKey))
 	full := encrypted.Bytes()
-	// Cut the stream mid-chunk, losing the final chunk and most of the one before it.
-	truncated := full[:len(full)-(64*1024+16)]
+	// Cut exactly on a chunk boundary, dropping only the final chunk. What remains is a sequence of intact, correctly
+	// sized chunks, so this can only be caught by the final-chunk flag bound into the nonce.
+	truncated := full[:len(full)-(512+16)]
 	var decrypted bytes.Buffer
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(truncated), &decrypted, privateKey))
-	// Removing just the final tag byte must also fail.
+	// Cut mid-chunk, losing the final chunk and most of the one before it.
+	truncated = full[:len(full)-(64*1024+16)]
 	var decrypted2 bytes.Buffer
-	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(full[:len(full)-1]), &decrypted2, privateKey))
+	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(truncated), &decrypted2, privateKey))
+	// Removing just the final tag byte must also fail.
+	var decrypted3 bytes.Buffer
+	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(full[:len(full)-1]), &decrypted3, privateKey))
 }
 
 // TestDecryptStreamDetectsExtraData verifies that data appended after the final chunk is rejected, since that chunk
