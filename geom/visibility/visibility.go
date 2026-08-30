@@ -127,15 +127,26 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 		if end.EqualWithin(start, eps) {
 			continue
 		}
-		if viewPort == nil || viewPort.IntersectsLine(start, end) {
+		if viewPort == nil || withinViewPort(*viewPort, start, end) {
 			lines = append(lines, geom.NewLine(start, end))
 		}
 		start = end
 	}
-	if !line.End.EqualWithin(start, eps) && (viewPort == nil || viewPort.IntersectsLine(start, line.End)) {
+	if !line.End.EqualWithin(start, eps) && (viewPort == nil || withinViewPort(*viewPort, start, line.End)) {
 		lines = append(lines, geom.NewLine(start, line.End))
 	}
 	return lines
+}
+
+// withinViewPort reports whether the segment lies inside the view port. Callers have already split the segment at
+// every crossing of the port's edges, so it is either wholly inside or wholly outside and its midpoint settles which.
+// Rect.IntersectsLine cannot be used here: it also reports true for a segment lying outside that merely touches an
+// edge or a corner, and the sweep would then cast rays out to that segment's far endpoint and place polygon vertices
+// beyond the bounds.
+func withinViewPort(viewPort geom.Rect, start, end geom.Point) bool {
+	midX := (start.X + end.X) / 2
+	midY := (start.Y + end.Y) / 2
+	return midX >= viewPort.X && midX <= viewPort.Right() && midY >= viewPort.Y && midY <= viewPort.Bottom()
 }
 
 // PolygonFrom returns the polygon of the unobstructed area visible from viewPt, or nil if viewPt is outside the bounds
@@ -156,6 +167,9 @@ func (v *Visibility) PolygonFrom(viewPt geom.Point) []geom.Point {
 	}
 	var intersections []geom.Point
 	for _, line := range v.lines {
+		if !finite(line.Start) || !finite(line.End) {
+			continue
+		}
 		if (line.Start.X < v.bounds.X && line.End.X < v.bounds.X) ||
 			(line.Start.Y < v.bounds.Y && line.End.Y < v.bounds.Y) ||
 			(line.Start.X > v.bounds.Right() && line.End.X > v.bounds.Right()) ||
@@ -230,25 +244,25 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 		// The heap can be emptied by the removals above, so every nearest-occluder lookup has to tolerate the empty
 		// case rather than indexing blindly.
 		if extend {
-			polygon = appendVertex(polygon, vertex, v.epsilon)
+			polygon = v.appendVertex(polygon, vertex)
 			if nearest := heap.nearest(); nearest != -1 {
 				line := lines[nearest]
 				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects &&
 					!cur.EqualWithin(vertex, v.epsilon) {
-					polygon = appendVertex(polygon, cur, v.epsilon)
+					polygon = v.appendVertex(polygon, cur)
 				}
 			}
 		} else if shorten {
 			if oldLine != -1 {
 				line := lines[oldLine]
 				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
-					polygon = appendVertex(polygon, cur, v.epsilon)
+					polygon = v.appendVertex(polygon, cur)
 				}
 			}
 			if nearest := heap.nearest(); nearest != -1 {
 				line := lines[nearest]
 				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
-					polygon = appendVertex(polygon, cur, v.epsilon)
+					polygon = v.appendVertex(polygon, cur)
 				}
 			}
 		}
@@ -264,11 +278,19 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 	return polygon
 }
 
-// appendVertex appends pt to the polygon unless it repeats the vertex already at the end. Emitting the repeat would
-// leave a zero-length edge for every consumer to filter out, and would break polygon algorithms that assume each edge
-// has a direction.
-func appendVertex(polygon []geom.Point, pt geom.Point, eps float32) []geom.Point {
-	if len(polygon) != 0 && polygon[len(polygon)-1].EqualWithin(pt, eps) {
+// appendVertex clamps pt to the bounds and appends it to the polygon, unless it repeats the vertex already at the end.
+//
+// The clamp holds the documented postcondition that the visible area lies within the bounds. The sweep intersects the
+// ray with the infinite line through the nearest occluder, so when that occluder is a bounds edge and the ray runs
+// almost parallel to it -- which happens near a corner of a very elongated rectangle -- the crossing can land well
+// beyond the edge's end.
+//
+// Emitting a repeated vertex would leave a zero-length edge for every consumer to filter out, and would break polygon
+// algorithms that assume each edge has a direction.
+func (v *Visibility) appendVertex(polygon []geom.Point, pt geom.Point) []geom.Point {
+	pt.X = min(max(pt.X, v.bounds.X), v.bounds.Right())
+	pt.Y = min(max(pt.Y, v.bounds.Y), v.bounds.Bottom())
+	if len(polygon) != 0 && polygon[len(polygon)-1].EqualWithin(pt, v.epsilon) {
 		return polygon
 	}
 	return append(polygon, pt)
@@ -472,6 +494,14 @@ func pointEpsilon(magnitude float32) float32 {
 		return eps
 	}
 	return minPointEpsilon
+}
+
+// finite reports whether both of a point's coordinates can take part in the sweep. A NaN or infinite coordinate has
+// neither a meaningful angle nor a meaningful distance, so a line carrying one is dropped before it reaches anything
+// that would have to reason about it. The viewport clipping happens to reject such a line as well, since every
+// comparison against a NaN is false, but relying on that would leave the behavior resting on an accident.
+func finite(pt geom.Point) bool {
+	return !xmath.IsNaN(pt.X) && !xmath.IsNaN(pt.Y) && !xmath.IsInf(pt.X, 0) && !xmath.IsInf(pt.Y, 0)
 }
 
 func distSqrd(a, b geom.Point) float32 {
