@@ -447,6 +447,38 @@ func TestVisibilityWithLargeObstruction(t *testing.T) {
 	c.NotNil(result)
 }
 
+func TestSetViewPointIsScaleInvariant(t *testing.T) {
+	c := check.New(t)
+
+	// The same scene, expressed at wildly different scales, has to produce the same polygon shape. A tolerance fixed
+	// in world units instead makes small scenes silently collapse: at a bounds size of 0.01 the square's shadow used
+	// to disappear entirely, dropping the polygon from 8 vertices to 5.
+	const wantRatio = 0.72
+	for _, size := range []float32{1000, 100, 10, 1, 0.1, 0.01, 0.001} {
+		bounds := geom.NewRect(0, 0, size, size)
+		v := visibility.New(bounds, []geom.Line{
+			geom.NewLine(geom.NewPoint(size*0.4, size*0.4), geom.NewPoint(size*0.6, size*0.4)),
+			geom.NewLine(geom.NewPoint(size*0.6, size*0.4), geom.NewPoint(size*0.6, size*0.6)),
+			geom.NewLine(geom.NewPoint(size*0.6, size*0.6), geom.NewPoint(size*0.4, size*0.6)),
+			geom.NewLine(geom.NewPoint(size*0.4, size*0.6), geom.NewPoint(size*0.4, size*0.4)),
+		})
+		result := v.SetViewPoint(geom.NewPoint(size*0.2, size*0.2))
+		c.Equal(8, len(result), "bounds size %v", size)
+		ratio := polygonArea(result) / (float64(size) * float64(size))
+		c.True(math.Abs(ratio-wantRatio) < 0.001, "bounds size %v: area ratio %v, want %v", size, ratio, wantRatio)
+	}
+}
+
+// polygonArea returns the absolute area enclosed by the polygon, via the shoelace formula.
+func polygonArea(pts []geom.Point) float64 {
+	var area float64
+	for i := range pts {
+		j := (i + 1) % len(pts)
+		area += float64(pts[i].X)*float64(pts[j].Y) - float64(pts[j].X)*float64(pts[i].Y)
+	}
+	return math.Abs(area) / 2
+}
+
 func BenchmarkNew(b *testing.B) {
 	bounds := geom.NewRect(0, 0, 1000, 1000)
 	obstructions := make([]geom.Line, 100)

@@ -19,20 +19,34 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
-const epsilon = 0.01
+const (
+	// pointEpsilonRatio is the fraction of a scene's overall magnitude used as the tolerance when comparing points for
+	// equality. Deriving the tolerance from the data rather than fixing it at some number of world units keeps the
+	// results consistent as a scene is scaled up or down.
+	pointEpsilonRatio = 0.0001
+	// minPointEpsilon is the floor for the point comparison tolerance, used when a scene has no measurable extent.
+	minPointEpsilon = 1e-6
+	// angleEpsilon is the tolerance, in degrees, for treating two endpoints as lying at the same angle from the view
+	// point. This is an angular tolerance and is deliberately kept separate from the point comparison tolerance, which
+	// is in world units.
+	angleEpsilon = 0.01
+)
 
 // Visibility holds state for computing a visibility polygon.
 type Visibility struct {
-	lines  []geom.Line
-	bounds geom.Rect
+	lines   []geom.Line
+	bounds  geom.Rect
+	epsilon float32
 }
 
 // New creates a Visibility object. The obstructions must not intersect each other. If they do, call
 // BreakIntersections() and pass the result instead.
 func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
+	magnitude := max(xmath.Abs(bounds.X), xmath.Abs(bounds.Y), xmath.Abs(bounds.Right()), xmath.Abs(bounds.Bottom()))
 	v := &Visibility{
-		lines:  make([]geom.Line, len(obstructions)),
-		bounds: bounds,
+		lines:   make([]geom.Line, len(obstructions)),
+		bounds:  bounds,
+		epsilon: pointEpsilon(magnitude),
 	}
 	copy(v.lines, obstructions)
 	return v
@@ -43,9 +57,13 @@ func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
 // returned only once.
 func BreakIntersections(lines []geom.Line) []geom.Line {
 	var qt quadtree.QuadTree[geom.Line]
+	var magnitude float32
 	for _, line := range lines {
 		qt.Insert(line)
+		magnitude = max(magnitude, xmath.Abs(line.Start.X), xmath.Abs(line.Start.Y), xmath.Abs(line.End.X),
+			xmath.Abs(line.End.Y))
 	}
+	eps := pointEpsilon(magnitude)
 	revised := make([]geom.Line, 0, len(lines)*2)
 	for _, line := range lines {
 		var intersections []geom.Point
@@ -57,12 +75,12 @@ func BreakIntersections(lines []geom.Line) []geom.Line {
 			// the shared portion when the two segments are collinear and overlap, a case that cannot be expressed as a
 			// single infinite-line intersection point.
 			for _, pt := range geom.LineIntersection(line.Start, line.End, one.Start, one.End) {
-				if !pt.EqualWithin(line.Start, epsilon) && !pt.EqualWithin(line.End, epsilon) {
+				if !pt.EqualWithin(line.Start, eps) && !pt.EqualWithin(line.End, eps) {
 					intersections = append(intersections, pt)
 				}
 			}
 		}
-		revised = collectLines(line, intersections, revised, nil)
+		revised = collectLines(line, intersections, revised, nil, eps)
 	}
 	// A collinear overlap is broken out of each of the lines that contained it, so the shared portion appears more than
 	// once. Drop those exact duplicates, since coincident lines would otherwise still intersect each other.
@@ -82,7 +100,8 @@ func BreakIntersections(lines []geom.Line) []geom.Line {
 	return slices.Clip(deduped)
 }
 
-func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line, viewPort *geom.Rect) []geom.Line {
+func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line, viewPort *geom.Rect, eps float32,
+) []geom.Line {
 	start := line.Start
 	for len(intersections) > 0 {
 		endIndex := 0
@@ -97,7 +116,7 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 		intersections = slices.Delete(intersections, endIndex, endIndex+1)
 		// Three or more lines meeting at a single point yield that point once per line, so skip any repeat of the
 		// current start rather than emitting a zero-length segment.
-		if end.EqualWithin(start, epsilon) {
+		if end.EqualWithin(start, eps) {
 			continue
 		}
 		if viewPort == nil || viewPort.IntersectsLine(start, end) {
@@ -105,7 +124,7 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 		}
 		start = end
 	}
-	if !line.End.EqualWithin(start, epsilon) && (viewPort == nil || viewPort.IntersectsLine(start, line.End)) {
+	if !line.End.EqualWithin(start, eps) && (viewPort == nil || viewPort.IntersectsLine(start, line.End)) {
 		lines = append(lines, geom.NewLine(start, line.End))
 	}
 	return lines
@@ -139,12 +158,12 @@ func (v *Visibility) SetViewPoint(viewPt geom.Point) []geom.Point {
 			k := (j + 1) % len(viewport)
 			if hasIntersection(line.Start, line.End, viewport[j], viewport[k]) {
 				pt, intersects := intersectLines(line.Start, line.End, viewport[j], viewport[k])
-				if intersects && !pt.EqualWithin(line.Start, epsilon) && !pt.EqualWithin(line.End, epsilon) {
+				if intersects && !pt.EqualWithin(line.Start, v.epsilon) && !pt.EqualWithin(line.End, v.epsilon) {
 					intersections = append(intersections, pt)
 				}
 			}
 		}
-		lines = collectLines(line, intersections, lines, &v.bounds)
+		lines = collectLines(line, intersections, lines, &v.bounds, v.epsilon)
 	}
 
 	lines = append(lines,
@@ -171,7 +190,7 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 		a2 := angle(lines[i].End, viewPt)
 		if (a1 >= -180 && a1 <= 0 && a2 <= 180 && a2 >= 0 && a2-a1 > 180) ||
 			(a2 >= -180 && a2 <= 0 && a1 <= 180 && a1 >= 0 && a1-a2 > 180) {
-			insert(i, heap, mapper, lines, viewPt, start)
+			v.insert(i, heap, mapper, lines, viewPt, start)
 		}
 	}
 	polygon := make([]geom.Point, 0, len(sorted)*2)
@@ -181,40 +200,48 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 		shorten := false
 		orig := i
 		vertex := sorted[i].pt(lines)
-		oldLine := heap.elem(0)
+		oldLine := heap.top()
 		for {
 			if mapper.elem(sorted[i].lineIndex) != -1 {
 				if sorted[i].lineIndex == oldLine {
 					extend = true
 					vertex = sorted[i].pt(lines)
 				}
-				remove(mapper.elem(sorted[i].lineIndex), heap, mapper, lines, viewPt, vertex)
+				v.remove(mapper.elem(sorted[i].lineIndex), heap, mapper, lines, viewPt, vertex)
 			} else {
-				insert(sorted[i].lineIndex, heap, mapper, lines, viewPt, vertex)
-				if heap.elem(0) != oldLine {
+				v.insert(sorted[i].lineIndex, heap, mapper, lines, viewPt, vertex)
+				if heap.top() != oldLine {
 					shorten = true
 				}
 			}
 			i++
-			if i == len(sorted) || sorted[i].angle >= sorted[orig].angle+epsilon {
+			if i == len(sorted) || sorted[i].angle >= sorted[orig].angle+angleEpsilon {
 				break
 			}
 		}
+		// The heap can be emptied by the removals above, so every nearest-occluder lookup has to tolerate the empty
+		// case rather than indexing blindly.
 		if extend {
 			polygon = append(polygon, geom.Point{X: vertex.X, Y: vertex.Y})
-			line := lines[heap.elem(0)]
-			if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects &&
-				!cur.EqualWithin(vertex, epsilon) {
-				polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+			if nearest := heap.top(); nearest != -1 {
+				line := lines[nearest]
+				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects &&
+					!cur.EqualWithin(vertex, v.epsilon) {
+					polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+				}
 			}
 		} else if shorten {
-			line := lines[oldLine]
-			if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
-				polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+			if oldLine != -1 {
+				line := lines[oldLine]
+				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
+					polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+				}
 			}
-			line = lines[heap.elem(0)]
-			if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
-				polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+			if nearest := heap.top(); nearest != -1 {
+				line := lines[nearest]
+				if cur, intersects := intersectLines(line.Start, line.End, viewPt, vertex); intersects {
+					polygon = append(polygon, geom.Point{X: cur.X, Y: cur.Y})
+				}
 			}
 		}
 	}
@@ -224,7 +251,7 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 	return polygon
 }
 
-func remove(index int, heap, mapper *array, lines []geom.Line, position, destination geom.Point) {
+func (v *Visibility) remove(index int, heap, mapper *array, lines []geom.Line, position, destination geom.Point) {
 	mapper.set(heap.elem(index), -1)
 	if index == heap.size()-1 {
 		heap.pop()
@@ -234,12 +261,12 @@ func remove(index int, heap, mapper *array, lines []geom.Line, position, destina
 	mapper.set(heap.elem(index), index)
 	cur := index
 	parent := (cur - 1) / 2
-	if cur != 0 && lessThan(heap.elem(cur), heap.elem(parent), lines, position, destination) {
+	if cur != 0 && v.lessThan(heap.elem(cur), heap.elem(parent), lines, position, destination) {
 		for cur > 0 {
 			parent = (cur - 1) / 2
 			parentElem := heap.elem(parent)
 			curElem := heap.elem(cur)
-			if !lessThan(curElem, parentElem, lines, position, destination) {
+			if !v.lessThan(curElem, parentElem, lines, position, destination) {
 				break
 			}
 			mapper.set(parentElem, cur)
@@ -255,8 +282,8 @@ loop:
 		left := 2*cur + 1
 		right := left + 1
 		switch {
-		case left < heap.size() && lessThan(heap.elem(left), heap.elem(cur), lines, position, destination) &&
-			(right == heap.size() || lessThan(heap.elem(left), heap.elem(right), lines, position, destination)):
+		case left < heap.size() && v.lessThan(heap.elem(left), heap.elem(cur), lines, position, destination) &&
+			(right == heap.size() || v.lessThan(heap.elem(left), heap.elem(right), lines, position, destination)):
 			leftElem := heap.elem(left)
 			curElem := heap.elem(cur)
 			mapper.set(leftElem, cur)
@@ -264,7 +291,7 @@ loop:
 			heap.set(left, curElem)
 			heap.set(cur, leftElem)
 			cur = left
-		case right < heap.size() && lessThan(heap.elem(right), heap.elem(cur), lines, position, destination):
+		case right < heap.size() && v.lessThan(heap.elem(right), heap.elem(cur), lines, position, destination):
 			rightElem := heap.elem(right)
 			curElem := heap.elem(cur)
 			mapper.set(rightElem, cur)
@@ -278,7 +305,7 @@ loop:
 	}
 }
 
-func insert(index int, heap, mapper *array, lines []geom.Line, position, destination geom.Point) {
+func (v *Visibility) insert(index int, heap, mapper *array, lines []geom.Line, position, destination geom.Point) {
 	cur := heap.size()
 	heap.push(index)
 	mapper.set(index, cur)
@@ -286,7 +313,7 @@ func insert(index int, heap, mapper *array, lines []geom.Line, position, destina
 		parent := (cur - 1) / 2
 		parentElem := heap.elem(parent)
 		curElem := heap.elem(cur)
-		if !lessThan(curElem, parentElem, lines, position, destination) {
+		if !v.lessThan(curElem, parentElem, lines, position, destination) {
 			break
 		}
 		mapper.set(parentElem, cur)
@@ -297,28 +324,32 @@ func insert(index int, heap, mapper *array, lines []geom.Line, position, destina
 	}
 }
 
-func lessThan(index1, index2 int, lines []geom.Line, position, destination geom.Point) bool {
+// lessThan reports whether the line at index1 is closer to position along the ray towards destination than the line at
+// index2. A line that the ray misses entirely sorts as infinitely far away, so that it can always be displaced from the
+// front of the heap by one that is actually hit. Returning false for both orderings instead would break the strict weak
+// ordering the sift-up and sift-down code depends on and would let a missed line sit at the front of the heap forever.
+func (v *Visibility) lessThan(index1, index2 int, lines []geom.Line, position, destination geom.Point) bool {
 	pt1, intersects1 := intersectLines(lines[index1].Start, lines[index1].End, position, destination)
+	pt2, intersects2 := intersectLines(lines[index2].Start, lines[index2].End, position, destination)
 	if !intersects1 {
 		return false
 	}
-	pt2, intersects2 := intersectLines(lines[index2].Start, lines[index2].End, position, destination)
 	if !intersects2 {
-		return false
+		return true
 	}
-	if !pt1.EqualWithin(pt2, epsilon) {
+	if !pt1.EqualWithin(pt2, v.epsilon) {
 		d1 := distSqrd(pt1, position)
 		d2 := distSqrd(pt2, position)
 		return d1 < d2
 	}
 	var a1 float32
-	if pt1.EqualWithin(lines[index1].Start, epsilon) {
+	if pt1.EqualWithin(lines[index1].Start, v.epsilon) {
 		a1 = angle2(lines[index1].End, pt1, position)
 	} else {
 		a1 = angle2(lines[index1].Start, pt1, position)
 	}
 	var a2 float32
-	if pt2.EqualWithin(lines[index2].Start, epsilon) {
+	if pt2.EqualWithin(lines[index2].Start, v.epsilon) {
 		a2 = angle2(lines[index2].End, pt2, position)
 	} else {
 		a2 = angle2(lines[index2].Start, pt2, position)
@@ -378,6 +409,16 @@ func angle2(a, b, c geom.Point) float32 {
 
 func angle(a, b geom.Point) float32 {
 	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
+}
+
+// pointEpsilon returns the tolerance to use when comparing points for equality in a scene whose coordinates reach the
+// given magnitude. A tolerance proportional to the scene keeps behavior the same at every scale, while the floor keeps
+// it from collapsing to zero for a scene with no measurable extent.
+func pointEpsilon(magnitude float32) float32 {
+	if eps := magnitude * pointEpsilonRatio; eps > minPointEpsilon {
+		return eps
+	}
+	return minPointEpsilon
 }
 
 func distSqrd(a, b geom.Point) float32 {
@@ -446,6 +487,14 @@ func (a *array) size() int {
 
 func (a *array) elem(index int) int {
 	return a.data[index]
+}
+
+// top returns the element at the front of the heap, or -1 if the heap is empty.
+func (a *array) top() int {
+	if len(a.data) == 0 {
+		return -1
+	}
+	return a.data[0]
 }
 
 func (a *array) set(index, value int) {
