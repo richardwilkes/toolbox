@@ -358,6 +358,14 @@ func withinViewPort(viewPort geom.Rect, start, end geom.Point) bool {
 	return midX >= viewPort.X && midX <= viewPort.Right() && midY >= viewPort.Y && midY <= viewPort.Bottom()
 }
 
+// SetViewPoint returns the polygon of the unobstructed area visible from viewPt.
+//
+// Deprecated: Use PolygonFrom instead, which this forwards to. Despite this method's name, a Visibility holds no view
+// point state.
+func (v *Visibility) SetViewPoint(viewPt geom.Point) []geom.Point {
+	return v.PolygonFrom(viewPt)
+}
+
 // PolygonFrom returns the polygon of the unobstructed area visible from viewPt, or nil if viewPt is outside the bounds
 // or no area is visible. Consecutive vertices are always distinct, so the polygon has no zero-length edges.
 //
