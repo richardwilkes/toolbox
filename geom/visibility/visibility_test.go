@@ -571,6 +571,125 @@ func TestPolygonFromIsScaleInvariant(t *testing.T) {
 	}
 }
 
+func TestNewWithNonFiniteBounds(t *testing.T) {
+	c := check.New(t)
+
+	// A bounds with a NaN or infinite coordinate cannot yield finite vertices, so it is treated as empty and every
+	// polygon request returns nil rather than garbage such as [+Inf,+Inf NaN,NaN ...].
+	nan := float32(math.NaN())
+	inf := float32(math.Inf(1))
+	obstructions := []geom.Line{geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20))}
+	for _, bounds := range []geom.Rect{
+		geom.NewRect(0, 0, inf, inf),
+		geom.NewRect(nan, 0, 100, 100),
+		geom.NewRect(0, nan, 100, 100),
+		geom.NewRect(0, 0, 100, nan),
+		geom.NewRect(float32(math.Inf(-1)), 0, 100, 100),
+	} {
+		c.Nil(visibility.New(bounds, obstructions).PolygonFrom(geom.NewPoint(50, 50)), "bounds %v", bounds)
+	}
+}
+
+func TestPolygonFromWithBoundsFarFromOrigin(t *testing.T) {
+	c := check.New(t)
+
+	// The comparison tolerance is derived from the scene's extent, not the raw coordinate magnitude. A magnitude-based
+	// tolerance exceeds the extent of a small scene far from the origin, collapsing the sweep to a single degenerate
+	// vertex.
+	for _, tc := range []struct {
+		name   string
+		bounds geom.Rect
+	}{
+		{"offset 10000, extent 1", geom.NewRect(10000, 10000, 1, 1)},
+		{"offset 100000, extent 3", geom.NewRect(100000, 100000, 3, 3)},
+		{"offset 1e6, extent 50", geom.NewRect(1e6, 1e6, 50, 50)},
+	} {
+		polygon := visibility.New(tc.bounds, nil).PolygonFrom(tc.bounds.Center())
+		c.Equal(4, len(polygon), "%s: %v", tc.name, polygon)
+		wantArea := float64(tc.bounds.Width) * float64(tc.bounds.Height)
+		area := polygonArea(polygon)
+		c.True(math.Abs(area-wantArea) <= wantArea*0.01, "%s: area %v, want %v", tc.name, area, wantArea)
+	}
+
+	// An obstruction in an offset scene still casts its shadow: this is the scene from TestPolygonFromInsideBounds
+	// translated by (10000,10000), so the visible area is the same 9100 square units.
+	v := visibility.New(geom.NewRect(10000, 10000, 100, 100), []geom.Line{
+		geom.NewLine(geom.NewPoint(10010, 10010), geom.NewPoint(10090, 10010)),
+	})
+	polygon := v.PolygonFrom(geom.NewPoint(10050, 10050))
+	c.Equal(6, len(polygon), "%v", polygon)
+	area := polygonArea(polygon)
+	c.True(math.Abs(area-9100) <= 9100*0.01, "area %v, want 9100", area)
+}
+
+func TestPolygonFromWithSliverBounds(t *testing.T) {
+	c := check.New(t)
+
+	// A bounds far thinner than it is long has an epsilon, derived from the long dimension, that swallows the short
+	// one, so the sweep's output collapses to fewer than three distinct vertices. The contract is a real polygon or
+	// nil, never a degenerate one- or two-vertex slice.
+	v := visibility.New(geom.NewRect(0, 0, 100, 0.0001), nil)
+	c.Nil(v.PolygonFrom(geom.NewPoint(50, 0.00005)))
+}
+
+func TestBreakIntersectionsFarFromOrigin(t *testing.T) {
+	c := check.New(t)
+
+	// These cross at (10000.5,10000), half a unit from an endpoint of each line. A tolerance derived from the raw
+	// coordinate magnitude (~1) discards the crossing as coincident with those endpoints and returns both lines
+	// uncut, violating the postcondition that the results do not intersect.
+	c.Equal([]geom.Line{
+		geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10000.5, 10000)),
+		geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10000)),
+		geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10000.5, 10001)),
+		geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10010, 10000)),
+	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
+		geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10010, 10000)),
+		geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10001)),
+	})))
+}
+
+func TestBreakIntersectionsWithNonFiniteLines(t *testing.T) {
+	c := check.New(t)
+
+	// A single non-finite line must not poison the batch: an infinite coordinate used to drive the tolerance to +Inf,
+	// making every point compare equal and dropping every segment, while a NaN collapsed the tolerance to its floor.
+	// The bad line is dropped and the rest of the batch is still split normally.
+	nan := float32(math.NaN())
+	inf := float32(math.Inf(1))
+	crossing := []geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+	}
+	want := []geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+	}
+	for _, bad := range []geom.Line{
+		geom.NewLine(geom.NewPoint(inf, 20), geom.NewPoint(30, 20)),
+		geom.NewLine(geom.NewPoint(-inf, 20), geom.NewPoint(30, 20)),
+		geom.NewLine(geom.NewPoint(nan, 20), geom.NewPoint(30, 20)),
+		geom.NewLine(geom.NewPoint(20, 20), geom.NewPoint(20, nan)),
+	} {
+		c.Equal(want, normalizedLines(visibility.BreakIntersections(append(slices.Clone(crossing), bad))),
+			"bad line %v", bad)
+	}
+}
+
+func TestBreakIntersectionsDropsZeroLengthLines(t *testing.T) {
+	c := check.New(t)
+
+	// Dropping degenerate input is documented behavior: a zero-length line has nothing to split and nothing to
+	// contribute as an obstruction.
+	lines := []geom.Line{
+		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 5)),
+	}
+	c.Equal([]geom.Line{lines[0]}, visibility.BreakIntersections(lines))
+}
+
 var (
 	brokenSink  []geom.Line
 	polygonSink []geom.Point

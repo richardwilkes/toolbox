@@ -20,10 +20,15 @@ import (
 )
 
 const (
-	// pointEpsilonRatio is the fraction of a scene's overall magnitude used as the tolerance when comparing points for
-	// equality. Deriving the tolerance from the data rather than fixing it at some number of world units keeps the
-	// results consistent as a scene is scaled up or down.
+	// pointEpsilonRatio is the fraction of a scene's overall extent used as the tolerance when comparing points for
+	// equality. Deriving the tolerance from the size of the data rather than fixing it at some number of world units
+	// keeps the results consistent as a scene is scaled up or down.
 	pointEpsilonRatio = 0.0001
+	// coordinateNoiseRatio is the fraction of a scene's coordinate magnitude used as a secondary floor for the point
+	// comparison tolerance. Coordinates far from the origin carry float32 rounding noise proportional to their
+	// magnitude rather than to the scene's extent, so a scene that is small relative to its distance from the origin
+	// needs its tolerance to cover that noise. The ratio is about eight float32 ULPs.
+	coordinateNoiseRatio = 1e-6
 	// minPointEpsilon is the floor for the point comparison tolerance, used when a scene has no measurable extent.
 	minPointEpsilon = 1e-6
 	// angleEpsilon is the tolerance, in degrees, for treating two endpoints as lying at the same angle from the view
@@ -46,16 +51,20 @@ type Visibility struct {
 // New creates a Visibility object.
 //
 // bounds should not be empty. Nothing rejects one that is, but no point lies inside an empty rectangle, so every call
-// to PolygonFrom on such a Visibility returns nil.
+// to PolygonFrom on such a Visibility returns nil. A bounds with a NaN or infinite coordinate is treated as empty,
+// since the four implicit edges built from its corners could never produce the finite vertices PolygonFrom promises.
 //
 // The obstructions must not intersect each other, which is not verified. If they do, call BreakIntersections() and
 // pass the result instead.
 func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
+	if !finite(bounds.Point) || !finite(geom.NewPoint(bounds.Right(), bounds.Bottom())) {
+		bounds = geom.Rect{}
+	}
 	magnitude := max(xmath.Abs(bounds.X), xmath.Abs(bounds.Y), xmath.Abs(bounds.Right()), xmath.Abs(bounds.Bottom()))
 	v := &Visibility{
 		lines:   make([]geom.Line, len(obstructions)),
 		bounds:  bounds,
-		epsilon: pointEpsilon(magnitude),
+		epsilon: pointEpsilon(max(bounds.Width, bounds.Height), magnitude),
 	}
 	copy(v.lines, obstructions)
 	return v
@@ -64,18 +73,36 @@ func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
 // BreakIntersections breaks the lines at their intersections, returning a new slice of lines that do not intersect.
 // Collinear lines that overlap each other are split at the ends of the shared portion, and that shared portion is
 // returned only once.
+//
+// Lines with a NaN or infinite coordinate are dropped, since they cannot be reasoned about geometrically. Zero-length
+// lines, and lines or fragments shorter than the point comparison tolerance, are dropped as well; the tolerance is
+// derived from the extent of the input as a whole.
 func BreakIntersections(lines []geom.Line) []geom.Line {
 	var qt quadtree.QuadTree[geom.Line]
+	finiteLines := make([]geom.Line, 0, len(lines))
+	minX, minY := float32(math.Inf(1)), float32(math.Inf(1))
+	maxX, maxY := float32(math.Inf(-1)), float32(math.Inf(-1))
 	var magnitude float32
 	for _, line := range lines {
+		// A single NaN or infinite coordinate would poison the tolerance derivation for the entire batch, collapsing
+		// or inflating the epsilon for every other line, so such lines are dropped here just as PolygonFrom drops
+		// them.
+		if !finite(line.Start) || !finite(line.End) {
+			continue
+		}
+		finiteLines = append(finiteLines, line)
 		qt.Insert(line)
+		minX = min(minX, line.Start.X, line.End.X)
+		minY = min(minY, line.Start.Y, line.End.Y)
+		maxX = max(maxX, line.Start.X, line.End.X)
+		maxY = max(maxY, line.Start.Y, line.End.Y)
 		magnitude = max(magnitude, xmath.Abs(line.Start.X), xmath.Abs(line.Start.Y), xmath.Abs(line.End.X),
 			xmath.Abs(line.End.Y))
 	}
-	eps := pointEpsilon(magnitude)
-	revised := make([]geom.Line, 0, len(lines)*2)
+	eps := pointEpsilon(max(maxX-minX, maxY-minY), magnitude)
+	revised := make([]geom.Line, 0, len(finiteLines)*2)
 	var intersections []geom.Point
-	for _, line := range lines {
+	for _, line := range finiteLines {
 		intersections = intersections[:0]
 		for _, one := range qt.FindIntersects(line.Bounds()) {
 			// geom.LineIntersection is used rather than the local intersectLines because it returns both endpoints of
@@ -272,7 +299,10 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 	if len(polygon) > 1 && polygon[0].EqualWithin(polygon[len(polygon)-1], v.epsilon) {
 		polygon = polygon[:len(polygon)-1]
 	}
-	if len(polygon) == 0 {
+	// A polygon needs at least three vertices to enclose anything. A scene whose extent is at the scale of the
+	// comparison tolerance, such as a sliver bounds far thinner than it is long, can collapse the sweep's output to
+	// one or two points, and the documented contract is a real polygon or nil, never a degenerate point or edge.
+	if len(polygon) < 3 {
 		return nil
 	}
 	return polygon
@@ -486,14 +516,14 @@ func angle(a, b geom.Point) float32 {
 	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
 }
 
-// pointEpsilon returns the tolerance to use when comparing points for equality in a scene whose coordinates reach the
-// given magnitude. A tolerance proportional to the scene keeps behavior the same at every scale, while the floor keeps
-// it from collapsing to zero for a scene with no measurable extent.
-func pointEpsilon(magnitude float32) float32 {
-	if eps := magnitude * pointEpsilonRatio; eps > minPointEpsilon {
-		return eps
-	}
-	return minPointEpsilon
+// pointEpsilon returns the tolerance to use when comparing points for equality in a scene of the given extent whose
+// coordinates reach the given magnitude. The primary term is proportional to the extent, which keeps behavior the
+// same at every scale; deriving it from the extent rather than the magnitude is what lets a small scene sit far from
+// the origin without the tolerance swallowing the entire scene. The magnitude term keeps the tolerance above the
+// float32 rounding noise carried by coordinates far from the origin, and the fixed floor keeps it from collapsing to
+// zero for a scene with no measurable extent.
+func pointEpsilon(extent, magnitude float32) float32 {
+	return max(extent*pointEpsilonRatio, magnitude*coordinateNoiseRatio, minPointEpsilon)
 }
 
 // finite reports whether both of a point's coordinates can take part in the sweep. A NaN or infinite coordinate has

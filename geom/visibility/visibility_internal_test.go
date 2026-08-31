@@ -74,13 +74,17 @@ func TestComputePolygonToleratesEmptyHeap(t *testing.T) {
 	}
 }
 
-func TestPointEpsilonTracksMagnitude(t *testing.T) {
+func TestPointEpsilonTracksExtentAndMagnitude(t *testing.T) {
 	c := check.New(t)
 
-	c.Equal(float32(0.01), pointEpsilon(100))
-	c.Equal(float32(0.0001), pointEpsilon(1))
-	c.Equal(float32(minPointEpsilon), pointEpsilon(0))
-	c.Equal(float32(minPointEpsilon), pointEpsilon(-1))
+	c.Equal(float32(0.01), pointEpsilon(100, 100))
+	c.Equal(float32(0.0001), pointEpsilon(1, 1))
+	// A small scene far from the origin gets its tolerance from the rounding noise its coordinates carry, not from
+	// its own extent, and certainly not from a tolerance proportional to the raw coordinates, which would exceed the
+	// scene itself.
+	c.Equal(float32(1), pointEpsilon(1, 1e6))
+	c.Equal(float32(minPointEpsilon), pointEpsilon(0, 0))
+	c.Equal(float32(minPointEpsilon), pointEpsilon(-1, -1))
 }
 
 func TestIntersectLinesRejectsNearlyParallel(t *testing.T) {
@@ -120,7 +124,7 @@ func TestLineHeapMaintainsInvariants(t *testing.T) {
 	// against. The sweep varies the destination per operation, so it only ever relies on the ordering being correct
 	// for the destination in hand.
 	destination := geom.NewPoint(120, 63)
-	h := newLineHeap(lines, viewPt, pointEpsilon(100))
+	h := newLineHeap(lines, viewPt, pointEpsilon(100, 100))
 	present := make(map[int]bool, len(lines))
 	for range 4000 {
 		lineIndex := rng.IntN(len(lines))
