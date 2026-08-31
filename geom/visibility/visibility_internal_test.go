@@ -53,36 +53,77 @@ func TestLessThanSortsMissedLinesLast(t *testing.T) {
 	c.False(h.lessThan(alsoMissed, missed, destination))
 }
 
+func TestLessThanIsStrictWeakOrderingAtEpsilonScale(t *testing.T) {
+	c := check.New(t)
+
+	// Walls whose ray crossings sit within a few tolerances of each other used to be ordered through a non-transitive
+	// pairwise epsilon-equality gate, which admitted genuine cycles (a < b < c < a) that every insertion order turned
+	// into a heap whose front was beaten by another element. The bucketed comparison has to be asymmetric and
+	// transitive, with transitive equivalence, for every pair and triple.
+	eps := pointEpsilon(100, 100)
+	viewPt := geom.NewPoint(0, 0)
+	destination := geom.NewPoint(120, 0)
+	rng := rand.New(rand.NewPCG(5150, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
+	lines := make([]geom.Line, 16)
+	for i := range lines {
+		// Nearly vertical walls crossing the ray at 10 plus a handful of epsilons, with epsilon-scale slopes.
+		x := 10 + (rng.Float32()-0.5)*8*eps
+		lines[i] = geom.NewLine(
+			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, -5),
+			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, 5),
+		)
+	}
+	h := newLineHeap(lines, viewPt, eps)
+	less := func(a, b int) bool { return h.lessThan(a, b, destination) }
+	for a := range lines {
+		for b := range lines {
+			if less(a, b) {
+				c.False(less(b, a), "asymmetry violated for %d,%d", a, b)
+			}
+			for d := range lines {
+				if less(a, b) && less(b, d) {
+					c.True(less(a, d), "transitivity violated for %d,%d,%d", a, b, d)
+				}
+				if !less(a, b) && !less(b, a) && !less(b, d) && !less(d, b) {
+					c.False(less(a, d) || less(d, a), "equivalence not transitive for %d,%d,%d", a, b, d)
+				}
+			}
+		}
+	}
+}
+
 func TestComputePolygonToleratesEmptyHeap(t *testing.T) {
 	c := check.New(t)
 
 	// PolygonFrom always appends the four bounds edges, so it is not known to be able to drain the heap. Calling
 	// computePolygon directly with lines that do not enclose the view point does drain it, which is enough to pin the
-	// guards on the nearest-occluder lookups.
-	v := New(geom.NewRect(0, 0, 100, 100), nil)
-	viewPt := geom.NewPoint(50, 50)
+	// guards on the nearest-occluder lookups. computePolygon works in scene-local coordinates, so the bounds is
+	// centered on the origin to make the world and scene-local frames coincide, keeping these lines and the view point
+	// in the same frame as v.bounds rather than exercising the guards only by geometric luck.
+	v := New(geom.NewRect(-50, -50, 100, 100), nil)
+	viewPt := geom.NewPoint(0, 0)
 	for _, lines := range [][]geom.Line{
-		{geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20))},
-		{geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(90, 10))},
-		{geom.NewLine(geom.NewPoint(40, 40), geom.NewPoint(60, 60))},
+		{geom.NewLine(geom.NewPoint(-40, -40), geom.NewPoint(-30, -30))},
+		{geom.NewLine(geom.NewPoint(-40, -40), geom.NewPoint(40, -40))},
+		{geom.NewLine(geom.NewPoint(-10, -10), geom.NewPoint(10, 10))},
 		{
-			geom.NewLine(geom.NewPoint(10, 50), geom.NewPoint(90, 50)),
-			geom.NewLine(geom.NewPoint(20, 20), geom.NewPoint(30, 30)),
+			geom.NewLine(geom.NewPoint(-40, 0), geom.NewPoint(40, 0)),
+			geom.NewLine(geom.NewPoint(-30, -30), geom.NewPoint(-20, -20)),
 		},
 	} {
 		c.NotPanics(func() { v.computePolygon(viewPt, lines) }, "lines: %v", lines)
 	}
 }
 
-func TestPointEpsilonTracksExtentAndMagnitude(t *testing.T) {
+func TestPointEpsilonTracksFeatureAndExtent(t *testing.T) {
 	c := check.New(t)
 
 	c.Equal(float32(0.01), pointEpsilon(100, 100))
 	c.Equal(float32(0.0001), pointEpsilon(1, 1))
-	// A small scene far from the origin gets its tolerance from the rounding noise its coordinates carry, not from
-	// its own extent, and certainly not from a tolerance proportional to the raw coordinates, which would exceed the
-	// scene itself.
-	c.Equal(float32(1), pointEpsilon(1, 1e6))
+	// An elongated scene takes its tolerance from the finer dimension so that dimension is not swallowed, with the
+	// noise floor still proportional to the overall extent, which is what bounds the rounding noise of scene-local
+	// coordinates.
+	c.Equal(float32(1000)*extentNoiseRatio, pointEpsilon(0.05, 1000))
 	c.Equal(float32(minPointEpsilon), pointEpsilon(0, 0))
 	c.Equal(float32(minPointEpsilon), pointEpsilon(-1, -1))
 }
@@ -110,21 +151,18 @@ func TestIntersectLinesRejectsNearlyParallel(t *testing.T) {
 	c.Equal(geom.NewPoint(5, 0), pt)
 }
 
-func TestLineHeapMaintainsInvariants(t *testing.T) {
+// checkLineHeapInvariants drives a heap over the given lines through a random insert/remove sequence, verifying the
+// structural invariants after every operation.
+func checkLineHeapInvariants(t *testing.T, lines []geom.Line, epsilon float32) {
+	t.Helper()
 	c := check.New(t)
-
 	rng := rand.New(rand.NewPCG(1, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
-	lines := make([]geom.Line, 24)
-	for i := range lines {
-		lines[i] = geom.NewLine(geom.NewPoint(rng.Float32()*100, rng.Float32()*100),
-			geom.NewPoint(rng.Float32()*100, rng.Float32()*100))
-	}
 	viewPt := geom.NewPoint(50, 50)
 	// One destination throughout gives a single consistent ordering, which is what these invariants are stated
 	// against. The sweep varies the destination per operation, so it only ever relies on the ordering being correct
 	// for the destination in hand.
 	destination := geom.NewPoint(120, 63)
-	h := newLineHeap(lines, viewPt, pointEpsilon(100, 100))
+	h := newLineHeap(lines, viewPt, epsilon)
 	present := make(map[int]bool, len(lines))
 	for range 4000 {
 		lineIndex := rng.IntN(len(lines))
@@ -150,4 +188,30 @@ func TestLineHeapMaintainsInvariants(t *testing.T) {
 		}
 	}
 	c.True(len(present) > 0, "the run left the heap empty, so it proved little")
+}
+
+func TestLineHeapMaintainsInvariants(t *testing.T) {
+	rng := rand.New(rand.NewPCG(1, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
+	lines := make([]geom.Line, 24)
+	for i := range lines {
+		lines[i] = geom.NewLine(geom.NewPoint(rng.Float32()*100, rng.Float32()*100),
+			geom.NewPoint(rng.Float32()*100, rng.Float32()*100))
+	}
+	checkLineHeapInvariants(t, lines, pointEpsilon(100, 100))
+}
+
+func TestLineHeapMaintainsInvariantsAtEpsilonScale(t *testing.T) {
+	// Lines whose ray crossings cluster within a few tolerances of each other exercise the tie-handling paths of the
+	// ordering, which lines spread far apart relative to the tolerance never reach.
+	eps := pointEpsilon(100, 100)
+	rng := rand.New(rand.NewPCG(2, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
+	lines := make([]geom.Line, 24)
+	for i := range lines {
+		x := 60 + (rng.Float32()-0.5)*8*eps
+		lines[i] = geom.NewLine(
+			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, 40+rng.Float32()*10),
+			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, 55+rng.Float32()*10),
+		)
+	}
+	checkLineHeapInvariants(t, lines, eps)
 }

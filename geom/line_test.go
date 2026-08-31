@@ -10,6 +10,7 @@
 package geom_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -137,6 +138,70 @@ func TestLineIntersectionParallelCollinearity(t *testing.T) {
 	c.Equal(0, len(a.Intersection(offset)))
 	c.Equal(0, len(offset.Intersection(a))) // Order independent
 	c.False(a.Intersects(offset))
+}
+
+func TestLineIntersectionCollinearNonInteger(t *testing.T) {
+	c := check.New(t)
+
+	// Exactly collinear diagonal segments with non-integer coordinates: (t,t) lies exactly on y=x for any float32 t,
+	// but the cross-product terms of the collinearity tests are inexact. Fused multiply-subtract on arm64 used to turn
+	// their mathematically zero results into rounding noise, so the overlap went undetected. The long segment runs to
+	// a power of two so that the interpolated overlap endpoints below are exact.
+	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(8192, 8192))
+	b := geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(20, 20))
+	overlap := a.Intersection(b)
+	c.Equal(2, len(overlap))
+	found1 := false
+	found2 := false
+	for _, pt := range overlap {
+		if pt == geom.NewPoint(5.848, 5.848) {
+			found1 = true
+		}
+		if pt == geom.NewPoint(20, 20) {
+			found2 = true
+		}
+	}
+	c.True(found1, "%v", overlap)
+	c.True(found2, "%v", overlap)
+}
+
+func TestLineBoundsAtLargeCoordinates(t *testing.T) {
+	c := check.New(t)
+
+	// The padding must survive float32 rounding at every magnitude. A fixed pad falls below half a ULP at 4096 and
+	// up, which used to leave an axis-aligned line with a degenerate zero-thickness bounds that intersects nothing,
+	// not even itself.
+	vertical := geom.NewLine(geom.NewPoint(12000, 0), geom.NewPoint(12000, 3000))
+	bounds := vertical.Bounds()
+	c.True(bounds.X < 12000, "%v", bounds)
+	c.True(bounds.Right() > 12000, "%v", bounds)
+	c.True(bounds.Intersects(bounds), "%v", bounds)
+
+	horizontal := geom.NewLine(geom.NewPoint(-20000, -8000), geom.NewPoint(-10000, -8000))
+	bounds = horizontal.Bounds()
+	c.True(bounds.Y < -8000, "%v", bounds)
+	c.True(bounds.Bottom() > -8000, "%v", bounds)
+	c.True(bounds.Intersects(bounds), "%v", bounds)
+
+	// Small coordinates keep the fixed floor.
+	small := geom.NewLine(geom.NewPoint(1, 2), geom.NewPoint(3, 2))
+	bounds = small.Bounds()
+	c.True(bounds.Y < 2 && bounds.Bottom() > 2, "%v", bounds)
+}
+
+func TestPointSegmentDistanceNearLongSegment(t *testing.T) {
+	c := check.New(t)
+
+	// A point near a long segment: the old float32 formulation subtracted two nearly equal squared magnitudes, which
+	// cancels catastrophically and reported 0 for any true distance below roughly the segment length times 2.4e-4.
+	seg := geom.NewLine(geom.NewPoint(0, 5), geom.NewPoint(10000, 5))
+	dist := seg.DistanceToPoint(geom.NewPoint(5000, 6))
+	c.True(math.Abs(float64(dist)-1) < 1e-4, "distance %v, want 1", dist)
+	got := geom.PointSegmentDistanceSquared(geom.NewPoint(-1e6, 50), geom.NewPoint(1e6, 50), geom.NewPoint(50, 45))
+	c.True(math.Abs(float64(got)-25) < 1e-3, "squared distance %v, want 25", got)
+
+	// A degenerate segment measures the distance to its single point.
+	c.Equal(float32(25), geom.PointSegmentDistanceSquared(geom.NewPoint(3, 4), geom.NewPoint(3, 4), geom.NewPoint(0, 0)))
 }
 
 func TestPointSegmentDistance(t *testing.T) {

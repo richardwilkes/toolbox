@@ -20,21 +20,22 @@ import (
 )
 
 const (
-	// pointEpsilonRatio is the fraction of a scene's overall extent used as the tolerance when comparing points for
-	// equality. Deriving the tolerance from the size of the data rather than fixing it at some number of world units
-	// keeps the results consistent as a scene is scaled up or down.
+	// pointEpsilonRatio is the fraction of a scene's finest meaningful dimension used as the tolerance when comparing
+	// points for equality. Deriving the tolerance from the size of the data rather than fixing it at some number of
+	// world units keeps the results consistent as a scene is scaled up or down.
 	pointEpsilonRatio = 0.0001
-	// coordinateNoiseRatio is the fraction of a scene's coordinate magnitude used as a secondary floor for the point
-	// comparison tolerance. Coordinates far from the origin carry float32 rounding noise proportional to their
-	// magnitude rather than to the scene's extent, so a scene that is small relative to its distance from the origin
-	// needs its tolerance to cover that noise. The ratio is about eight float32 ULPs.
-	coordinateNoiseRatio = 1e-6
+	// extentNoiseRatio is the fraction of a scene's overall extent used as a secondary floor for the point comparison
+	// tolerance. All computation happens in coordinates relative to the scene's center, so the float32 rounding noise
+	// a coordinate carries is proportional to the scene's extent rather than to its distance from the origin. The
+	// ratio is about eight float32 ULPs.
+	extentNoiseRatio = 1e-6
 	// minPointEpsilon is the floor for the point comparison tolerance, used when a scene has no measurable extent.
 	minPointEpsilon = 1e-6
-	// angleEpsilon is the tolerance, in degrees, for treating two endpoints as lying at the same angle from the view
-	// point. This is an angular tolerance and is deliberately kept separate from the point comparison tolerance, which
-	// is in world units.
-	angleEpsilon = 0.01
+	// minAngleEpsilon is the floor, in degrees, for the tolerance used when deciding whether two endpoints lie at the
+	// same angle from the view point. It covers the quantization of float32 angles; the working tolerance comes from
+	// angleEpsilon, which derives it from the point comparison tolerance so that only endpoints that could be the
+	// same point within that tolerance are merged.
+	minAngleEpsilon = 0.0001
 	// parallelEpsilonSqrd is the square of the largest sine of the angle between two lines that still counts as
 	// parallel. Squared because intersectLines can obtain the squared sine without a square root.
 	parallelEpsilonSqrd = 1e-12
@@ -43,9 +44,12 @@ const (
 // Visibility holds state for computing a visibility polygon. A Visibility is immutable once created, so it is safe for
 // concurrent use by multiple goroutines.
 type Visibility struct {
-	lines   []geom.Line
-	bounds  geom.Rect
-	epsilon float32
+	lines    []geom.Line // In scene-local coordinates.
+	bounds   geom.Rect   // In scene-local coordinates.
+	world    geom.Rect   // The bounds as the caller supplied them.
+	offset   geom.Point  // World coordinates are scene-local coordinates plus this offset.
+	epsilon  float32
+	angleEps float32 // In degrees.
 }
 
 // New creates a Visibility object.
@@ -60,29 +64,49 @@ func New(bounds geom.Rect, obstructions []geom.Line) *Visibility {
 	if !finite(bounds.Point) || !finite(geom.NewPoint(bounds.Right(), bounds.Bottom())) {
 		bounds = geom.Rect{}
 	}
-	magnitude := max(xmath.Abs(bounds.X), xmath.Abs(bounds.Y), xmath.Abs(bounds.Right()), xmath.Abs(bounds.Bottom()))
-	v := &Visibility{
-		lines:   make([]geom.Line, len(obstructions)),
-		bounds:  bounds,
-		epsilon: pointEpsilon(max(bounds.Width, bounds.Height), magnitude),
+	// Everything is computed relative to the center of the bounds. Working in scene-local coordinates keeps the
+	// float32 rounding noise proportional to the scene's extent rather than to its distance from the origin, so a
+	// small scene far from the origin resolves exactly as well as the same scene placed at the origin.
+	offset := bounds.Center()
+	if !finite(offset) {
+		offset = geom.Point{}
 	}
-	copy(v.lines, obstructions)
+	local := bounds
+	local.Point = local.Point.Sub(offset)
+	// The comparison tolerance tracks the smaller dimension so that an elongated bounds does not have its short
+	// dimension swallowed by a tolerance derived from the long one. The noise floor stays proportional to the larger
+	// dimension, which is what bounds the rounding error of the scene-local coordinates.
+	epsilon := pointEpsilon(min(bounds.Width, bounds.Height), max(bounds.Width, bounds.Height))
+	v := &Visibility{
+		lines:    make([]geom.Line, len(obstructions)),
+		bounds:   local,
+		world:    bounds,
+		offset:   offset,
+		epsilon:  epsilon,
+		angleEps: angleEpsilon(epsilon, xmath.Hypot(bounds.Width, bounds.Height)),
+	}
+	for i, line := range obstructions {
+		v.lines[i] = geom.NewLine(line.Start.Sub(offset), line.End.Sub(offset))
+	}
 	return v
 }
 
 // BreakIntersections breaks the lines at their intersections, returning a new slice of lines that do not intersect.
-// Collinear lines that overlap each other are split at the ends of the shared portion, and that shared portion is
-// returned only once.
+// Collinear lines that overlap each other are split at the ends of the shared portions, and each shared portion is
+// returned only once. The cut points of a collinear overlap are merged when they fall within the point comparison
+// tolerance of each other, so the pieces of an overlap land on identical coordinates for every line that contains
+// them, even when an overlap boundary sits within the tolerance of one line's endpoint but not another's.
 //
 // Lines with a NaN or infinite coordinate are dropped, since they cannot be reasoned about geometrically. Zero-length
-// lines, and lines or fragments shorter than the point comparison tolerance, are dropped as well; the tolerance is
-// derived from the extent of the input as a whole.
+// lines, and lines or fragments whose endpoints compare equal within the point comparison tolerance, are dropped as
+// well; the tolerance is derived from the dimensions of the input's bounding box, mirroring how New derives its own
+// from the bounds, and, like all point comparisons here, is applied to each axis independently. The splitting and
+// merging happen in coordinates relative to the center of the input, and the intersections themselves are computed in
+// float64, so input far from the origin does not lose precision to its coordinate magnitude.
 func BreakIntersections(lines []geom.Line) []geom.Line {
-	var qt quadtree.QuadTree[geom.Line]
 	finiteLines := make([]geom.Line, 0, len(lines))
 	minX, minY := float32(math.Inf(1)), float32(math.Inf(1))
 	maxX, maxY := float32(math.Inf(-1)), float32(math.Inf(-1))
-	var magnitude float32
 	for _, line := range lines {
 		// A single NaN or infinite coordinate would poison the tolerance derivation for the entire batch, collapsing
 		// or inflating the epsilon for every other line, so such lines are dropped here just as PolygonFrom drops
@@ -91,50 +115,207 @@ func BreakIntersections(lines []geom.Line) []geom.Line {
 			continue
 		}
 		finiteLines = append(finiteLines, line)
-		qt.Insert(line)
 		minX = min(minX, line.Start.X, line.End.X)
 		minY = min(minY, line.Start.Y, line.End.Y)
 		maxX = max(maxX, line.Start.X, line.End.X)
 		maxY = max(maxY, line.Start.Y, line.End.Y)
-		magnitude = max(magnitude, xmath.Abs(line.Start.X), xmath.Abs(line.Start.Y), xmath.Abs(line.End.X),
-			xmath.Abs(line.End.Y))
 	}
-	eps := pointEpsilon(max(maxX-minX, maxY-minY), magnitude)
-	revised := make([]geom.Line, 0, len(finiteLines)*2)
-	var intersections []geom.Point
+	if len(finiteLines) == 0 {
+		return finiteLines
+	}
+	// Mirror New's derivation from its bounds: the comparison tolerance tracks the finer dimension of the input's
+	// bounding box so that an elongated batch is not preprocessed at a coarser tolerance than the sweep itself works
+	// to, which would silently delete short geometry PolygonFrom could have resolved.
+	spanX := maxX - minX
+	spanY := maxY - minY
+	eps := pointEpsilon(min(spanX, spanY), max(spanX, spanY))
+	offset := geom.NewPoint((minX+maxX)/2, (minY+maxY)/2)
+	if !finite(offset) {
+		offset = geom.Point{}
+	}
+	work := make([]geom.Line, 0, len(finiteLines))
+	worldLines := make([]geom.Line, 0, len(finiteLines))
+	byIndex := make(map[geom.Line]int, len(finiteLines))
+	var qt quadtree.QuadTree[geom.Line]
 	for _, line := range finiteLines {
-		intersections = intersections[:0]
-		for _, one := range qt.FindIntersects(line.Bounds()) {
-			// geom.LineIntersection is used rather than the local intersectLines because it returns both endpoints of
-			// the shared portion when the two segments are collinear and overlap, a case that cannot be expressed as a
-			// single infinite-line intersection point. Every candidate is passed through it, including the line
-			// itself: a line intersected with itself yields its own endpoints, which the filter below discards.
-			// Skipping the self case by equality instead would also make each of two identical input lines skip its
-			// twin, leaving them uncut.
-			for _, pt := range geom.LineIntersection(line.Start, line.End, one.Start, one.End) {
+		local := geom.NewLine(line.Start.Sub(offset), line.End.Sub(offset))
+		// A line shorter than the comparison tolerance has nothing to split and nothing to contribute as an
+		// obstruction; left in, it would still cut other lines it happens to lie on.
+		if local.Start.EqualWithin(local.End, eps) {
+			continue
+		}
+		// Identical duplicate lines reduce to a single copy here, which both returns their shared portion exactly
+		// once and makes every work entry unique, so a line meeting its own value among the quadtree candidates below
+		// can only be meeting itself.
+		if _, exists := byIndex[local]; exists {
+			continue
+		}
+		byIndex[local] = len(work)
+		work = append(work, local)
+		worldLines = append(worldLines, line)
+		qt.Insert(local)
+	}
+	// First pass: visit every intersecting pair once, recording single-point crossings as cut points and joining
+	// collinear overlapping lines into groups with a union-find. Groups are handled jointly afterwards, since the
+	// pieces of an overlap have to be carved identically for every line that contains them.
+	parent := make([]int, len(work))
+	for i := range parent {
+		parent[i] = i
+	}
+	find := func(x int) int {
+		for parent[x] != x {
+			parent[x] = parent[parent[x]]
+			x = parent[x]
+		}
+		return x
+	}
+	cuts := make([]geom.Point, 0, len(work)*2)
+	cutRanges := make([][2]int, len(work))
+	grouped := false
+	for i, line := range work {
+		from := len(cuts)
+		for _, candidate := range qt.FindIntersects(line.Bounds()) {
+			if candidate == line {
+				continue
+			}
+			j := byIndex[candidate]
+			// Intersect in the caller's original coordinates: re-centering rounds each axis independently, which
+			// nudges exactly collinear world input (a diagonal through points whose x and y coordinates are equal,
+			// say) off exact collinearity, and the overlap of such a pair would then go undetected, leaving
+			// overlapping lines in the output. The float64 arithmetic inside segmentIntersection keeps its precision
+			// without the re-centering, and the cut points it returns are converted to scene-local coordinates here,
+			// where the conversion's rounding sits far below the comparison tolerance.
+			pts, count := segmentIntersection(worldLines[i].Start, worldLines[i].End, worldLines[j].Start,
+				worldLines[j].End)
+			switch count {
+			case 1:
+				pt := pts[0].Sub(offset)
 				if !pt.EqualWithin(line.Start, eps) && !pt.EqualWithin(line.End, eps) {
-					intersections = append(intersections, pt)
+					cuts = append(cuts, pt)
+				}
+			case 2:
+				ri, rj := find(i), find(j)
+				if ri != rj {
+					if ri < rj {
+						parent[rj] = ri
+					} else {
+						parent[ri] = rj
+					}
+					grouped = true
 				}
 			}
 		}
-		revised = collectLines(line, intersections, revised, nil, eps)
+		cutRanges[i] = [2]int{from, len(cuts)}
 	}
-	// A collinear overlap is broken out of each of the lines that contained it, so the shared portion appears more than
-	// once. Drop those exact duplicates, since coincident lines would otherwise still intersect each other.
-	seen := make(map[geom.Line]struct{}, len(revised))
-	deduped := revised[:0]
-	for _, line := range revised {
-		key := line
-		if key.End.X < key.Start.X || (key.End.X == key.Start.X && key.End.Y < key.Start.Y) {
-			key.Start, key.End = key.End, key.Start
+	// Second pass: emit the split lines. A line that overlaps nothing is split at its crossings; each group of
+	// collinear overlapping lines is emitted as the spans between consecutive merged cut points, each span exactly
+	// once.
+	revised := make([]geom.Line, 0, len(work)*2)
+	if !grouped {
+		for i, line := range work {
+			revised = collectLines(line, cuts[cutRanges[i][0]:cutRanges[i][1]], revised, nil, eps)
 		}
-		if _, exists := seen[key]; exists {
-			continue
+	} else {
+		groups := make(map[int][]int)
+		for i := range work {
+			root := find(i)
+			groups[root] = append(groups[root], i)
 		}
-		seen[key] = struct{}{}
-		deduped = append(deduped, line)
+		for i, line := range work {
+			members := groups[find(i)]
+			switch {
+			case len(members) == 1:
+				revised = collectLines(line, cuts[cutRanges[i][0]:cutRanges[i][1]], revised, nil, eps)
+			case members[0] == i:
+				revised = appendGroupSpans(work, members, cuts, cutRanges, revised, eps)
+			}
+		}
 	}
-	return slices.Clip(deduped)
+	for i := range revised {
+		revised[i] = geom.NewLine(revised[i].Start.Add(offset), revised[i].End.Add(offset))
+	}
+	return slices.Clip(revised)
+}
+
+// appendGroupSpans emits the pieces of one group of collinear overlapping lines. Every cut point in the group -- the
+// members' endpoints and any crossings with lines outside the group -- is projected onto the group's shared line, cut
+// points within the comparison tolerance of each other are merged, and each span between consecutive merged points
+// that at least one member covers is appended exactly once. Merging before emission is what makes the boundary of an
+// overlap land on the same coordinates for every member containing it, no matter whose endpoint it came from.
+func appendGroupSpans(work []geom.Line, members []int, cuts []geom.Point, cutRanges [][2]int, revised []geom.Line,
+	eps float32,
+) []geom.Line {
+	// Project along the direction of the longest member, which gives the most numerically stable parameterization of
+	// the shared line.
+	var dir geom.Point
+	var bestSqrd float32
+	for _, m := range members {
+		d := work[m].End.Sub(work[m].Start)
+		if lenSqrd := d.Dot(d); lenSqrd > bestSqrd {
+			bestSqrd = lenSqrd
+			dir = d
+		}
+	}
+	dir = dir.Div(xmath.Sqrt(bestSqrd))
+	origin := work[members[0]].Start
+	type groupPoint struct {
+		pt geom.Point
+		t  float32
+	}
+	// The members' endpoints come first, two per member, so that the coverage step below can find member k's
+	// endpoints at indices 2k and 2k+1. The crossings only add split points and never extend coverage, so their
+	// positions in the slice do not matter.
+	points := make([]groupPoint, 0, len(members)*3)
+	for _, m := range members {
+		points = append(points,
+			groupPoint{pt: work[m].Start, t: work[m].Start.Sub(origin).Dot(dir)},
+			groupPoint{pt: work[m].End, t: work[m].End.Sub(origin).Dot(dir)})
+	}
+	for _, m := range members {
+		r := cutRanges[m]
+		for _, pt := range cuts[r[0]:r[1]] {
+			points = append(points, groupPoint{pt: pt, t: pt.Sub(origin).Dot(dir)})
+		}
+	}
+	order := make([]int, len(points))
+	for i := range order {
+		order[i] = i
+	}
+	slices.SortFunc(order, func(a, b int) int { return cmp.Compare(points[a].t, points[b].t) })
+	// Merge cut points that fall within the comparison tolerance of the first point of their cluster. Each cluster is
+	// represented by that first point, so representative coordinates are always taken verbatim from an endpoint or a
+	// crossing rather than re-derived, and consecutive representatives are always more than the tolerance apart,
+	// which is what keeps fragments shorter than the tolerance out of the result.
+	clusterOf := make([]int, len(points))
+	var reps []geom.Point
+	var repT []float32
+	for _, idx := range order {
+		if len(reps) == 0 || points[idx].t > repT[len(repT)-1]+eps {
+			reps = append(reps, points[idx].pt)
+			repT = append(repT, points[idx].t)
+		}
+		clusterOf[idx] = len(reps) - 1
+	}
+	if len(reps) < 2 {
+		return revised
+	}
+	covered := make([]bool, len(reps)-1)
+	for k := range members {
+		a := clusterOf[2*k]
+		b := clusterOf[2*k+1]
+		if a > b {
+			a, b = b, a
+		}
+		for span := a; span < b; span++ {
+			covered[span] = true
+		}
+	}
+	for span, ok := range covered {
+		if ok {
+			revised = append(revised, geom.NewLine(reps[span], reps[span+1]))
+		}
+	}
+	return revised
 }
 
 // collectLines splits line at each of the given intersection points and appends the resulting segments to lines,
@@ -165,11 +346,12 @@ func collectLines(line geom.Line, intersections []geom.Point, lines []geom.Line,
 	return lines
 }
 
-// withinViewPort reports whether the segment lies inside the view port. Callers have already split the segment at
-// every crossing of the port's edges, so it is either wholly inside or wholly outside and its midpoint settles which.
-// Rect.IntersectsLine cannot be used here: it also reports true for a segment lying outside that merely touches an
-// edge or a corner, and the sweep would then cast rays out to that segment's far endpoint and place polygon vertices
-// beyond the bounds.
+// withinViewPort reports whether the segment lies inside the view port. Callers split each segment at the crossings
+// of the port's edges, snapping an endpoint that sits within the point comparison tolerance of a crossing onto it, so
+// a kept fragment lies flush with the port to within rounding. The midpoint test classifies each fragment dependably,
+// and appendVertex clamps any vertex derived from one back inside the bounds. Rect.IntersectsLine cannot be used
+// here: it also reports true for a segment lying outside that merely touches an edge or a corner, and the sweep would
+// then cast rays out to that segment's far endpoint and place polygon vertices beyond the bounds.
 func withinViewPort(viewPort geom.Rect, start, end geom.Point) bool {
 	midX := (start.X + end.X) / 2
 	midY := (start.Y + end.Y) / 2
@@ -178,7 +360,11 @@ func withinViewPort(viewPort geom.Rect, start, end geom.Point) bool {
 
 // PolygonFrom returns the polygon of the unobstructed area visible from viewPt, or nil if viewPt is outside the bounds
 // or no area is visible. Consecutive vertices are always distinct, so the polygon has no zero-length edges.
+//
+// An obstruction that passes within the point comparison tolerance of viewPt is ignored: a zero-thickness wall
+// through or touching the eye occludes only a measure-zero set of rays, so it blocks nothing measurable.
 func (v *Visibility) PolygonFrom(viewPt geom.Point) []geom.Point {
+	viewPt = viewPt.Sub(v.offset)
 	if !viewPt.In(v.bounds) {
 		return nil
 	}
@@ -197,6 +383,18 @@ func (v *Visibility) PolygonFrom(viewPt geom.Point) []geom.Point {
 		if !finite(line.Start) || !finite(line.End) {
 			continue
 		}
+		// A zero-length obstruction has no extent to block anything, and its degenerate direction would divide by
+		// zero in the collinear branch of segmentIntersection.
+		if line.Start == line.End {
+			continue
+		}
+		// A wall through, or within the comparison tolerance of, the eye occludes only rays along its own line, a
+		// measure-zero set, so it is dropped. An endpoint at the view point also has no meaningful angle, and a ray
+		// cast towards it no meaningful direction, so keeping such a wall would corrupt the ordering of every line it
+		// is compared against during its batch of the sweep.
+		if geom.PointSegmentDistanceSquared(line.Start, line.End, viewPt) <= v.epsilon*v.epsilon {
+			continue
+		}
 		if (line.Start.X < v.bounds.X && line.End.X < v.bounds.X) ||
 			(line.Start.Y < v.bounds.Y && line.End.Y < v.bounds.Y) ||
 			(line.Start.X > v.bounds.Right() && line.End.X > v.bounds.Right()) ||
@@ -206,8 +404,21 @@ func (v *Visibility) PolygonFrom(viewPt geom.Point) []geom.Point {
 		intersections = intersections[:0]
 		for j := range viewport {
 			k := (j + 1) % len(viewport)
-			for _, pt := range geom.LineIntersection(line.Start, line.End, viewport[j], viewport[k]) {
-				if !pt.EqualWithin(line.Start, v.epsilon) && !pt.EqualWithin(line.End, v.epsilon) {
+			pts, count := segmentIntersection(line.Start, line.End, viewport[j], viewport[k])
+			for _, pt := range pts[:count] {
+				// A crossing within the comparison tolerance of an endpoint is not a meaningful cut, but simply
+				// discarding it would leave an endpoint that lies within the tolerance of a viewport edge poking up
+				// to that far beyond it. Along the ray towards such an endpoint the edge then sits measurably in
+				// front of the wall, so the sweep would keep the edge as the occluder past the event instead of
+				// handing over to the wall, leaking whatever the wall should have hidden. Snapping the endpoint onto
+				// the crossing keeps the fragment flush with the edge, so the two distances tie and the front is
+				// chosen by the ordering's shared-point tie-break.
+				switch {
+				case pt.EqualWithin(line.Start, v.epsilon):
+					line.Start = pt
+				case pt.EqualWithin(line.End, v.epsilon):
+					line.End = pt
+				default:
 					intersections = append(intersections, pt)
 				}
 			}
@@ -222,14 +433,42 @@ func (v *Visibility) PolygonFrom(viewPt geom.Point) []geom.Point {
 		geom.NewLine(v.bounds.BottomLeft(), v.bounds.Point),
 	)
 
-	return v.computePolygon(viewPt, lines)
+	return v.toWorld(v.computePolygon(viewPt, lines))
+}
+
+// toWorld translates a polygon from scene-local coordinates back to world coordinates, clamping each vertex to the
+// bounds. Adding the offset back rounds to the resolution the world coordinates support, which for a scene far from
+// the origin is coarser than the scene-local tolerance, so consecutive vertices that collapse onto the same world
+// coordinates are reduced to one and the documented at-least-three-distinct-vertices contract is re-checked.
+func (v *Visibility) toWorld(polygon []geom.Point) []geom.Point {
+	out := polygon[:0]
+	for _, pt := range polygon {
+		p := pt.Add(v.offset)
+		p.X = min(max(p.X, v.world.X), v.world.Right())
+		p.Y = min(max(p.Y, v.world.Y), v.world.Bottom())
+		if len(out) != 0 && out[len(out)-1] == p {
+			continue
+		}
+		out = append(out, p)
+	}
+	for len(out) > 1 && out[0] == out[len(out)-1] {
+		out = out[:len(out)-1]
+	}
+	if len(out) < 3 {
+		return nil
+	}
+	return out
 }
 
 func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom.Point {
 	// Sweep through the points to generate the visibility polygon
 	sorted := sortLines(viewPt, lines)
 	heap := newLineHeap(lines, viewPt, v.epsilon)
-	start := geom.Point{X: viewPt.X + 1, Y: viewPt.Y}
+	// The sweep starts along the +X direction from the view point. The offset only fixes a direction, but it has to
+	// be large enough that adding it to the view point's coordinate actually changes it: a fixed +1 vanishes below
+	// the float32 resolution of a large enough coordinate, collapsing the ray to a point and with it the ordering of
+	// the entire seeded heap, so it is derived from the scene's extent instead.
+	start := geom.NewPoint(viewPt.X+max(1, v.bounds.Width, v.bounds.Height), viewPt.Y)
 	for i := range lines {
 		a1 := angle(lines[i].Start, viewPt)
 		a2 := angle(lines[i].End, viewPt)
@@ -245,27 +484,42 @@ func (v *Visibility) computePolygon(viewPt geom.Point, lines []geom.Line) []geom
 	polygon := make([]geom.Point, 0, len(sorted)+len(sorted)/2)
 	i := 0
 	for i < len(sorted) {
+		orig := i
+		for i++; i < len(sorted) && sorted[i].angle < sorted[orig].angle+v.angleEps; i++ {
+		}
 		extend := false
 		shorten := false
-		orig := i
-		vertex := sorted[i].pt(lines)
+		vertex := sorted[orig].pt(lines)
 		oldLine := heap.nearest()
-		for {
-			if heap.contains(sorted[i].lineIndex) {
-				if sorted[i].lineIndex == oldLine {
+		// The batch's removals happen before its insertions. A line ending at a point that another line passes
+		// through or starts from swaps its order against that line exactly at this batch's angle, and the heap is
+		// only ever reordered by the operations themselves, so the ending line has to leave before a newcomer is
+		// sifted in: a sift compares the newcomer against only its ancestors and relies on every other pair already
+		// being consistently ordered, which such a stale pair no longer is, and a newcomer can otherwise end up
+		// parked in front of a line that actually occludes it.
+		for j := orig; j < i; j++ {
+			if heap.contains(sorted[j].lineIndex) {
+				if sorted[j].lineIndex == oldLine {
 					extend = true
-					vertex = sorted[i].pt(lines)
+					vertex = sorted[j].pt(lines)
 				}
-				heap.remove(sorted[i].lineIndex, vertex)
-			} else {
-				heap.insert(sorted[i].lineIndex, vertex)
-				if heap.nearest() != oldLine {
-					shorten = true
-				}
+				heap.remove(sorted[j].lineIndex, vertex)
+				sorted[j].handled = true
 			}
-			i++
-			if i == len(sorted) || sorted[i].angle >= sorted[orig].angle+angleEpsilon {
-				break
+		}
+		for j := orig; j < i; j++ {
+			if sorted[j].handled {
+				continue
+			}
+			if heap.contains(sorted[j].lineIndex) {
+				// The line's other endpoint fell within this same batch: it entered moments ago at that event and
+				// leaves again here without ever spanning a full batch.
+				heap.remove(sorted[j].lineIndex, vertex)
+				continue
+			}
+			heap.insert(sorted[j].lineIndex, vertex)
+			if heap.nearest() != oldLine {
+				shorten = true
 			}
 		}
 		// The heap can be emptied by the removals above, so every nearest-occluder lookup has to tolerate the empty
@@ -434,10 +688,15 @@ func (h *lineHeap) siftDown(cur int, destination geom.Point) {
 }
 
 // lessThan reports whether the line at index1 is closer to the view point along the ray towards destination than the
-// line at index2. A line that the ray misses entirely sorts as infinitely far away, so that it can always be displaced
-// from the front of the heap by one that is actually hit. Returning false for both orderings instead would break the
-// strict weak ordering the sift-up and sift-down code depends on and would let a missed line sit at the front of the
-// heap forever.
+// line at index2. A line that the ray misses entirely sorts as infinitely far away, so that it can always be
+// displaced from the front of the heap by one that is actually hit, and two missed lines are equivalent.
+//
+// The comparison is a genuine strict weak ordering, which the sift-up and sift-down code depends on: distances are
+// compared by the tolerance-sized bucket they fall in rather than gated by pairwise epsilon equality, which is
+// non-transitive and admits ordering cycles among lines whose crossings sit just under a tolerance apart. Bucket ties
+// -- lines sharing a point on the current ray, such as a clipped wall endpoint lying on a bounds edge or several
+// walls meeting at a cut -- are broken by frontKey, a totally ordered scalar, with exactly collinear lines untangled
+// by length.
 func (h *lineHeap) lessThan(index1, index2 int, destination geom.Point) bool {
 	pt1, intersects1 := intersectLines(h.lines[index1].Start, h.lines[index1].End, h.viewPt, destination)
 	pt2, intersects2 := intersectLines(h.lines[index2].Start, h.lines[index2].End, h.viewPt, destination)
@@ -447,28 +706,47 @@ func (h *lineHeap) lessThan(index1, index2 int, destination geom.Point) bool {
 	if !intersects2 {
 		return true
 	}
-	if !pt1.EqualWithin(pt2, h.epsilon) {
-		return distSqrd(pt1, h.viewPt) < distSqrd(pt2, h.viewPt)
+	b1 := xmath.Floor(xmath.Sqrt(distSqrd(pt1, h.viewPt)) / h.epsilon)
+	b2 := xmath.Floor(xmath.Sqrt(distSqrd(pt2, h.viewPt)) / h.epsilon)
+	if b1 != b2 {
+		return b1 < b2
 	}
-	var a1 float32
-	if pt1.EqualWithin(h.lines[index1].Start, h.epsilon) {
-		a1 = angle2(h.lines[index1].End, pt1, h.viewPt)
-	} else {
-		a1 = angle2(h.lines[index1].Start, pt1, h.viewPt)
+	k1 := h.frontKey(index1, pt1)
+	k2 := h.frontKey(index2, pt2)
+	if k1 != k2 {
+		return k1 < k2
 	}
-	var a2 float32
-	if pt2.EqualWithin(h.lines[index2].Start, h.epsilon) {
-		a2 = angle2(h.lines[index2].End, pt2, h.viewPt)
-	} else {
-		a2 = angle2(h.lines[index2].Start, pt2, h.viewPt)
+	// Exactly collinear lines have equal keys and are interchangeable as occluders. Putting the shorter one in front
+	// keeps its removal event visible to the sweep, so the endpoints of a wall lying along a bounds edge still become
+	// vertices; two lines equal in both key and length are genuinely equivalent.
+	return distSqrd(h.lines[index1].Start, h.lines[index1].End) < distSqrd(h.lines[index2].Start, h.lines[index2].End)
+}
+
+// frontKey returns the rate at which the crossing distance of the line at the given index changes as the sweep's ray
+// rotates forward past its crossing point pt, up to a positive factor shared by every line crossing the ray at that
+// point: the cotangent of the angle between the line and the direction from pt back to the view point. Two lines
+// crossing the current ray at the same point are ordered by which one bends in front of the other just beyond that
+// point, which is the one whose distance shrinks faster or grows more slowly, so the smaller key is the nearer line.
+//
+// The cotangent is periodic in the line's direction, so the key does not depend on which way the line's endpoints
+// happen to be ordered. The angle-based tie-break this replaces did depend on it -- it picked a direction from
+// whichever endpoint the crossing was not near, which is ambiguous for a line crossed mid-span -- and its two-class
+// comparison key was split exactly at the angle that an eye lying close to the line through a wall or bounds edge
+// produces, so the ordering there flipped on rounding noise, leaking scene-scale regions past the wall or carving
+// them away.
+func (h *lineHeap) frontKey(index int, pt geom.Point) float64 {
+	ux := float64(h.lines[index].End.X) - float64(h.lines[index].Start.X)
+	uy := float64(h.lines[index].End.Y) - float64(h.lines[index].Start.Y)
+	ex := float64(h.viewPt.X) - float64(pt.X)
+	ey := float64(h.viewPt.Y) - float64(pt.Y)
+	cross := ex*uy - ey*ux
+	if cross == 0 {
+		// The line runs along the ray itself, which intersectLines rejects as parallel before the ordering ever
+		// compares it, so this is unreachable in practice; +Inf orders such a line as maximally behind if the guard is
+		// ever reached.
+		return math.Inf(1)
 	}
-	if a1 < 180 {
-		if a2 > 180 {
-			return true
-		}
-		return a2 < a1
-	}
-	return a1 < a2
+	return (ux*ex + uy*ey) / cross
 }
 
 func sortLines(position geom.Point, lines []geom.Line) []endPoint {
@@ -502,28 +780,29 @@ func sortLines(position geom.Point, lines []geom.Line) []endPoint {
 	return points
 }
 
-func angle2(a, b, c geom.Point) float32 {
-	// Both angles are atan2 results in [-180,180], so their difference is in [-360,360] and one adjustment is enough
-	// to bring it into [0,360].
-	a3 := angle(a, b) - angle(b, c)
-	if a3 < 0 {
-		a3 += 360
-	}
-	return a3
-}
-
 func angle(a, b geom.Point) float32 {
 	return xmath.Atan2(b.Y-a.Y, b.X-a.X) * 180 / math.Pi
 }
 
-// pointEpsilon returns the tolerance to use when comparing points for equality in a scene of the given extent whose
-// coordinates reach the given magnitude. The primary term is proportional to the extent, which keeps behavior the
-// same at every scale; deriving it from the extent rather than the magnitude is what lets a small scene sit far from
-// the origin without the tolerance swallowing the entire scene. The magnitude term keeps the tolerance above the
-// float32 rounding noise carried by coordinates far from the origin, and the fixed floor keeps it from collapsing to
-// zero for a scene with no measurable extent.
-func pointEpsilon(extent, magnitude float32) float32 {
-	return max(extent*pointEpsilonRatio, magnitude*coordinateNoiseRatio, minPointEpsilon)
+// pointEpsilon returns the tolerance to use when comparing points for equality in a scene whose finest meaningful
+// dimension is feature and whose overall extent is extent. The primary term is proportional to the feature size,
+// which keeps behavior the same at every scale. The extent term keeps the tolerance above the float32 rounding noise
+// carried by scene-local coordinates, which is proportional to the scene's extent, and the fixed floor keeps the
+// tolerance from collapsing to zero for a scene with no measurable extent.
+func pointEpsilon(feature, extent float32) float32 {
+	return max(feature*pointEpsilonRatio, extent*extentNoiseRatio, minPointEpsilon)
+}
+
+// angleEpsilon returns the tolerance, in degrees, for treating two endpoints as lying at the same angle from the view
+// point. It is the angle the point comparison tolerance subtends across the scene's diagonal, so two endpoints merge
+// into one batch of the sweep only when they could be the same point to within that tolerance. A fixed angular
+// tolerance instead merges a wall endpoint with a bounds corner it merely aligns with, silently deleting or inflating
+// the wall's shadow. The floor covers the quantization of float32 angles.
+func angleEpsilon(epsilon, diagonal float32) float32 {
+	if diagonal <= 0 || xmath.IsInf(diagonal, 0) {
+		return minAngleEpsilon
+	}
+	return max(epsilon/diagonal*(180/math.Pi), minAngleEpsilon)
 }
 
 // finite reports whether both of a point's coordinates can take part in the sweep. A NaN or infinite coordinate has
@@ -544,23 +823,100 @@ func distSqrd(a, b geom.Point) float32 {
 // lines are parallel, or so nearly parallel that the crossing point would be far enough away to swamp every distance
 // it was compared against. ub is the cross product of the two direction vectors, so comparing its square against the
 // product of their squared lengths tests the squared sine of the angle between them, which is independent of scale.
+//
+// The arithmetic is done in float64. The heap comparator buckets the crossing distances it gets from here by the
+// comparison tolerance, and when two lines share a point on the current ray -- a clipped wall endpoint lying on a
+// bounds edge, or several walls meeting at a cut -- their equal distances must land in the same bucket for the
+// angle-based tie-break to engage at all. Float32 rounding here is a meaningful fraction of the bucket width, so it
+// randomly separated such ties across a bucket boundary, leaving whichever line the noise favored in front.
 func intersectLines(s1, e1, s2, e2 geom.Point) (geom.Point, bool) {
-	dbx := e2.X - s2.X
-	dby := e2.Y - s2.Y
-	dax := e1.X - s1.X
-	day := e1.Y - s1.Y
+	dbx := float64(e2.X) - float64(s2.X)
+	dby := float64(e2.Y) - float64(s2.Y)
+	dax := float64(e1.X) - float64(s1.X)
+	day := float64(e1.Y) - float64(s1.Y)
 	ub := dby*dax - dbx*day
 	if ub*ub <= (parallelEpsilonSqrd*(dax*dax+day*day))*(dbx*dbx+dby*dby) {
 		return geom.Point{}, false
 	}
-	ua := (dbx*(s1.Y-s2.Y) - dby*(s1.X-s2.X)) / ub
-	return geom.Point{X: s1.X + ua*dax, Y: s1.Y + ua*day}, true
+	ua := (dbx*(float64(s1.Y)-float64(s2.Y)) - dby*(float64(s1.X)-float64(s2.X))) / ub
+	return geom.Point{X: float32(float64(s1.X) + ua*dax), Y: float32(float64(s1.Y) + ua*day)}, true
+}
+
+// segmentIntersection returns the intersection of two segments, if any, without allocating. A count of 0 means no
+// intersection, 1 a single shared point (in pts[0]), and 2 a collinear overlapping span, with pts holding the ends of
+// the shared portion interpolated along the first segment. It mirrors geom.LineIntersection for segments of nonzero
+// length, which callers guarantee.
+//
+// The arithmetic is done in float64, for two reasons. First, the products of float32 differences carry at most 48
+// significant bits, so they are exact in float64 and the exact-zero collinearity tests below become reliable; in
+// float32, fused multiply-subtract contraction of a*b - c*d (which the compiler emits on arm64) returns the rounding
+// error of the second product instead of zero for exactly collinear segments, sending every such overlap down the
+// "not parallel" branch and leaving it undetected. Second, an interpolated crossing lands within a float32 rounding
+// of the true crossing even when one segment is far longer than the other, where float32 interpolation drifts by the
+// long segment's length times the float32 rounding unit -- for a caller-supplied obstruction clipped against the
+// viewport, far enough past the viewport edge to defeat the sweep's tolerance. The explicit float64 conversions
+// around each product keep the compiler from fusing even the float64 subtractions, which matters for differences that
+// do not happen to be exact.
+func segmentIntersection(a1, a2, b1, b2 geom.Point) (pts [2]geom.Point, count int) {
+	abdx := float64(a1.X) - float64(b1.X)
+	abdy := float64(a1.Y) - float64(b1.Y)
+	bdx := float64(b2.X) - float64(b1.X)
+	bdy := float64(b2.Y) - float64(b1.Y)
+	uat := float64(bdx*abdy) - float64(bdy*abdx)
+	adx := float64(a2.X) - float64(a1.X)
+	ady := float64(a2.Y) - float64(a1.Y)
+	ubt := float64(adx*abdy) - float64(ady*abdx)
+	ub := float64(bdy*adx) - float64(bdx*ady)
+	if ub != 0 {
+		// Not parallel, so there is at most a single crossing.
+		a := uat / ub
+		if a >= 0 && a <= 1 {
+			if b := ubt / ub; b >= 0 && b <= 1 {
+				pts[0] = geom.Point{X: float32(float64(a1.X) + a*adx), Y: float32(float64(a1.Y) + a*ady)}
+				count = 1
+			}
+		}
+		return pts, count
+	}
+	// Parallel. Collinearity requires both cross-product numerators to be zero; in exact arithmetic either being zero
+	// implies the other, but requiring both guards against a phantom overlap when rounding zeroes only one of them
+	// for parallel-but-offset segments.
+	if uat != 0 || ubt != 0 {
+		return pts, 0
+	}
+	var ub1, ub2 float64
+	if math.Abs(adx) > math.Abs(ady) {
+		ub1 = (float64(b1.X) - float64(a1.X)) / adx
+		ub2 = (float64(b2.X) - float64(a1.X)) / adx
+	} else {
+		ub1 = (float64(b1.Y) - float64(a1.Y)) / ady
+		ub2 = (float64(b2.Y) - float64(a1.Y)) / ady
+	}
+	left := max(0, min(ub1, ub2))
+	right := min(1, max(ub1, ub2))
+	if left > right {
+		return pts, 0
+	}
+	pts[0] = geom.Point{
+		X: float32(float64(a2.X)*left + float64(a1.X)*(1-left)),
+		Y: float32(float64(a2.Y)*left + float64(a1.Y)*(1-left)),
+	}
+	if left == right {
+		return pts, 1
+	}
+	pts[1] = geom.Point{
+		X: float32(float64(a2.X)*right + float64(a1.X)*(1-right)),
+		Y: float32(float64(a2.Y)*right + float64(a1.Y)*(1-right)),
+	}
+	return pts, 2
 }
 
 type endPoint struct {
 	lineIndex int
 	angle     float32
 	start     bool
+	// handled marks an event the sweep's removal pass has already consumed, so the insertion pass skips it.
+	handled bool
 }
 
 func (ep *endPoint) pt(lines []geom.Line) geom.Point {
