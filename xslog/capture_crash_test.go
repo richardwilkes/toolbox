@@ -23,7 +23,7 @@ var crashName = "test-crash"
 
 func TestCrashOutputPathFor(t *testing.T) {
 	c := check.New(t)
-	prefix := filepath.Join("/logs", crashName)
+	prefix := filepath.Join(t.TempDir(), "logs", crashName)
 	c.Equal(prefix+".log", xslog.CrashOutputPathFor(prefix, 0))
 	c.Equal(prefix+".log", xslog.CrashOutputPathFor(prefix, -1))
 	c.Equal(prefix+"-1.log", xslog.CrashOutputPathFor(prefix, 1))
