@@ -21,10 +21,15 @@ import (
 )
 
 // SetUsage replaces the Usage function of flagSet with one that provides more information. A nil flagSet means
-// flag.CommandLine.
-func SetUsage(flagSet *flag.FlagSet, description, argsUsage string) {
+// flag.CommandLine. Any flag names passed in hiddenFlags are omitted from the emitted options, but remain usable. If
+// every defined flag is hidden, the options section and the "[options]" placeholder are omitted entirely.
+func SetUsage(flagSet *flag.FlagSet, description, argsUsage string, hiddenFlags ...string) {
 	if flagSet == nil {
 		flagSet = flag.CommandLine
+	}
+	hidden := make(map[string]bool, len(hiddenFlags))
+	for _, name := range hiddenFlags {
+		hidden[name] = true
 	}
 	flagSet.Usage = func() {
 		var w *xterm.AnsiWriter
@@ -72,6 +77,9 @@ func SetUsage(flagSet *flag.FlagSet, description, argsUsage string) {
 		var flags []state
 		largest := 0
 		flagSet.VisitAll(func(f *flag.Flag) {
+			if hidden[f.Name] {
+				return
+			}
 			argName, revisedUsage := flag.UnquoteUsage(f)
 			size := 3 + len([]rune(f.Name))
 			if argName != "" {
