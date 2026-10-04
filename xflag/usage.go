@@ -42,9 +42,9 @@ func SetUsage(flagSet *flag.FlagSet, description, argsUsage string, hiddenFlags 
 		kind := w.Kind()
 		w.WriteString(kind.Reset() + "\n")
 		w.WrapText("", kind.Green()+xos.AppName+kind.Dim())
-		buildInfo := fmt.Sprintf(i18n.Text("Version %s"), xos.ShortAppVersion())
+		buildInfo := i18n.Text("Version %s", xos.ShortAppVersion())
 		if xos.BuildNumber != "" {
-			buildInfo = fmt.Sprintf(i18n.Text("%s, Build %s"), buildInfo, xos.BuildNumber)
+			buildInfo = i18n.Text("%s, Build %s", buildInfo, xos.BuildNumber)
 		}
 		w.WrapText("", buildInfo)
 		if xos.VCSName != "" && xos.VCSVersion != "" {
@@ -59,7 +59,7 @@ func SetUsage(flagSet *flag.FlagSet, description, argsUsage string, hiddenFlags 
 			w.WrapText("", copyright)
 		}
 		if xos.License != "" {
-			w.WrapText("", fmt.Sprintf(i18n.Text("License: %s"), xos.License))
+			w.WrapText("", i18n.Text("License: %s", xos.License))
 		}
 		w.WriteString(kind.Reset() + "\n")
 		if description != "" {
@@ -127,7 +127,7 @@ func SetUsage(flagSet *flag.FlagSet, description, argsUsage string, hiddenFlags 
 				prefix += kind.Reset()
 				full := f.usage
 				if !f.zero {
-					full += fmt.Sprintf(i18n.Text(" (default: %s%s%s)"), kind.Blue(), f.flag.DefValue, kind.Reset())
+					full += i18n.Text(" (default: %s%s%s)", kind.Blue(), f.flag.DefValue, kind.Reset())
 				}
 				w.WrapText(prefix+strings.Repeat(" ", 1+largest-f.size), full)
 			}

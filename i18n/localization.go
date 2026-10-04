@@ -13,6 +13,7 @@ package i18n
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -63,8 +64,17 @@ func SetLocalizer(f func(string) string) {
 	altLocalizer.Store(trampoline)
 }
 
-// Text returns a localized version of the text if one exists, or the original text if not.
-func Text(text string) string {
+// Text returns a localized version of the text if one exists, or the original text if not. If args are provided, the
+// localized text is used as the format string in a call to fmt.Sprintf() with those args and the result is returned.
+func Text(text string, args ...any) string {
+	localized := localize(text)
+	if len(args) != 0 {
+		return fmt.Sprintf(localized, args...)
+	}
+	return localized
+}
+
+func localize(text string) string {
 	if f := altLocalizer.Load(); f != nil {
 		return f.Text(text)
 	}

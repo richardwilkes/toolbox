@@ -72,6 +72,31 @@ func TestAltLocalization(t *testing.T) {
 	c.Equal("Hello!", Text("Hello!"))
 }
 
+func TestTextWithArgs(t *testing.T) {
+	c := check.New(t)
+	savedLanguage := Language
+	savedLanguages := Languages
+	defer func() {
+		Language = savedLanguage
+		Languages = savedLanguages
+	}()
+	langMap["es"] = map[string]string{"Hello %s, you are %d": "Hola %[1]s, tienes %[2]d"}
+	defer delete(langMap, "es")
+	Language = "es"
+	Languages = nil
+	// The args are formatted into the localized text, not the original.
+	c.Equal("Hola Rich, tienes 42", Text("Hello %s, you are %d", "Rich", 42))
+	// Text with no translation is still formatted.
+	c.Equal("Goodbye Rich", Text("Goodbye %s", "Rich"))
+	// Without args, no formatting is applied, so formatting verbs are left untouched.
+	c.Equal("Hola %[1]s, tienes %[2]d", Text("Hello %s, you are %d"))
+	c.Equal("100%", Text("100%"))
+	// The args are also applied to the result of an alternate localizer.
+	SetLocalizer(func(_ string) string { return "Bonjour %s!" })
+	defer SetLocalizer(nil)
+	c.Equal("Bonjour Rich!", Text("Hello %s!", "Rich"))
+}
+
 // TestLoadRejectsTrailingContent verifies that key and value lines with content after the closing quote are rejected
 // with a warning rather than truncated.
 func TestLoadRejectsTrailingContent(t *testing.T) {

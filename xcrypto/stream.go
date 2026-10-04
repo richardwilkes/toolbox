@@ -82,7 +82,7 @@ func EncryptStreamWithPublicKey(in io.Reader, out io.Writer, publicKey *rsa.Publ
 			return errs.New("stream too large to encrypt")
 		}
 		fillStreamNonce(nonce, counter, last)
-		ciphertext = gcm.Seal(ciphertext[:0], nonce, plaintext[:n], nil)
+		ciphertext = gcm.Seal(ciphertext[:0], nonce, plaintext[:n], nil) //nolint:gosec // Nonce is unique per key
 		if _, err = out.Write(ciphertext); err != nil {
 			return errs.Wrap(err)
 		}

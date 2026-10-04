@@ -59,44 +59,29 @@ func main() {
 						fmt.Fprintln(os.Stderr, err)
 						xos.Exit(1)
 					}
-					const (
-						LookForPackageState = iota
-						LookForTextCallState
-						LookForParameterState
-					)
-					state := LookForPackageState
 					ast.Inspect(file, func(node ast.Node) bool {
-						switch x := node.(type) {
-						case *ast.Ident:
-							switch state {
-							case LookForPackageState:
-								if x.Name == "i18n" {
-									state = LookForTextCallState
-								}
-							case LookForTextCallState:
-								if x.Name == "Text" {
-									state = LookForParameterState
-								} else {
-									state = LookForPackageState
-								}
-							default:
-								state = LookForPackageState
+						call, ok := node.(*ast.CallExpr)
+						if !ok || len(call.Args) == 0 {
+							return true
+						}
+						var sel *ast.SelectorExpr
+						if sel, ok = call.Fun.(*ast.SelectorExpr); !ok || sel.Sel.Name != "Text" {
+							return true
+						}
+						var pkg *ast.Ident
+						if pkg, ok = sel.X.(*ast.Ident); !ok || pkg.Name != "i18n" {
+							return true
+						}
+						// Only the first argument is the text to localize. Any arguments that follow are values to
+						// be formatted into it, so they must not be extracted, even if they are string literals.
+						var lit *ast.BasicLit
+						if lit, ok = call.Args[0].(*ast.BasicLit); ok && lit.Kind == token.STRING {
+							var v string
+							if v, err = strconv.Unquote(lit.Value); err != nil {
+								fmt.Fprintln(os.Stderr, err)
+							} else {
+								kv[v] = v
 							}
-						case *ast.BasicLit:
-							if state == LookForParameterState {
-								if x.Kind == token.STRING {
-									var v string
-									if v, err = strconv.Unquote(x.Value); err != nil {
-										fmt.Fprintln(os.Stderr, err)
-									} else {
-										kv[v] = v
-									}
-								}
-							}
-							state = LookForPackageState
-						case nil:
-						default:
-							state = LookForPackageState
 						}
 						return true
 					})
