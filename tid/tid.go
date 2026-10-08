@@ -27,6 +27,10 @@ type TID string
 // meaning, but can be used to distinguish different types of ids.
 const KindAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
+// bodyAlphabet is the unpadded URL-safe base64 alphabet, which the 16 characters after the kind must come from.
+// It is checked directly rather than by decoding, since the base64 decoder silently skips CR and LF.
+const bodyAlphabet = KindAlphabet + "-_"
+
 // MustNewTID is like NewTID, but panics on error.
 func MustNewTID(kind byte) TID {
 	return xos.Must(NewTID(kind))
@@ -35,7 +39,7 @@ func MustNewTID(kind byte) TID {
 // NewTID creates a new TID with a random value and the specified kind, which must be in KindAlphabet.
 func NewTID(kind byte) (TID, error) {
 	if strings.IndexByte(KindAlphabet, kind) == -1 {
-		return "", errs.New("invalid kind")
+		return "", errs.Newf("invalid kind %q", kind)
 	}
 	var buffer [12]byte
 	if _, err := rand.Read(buffer[:]); err != nil {
@@ -48,27 +52,26 @@ func NewTID(kind byte) (TID, error) {
 func FromString(id string) (TID, error) {
 	tid := TID(id)
 	if !IsValid(tid) {
-		return "", errs.New("invalid TID")
+		return "", errs.Newf("invalid TID %q", id)
 	}
 	return tid, nil
 }
 
 // FromStringOfKind converts a string to a TID, returning an error if it is not valid or not of the specified kind.
 func FromStringOfKind(id string, kind byte) (TID, error) {
-	tid := TID(id)
-	if !IsKindAndValid(tid, kind) {
-		return "", errs.New("invalid TID")
+	tid, err := FromString(id)
+	if err != nil {
+		return "", err
+	}
+	if !IsKind(tid, kind) {
+		return "", errs.Newf("TID %q is not of kind %q", id, kind)
 	}
 	return tid, nil
 }
 
 // IsValid returns true if id is a well-formed TID.
 func IsValid(id TID) bool {
-	if len(id) != 17 || strings.IndexByte(KindAlphabet, id[0]) == -1 {
-		return false
-	}
-	_, err := base64.RawURLEncoding.DecodeString(string(id[1:]))
-	return err == nil
+	return len(id) == 17 && strings.IndexByte(KindAlphabet, id[0]) != -1 && hasValidBody(id)
 }
 
 // IsKind returns true if the TID has the specified kind.
@@ -78,9 +81,16 @@ func IsKind(id TID, kind byte) bool {
 
 // IsKindAndValid returns true if the TID is a valid TID with the specified kind.
 func IsKindAndValid(id TID, kind byte) bool {
-	if !IsKind(id, kind) {
-		return false
+	return IsKind(id, kind) && hasValidBody(id)
+}
+
+// hasValidBody returns true if every character after the kind is in bodyAlphabet. The caller must have already
+// checked the length.
+func hasValidBody(id TID) bool {
+	for i := 1; i < len(id); i++ {
+		if strings.IndexByte(bodyAlphabet, id[i]) == -1 {
+			return false
+		}
 	}
-	_, err := base64.RawURLEncoding.DecodeString(string(id[1:]))
-	return err == nil
+	return true
 }

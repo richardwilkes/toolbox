@@ -10,6 +10,7 @@
 package tid_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -73,7 +74,7 @@ func TestFromStringInvalid(t *testing.T) {
 	invalidTIDs := []string{
 		"",                         // empty string
 		"short",                    // too short
-		"!InvalidKindChar1234",     // invalid kind character
+		"!InvalidKindChar1",        // invalid kind character
 		"Atoolongstring1234567890", // too long
 		"A123456789012345",         // wrong length (16 chars)
 		"A12345678901234567",       // wrong length (18 chars)
@@ -120,7 +121,7 @@ func TestIsValid(t *testing.T) {
 	invalidTIDs := []tid.TID{
 		"",                        // empty
 		"short",                   // too short
-		"!ValidBase64String12",    // invalid kind
+		"!ValidBase64Str12",       // invalid kind
 		"Vtoolongstring123456789", // too long
 		"V123456789012345",        // wrong length (16 chars)
 		"V12345678901234567",      // wrong length (18 chars)
@@ -140,7 +141,7 @@ func TestIsKind(t *testing.T) {
 
 	c.False(tid.IsKind(testTID, 'X'), "Should return false for wrong kind")
 
-	c.False(tid.IsKind(testTID, '!'), "Should return false for invalid kind character")
+	c.False(tid.IsKind(tid.TID("!"+string(testTID)[1:]), '!'), "Should return false for invalid kind character")
 
 	c.False(tid.IsKind("short", 'K'), "Should return false for short string")
 	c.False(tid.IsKind("toolongstring1234567890", 'K'), "Should return false for long string")
@@ -217,4 +218,52 @@ func TestTIDStringConversion(t *testing.T) {
 	convertedTID, err := tid.FromString(tidStr)
 	c.NoError(err)
 	c.Equal(originalTID, convertedTID)
+}
+
+func TestRejectsLineBreaks(t *testing.T) {
+	c := check.New(t)
+
+	body := string(tid.MustNewTID('A'))[1:]
+	ids := []string{
+		"A" + strings.Repeat("\n", 16),
+		"A" + strings.Repeat("\r", 16),
+		"A" + body[:15] + "\n",
+		"A" + body[:14] + "\r\n",
+		"A\n" + body[:15],
+	}
+	for _, id := range ids {
+		c.False(tid.IsValid(tid.TID(id)), "IsValid should reject %q", id)
+		c.False(tid.IsKindAndValid(tid.TID(id), 'A'), "IsKindAndValid should reject %q", id)
+		_, err := tid.FromString(id)
+		c.HasError(err, "FromString should reject %q", id)
+		_, err = tid.FromStringOfKind(id, 'A')
+		c.HasError(err, "FromStringOfKind should reject %q", id)
+	}
+}
+
+func TestErrorsNameRejectedInput(t *testing.T) {
+	c := check.New(t)
+
+	_, err := tid.FromString("bogus")
+	c.HasError(err)
+	c.Contains(err.Error(), `"bogus"`, "FromString error should include the rejected string")
+
+	_, err = tid.NewTID('!')
+	c.HasError(err)
+	c.Contains(err.Error(), `'!'`, "NewTID error should include the rejected kind")
+
+	_, err = tid.FromStringOfKind("bogus", 'A')
+	c.HasError(err)
+	c.Contains(err.Error(), `"bogus"`, "FromStringOfKind error should include the rejected string")
+}
+
+func TestFromStringOfKindDistinguishesWrongKind(t *testing.T) {
+	c := check.New(t)
+
+	id := string(tid.MustNewTID('A'))
+	_, err := tid.FromStringOfKind(id, 'B')
+	c.HasError(err)
+	c.Contains(err.Error(), `'B'`, "wrong-kind error should name the expected kind")
+	c.Contains(err.Error(), fmt.Sprintf("%q", id), "wrong-kind error should include the id")
+	c.NotContains(err.Error(), "invalid TID", "a well-formed id of the wrong kind should not be reported as invalid")
 }
