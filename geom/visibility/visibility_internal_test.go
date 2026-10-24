@@ -191,27 +191,25 @@ func checkLineHeapInvariants(t *testing.T, lines []geom.Line, epsilon float32) {
 }
 
 func TestLineHeapMaintainsInvariants(t *testing.T) {
+	eps := pointEpsilon(100, 100)
 	rng := rand.New(rand.NewPCG(1, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
-	lines := make([]geom.Line, 24)
-	for i := range lines {
-		lines[i] = geom.NewLine(geom.NewPoint(rng.Float32()*100, rng.Float32()*100),
+	spread := make([]geom.Line, 24)
+	for i := range spread {
+		spread[i] = geom.NewLine(geom.NewPoint(rng.Float32()*100, rng.Float32()*100),
 			geom.NewPoint(rng.Float32()*100, rng.Float32()*100))
 	}
-	checkLineHeapInvariants(t, lines, pointEpsilon(100, 100))
-}
+	checkLineHeapInvariants(t, spread, eps)
 
-func TestLineHeapMaintainsInvariantsAtEpsilonScale(t *testing.T) {
 	// Lines whose ray crossings cluster within a few tolerances of each other exercise the tie-handling paths of the
 	// ordering, which lines spread far apart relative to the tolerance never reach.
-	eps := pointEpsilon(100, 100)
-	rng := rand.New(rand.NewPCG(2, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
-	lines := make([]geom.Line, 24)
-	for i := range lines {
+	rng = rand.New(rand.NewPCG(2, 1967)) //nolint:gosec // Yes, it is ok to use a weak prng here
+	clustered := make([]geom.Line, 24)
+	for i := range clustered {
 		x := 60 + (rng.Float32()-0.5)*8*eps
-		lines[i] = geom.NewLine(
+		clustered[i] = geom.NewLine(
 			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, 40+rng.Float32()*10),
 			geom.NewPoint(x+(rng.Float32()-0.5)*4*eps, 55+rng.Float32()*10),
 		)
 	}
-	checkLineHeapInvariants(t, lines, eps)
+	checkLineHeapInvariants(t, clustered, eps)
 }

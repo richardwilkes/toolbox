@@ -11,6 +11,7 @@ package geom_test
 
 import (
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -73,96 +74,56 @@ func TestLineIntersection(t *testing.T) {
 	c.True(foundEnd)
 }
 
-func TestLineIntersectionCollinear(t *testing.T) {
+// TestLineIntersectionParallel checks parallel segments, which intersect only when collinear and overlapping or
+// touching. The diagonal rows have non-axis-aligned direction vectors, so neither collinearity numerator is trivially
+// zero.
+func TestLineIntersectionParallel(t *testing.T) {
 	c := check.New(t)
 
-	// Collinear but non-overlapping segments must report no intersection rather than a phantom 2-point overlap.
-	horiz := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(1, 0))
-	beyond := geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(3, 0))
-	c.Equal(0, len(horiz.Intersection(beyond)))
-	c.Equal(0, len(beyond.Intersection(horiz))) // Order independent
-	c.False(horiz.Intersects(beyond))
+	for _, tc := range []struct {
+		name string
+		want []geom.Point
+		a, b geom.Line
+	}{
+		{"horizontal disjoint", nil, newLine(0, 0, 1, 0), newLine(2, 0, 3, 0)},
+		{"horizontal disjoint, reversed", nil, newLine(2, 0, 3, 0), newLine(0, 0, 1, 0)},
+		{"vertical disjoint", nil, newLine(0, 0, 0, 1), newLine(0, 2, 0, 3)},
+		{"horizontal touching", []geom.Point{geom.NewPoint(1, 0)}, newLine(0, 0, 1, 0), newLine(1, 0, 2, 0)},
+		{
+			"horizontal overlap",
+			[]geom.Point{geom.NewPoint(1, 0), geom.NewPoint(2, 0)},
+			newLine(0, 0, 2, 0),
+			newLine(1, 0, 3, 0),
+		},
+		{
+			"diagonal overlap",
+			[]geom.Point{geom.NewPoint(1, 1), geom.NewPoint(3, 3)},
+			newLine(0, 0, 4, 4),
+			newLine(1, 1, 3, 3),
+		},
+		{"diagonal touching", []geom.Point{geom.NewPoint(4, 4)}, newLine(0, 0, 4, 4), newLine(4, 4, 6, 6)},
+		{"diagonal offset", nil, newLine(0, 0, 4, 4), newLine(1, 0, 5, 4)},
+		{"diagonal offset, reversed", nil, newLine(1, 0, 5, 4), newLine(0, 0, 4, 4)},
+		// (t,t) lies exactly on y=x, but the cross products of the collinearity tests are inexact in float32, where
+		// arm64's fused multiply-subtract turned their zero into rounding noise. The power-of-two length keeps the
+		// interpolated overlap endpoints exact.
+		{
+			"diagonal non-integer overlap",
+			[]geom.Point{geom.NewPoint(5.848, 5.848), geom.NewPoint(20, 20)},
+			newLine(0, 0, 8192, 8192),
+			newLine(5.848, 5.848, 20, 20),
+		},
+	} {
+		got := tc.a.Intersection(tc.b)
+		c.Equal(len(tc.want), len(got), "%s: %v", tc.name, got)
+		for _, pt := range tc.want {
+			c.True(slices.Contains(got, pt), "%s: %v", tc.name, got)
+		}
+		c.Equal(len(tc.want) != 0, tc.a.Intersects(tc.b), tc.name)
+	}
 
-	// Same, but exercising the vertical (ady) branch of the overlap math.
-	vert := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(0, 1))
-	vertBeyond := geom.NewLine(geom.NewPoint(0, 2), geom.NewPoint(0, 3))
-	c.Equal(0, len(vert.Intersection(vertBeyond)))
-
-	// Collinear segments that touch at exactly one endpoint yield a single point.
-	touching := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(2, 0))
-	touch := horiz.Intersection(touching)
-	c.Equal(1, len(touch))
-	c.Equal(geom.NewPoint(1, 0), touch[0])
-
-	// Genuinely overlapping collinear segments still yield the two-point overlap.
-	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(2, 0))
-	b := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(3, 0))
-	c.Equal(2, len(a.Intersection(b)))
-
-	// Propagation: a rect must not report intersection with a line collinear with an edge but entirely beyond it.
+	// A rect must not report intersection with a line collinear with an edge but entirely beyond it.
 	c.False(geom.NewRect(0, 0, 10, 10).IntersectsLine(geom.NewPoint(20, 10), geom.NewPoint(30, 10)))
-}
-
-func TestLineIntersectionParallelCollinearity(t *testing.T) {
-	c := check.New(t)
-
-	// The parallel branch treats two segments as collinear only when both cross-product numerators are zero. These
-	// diagonal cases use non-axis-aligned direction vectors, so neither numerator is trivially zero.
-
-	// Collinear overlapping diagonal segments: both numerators are zero, so the overlap is reported as two points.
-	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(4, 4))
-	b := geom.NewLine(geom.NewPoint(1, 1), geom.NewPoint(3, 3))
-	overlap := a.Intersection(b)
-	c.Equal(2, len(overlap))
-	foundStart := false
-	foundEnd := false
-	for _, pt := range overlap {
-		if pt == geom.NewPoint(1, 1) {
-			foundStart = true
-		}
-		if pt == geom.NewPoint(3, 3) {
-			foundEnd = true
-		}
-	}
-	c.True(foundStart)
-	c.True(foundEnd)
-
-	// Collinear diagonal segments touching at a single endpoint yield exactly one point.
-	touching := geom.NewLine(geom.NewPoint(4, 4), geom.NewPoint(6, 6))
-	touch := a.Intersection(touching)
-	c.Equal(1, len(touch))
-	c.Equal(geom.NewPoint(4, 4), touch[0])
-
-	// Parallel-but-offset diagonal segments (same slope, different line) are not collinear and must not intersect.
-	offset := geom.NewLine(geom.NewPoint(1, 0), geom.NewPoint(5, 4))
-	c.Equal(0, len(a.Intersection(offset)))
-	c.Equal(0, len(offset.Intersection(a))) // Order independent
-	c.False(a.Intersects(offset))
-}
-
-func TestLineIntersectionCollinearNonInteger(t *testing.T) {
-	c := check.New(t)
-
-	// Exactly collinear diagonal segments with non-integer coordinates: (t,t) lies exactly on y=x for any float32 t,
-	// but the cross-product terms of the collinearity tests are inexact. Fused multiply-subtract on arm64 used to turn
-	// their mathematically zero results into rounding noise, so the overlap went undetected. The long segment runs to
-	// a power of two so that the interpolated overlap endpoints below are exact.
-	a := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(8192, 8192))
-	b := geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(20, 20))
-	overlap := a.Intersection(b)
-	c.Equal(2, len(overlap))
-	found1 := false
-	found2 := false
-	for _, pt := range overlap {
-		if pt == geom.NewPoint(5.848, 5.848) {
-			found1 = true
-		}
-		if pt == geom.NewPoint(20, 20) {
-			found2 = true
-		}
-	}
-	c.True(found1, "%v", overlap)
-	c.True(found2, "%v", overlap)
 }
 
 func TestLineBoundsAtLargeCoordinates(t *testing.T) {
@@ -189,65 +150,31 @@ func TestLineBoundsAtLargeCoordinates(t *testing.T) {
 	c.True(bounds.Y < 2 && bounds.Bottom() > 2, "%v", bounds)
 }
 
-func TestPointSegmentDistanceNearLongSegment(t *testing.T) {
-	c := check.New(t)
-
-	// A point near a long segment: the old float32 formulation subtracted two nearly equal squared magnitudes, which
-	// cancels catastrophically and reported 0 for any true distance below roughly the segment length times 2.4e-4.
-	seg := geom.NewLine(geom.NewPoint(0, 5), geom.NewPoint(10000, 5))
-	dist := seg.DistanceToPoint(geom.NewPoint(5000, 6))
-	c.True(math.Abs(float64(dist)-1) < 1e-4, "distance %v, want 1", dist)
-	got := geom.PointSegmentDistanceSquared(geom.NewPoint(-1e6, 50), geom.NewPoint(1e6, 50), geom.NewPoint(50, 45))
-	c.True(math.Abs(float64(got)-25) < 1e-3, "squared distance %v, want 25", got)
-
-	// A degenerate segment measures the distance to its single point.
-	c.Equal(float32(25), geom.PointSegmentDistanceSquared(geom.NewPoint(3, 4), geom.NewPoint(3, 4), geom.NewPoint(0, 0)))
-}
-
 func TestPointSegmentDistance(t *testing.T) {
 	c := check.New(t)
 
-	// Test point on the line segment
-	l1 := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0))
-	p1 := geom.NewPoint(5, 0)
-	c.Equal(float32(0), l1.DistanceToPoint(p1))
-
-	// Test point perpendicular to the line segment
-	p2 := geom.NewPoint(5, 3)
-	c.Equal(float32(3), l1.DistanceToPoint(p2))
-
-	// Test point closest to an endpoint
-	p3 := geom.NewPoint(-2, 4)
-	distance3 := l1.DistanceToPoint(p3)
-	expected3 := float32(4.47213595) // sqrt((-2)^2 + 4^2) = sqrt(20) ≈ 4.472
-	c.True(distance3 > expected3-0.01 && distance3 < expected3+0.01)
-
-	// Test with vertical line segment
-	l2 := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(0, 10))
-	p4 := geom.NewPoint(3, 5)
-	c.Equal(float32(3), l2.DistanceToPoint(p4))
-}
-
-func TestPointSegmentDistanceSquared(t *testing.T) {
-	c := check.New(t)
-
-	// Test point on the line segment
-	l1 := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0))
-	p1 := geom.NewPoint(5, 0)
-	c.Equal(float32(0), l1.DistanceToPointSquared(p1))
-
-	// Test point perpendicular to the line segment
-	p2 := geom.NewPoint(5, 3)
-	c.Equal(float32(9), l1.DistanceToPointSquared(p2))
-
-	// Test point closest to an endpoint
-	p3 := geom.NewPoint(-2, 4)
-	c.Equal(float32(20), l1.DistanceToPointSquared(p3)) // (-2)^2 + 4^2 = 4 + 16 = 20
-
-	// Test with vertical line segment
-	l2 := geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(0, 10))
-	p4 := geom.NewPoint(3, 5)
-	c.Equal(float32(9), l2.DistanceToPointSquared(p4))
+	for _, tc := range []struct {
+		name      string
+		line      geom.Line
+		pt        geom.Point
+		squared   float32
+		distance  float32
+		tolerance float64
+	}{
+		{"on the segment", newLine(0, 0, 10, 0), geom.NewPoint(5, 0), 0, 0, 0},
+		{"perpendicular to the segment", newLine(0, 0, 10, 0), geom.NewPoint(5, 3), 9, 3, 0},
+		{"nearest an endpoint", newLine(0, 0, 10, 0), geom.NewPoint(-2, 4), 20, float32(math.Sqrt(20)), 0},
+		{"vertical segment", newLine(0, 0, 0, 10), geom.NewPoint(3, 5), 9, 3, 0},
+		// A formulation that subtracts two nearly equal float32 squared magnitudes cancels catastrophically here.
+		{"near a long segment", newLine(0, 5, 10000, 5), geom.NewPoint(5000, 6), 1, 1, 1e-4},
+		{"near a very long segment", newLine(-1e6, 50, 1e6, 50), geom.NewPoint(50, 45), 25, 5, 1e-3},
+		{"degenerate segment", newLine(3, 4, 3, 4), geom.NewPoint(0, 0), 25, 5, 0},
+	} {
+		sq := tc.line.DistanceToPointSquared(tc.pt)
+		c.True(math.Abs(float64(sq-tc.squared)) <= tc.tolerance, "%s: squared distance %v", tc.name, sq)
+		d := tc.line.DistanceToPoint(tc.pt)
+		c.True(math.Abs(float64(d-tc.distance)) <= tc.tolerance, "%s: distance %v", tc.name, d)
+	}
 
 	// Verify consistency with PointSegmentDistance
 	l3 := geom.NewLine(geom.NewPoint(1, 2), geom.NewPoint(5, 6))
@@ -257,4 +184,8 @@ func TestPointSegmentDistanceSquared(t *testing.T) {
 	// distance^2 should equal distanceSquared (within floating point tolerance)
 	calculatedSquared := distance * distance
 	c.True(calculatedSquared > distanceSquared-0.001 && calculatedSquared < distanceSquared+0.001)
+}
+
+func newLine(x1, y1, x2, y2 float32) geom.Line {
+	return geom.NewLine(geom.NewPoint(x1, y1), geom.NewPoint(x2, y2))
 }

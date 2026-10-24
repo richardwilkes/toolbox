@@ -248,6 +248,8 @@ func testCeil[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.3333").Ceil())
 	c.Equal(fixed128.FromInteger[T](-2), fixed128.FromStringForced[T]("-2.6789").Ceil())
 	c.Equal(fixed128.FromInteger[T](-3), fixed128.FromInteger[T](-3).Ceil())
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromInteger[T](0).Ceil())
+	c.Equal(fixed128.FromInteger[T](0), fixed128.FromStringForced[T]("-0.0").Ceil())
 }
 
 func TestRound(t *testing.T) {
@@ -311,108 +313,37 @@ func testNeg[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed128.FromInteger[T](3), fixed128.FromInteger[T](-3).Neg())
 }
 
-func TestCmp(t *testing.T) {
-	testCmp[fixed.D1](t)
-	testCmp[fixed.D2](t)
-	testCmp[fixed.D3](t)
-	testCmp[fixed.D4](t)
-	testCmp[fixed.D5](t)
-	testCmp[fixed.D6](t)
+func TestComparisons(t *testing.T) {
+	testComparisons[fixed.D1](t)
+	testComparisons[fixed.D2](t)
+	testComparisons[fixed.D3](t)
+	testComparisons[fixed.D4](t)
+	testComparisons[fixed.D5](t)
+	testComparisons[fixed.D6](t)
 }
 
-func testCmp[T fixed.Dx](t *testing.T) {
+func testComparisons[T fixed.Dx](t *testing.T) {
 	c := check.New(t)
-	c.Equal(1, fixed128.FromStringForced[T]("0.3333").Cmp(fixed128.FromInteger[T](-3)))
-	c.Equal(-1, fixed128.FromStringForced[T]("2.6789").Cmp(fixed128.FromInteger[T](3)))
-	c.Equal(0, fixed128.FromInteger[T](3).Cmp(fixed128.FromInteger[T](3)))
-}
-
-func TestEqual(t *testing.T) {
-	testEqual[fixed.D1](t)
-	testEqual[fixed.D2](t)
-	testEqual[fixed.D3](t)
-	testEqual[fixed.D4](t)
-	testEqual[fixed.D5](t)
-	testEqual[fixed.D6](t)
-}
-
-func testEqual[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-	c.False(fixed128.FromStringForced[T]("0.3333").Equal(fixed128.FromInteger[T](-3)))
-	c.False(fixed128.FromStringForced[T]("2.6789").Equal(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromInteger[T](3).Equal(fixed128.FromInteger[T](3)))
-}
-
-func TestGreaterThan(t *testing.T) {
-	testGreaterThan[fixed.D1](t)
-	testGreaterThan[fixed.D2](t)
-	testGreaterThan[fixed.D3](t)
-	testGreaterThan[fixed.D4](t)
-	testGreaterThan[fixed.D5](t)
-	testGreaterThan[fixed.D6](t)
-}
-
-func testGreaterThan[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-	c.True(fixed128.FromStringForced[T]("0.3333").GreaterThan(fixed128.FromInteger[T](-3)))
-	c.False(fixed128.FromStringForced[T]("2.6789").GreaterThan(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromInteger[T](3).GreaterThan(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromInteger[T](4).GreaterThan(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromStringForced[T]("2.6789").GreaterThan(fixed128.FromInteger[T](-1)))
-}
-
-func TestGreaterThanOrEqual(t *testing.T) {
-	testGreaterThanOrEqual[fixed.D1](t)
-	testGreaterThanOrEqual[fixed.D2](t)
-	testGreaterThanOrEqual[fixed.D3](t)
-	testGreaterThanOrEqual[fixed.D4](t)
-	testGreaterThanOrEqual[fixed.D5](t)
-	testGreaterThanOrEqual[fixed.D6](t)
-}
-
-func testGreaterThanOrEqual[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-	c.True(fixed128.FromStringForced[T]("0.3333").GreaterThanOrEqual(fixed128.FromInteger[T](-3)))
-	c.False(fixed128.FromStringForced[T]("2.6789").GreaterThanOrEqual(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromInteger[T](3).GreaterThanOrEqual(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromInteger[T](4).GreaterThanOrEqual(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromStringForced[T]("2.6789").GreaterThanOrEqual(fixed128.FromInteger[T](-1)))
-}
-
-func TestLessThan(t *testing.T) {
-	testLessThan[fixed.D1](t)
-	testLessThan[fixed.D2](t)
-	testLessThan[fixed.D3](t)
-	testLessThan[fixed.D4](t)
-	testLessThan[fixed.D5](t)
-	testLessThan[fixed.D6](t)
-}
-
-func testLessThan[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-	c.False(fixed128.FromStringForced[T]("0.3333").LessThan(fixed128.FromInteger[T](-3)))
-	c.True(fixed128.FromStringForced[T]("2.6789").LessThan(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromInteger[T](3).LessThan(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromInteger[T](4).LessThan(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromStringForced[T]("2.6789").LessThan(fixed128.FromInteger[T](-1)))
-}
-
-func TestLessThanOrEqual(t *testing.T) {
-	testLessThanOrEqual[fixed.D1](t)
-	testLessThanOrEqual[fixed.D2](t)
-	testLessThanOrEqual[fixed.D3](t)
-	testLessThanOrEqual[fixed.D4](t)
-	testLessThanOrEqual[fixed.D5](t)
-	testLessThanOrEqual[fixed.D6](t)
-}
-
-func testLessThanOrEqual[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-	c.False(fixed128.FromStringForced[T]("0.3333").LessThanOrEqual(fixed128.FromInteger[T](-3)))
-	c.True(fixed128.FromStringForced[T]("2.6789").LessThanOrEqual(fixed128.FromInteger[T](3)))
-	c.True(fixed128.FromInteger[T](3).LessThanOrEqual(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromInteger[T](4).LessThanOrEqual(fixed128.FromInteger[T](3)))
-	c.False(fixed128.FromStringForced[T]("2.6789").LessThanOrEqual(fixed128.FromInteger[T](-1)))
+	for _, tc := range []struct {
+		a   string
+		b   string
+		cmp int
+	}{
+		{a: "0.3333", b: "-3", cmp: 1},
+		{a: "2.6789", b: "3", cmp: -1},
+		{a: "3", b: "3", cmp: 0},
+		{a: "4", b: "3", cmp: 1},
+		{a: "2.6789", b: "-1", cmp: 1},
+	} {
+		a := fixed128.FromStringForced[T](tc.a)
+		b := fixed128.FromStringForced[T](tc.b)
+		c.Equal(tc.cmp, a.Cmp(b), "%s cmp %s", tc.a, tc.b)
+		c.Equal(tc.cmp == 0, a.Equal(b), "%s == %s", tc.a, tc.b)
+		c.Equal(tc.cmp > 0, a.GreaterThan(b), "%s > %s", tc.a, tc.b)
+		c.Equal(tc.cmp >= 0, a.GreaterThanOrEqual(b), "%s >= %s", tc.a, tc.b)
+		c.Equal(tc.cmp < 0, a.LessThan(b), "%s < %s", tc.a, tc.b)
+		c.Equal(tc.cmp <= 0, a.LessThanOrEqual(b), "%s <= %s", tc.a, tc.b)
+	}
 }
 
 func TestComma(t *testing.T) {
@@ -481,24 +412,6 @@ func testYAMLActual[T fixed.Dx](t *testing.T, v fixed128.Int[T]) {
 	err = yaml.Unmarshal(data, &e2)
 	c.NoError(err)
 	c.Equal(e1, e2)
-}
-
-func TestBoundaryValues(t *testing.T) {
-	testBoundaryValues[fixed.D1](t)
-	testBoundaryValues[fixed.D2](t)
-	testBoundaryValues[fixed.D3](t)
-	testBoundaryValues[fixed.D4](t)
-	testBoundaryValues[fixed.D5](t)
-	testBoundaryValues[fixed.D6](t)
-}
-
-func testBoundaryValues[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	maxValue := fixed128.Maximum[T]()
-	minValue := fixed128.Minimum[T]()
-	c.True(maxValue.GreaterThan(minValue))
-	c.True(minValue.LessThan(maxValue))
 }
 
 func TestMinMax(t *testing.T) {
@@ -621,6 +534,10 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	floatResult, err = million.AsFloatChecked[float64]()
 	c.NoError(err)
 	c.Equal(float64(1000000), floatResult)
+
+	// 2^24+1 is the smallest positive integer a float32 cannot represent exactly.
+	_, err = fixed128.FromInteger[T](16777217).AsFloatChecked[float32]()
+	c.HasError(err)
 }
 
 func TestStringWithSign(t *testing.T) {
@@ -805,79 +722,6 @@ func testFloorCeilRoundExtremes[T fixed.Dx](t *testing.T) {
 	c.True(fixed128.Minimum[T]().Round().GreaterThanOrEqual(fixed128.Minimum[T]()))
 	c.True(fixed128.Maximum[T]().Round().GreaterThan(zero))
 	c.True(fixed128.Maximum[T]().Round().LessThanOrEqual(fixed128.Maximum[T]()))
-}
-
-func TestCeilEdgeCases(t *testing.T) {
-	testCeilEdgeCases[fixed.D1](t)
-	testCeilEdgeCases[fixed.D2](t)
-	testCeilEdgeCases[fixed.D3](t)
-	testCeilEdgeCases[fixed.D4](t)
-	testCeilEdgeCases[fixed.D5](t)
-	testCeilEdgeCases[fixed.D6](t)
-}
-
-func testCeilEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	negFrac := fixed128.FromStringForced[T]("-2.5")
-	c.Equal(fixed128.FromInteger[T](-2), negFrac.Ceil())
-
-	zero := fixed128.FromInteger[T](0)
-	c.Equal(zero, zero.Ceil())
-
-	negZero := fixed128.FromStringForced[T]("-0.0")
-	c.Equal(fixed128.FromInteger[T](0), negZero.Ceil())
-}
-
-func TestStringEdgeCases(t *testing.T) {
-	testStringEdgeCases[fixed.D1](t)
-	testStringEdgeCases[fixed.D2](t)
-	testStringEdgeCases[fixed.D3](t)
-	testStringEdgeCases[fixed.D4](t)
-	testStringEdgeCases[fixed.D5](t)
-	testStringEdgeCases[fixed.D6](t)
-}
-
-func testStringEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	negFrac := fixed128.FromStringForced[T]("-0.5")
-	c.Equal("-0.5", negFrac.String())
-
-	posFrac := fixed128.FromStringForced[T]("0.5")
-	c.Equal("0.5", posFrac.String())
-
-	val := fixed128.FromStringForced[T]("1.2000")
-	c.Equal("1.2", val.String())
-}
-
-func TestAdditionalEdgeCases(t *testing.T) {
-	testAdditionalEdgeCases[fixed.D1](t)
-	testAdditionalEdgeCases[fixed.D2](t)
-	testAdditionalEdgeCases[fixed.D3](t)
-	testAdditionalEdgeCases[fixed.D4](t)
-	testAdditionalEdgeCases[fixed.D5](t)
-	testAdditionalEdgeCases[fixed.D6](t)
-}
-
-func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	val := fixed128.FromStringForced[T]("999999999999999999999999999.9")
-	_, _ = val.AsFloatChecked[float32]() //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
-	c.NotNil(val)
-
-	var intVal fixed128.Int[T]
-	err := intVal.UnmarshalYAML(func(v any) error {
-		*v.(*string) = "42" //nolint:errcheck // This is just a test, we know it will succeed
-		return nil
-	})
-	c.NoError(err)
-
-	err = intVal.UnmarshalYAML(func(any) error {
-		return fmt.Errorf("unmarshal error")
-	})
-	c.HasError(err)
 }
 
 // TestOutOfRangeSaturates verifies that a value too large for the type converts to Maximum/Minimum rather than 0, and

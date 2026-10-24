@@ -137,55 +137,47 @@ func TestRecursiveExit(t *testing.T) {
 	c.Contains(string(output), "normal")
 }
 
-func TestSIGINT(t *testing.T) {
+func TestSignalsExitWithConfiguredCode(t *testing.T) {
 	if runtime.GOOS == xos.WindowsOS {
 		t.Skip("This test requires permissions that aren't available by default on Windows")
 	}
-	if os.Getenv("SIGINT_EXIT_TEST") == "1" {
+	cases := []struct {
+		exitCode *int
+		name     string
+		signal   syscall.Signal
+		code     int
+	}{
+		{name: "SIGINT", signal: syscall.SIGINT, exitCode: &xos.ExitCodeForSIGINT, code: 99},
+		{name: "SIGTERM", signal: syscall.SIGTERM, exitCode: &xos.ExitCodeForSIGTERM, code: 123},
+	}
+	if name := os.Getenv("SIGNAL_EXIT_TEST"); name != "" {
 		// This is the subprocess
-		xos.ExitCodeForSIGINT = 99
-		xos.EnsureAtSignalHandlersAreInstalled()
-		select {}
+		for _, tc := range cases {
+			if tc.name == name {
+				*tc.exitCode = tc.code
+				xos.EnsureAtSignalHandlersAreInstalled()
+				select {}
+			}
+		}
+		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestSIGINT")
-	cmd.Env = append(os.Environ(), "SIGINT_EXIT_TEST=1")
-	c := check.New(t)
-	c.NoError(cmd.Start())
-	time.Sleep(100 * time.Millisecond) // Give the command time to start
-	c.NoError(cmd.Process.Signal(syscall.SIGINT))
-	err := cmd.Wait()
-	c.HasError(err)
-	var exitError *exec.ExitError
-	hasExitErr := errors.As(err, &exitError)
-	c.True(hasExitErr)
-	if hasExitErr {
-		c.Equal(99, exitError.ExitCode())
-	}
-}
-
-func TestSIGTERM(t *testing.T) {
-	if runtime.GOOS == xos.WindowsOS {
-		t.Skip("This test requires permissions that aren't available by default on Windows")
-	}
-	if os.Getenv("SIGTERM_EXIT_TEST") == "1" {
-		// This is the subprocess
-		xos.ExitCodeForSIGTERM = 123
-		xos.EnsureAtSignalHandlersAreInstalled()
-		select {}
-	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestSIGTERM")
-	cmd.Env = append(os.Environ(), "SIGTERM_EXIT_TEST=1")
-	c := check.New(t)
-	c.NoError(cmd.Start())
-	time.Sleep(100 * time.Millisecond) // Give the command time to start
-	c.NoError(cmd.Process.Signal(syscall.SIGTERM))
-	err := cmd.Wait()
-	c.HasError(err)
-	var exitError *exec.ExitError
-	hasExitErr := errors.As(err, &exitError)
-	c.True(hasExitErr)
-	if hasExitErr {
-		c.Equal(123, exitError.ExitCode())
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := exec.Command(os.Args[0], "-test.run=TestSignalsExitWithConfiguredCode")
+			cmd.Env = append(os.Environ(), "SIGNAL_EXIT_TEST="+tc.name)
+			c := check.New(t)
+			c.NoError(cmd.Start())
+			time.Sleep(100 * time.Millisecond) // Give the command time to start
+			c.NoError(cmd.Process.Signal(tc.signal))
+			err := cmd.Wait()
+			c.HasError(err)
+			var exitError *exec.ExitError
+			hasExitErr := errors.As(err, &exitError)
+			c.True(hasExitErr)
+			if hasExitErr {
+				c.Equal(tc.code, exitError.ExitCode())
+			}
+		})
 	}
 }
 
@@ -206,69 +198,45 @@ func TestEnsureAtSignalHandlersAreInstalledIsIdempotent(t *testing.T) {
 	c.True(after-before < 10)
 }
 
-func TestExitWithError(t *testing.T) {
-	if os.Getenv("EXIT_WITH_ERROR_TEST") == "1" {
-		// This is the subprocess
-		xos.ExitWithErr(errors.New("boom"))
+func TestExitHelpersReportFailureAndExit(t *testing.T) {
+	cases := []struct {
+		fn       func()
+		name     string
+		output   string
+		exitCode int
+	}{
+		{name: "ExitIfErr", fn: func() { xos.ExitIfErr(errors.New("bang")) }, output: "bang", exitCode: 1},
+		{name: "ExitIfErr nil", fn: func() { xos.ExitIfErr(nil) }},
+		{name: "ExitWithErr", fn: func() { xos.ExitWithErr(errors.New("boom")) }, output: "boom", exitCode: 1},
+		{name: "ExitWithMsg", fn: func() { xos.ExitWithMsg("Outta here") }, output: "Outta here", exitCode: 1},
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExitWithError")
-	cmd.Env = append(os.Environ(), "EXIT_WITH_ERROR_TEST=1")
-	output, err := cmd.CombinedOutput()
-	c := check.New(t)
-	c.HasError(err)
-	c.Contains(string(output), "boom")
-	var exitError *exec.ExitError
-	hasExitErr := errors.As(err, &exitError)
-	c.True(hasExitErr)
-	if hasExitErr {
-		c.Equal(1, exitError.ExitCode())
-	}
-}
-
-func TestExitIfErr(t *testing.T) {
-	if os.Getenv("EXIT_IF_ERROR_TEST") == "1" {
+	if name := os.Getenv("EXIT_HELPER_TEST"); name != "" {
 		// This is the subprocess
-		xos.ExitIfErr(errors.New("bang"))
+		for _, tc := range cases {
+			if tc.name == name {
+				tc.fn()
+			}
+		}
 		return
 	}
-	if os.Getenv("EXIT_IF_ERROR_TEST") == "2" {
-		// This is the subprocess
-		xos.ExitIfErr(nil)
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExitIfErr")
-	cmd.Env = append(os.Environ(), "EXIT_IF_ERROR_TEST=1")
-	output, err := cmd.CombinedOutput()
-	c := check.New(t)
-	c.HasError(err)
-	c.Contains(string(output), "bang")
-	var exitError *exec.ExitError
-	hasExitErr := errors.As(err, &exitError)
-	c.True(hasExitErr)
-	if hasExitErr {
-		c.Equal(1, exitError.ExitCode())
-	}
-	cmd = exec.Command(os.Args[0], "-test.run=TestExitIfErr")
-	cmd.Env = append(os.Environ(), "EXIT_IF_ERROR_TEST=2")
-	_, err = cmd.CombinedOutput()
-	c.NoError(err)
-}
-
-func TestExitWithMsg(t *testing.T) {
-	if os.Getenv("EXIT_WITH_MSG_TEST") == "1" {
-		// This is the subprocess
-		xos.ExitWithMsg("Outta here")
-	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestExitWithMsg")
-	cmd.Env = append(os.Environ(), "EXIT_WITH_MSG_TEST=1")
-	output, err := cmd.CombinedOutput()
-	c := check.New(t)
-	c.HasError(err)
-	c.Contains(string(output), "Outta here")
-	var exitError *exec.ExitError
-	hasExitErr := errors.As(err, &exitError)
-	c.True(hasExitErr)
-	if hasExitErr {
-		c.Equal(1, exitError.ExitCode())
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := exec.Command(os.Args[0], "-test.run=TestExitHelpersReportFailureAndExit")
+			cmd.Env = append(os.Environ(), "EXIT_HELPER_TEST="+tc.name)
+			output, err := cmd.CombinedOutput()
+			c := check.New(t)
+			if tc.exitCode == 0 {
+				c.NoError(err)
+				return
+			}
+			c.HasError(err)
+			c.Contains(string(output), tc.output)
+			var exitError *exec.ExitError
+			hasExitErr := errors.As(err, &exitError)
+			c.True(hasExitErr)
+			if hasExitErr {
+				c.Equal(tc.exitCode, exitError.ExitCode())
+			}
+		})
 	}
 }

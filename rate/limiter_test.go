@@ -18,18 +18,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/rate"
 )
 
-func TestNew(t *testing.T) {
-	c := check.New(t)
-	rl := rate.New(1024, time.Second)
-	c.NotNil(rl)
-	c.Equal(1024, rl.Cap(false))
-	c.Equal(1024, rl.Cap(true))
-	c.Equal(0, rl.LastUsed())
-	c.False(rl.Closed())
-	rl.Close()
-	c.True(rl.Closed())
-}
-
 func TestSetCap(t *testing.T) {
 	c := check.New(t)
 	rl := rate.New(1024, time.Second)
@@ -100,33 +88,38 @@ func TestUseNegativeAmount(t *testing.T) {
 }
 
 func TestUseAmountGreaterThanCapacity(t *testing.T) {
-	c := check.New(t)
-	rl := rate.New(100, time.Second)
+	for _, tc := range []struct {
+		name      string
+		msg       string
+		parentCap int // When nonzero, the limiter is a child of a root with this capacity.
+		capacity  int
+		amount    int
+	}{
+		{name: "own capacity", capacity: 100, amount: 200, msg: "Amount (200) is greater than capacity (100)"},
+		{name: "parent-capped capacity", parentCap: 50, capacity: 100, amount: 80, msg: "Amount (80) is greater than capacity (50)"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := check.New(t)
+			var root, rl rate.Limiter
+			if tc.parentCap == 0 {
+				root = rate.New(tc.capacity, time.Second)
+				rl = root
+			} else {
+				root = rate.New(tc.parentCap, time.Second)
+				rl = root.New(tc.capacity)
+			}
+			defer root.Close()
 
-	err := <-rl.Use(200)
-	c.HasError(err)
-	c.Contains(err.Error(), "Amount (200) is greater than capacity (100)")
-
-	rl.Close()
-}
-
-func TestUseAmountGreaterThanParentCap(t *testing.T) {
-	c := check.New(t)
-	parent := rate.New(50, time.Second)
-	child := parent.New(100) // The child's own capacity deliberately exceeds the parent's cap.
-
-	// 80 exceeds the parent-capped effective capacity (50), so it can never be satisfied and must be rejected promptly
-	// rather than queued forever.
-	done := child.Use(80)
-	select {
-	case err := <-done:
-		c.HasError(err)
-		c.Contains(err.Error(), "Amount (80) is greater than capacity (50)")
-	case <-time.After(10 * time.Second):
-		t.Fatal("child.Use(80) never returned; a request exceeding the parent cap was queued forever")
+			// The amount can never be satisfied, so it must be rejected promptly rather than queued forever.
+			select {
+			case err := <-rl.Use(tc.amount):
+				c.HasError(err)
+				c.Contains(err.Error(), tc.msg)
+			case <-time.After(10 * time.Second):
+				t.Fatalf("Use(%d) never returned; a request exceeding the effective capacity was queued forever", tc.amount)
+			}
+		})
 	}
-
-	parent.Close()
 }
 
 func TestQueuedRequestRejectedWhenParentCapLowered(t *testing.T) {
@@ -164,22 +157,6 @@ func TestUseOnClosedLimiter(t *testing.T) {
 	err := <-rl.Use(10)
 	c.HasError(err)
 	c.Contains(err.Error(), "Limiter is closed")
-}
-
-func TestUseImmediateSuccess(t *testing.T) {
-	c := check.New(t)
-	rl := rate.New(100, time.Second)
-
-	err := <-rl.Use(50)
-	c.NoError(err)
-
-	err = <-rl.Use(30)
-	c.NoError(err)
-
-	err = <-rl.Use(20)
-	c.NoError(err)
-
-	rl.Close()
 }
 
 func TestUseWaiting(t *testing.T) {
@@ -394,47 +371,4 @@ func TestWaitingRequestsClearedOnClose(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Error("Waiting request should have been canceled")
 	}
-}
-
-func TestRateLimitingWithRealTiming(t *testing.T) {
-	c := check.New(t)
-	rl := rate.New(100, 100*time.Millisecond)
-
-	start := time.Now()
-
-	err := <-rl.Use(100)
-	c.NoError(err)
-
-	// The second 100 must wait for the period to reset.
-	err = <-rl.Use(100)
-	c.NoError(err)
-
-	elapsed := time.Since(start)
-	// Both requests together take at least one period.
-	c.True(elapsed >= 80*time.Millisecond) // Allow some tolerance for timing
-
-	rl.Close()
-}
-
-func TestHierarchicalConstraints(t *testing.T) {
-	c := check.New(t)
-	parent := rate.New(100, time.Second)
-	child := parent.New(80)
-
-	err := <-child.Use(80)
-	c.NoError(err)
-
-	// The child is at capacity even though the parent has 20 left, so this cannot succeed immediately.
-	done := child.Use(10)
-
-	select {
-	case err = <-done:
-		if err != nil {
-			c.Contains(err.Error(), "capacity")
-		}
-	case <-time.After(10 * time.Millisecond):
-		// Queued until the next period, which is also acceptable.
-	}
-
-	parent.Close()
 }

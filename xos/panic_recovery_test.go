@@ -29,45 +29,6 @@ func TestPanicRecovery_NoPanic(t *testing.T) {
 	c.False(called)
 }
 
-func TestPanicRecovery_PanicWithError(t *testing.T) {
-	var capturedErr error
-	func() {
-		defer xos.PanicRecovery(func(err error) { capturedErr = err })
-		panic(errors.New("original error"))
-	}()
-	c := check.New(t)
-	c.NotNil(capturedErr)
-	msg := capturedErr.Error()
-	c.Contains(msg, "recovered from panic")
-	c.Contains(msg, "original error")
-}
-
-func TestPanicRecovery_PanicWithString(t *testing.T) {
-	var capturedErr error
-	func() {
-		defer xos.PanicRecovery(func(err error) { capturedErr = err })
-		panic("string panic")
-	}()
-	c := check.New(t)
-	c.NotNil(capturedErr)
-	msg := capturedErr.Error()
-	c.Contains(msg, "recovered from panic")
-	c.Contains(msg, "string panic")
-}
-
-func TestPanicRecovery_PanicWithInt(t *testing.T) {
-	var capturedErr error
-	func() {
-		defer xos.PanicRecovery(func(err error) { capturedErr = err })
-		panic(42)
-	}()
-	c := check.New(t)
-	c.NotNil(capturedErr)
-	msg := capturedErr.Error()
-	c.Contains(msg, "recovered from panic")
-	c.Contains(msg, "42")
-}
-
 func TestPanicRecovery_NilHandler(t *testing.T) {
 	oldLogger := slog.Default()
 	defer func() { slog.SetDefault(oldLogger) }()
@@ -99,27 +60,29 @@ func TestPanicRecovery_HandlerPanics(t *testing.T) {
 	c.Contains(msg, "handler panic")
 }
 
-func TestPanicRecovery_PanicWithNil(t *testing.T) {
-	var capturedErr error
-	func() {
-		defer xos.PanicRecovery(func(err error) { capturedErr = err })
-		panic(nil) //nolint:govet // Intentionally panicking with nil
-	}()
-	c := check.New(t)
-	c.NotNil(capturedErr)
-	c.Contains(capturedErr.Error(), "recovered from panic")
-}
-
 func TestPanicRecovery_ErrorWrapping(t *testing.T) {
 	originalErr := errors.New("original error")
-	var capturedErr error
-	func() {
-		defer xos.PanicRecovery(func(err error) { capturedErr = err })
-		panic(originalErr)
-	}()
-	c := check.New(t)
-	c.NotNil(capturedErr)
-	c.NotEqual(originalErr, capturedErr)
-	c.Contains(capturedErr.Error(), "recovered from panic")
-	c.Contains(capturedErr.Error(), originalErr.Error())
+	for _, tc := range []struct {
+		value any
+		name  string
+		want  string
+	}{
+		{name: "error", value: originalErr, want: originalErr.Error()},
+		{name: "string", value: "string panic", want: "string panic"},
+		{name: "int", value: 42, want: "42"},
+		{name: "nil", value: nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var capturedErr error
+			func() {
+				defer xos.PanicRecovery(func(err error) { capturedErr = err })
+				panic(tc.value)
+			}()
+			c := check.New(t)
+			c.NotNil(capturedErr)
+			c.NotEqual(originalErr, capturedErr)
+			c.Contains(capturedErr.Error(), "recovered from panic")
+			c.Contains(capturedErr.Error(), tc.want)
+		})
+	}
 }

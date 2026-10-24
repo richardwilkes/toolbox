@@ -20,21 +20,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xcrypto"
 )
 
-func TestEncryptDecryptStreamWithKeyPair(t *testing.T) {
-	c := check.New(t)
-	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
-	c.NoError(err)
-	publicKey := &privateKey.PublicKey
-	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
-	in := bytes.NewReader(plaintext)
-	var encrypted bytes.Buffer
-	c.NoError(xcrypto.EncryptStreamWithPublicKey(in, &encrypted, publicKey))
-	c.True(encrypted.Len() > len(plaintext))
-	var decrypted bytes.Buffer
-	c.NoError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(encrypted.Bytes()), &decrypted, privateKey))
-	c.Equal(plaintext, decrypted.Bytes())
-}
-
 // TestEncryptDecryptStreamVariousSizes exercises the chunking boundaries: empty, sub-chunk, and exact and partial
 // multiples of the chunk size.
 func TestEncryptDecryptStreamVariousSizes(t *testing.T) {
@@ -94,9 +79,9 @@ func TestDecryptStreamDetectsBitFlip(t *testing.T) {
 	}
 }
 
-// TestDecryptStreamDetectsTruncation verifies that removing trailing bytes is detected rather than accepted as a
-// shorter but valid stream.
-func TestDecryptStreamDetectsTruncation(t *testing.T) {
+// TestDecryptStreamDetectsTruncationAndAppendedData verifies that removing trailing bytes, or appending bytes after the
+// final chunk, is detected rather than accepted as a valid stream.
+func TestDecryptStreamDetectsTruncationAndAppendedData(t *testing.T) {
 	c := check.New(t)
 	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
 	c.NoError(err)
@@ -121,21 +106,10 @@ func TestDecryptStreamDetectsTruncation(t *testing.T) {
 	// Removing just the final tag byte must also fail.
 	var decrypted3 bytes.Buffer
 	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(full[:len(full)-1]), &decrypted3, privateKey))
-}
-
-// TestDecryptStreamDetectsExtraData verifies that data appended after the final chunk is rejected, since that chunk
-// is bound as final by its authentication tag.
-func TestDecryptStreamDetectsExtraData(t *testing.T) {
-	c := check.New(t)
-	privateKey, err := rsa.GenerateKey(crypto_rand.Reader, 2048)
-	c.NoError(err)
-	publicKey := &privateKey.PublicKey
-	plaintext := []byte("The quick brown fox jumps over the lazy dog.")
-	var encrypted bytes.Buffer
-	c.NoError(xcrypto.EncryptStreamWithPublicKey(bytes.NewReader(plaintext), &encrypted, publicKey))
-	extended := append(encrypted.Bytes(), make([]byte, 32)...)
-	var decrypted bytes.Buffer
-	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(extended), &decrypted, privateKey))
+	// Data appended after the final chunk must be rejected, since that chunk is bound as final by its tag.
+	extended := append(bytes.Clone(full), make([]byte, 32)...)
+	var decrypted4 bytes.Buffer
+	c.HasError(xcrypto.DecryptStreamWithPrivateKey(bytes.NewReader(extended), &decrypted4, privateKey))
 }
 
 // TestDecryptStreamDetectsReorderedChunks verifies that swapping two chunks is detected, since each chunk's position

@@ -60,6 +60,10 @@ func testFractionFunctions[T fixed.Dx](t *testing.T) {
 	negFrac := fixed128.NewFraction[T]("-1/2")
 	c.Equal("-1/2", negFrac.StringWithSign())
 
+	wholeFrac := fixed128.NewFraction[T]("5")
+	c.Equal("5", wholeFrac.String())
+	c.Equal("+5", wholeFrac.StringWithSign())
+
 	data, err := json.Marshal(posFrac)
 	c.NoError(err)
 	c.Equal(`"1/2"`, string(data))
@@ -68,25 +72,6 @@ func testFractionFunctions[T fixed.Dx](t *testing.T) {
 	err = json.Unmarshal(data, &unmarshaled)
 	c.NoError(err)
 	c.Equal(posFrac, unmarshaled)
-}
 
-func TestAdditionalFractionEdgeCases(t *testing.T) {
-	testAdditionalFractionEdgeCases[fixed.D1](t)
-	testAdditionalFractionEdgeCases[fixed.D2](t)
-	testAdditionalFractionEdgeCases[fixed.D3](t)
-	testAdditionalFractionEdgeCases[fixed.D4](t)
-	testAdditionalFractionEdgeCases[fixed.D5](t)
-	testAdditionalFractionEdgeCases[fixed.D6](t)
-}
-
-func testAdditionalFractionEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	wholeFrac := fixed128.NewFraction[T]("5")
-	c.Equal("5", wholeFrac.String())
-	c.Equal("+5", wholeFrac.StringWithSign())
-
-	var frac fixed128.Fraction[T]
-	err := json.Unmarshal([]byte("invalid json"), &frac)
-	c.HasError(err)
+	c.HasError(unmarshaled.UnmarshalJSON([]byte("invalid json")))
 }

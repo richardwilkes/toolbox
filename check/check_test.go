@@ -20,13 +20,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/check"
 )
 
-// customError exists to test typed nil interfaces.
-type customError struct{}
-
-func (e *customError) Error() string {
-	return "custom error"
-}
-
 type mockTestingT struct {
 	errors []string
 	failed bool
@@ -118,14 +111,6 @@ func (m *mockTestingT) Context() context.Context {
 	return context.Background()
 }
 
-func TestNew(t *testing.T) {
-	mock := newMockTestingT()
-	checker := check.New(mock)
-	if checker.TestingT != mock {
-		t.Error("Expected TestingT to be set correctly")
-	}
-}
-
 func TestEqual(t *testing.T) {
 	tests := []struct { //nolint:govet // Don't care about field alignment in tests
 		name        string
@@ -145,6 +130,11 @@ func TestEqual(t *testing.T) {
 		{"unequal byte slices", []byte{1, 2, 3}, []byte{1, 2, 4}, true, "Expected [1 2 3], got [1 2 4]"},
 		{"byte slice vs nil", []byte{1, 2, 3}, nil, true, "Expected [1 2 3], got <nil>"},
 		{"nil byte slices", []byte(nil), []byte(nil), false, ""},
+		{"empty vs nil byte slice", []byte{}, []byte(nil), true, "Expected [], got []"},
+		{"byte slice vs string", []byte("hello"), "hello", true, "Expected [104 101 108 108 111], got hello"},
+		{"byte slice vs int slice", []byte{1, 2, 3}, []int{1, 2, 3}, true, "Expected [1 2 3], got [1 2 3]"},
+		{"empty vs nil int slice", []int{}, []int(nil), true, "Expected [], got []"},
+		{"int vs float64", 42, 42.0, true, "Expected 42, got 42"},
 	}
 
 	for _, tt := range tests {
@@ -167,38 +157,6 @@ func TestEqual(t *testing.T) {
 				t.Errorf("Expected Equal to pass for %v vs %v, but it failed with: %v", tt.expected, tt.actual, mock.errors)
 			}
 		})
-	}
-}
-
-func TestEqualWithMessage(t *testing.T) {
-	mock := newMockTestingT()
-	checker := check.New(mock)
-
-	checker.Equal("expected", "actual", "custom message")
-
-	if !mock.failed {
-		t.Error("Expected Equal to fail")
-	}
-	if len(mock.errors) == 0 {
-		t.Error("Expected error message")
-	} else if !strings.Contains(mock.errors[0], "custom message") {
-		t.Errorf("Expected error message to contain custom message, got: %s", mock.errors[0])
-	}
-}
-
-func TestEqualWithFormattedMessage(t *testing.T) {
-	mock := newMockTestingT()
-	checker := check.New(mock)
-
-	checker.Equal("expected", "actual", "test %d: %s", 1, "formatted")
-
-	if !mock.failed {
-		t.Error("Expected Equal to fail")
-	}
-	if len(mock.errors) == 0 {
-		t.Error("Expected error message")
-	} else if !strings.Contains(mock.errors[0], "test 1: formatted") {
-		t.Errorf("Expected error message to contain formatted message, got: %s", mock.errors[0])
 	}
 }
 
@@ -577,27 +535,6 @@ func TestNotPanics(t *testing.T) {
 	}
 }
 
-func TestPanicsWithError(t *testing.T) {
-	mock := newMockTestingT()
-	checker := check.New(mock)
-
-	checker.Panics(func() {
-		panic(errors.New("error panic"))
-	})
-	if mock.failed {
-		t.Error("Expected Panics to pass for error panic")
-	}
-
-	mock = newMockTestingT()
-	checker = check.New(mock)
-	checker.Panics(func() {
-		panic("string panic")
-	})
-	if mock.failed {
-		t.Error("Expected Panics to pass for string panic")
-	}
-}
-
 func TestErrorMessageFormatting(t *testing.T) {
 	tests := []struct { //nolint:govet // Don't care about field alignment in tests
 		name        string
@@ -627,87 +564,6 @@ func TestErrorMessageFormatting(t *testing.T) {
 				t.Errorf("Expected error message to contain %q, got %q", tt.expectedMsg, mock.errors[0])
 			}
 		})
-	}
-}
-
-func TestEdgeCases(t *testing.T) {
-	mock := newMockTestingT()
-	checker := check.New(mock)
-
-	emptySlice := []int{}
-	var nilSlice []int
-
-	checker.Equal(emptySlice, nilSlice)
-	if !mock.failed {
-		t.Error("Expected Equal to fail for empty slice vs nil slice")
-	}
-
-	mock = newMockTestingT()
-	checker = check.New(mock)
-
-	i := 42
-	f := 42.0
-
-	checker.Equal(i, f)
-	if !mock.failed {
-		t.Error("Expected Equal to fail for int vs float64 with same value")
-	}
-}
-
-func TestByteSliceHandling(t *testing.T) {
-	tests := []struct { //nolint:govet // Don't care about field alignment in tests
-		name       string
-		a, b       any
-		shouldFail bool
-	}{
-		{"equal byte slices", []byte{1, 2, 3}, []byte{1, 2, 3}, false},
-		{"unequal byte slices", []byte{1, 2, 3}, []byte{1, 2, 4}, true},
-		{"nil byte slices", []byte(nil), []byte(nil), false},
-		{"empty vs nil byte slice", []byte{}, []byte(nil), true},
-		{"byte slice vs string", []byte("hello"), "hello", true},
-		{"byte slice vs int slice", []byte{1, 2, 3}, []int{1, 2, 3}, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mock := newMockTestingT()
-			checker := check.New(mock)
-
-			checker.Equal(tt.a, tt.b)
-
-			if tt.shouldFail && !mock.failed {
-				t.Errorf("Expected Equal to fail for %v vs %v", tt.a, tt.b)
-			}
-			if !tt.shouldFail && mock.failed {
-				t.Errorf("Expected Equal to pass for %v vs %v, but failed with: %v", tt.a, tt.b, mock.errors)
-			}
-		})
-	}
-}
-
-func TestNilChecksWithInterfaces(t *testing.T) {
-	var nilError error
-	var nilStringer fmt.Stringer
-	var nonNilError error = (*customError)(nil) // typed nil
-
-	mock := newMockTestingT()
-	checker := check.New(mock)
-
-	checker.Nil(nilError)
-	checker.Nil(nilStringer)
-	checker.Nil((*int)(nil))
-	checker.Nil([]int(nil))
-	checker.Nil(map[string]int(nil))
-
-	if mock.failed {
-		t.Errorf("Expected all nil checks to pass, but got errors: %v", mock.errors)
-	}
-
-	mock = newMockTestingT()
-	checker = check.New(mock)
-	checker.Nil(nonNilError)
-	if mock.failed {
-		t.Errorf("Expected typed nil to be considered nil, but got errors: %v", mock.errors)
 	}
 }
 

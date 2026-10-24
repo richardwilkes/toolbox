@@ -106,22 +106,11 @@ func TestWrap(t *testing.T) {
 	c.Equal("hi\nbye", xstrings.Wrap("", "hi bye", 3))
 
 	c.Equal("short text here", xstrings.Wrap("", "short text here", 1000))
-}
 
-// TestWrapMeasuresRunesNotBytes verifies that wrapping measures rune width rather than byte length, so multibyte text
-// is not wrapped prematurely and a multibyte prefix does not shrink the available width.
-func TestWrapMeasuresRunesNotBytes(t *testing.T) {
-	c := check.New(t)
-
-	// 9 rune columns (4 + 1 + 4); byte counting would see 17 bytes and wrap.
+	// Width is measured in runes, not bytes: "абвг абвг" is 9 runes but 17 bytes, and "→ " is 2 runes but 4 bytes.
 	c.Equal("абвг абвг", xstrings.Wrap("", "абвг абвг", 9))
-	// One column short forces the wrap.
 	c.Equal("абвг\nабвг", xstrings.Wrap("", "абвг абвг", 8))
-
-	// Three two-rune words fit in 8 columns (2 + 1 + 2 + 1 + 2); byte counting would see 20 bytes and wrap.
 	c.Equal("日本 中文 한국", xstrings.Wrap("", "日本 中文 한국", 8))
-
-	// The prefix "→ " is 2 columns (4 bytes): 13 columns fit "hello world" exactly, while 8 force a wrap.
 	c.Equal("→ hello\n→ world", xstrings.Wrap("→ ", "hello world", 8))
 	c.Equal("→ hello world", xstrings.Wrap("→ ", "hello world", 13))
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/fixed"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed128"
 	"github.com/richardwilkes/toolbox/v2/fixed/fixed64"
-	"github.com/richardwilkes/toolbox/v2/num128"
 	"gopkg.in/yaml.v3"
 )
 
@@ -135,6 +134,9 @@ func TestMulDivSaturate(t *testing.T) {
 	// saturate (this exercises the 128-bit path without overflow).
 	c.Equal("10000000000000000",
 		fixed64.FromInteger[fixed.D2](100000000).Mul(fixed64.FromInteger[fixed.D2](100000000)).String())
+	// With a fractional operand, the product must be divided by the multiplier only after multiplying.
+	c.Equal("913113831648623",
+		fixed64.FromInteger[fixed.D4](830103483316930).Mul(fixed64.FromStringForced[fixed.D4]("1.1")).String())
 }
 
 func TestAddSub(t *testing.T) {
@@ -266,6 +268,8 @@ func testCeil[T fixed.Dx](t *testing.T) {
 	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("-0.3333").Ceil())
 	c.Equal(fixed64.FromInteger[T](-2), fixed64.FromStringForced[T]("-2.6789").Ceil())
 	c.Equal(fixed64.FromInteger[T](-3), fixed64.FromInteger[T](-3).Ceil())
+	c.Equal(fixed64.FromInteger[T](0), fixed64.FromInteger[T](0).Ceil())
+	c.Equal(fixed64.FromInteger[T](0), fixed64.FromStringForced[T]("-0.0").Ceil())
 }
 
 func TestRound(t *testing.T) {
@@ -500,6 +504,10 @@ func testCheckedAs[T fixed.Dx](t *testing.T) {
 	c.NoError(err)
 	c.Equal(float64(1000000), floatResult)
 
+	// 2^24+1 is the smallest positive integer a float32 cannot represent exactly.
+	_, err = fixed64.FromInteger[T](16777217).AsFloatChecked[float32]()
+	c.HasError(err)
+
 	smallResult, err := fixed64.FromInteger[T](100).AsIntegerChecked[int8]()
 	c.NoError(err)
 	c.Equal(int8(100), smallResult)
@@ -708,93 +716,6 @@ func testFloorCeilRoundExtremes[T fixed.Dx](t *testing.T) {
 	c.True(fixed64.Minimum[T]().Round() >= fixed64.Minimum[T]())
 	c.True(fixed64.Maximum[T]().Round() > zero)
 	c.True(fixed64.Maximum[T]().Round() <= fixed64.Maximum[T]())
-}
-
-func TestCeilEdgeCases(t *testing.T) {
-	testCeilEdgeCases[fixed.D1](t)
-	testCeilEdgeCases[fixed.D2](t)
-	testCeilEdgeCases[fixed.D3](t)
-	testCeilEdgeCases[fixed.D4](t)
-	testCeilEdgeCases[fixed.D5](t)
-	testCeilEdgeCases[fixed.D6](t)
-}
-
-func testCeilEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	negFrac := fixed64.FromStringForced[T]("-2.5")
-	c.Equal(fixed64.FromInteger[T](-2), negFrac.Ceil())
-
-	zero := fixed64.FromInteger[T](0)
-	c.Equal(zero, zero.Ceil())
-
-	negZero := fixed64.FromStringForced[T]("-0.0")
-	c.Equal(fixed64.FromInteger[T](0), negZero.Ceil())
-}
-
-func TestStringEdgeCases(t *testing.T) {
-	testStringEdgeCases[fixed.D1](t)
-	testStringEdgeCases[fixed.D2](t)
-	testStringEdgeCases[fixed.D3](t)
-	testStringEdgeCases[fixed.D4](t)
-	testStringEdgeCases[fixed.D5](t)
-	testStringEdgeCases[fixed.D6](t)
-}
-
-func testStringEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	negFrac := fixed64.FromStringForced[T]("-0.5")
-	c.Equal("-0.5", negFrac.String())
-
-	posFrac := fixed64.FromStringForced[T]("0.5")
-	c.Equal("0.5", posFrac.String())
-
-	val := fixed64.FromStringForced[T]("1.2000")
-	c.Equal("1.2", val.String())
-}
-
-func TestAdditionalEdgeCases(t *testing.T) {
-	testAdditionalEdgeCases[fixed.D1](t)
-	testAdditionalEdgeCases[fixed.D2](t)
-	testAdditionalEdgeCases[fixed.D3](t)
-	testAdditionalEdgeCases[fixed.D4](t)
-	testAdditionalEdgeCases[fixed.D5](t)
-	testAdditionalEdgeCases[fixed.D6](t)
-}
-
-func testAdditionalEdgeCases[T fixed.Dx](t *testing.T) {
-	c := check.New(t)
-
-	val := fixed64.FromStringForced[T]("999999999999999999.9")
-	_, _ = val.AsFloatChecked[float32]() //nolint:errcheck // This might succeed or fail depending on precision, but shouldn't panic. We'll just test that it doesn't panic
-	c.NotNil(val)
-
-	var intVal fixed64.Int[T]
-	err := intVal.UnmarshalYAML(func(v any) error {
-		*v.(*string) = "42" //nolint:errcheck // This is just a test, we know it will succeed
-		return nil
-	})
-	c.NoError(err)
-
-	err = intVal.UnmarshalYAML(func(any) error {
-		return fmt.Errorf("unmarshal error")
-	})
-	c.HasError(err)
-}
-
-func TestMulOverflow(t *testing.T) {
-	c := check.New(t)
-	v1 := int64(math.MaxInt64 / 10000)
-	v1 -= v1 / 10
-	m1 := int64(110)
-	d1 := int64(100)
-	expected := num128.IntFrom64(v1).Mul(num128.IntFrom64(m1)).Div(num128.IntFrom64(d1)).AsInt64()
-	v2 := fixed64.FromInteger[fixed.D4](v1)
-	m2 := fixed64.FromInteger[fixed.D4](m1)
-	d2 := fixed64.FromInteger[fixed.D4](d1)
-	result := v2.Mul(m2.Div(d2)).AsInteger[int64]()
-	c.Equal(expected, result)
 }
 
 // TestOutOfRangeSaturates verifies that a value too large for the type to hold converts to Maximum/Minimum rather than

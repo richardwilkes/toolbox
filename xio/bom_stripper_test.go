@@ -21,27 +21,21 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xio"
 )
 
-func TestNewBOMStripper_NoBOM(t *testing.T) {
+func TestNewBOMStripper_StripsLeadingBOM(t *testing.T) {
 	c := check.New(t)
-	input := "hello world"
-	r := strings.NewReader(input)
-	br, err := xio.NewBOMStripper(r)
-	c.NoError(err)
-	out, err := io.ReadAll(br)
-	c.NoError(err)
-	c.Equal([]byte(input), out)
-}
-
-func TestNewBOMStripper_WithBOM(t *testing.T) {
-	c := check.New(t)
-	// UTF-8 BOM is 0xEF,0xBB,0xBF
-	input := string([]byte{0xEF, 0xBB, 0xBF}) + "hello world"
-	r := strings.NewReader(input)
-	br, err := xio.NewBOMStripper(r)
-	c.NoError(err)
-	out, err := io.ReadAll(br)
-	c.NoError(err)
-	c.Equal([]byte("hello world"), out)
+	for _, tc := range []struct {
+		input string
+		want  string
+	}{
+		{input: "\xef\xbb\xbfhello world", want: "hello world"},
+		{input: "hello world", want: "hello world"},
+	} {
+		br, err := xio.NewBOMStripper(strings.NewReader(tc.input))
+		c.NoError(err)
+		out, err := io.ReadAll(br)
+		c.NoError(err)
+		c.Equal([]byte(tc.want), out, "input %q", tc.input)
+	}
 }
 
 func TestNewBOMStripper_AlreadyBufioReader(t *testing.T) {

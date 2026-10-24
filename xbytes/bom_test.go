@@ -18,144 +18,53 @@ import (
 
 func TestStripBOM(t *testing.T) {
 	c := check.New(t)
-
-	bomBytes := []byte{0xef, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}
-	expected := []byte{'h', 'e', 'l', 'l', 'o'}
-	c.Equal(expected, xbytes.StripBOM(bomBytes))
-
-	bomOnly := []byte{0xef, 0xbb, 0xbf}
-	c.Equal([]byte{}, xbytes.StripBOM(bomOnly))
-
-	bomSingle := []byte{0xef, 0xbb, 0xbf, 'A'}
-	c.Equal([]byte{'A'}, xbytes.StripBOM(bomSingle))
-
-	bomUnicode := []byte{0xef, 0xbb, 0xbf, 0xc3, 0xa9} // BOM + é
-	expectedUnicode := []byte{0xc3, 0xa9}
-	c.Equal(expectedUnicode, xbytes.StripBOM(bomUnicode))
-
-	bomEmoji := []byte{0xef, 0xbb, 0xbf, 0xf0, 0x9f, 0x98, 0x80} // BOM + 😀
-	expectedEmoji := []byte{0xf0, 0x9f, 0x98, 0x80}
-	c.Equal(expectedEmoji, xbytes.StripBOM(bomEmoji))
-
-	noBom := []byte{'h', 'e', 'l', 'l', 'o'}
-	c.Equal(noBom, xbytes.StripBOM(noBom))
-
-	empty := []byte{}
-	c.Equal(empty, xbytes.StripBOM(empty))
-
-	single := []byte{'A'}
-	c.Equal(single, xbytes.StripBOM(single))
-
-	twoBytes := []byte{'A', 'B'}
-	c.Equal(twoBytes, xbytes.StripBOM(twoBytes))
-
-	partialBom1 := []byte{0xef, 'h', 'e', 'l', 'l', 'o'}
-	c.Equal(partialBom1, xbytes.StripBOM(partialBom1))
-
-	partialBom2 := []byte{0xef, 0xbb, 'h', 'e', 'l', 'l', 'o'}
-	c.Equal(partialBom2, xbytes.StripBOM(partialBom2))
-
-	bomInMiddle := []byte{'h', 'e', 0xef, 0xbb, 0xbf, 'l', 'o'}
-	c.Equal(bomInMiddle, xbytes.StripBOM(bomInMiddle))
-
-	bomAtEnd := []byte{'h', 'e', 'l', 'l', 'o', 0xef, 0xbb, 0xbf}
-	c.Equal(bomAtEnd, xbytes.StripBOM(bomAtEnd))
-
-	multipleBom := []byte{0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, 'h', 'i'}
-	expectedMultiple := []byte{0xef, 0xbb, 0xbf, 'h', 'i'}
-	c.Equal(expectedMultiple, xbytes.StripBOM(multipleBom))
-
-	notBom1 := []byte{0xef, 0xbb, 0xbe, 'h', 'e', 'l', 'l', 'o'} // Last byte different
-	c.Equal(notBom1, xbytes.StripBOM(notBom1))
-
-	notBom2 := []byte{0xef, 0xbc, 0xbf, 'h', 'e', 'l', 'l', 'o'} // Middle byte different
-	c.Equal(notBom2, xbytes.StripBOM(notBom2))
-
-	notBom3 := []byte{0xee, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'} // First byte different
-	c.Equal(notBom3, xbytes.StripBOM(notBom3))
-
-	withNull := []byte{0xef, 0xbb, 0xbf, 0x00, 'h', 'e', 'l', 'l', 'o'}
-	expectedNull := []byte{0x00, 'h', 'e', 'l', 'l', 'o'}
-	c.Equal(expectedNull, xbytes.StripBOM(withNull))
-
-	binaryData := []byte{0xef, 0xbb, 0xbf, 0x01, 0x02, 0x03, 0xff, 0xfe}
-	expectedBinary := []byte{0x01, 0x02, 0x03, 0xff, 0xfe}
-	c.Equal(expectedBinary, xbytes.StripBOM(binaryData))
-
-	jsonWithBom := []byte{0xef, 0xbb, 0xbf, '{', '"', 'k', 'e', 'y', '"', ':', '"', 'v', 'a', 'l', 'u', 'e', '"', '}'}
-	expectedJSON := []byte{'{', '"', 'k', 'e', 'y', '"', ':', '"', 'v', 'a', 'l', 'u', 'e', '"', '}'}
-	c.Equal(expectedJSON, xbytes.StripBOM(jsonWithBom))
-
-	xmlWithBom := []byte{0xef, 0xbb, 0xbf, '<', '?', 'x', 'm', 'l', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', '=', '"', '1', '.', '0', '"', '?', '>'}
-	expectedXML := []byte{'<', '?', 'x', 'm', 'l', ' ', 'v', 'e', 'r', 's', 'i', 'o', 'n', '=', '"', '1', '.', '0', '"', '?', '>'}
-	c.Equal(expectedXML, xbytes.StripBOM(xmlWithBom))
-}
-
-func TestStripBOMEdgeCases(t *testing.T) {
-	c := check.New(t)
-
-	original := []byte{0xef, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}
-	originalCopy := make([]byte, len(original))
-	copy(originalCopy, original)
-
-	result := xbytes.StripBOM(original)
-
-	c.Equal(originalCopy, original)
-	c.Equal([]byte{'h', 'e', 'l', 'l', 'o'}, result)
-	// The result is a sub-slice of the original starting past the BOM.
-	c.NotEqual(&original[0], &result[0])
-
-	noBomOriginal := []byte{'h', 'e', 'l', 'l', 'o'}
-	noBomResult := xbytes.StripBOM(noBomOriginal)
-
-	c.Equal(&noBomOriginal[0], &noBomResult[0])
-	c.Equal(noBomOriginal, noBomResult)
-
-	exactBom := []byte{0xef, 0xbb, 0xbf}
-	c.Equal([]byte{}, xbytes.StripBOM(exactBom))
-
-	oneByte := []byte{0xef}
-	c.Equal(oneByte, xbytes.StripBOM(oneByte))
-
-	twoBytes := []byte{0xef, 0xbb}
-	c.Equal(twoBytes, xbytes.StripBOM(twoBytes))
-
-	var nilSlice []byte
-	c.Equal(nilSlice, xbytes.StripBOM(nilSlice))
-
-	largeBom := make([]byte, 10000)
-	largeBom[0] = 0xef
-	largeBom[1] = 0xbb
-	largeBom[2] = 0xbf
-	for i := 3; i < len(largeBom); i++ {
-		largeBom[i] = byte(i % 256)
+	for _, tc := range []struct {
+		in   []byte
+		want []byte
+	}{
+		{in: []byte{0xef, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}, want: []byte{'h', 'e', 'l', 'l', 'o'}},
+		{in: []byte{0xef, 0xbb, 0xbf}, want: []byte{}},
+		{in: []byte{0xef, 0xbb, 0xbf, 'A'}, want: []byte{'A'}},
+		{in: []byte{0xef, 0xbb, 0xbf, 0xc3, 0xa9}, want: []byte{0xc3, 0xa9}},                         // BOM + é
+		{in: []byte{0xef, 0xbb, 0xbf, 0xf0, 0x9f, 0x98, 0x80}, want: []byte{0xf0, 0x9f, 0x98, 0x80}}, // BOM + 😀
+		{in: []byte{'h', 'e', 'l', 'l', 'o'}, want: []byte{'h', 'e', 'l', 'l', 'o'}},
+		{in: nil, want: nil},
+		{in: []byte{}, want: []byte{}},
+		{in: []byte{'A'}, want: []byte{'A'}},
+		{in: []byte{'A', 'B'}, want: []byte{'A', 'B'}},
+		{in: []byte{0xef}, want: []byte{0xef}},
+		{in: []byte{0xef, 0xbb}, want: []byte{0xef, 0xbb}},
+		{in: []byte{0xef, 'h', 'e', 'l', 'l', 'o'}, want: []byte{0xef, 'h', 'e', 'l', 'l', 'o'}},
+		{in: []byte{0xef, 0xbb, 'h', 'e', 'l', 'l', 'o'}, want: []byte{0xef, 0xbb, 'h', 'e', 'l', 'l', 'o'}},
+		{in: []byte{'h', 'e', 0xef, 0xbb, 0xbf, 'l', 'o'}, want: []byte{'h', 'e', 0xef, 0xbb, 0xbf, 'l', 'o'}},
+		{in: []byte{'h', 'e', 'l', 'l', 'o', 0xef, 0xbb, 0xbf}, want: []byte{'h', 'e', 'l', 'l', 'o', 0xef, 0xbb, 0xbf}},
+		{in: []byte{0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, 'h', 'i'}, want: []byte{0xef, 0xbb, 0xbf, 'h', 'i'}},
+		{
+			in:   []byte{0xef, 0xbb, 0xbe, 'h', 'e', 'l', 'l', 'o'}, // Last byte different
+			want: []byte{0xef, 0xbb, 0xbe, 'h', 'e', 'l', 'l', 'o'},
+		},
+		{
+			in:   []byte{0xef, 0xbc, 0xbf, 'h', 'e', 'l', 'l', 'o'}, // Middle byte different
+			want: []byte{0xef, 0xbc, 0xbf, 'h', 'e', 'l', 'l', 'o'},
+		},
+		{
+			in:   []byte{0xee, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}, // First byte different
+			want: []byte{0xee, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'},
+		},
+		{in: []byte{0xef, 0xbb, 0xbf, 0x00, 'h', 'e', 'l', 'l', 'o'}, want: []byte{0x00, 'h', 'e', 'l', 'l', 'o'}},
+		{in: []byte{0xef, 0xbb, 0xbf, 0x01, 0x02, 0x03, 0xff, 0xfe}, want: []byte{0x01, 0x02, 0x03, 0xff, 0xfe}},
+		{in: append([]byte{0xef, 0xbb, 0xbf}, `{"key":"value"}`...), want: []byte(`{"key":"value"}`)},
+		{in: append([]byte{0xef, 0xbb, 0xbf}, `<?xml version="1.0"?>`...), want: []byte(`<?xml version="1.0"?>`)},
+	} {
+		c.Equal(tc.want, xbytes.StripBOM(tc.in), "StripBOM(%v)", tc.in)
 	}
 
-	largeResult := xbytes.StripBOM(largeBom)
-	c.Equal(len(largeBom)-3, len(largeResult))
-	c.Equal(largeBom[3:], largeResult)
-}
-
-func TestStripBOMUnicodeContent(t *testing.T) {
-	c := check.New(t)
-
-	chineseBom := []byte{0xef, 0xbb, 0xbf, 0xe4, 0xb8, 0xad, 0xe5, 0x9b, 0xbd} // BOM + 中国
-	expectedChinese := []byte{0xe4, 0xb8, 0xad, 0xe5, 0x9b, 0xbd}
-	c.Equal(expectedChinese, xbytes.StripBOM(chineseBom))
-
-	arabicBom := []byte{0xef, 0xbb, 0xbf, 0xd8, 0xa7, 0xd9, 0x84, 0xd8, 0xb9, 0xd8, 0xb1, 0xd8, 0xa8, 0xd9, 0x8a, 0xd8, 0xa9} // BOM + العربية
-	expectedArabic := []byte{0xd8, 0xa7, 0xd9, 0x84, 0xd8, 0xb9, 0xd8, 0xb1, 0xd8, 0xa8, 0xd9, 0x8a, 0xd8, 0xa9}
-	c.Equal(expectedArabic, xbytes.StripBOM(arabicBom))
-
-	emojiBom := []byte{0xef, 0xbb, 0xbf, 0xf0, 0x9f, 0x98, 0x80, 0xf0, 0x9f, 0x8e, 0x89, 0xf0, 0x9f, 0x9a, 0x80} // BOM + 😀🎉🚀
-	expectedEmoji := []byte{0xf0, 0x9f, 0x98, 0x80, 0xf0, 0x9f, 0x8e, 0x89, 0xf0, 0x9f, 0x9a, 0x80}
-	c.Equal(expectedEmoji, xbytes.StripBOM(emojiBom))
-
-	mathBom := []byte{0xef, 0xbb, 0xbf, 0xe2, 0x88, 0x91, 0xe2, 0x88, 0x9e, 0xcf, 0x80} // BOM + ∑∞π
-	expectedMath := []byte{0xe2, 0x88, 0x91, 0xe2, 0x88, 0x9e, 0xcf, 0x80}
-	c.Equal(expectedMath, xbytes.StripBOM(mathBom))
-
-	mixedBom := []byte{0xef, 0xbb, 0xbf, 'H', 'e', 'l', 'l', 'o', ' ', 0xf0, 0x9f, 0x8c, 0x8d, '!'}
-	expectedMixed := []byte{'H', 'e', 'l', 'l', 'o', ' ', 0xf0, 0x9f, 0x8c, 0x8d, '!'}
-	c.Equal(expectedMixed, xbytes.StripBOM(mixedBom))
+	// StripBOM returns a sub-slice of its input rather than a copy, and leaves the input unmodified.
+	withBOM := []byte{0xef, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}
+	result := xbytes.StripBOM(withBOM)
+	c.True(&withBOM[3] == &result[0])
+	c.Equal([]byte{0xef, 0xbb, 0xbf, 'h', 'e', 'l', 'l', 'o'}, withBOM)
+	noBOM := []byte{'h', 'e', 'l', 'l', 'o'}
+	result = xbytes.StripBOM(noBOM)
+	c.True(&noBOM[0] == &result[0])
 }

@@ -30,45 +30,6 @@ func TestNewIdentityMatrix(t *testing.T) {
 	c.True(m.IsIdentity())
 }
 
-func TestNewTranslationMatrix(t *testing.T) {
-	c := check.New(t)
-
-	m := geom.NewTranslationMatrix(10, 20)
-	c.Equal(float32(1), m.ScaleX)
-	c.Equal(float32(0), m.SkewX)
-	c.Equal(float32(10), m.TransX)
-	c.Equal(float32(0), m.SkewY)
-	c.Equal(float32(1), m.ScaleY)
-	c.Equal(float32(20), m.TransY)
-}
-
-func TestNewScaleMatrix(t *testing.T) {
-	c := check.New(t)
-
-	m := geom.NewScaleMatrix(2, 3)
-	c.Equal(float32(2), m.ScaleX)
-	c.Equal(float32(0), m.SkewX)
-	c.Equal(float32(0), m.TransX)
-	c.Equal(float32(0), m.SkewY)
-	c.Equal(float32(3), m.ScaleY)
-	c.Equal(float32(0), m.TransY)
-}
-
-func TestNewRotationMatrix(t *testing.T) {
-	c := check.New(t)
-
-	m := geom.NewRotationMatrix(90)
-
-	// cos(90) = 0, sin(90) = 1
-	// For clockwise rotation: ScaleX = cos, SkewX = -sin, SkewY = sin, ScaleY = cos
-	c.True(xmath.Abs(m.ScaleX) < 0.0001)  // Should be ~0
-	c.True(xmath.Abs(m.SkewX+1) < 0.0001) // Should be ~-1
-	c.Equal(float32(0), m.TransX)
-	c.True(xmath.Abs(m.SkewY-1) < 0.0001) // Should be ~1
-	c.True(xmath.Abs(m.ScaleY) < 0.0001)  // Should be ~0
-	c.Equal(float32(0), m.TransY)
-}
-
 func TestMatrixTranslate(t *testing.T) {
 	c := check.New(t)
 

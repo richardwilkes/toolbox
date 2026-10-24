@@ -19,16 +19,9 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-const (
-	parallelWorkSubmissions = 10000
-	workTotal               = 49995000
-)
-
 var (
 	prev    int
 	counter int
-	total   int32
-	count   int32
 )
 
 func TestSerialQueue(t *testing.T) {
@@ -53,40 +46,34 @@ func submitSerial(q *xos.TaskQueue, i int) {
 	})
 }
 
-func TestParallelQueue(t *testing.T) {
-	q := xos.NewTaskQueue(&xos.TaskQueueConfig{Workers: 5})
-	total = 0
-	count = 0
-	for i := range parallelWorkSubmissions {
-		submitParallel(q, i)
-	}
-	q.Shutdown()
-	c := check.New(t)
-	c.Equal(parallelWorkSubmissions, int(count))
-	c.Equal(workTotal, int(total))
-}
-
-func submitParallel(q *xos.TaskQueue, i int) {
-	q.Submit(func() {
-		atomic.AddInt32(&total, int32(i))
-		atomic.AddInt32(&count, 1)
-	})
-}
-
-func TestDepthOneQueue(t *testing.T) {
-	c := check.New(t)
-	c.NotPanics(func() {
-		q := xos.NewTaskQueue(&xos.TaskQueueConfig{Depth: 1, Workers: 1})
-		var n int32
-		for range 2000 {
-			q.Submit(func() {
-				time.Sleep(time.Microsecond)
-				atomic.AddInt32(&n, 1)
+func TestQueueRunsEveryTask(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		config xos.TaskQueueConfig
+		tasks  int
+		delay  time.Duration
+	}{
+		{name: "depth one", config: xos.TaskQueueConfig{Depth: 1, Workers: 1}, tasks: 2000, delay: time.Microsecond},
+		{name: "parallel", config: xos.TaskQueueConfig{Workers: 5}, tasks: 10000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := check.New(t)
+			c.NotPanics(func() {
+				q := xos.NewTaskQueue(&tc.config)
+				var count, total int32
+				for i := range tc.tasks {
+					q.Submit(func() {
+						time.Sleep(tc.delay)
+						atomic.AddInt32(&total, int32(i))
+						atomic.AddInt32(&count, 1)
+					})
+				}
+				q.Shutdown()
+				c.Equal(int32(tc.tasks), atomic.LoadInt32(&count))
+				c.Equal(int32(tc.tasks*(tc.tasks-1)/2), atomic.LoadInt32(&total))
 			})
-		}
-		q.Shutdown()
-		c.Equal(int32(2000), atomic.LoadInt32(&n))
-	})
+		})
+	}
 }
 
 func TestRecovery(t *testing.T) {

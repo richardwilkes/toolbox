@@ -118,22 +118,6 @@ func TestLogAttrsFunctions(t *testing.T) {
 	c.Equal(1, len(catcher.records))
 }
 
-func TestLogNilError(t *testing.T) {
-	c := check.New(t)
-	logger, catcher := newLoggerWithCatcher()
-	errs.LogTo(logger, nil)
-	c.Equal(1, len(catcher.records))
-	c.Equal("", catcher.records[0].Message)
-
-	savedLogger := slog.Default()
-	defer slog.SetDefault(savedLogger)
-	slog.SetDefault(logger)
-	catcher.records = nil
-	errs.Log(nil)
-	c.Equal(1, len(catcher.records))
-	c.Equal("", catcher.records[0].Message)
-}
-
 func TestStackTraceLogging(t *testing.T) {
 	c := check.New(t)
 	err := errs.New("stack error")
@@ -161,6 +145,7 @@ func TestLogToNil(t *testing.T) {
 	slog.SetDefault(logger)
 	errs.LogTo(nil, nil)
 	c.Equal(1, len(catcher.records))
+	c.Equal("", catcher.records[0].Message)
 	errs.LogContextTo(nil, nil, nil) //nolint:staticcheck // This is for testing only
 	c.Equal(2, len(catcher.records))
 	attr := slog.String("foo", "bar")

@@ -21,21 +21,28 @@ import (
 
 func TestSanitizeName(t *testing.T) {
 	c := check.New(t)
-
-	c.Equal("@0", xfilepath.SanitizeName(""))
-	c.Equal("@1", xfilepath.SanitizeName("."))
-	c.Equal("@2", xfilepath.SanitizeName(".."))
-
-	c.Equal("@3", xfilepath.SanitizeName("@"))
-	c.Equal("@4", xfilepath.SanitizeName("/"))
-	c.Equal("@5", xfilepath.SanitizeName("\\"))
-	c.Equal("@6", xfilepath.SanitizeName(":"))
-
-	c.Equal("normal_file.txt", xfilepath.SanitizeName("normal_file.txt"))
-
-	c.Equal("file@4with@5special@6chars@3here", xfilepath.SanitizeName("file/with\\special:chars@here"))
-
-	c.Equal("my file (1).txt", xfilepath.SanitizeName("my file (1).txt"))
+	for _, tc := range []struct {
+		name      string
+		sanitized string
+	}{
+		{name: "", sanitized: "@0"},
+		{name: ".", sanitized: "@1"},
+		{name: "..", sanitized: "@2"},
+		{name: "@", sanitized: "@3"},
+		{name: "/", sanitized: "@4"},
+		{name: "\\", sanitized: "@5"},
+		{name: ":", sanitized: "@6"},
+		{name: "normal_file.txt", sanitized: "normal_file.txt"},
+		{name: "file/with\\special:chars@here", sanitized: "file@4with@5special@6chars@3here"},
+		{name: "my file (1).txt", sanitized: "my file (1).txt"},
+		{name: "complex@file/name\\with:many@special@chars", sanitized: "complex@3file@4name@5with@6many@3special@3chars"},
+		{name: "@start", sanitized: "@3start"},
+		{name: "file@end", sanitized: "file@3end"},
+		{name: "mid@dle", sanitized: "mid@3dle"},
+	} {
+		c.Equal(tc.sanitized, xfilepath.SanitizeName(tc.name), "SanitizeName(%q)", tc.name)
+		c.Equal(tc.name, xfilepath.UnsanitizeName(tc.sanitized), "UnsanitizeName(%q)", tc.sanitized)
+	}
 }
 
 func TestUnsanitizeName(t *testing.T) {
@@ -58,33 +65,6 @@ func TestUnsanitizeName(t *testing.T) {
 
 	c.Equal("@x", xfilepath.UnsanitizeName("@x"))
 	c.Equal("@9", xfilepath.UnsanitizeName("@9"))
-}
-
-func TestSanitizeUnsanitizeRoundTrip(t *testing.T) {
-	c := check.New(t)
-
-	testCases := []string{
-		"",
-		".",
-		"..",
-		"normal_file.txt",
-		"file/with\\special:chars@here",
-		"my file (1).txt",
-		"@",
-		"/",
-		"\\",
-		":",
-		"complex@file/name\\with:many@special@chars",
-		"file@end",
-		"@start",
-		"mid@dle",
-	}
-
-	for _, original := range testCases {
-		sanitized := xfilepath.SanitizeName(original)
-		restored := xfilepath.UnsanitizeName(sanitized)
-		c.Equal(original, restored, "Round trip failed for: %q", original)
-	}
 }
 
 func TestBaseName(t *testing.T) {

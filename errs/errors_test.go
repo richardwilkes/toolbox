@@ -41,89 +41,21 @@ func TestDetail(t *testing.T) {
 	c.Equal("<no detail>", detail)
 }
 
-func TestAppendError(t *testing.T) {
-	c := check.New(t)
-	original := errs.New("foo")
-	result := errs.Append(original, errs.New("bar"))
-	c.Equal(2, result.Count())
-}
-
-func TestAppendToEmptyError(t *testing.T) {
-	c := check.New(t)
-	original := &errs.Error{}
-	result := errs.Append(original, errs.New("bar"))
-	c.Equal(1, result.Count())
-}
-
-func TestAppendFlattening(t *testing.T) {
-	c := check.New(t)
-	original := errs.Newf("foo%d", 1)
-	result := errs.Append(original, errs.Append(nil, errs.New("foo"), errs.New("bar")))
-	c.Equal(3, result.Count())
-}
-
-func TestAppendTypedNil(t *testing.T) {
-	c := check.New(t)
-	var e *errs.Error
-	result := errs.Append(e, errs.New("bar"))
-	c.Equal(1, result.Count())
-}
-
-func TestAppendNilError(t *testing.T) {
-	c := check.New(t)
-	var err error
-	result := errs.Append(err, errs.New("bar"))
-	c.Equal(1, result.Count())
-}
-
-func TestAppendNilErrorArg(t *testing.T) {
-	c := check.New(t)
-	var err error
-	var nilErr *errs.Error
-	result := errs.Append(err, nilErr)
-	c.Equal(0, result.Count())
-}
-
-func TestAppendNilErrorInterfaceArg(t *testing.T) {
-	c := check.New(t)
-	var err error
-	var nilErr error
-	result := errs.Append(err, nilErr)
-	c.Equal(0, result.Count())
-}
-
-func TestAppendNonErrorError(t *testing.T) {
-	c := check.New(t)
-	original := errors.New("foo")
-	result := errs.Append(original, errs.New("bar"))
-	c.Equal(2, result.Count())
-}
-
-func TestAppendNonErrorErrorWithAppend(t *testing.T) {
-	c := check.New(t)
-	original := errors.New("foo")
-	result := errs.Append(original, errs.Append(nil, errors.New("bar"), errors.New("baz")))
-	c.Equal(3, result.Count())
-}
-
-func TestErrorOrNil(t *testing.T) {
-	c := check.New(t)
-	var err errs.Error
-	c.Nil(err.ErrorOrNil())
-}
-
-func TestErrorOrNilPointer(t *testing.T) {
-	c := check.New(t)
-	var err *errs.Error
-	c.Nil(err.ErrorOrNil())
-}
-
-func TestWrap(t *testing.T) {
-	c := check.New(t)
-	notError := errors.New("foo")
-	result := errs.Wrap(notError)
-	c.NotNil(result)
-	c.Equal(1, strings.Count(result.Error(), "\n"))
+func TestAppendWrapsAndFlattens(t *testing.T) {
+	for _, tc := range []struct {
+		base  error
+		arg   error
+		name  string
+		count int
+	}{
+		{name: "chain onto error", base: errs.Newf("foo%d", 1), arg: errs.Append(nil, errs.New("foo"), errs.New("bar")), count: 3},
+		{name: "plain base", base: errors.New("foo"), arg: errs.New("bar"), count: 2},
+		{name: "plain errors throughout", base: errors.New("foo"), arg: errs.Append(nil, errors.New("bar"), errors.New("baz")), count: 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			check.New(t).Equal(tc.count, errs.Append(tc.base, tc.arg).Count())
+		})
+	}
 }
 
 func TestNilWrap(t *testing.T) {
@@ -158,14 +90,6 @@ func TestDoubleWrapTyped(t *testing.T) {
 	c.Equal(wrappedErr, errors.Unwrap(rewrittenError))
 }
 
-func TestIs(t *testing.T) {
-	c := check.New(t)
-	err := errs.Wrap(os.ErrNotExist)
-	c.NotNil(err)
-	c.True(errors.Is(err, os.ErrNotExist))
-	c.False(errors.Is(err, os.ErrClosed))
-}
-
 type customErr struct {
 	value string
 }
@@ -174,29 +98,35 @@ func (e *customErr) Error() string {
 	return e.value
 }
 
-func TestAs(t *testing.T) {
+func TestIsAndAsSeeWrappedCause(t *testing.T) {
 	c := check.New(t)
+	err := errs.Wrap(os.ErrNotExist)
+	c.NotNil(err)
+	c.True(errors.Is(err, os.ErrNotExist))
+	c.False(errors.Is(err, os.ErrClosed))
+
 	original := &customErr{value: "err"}
-	wrapped := errs.Wrap(original)
-	c.NotNil(wrapped)
 	var target *customErr
-	c.True(errors.As(wrapped, &target))
+	c.True(errors.As(errs.Wrap(original), &target))
 	c.Equal(original, target)
 }
 
-func TestNew(t *testing.T) {
-	c := check.New(t)
-	result := errs.New("foo")
-	c.Equal(1, strings.Count(result.Error(), "\n"))
-}
-
-func TestNewWithCause(t *testing.T) {
-	c := check.New(t)
+func TestCausedByOnlyForExplicitCause(t *testing.T) {
 	cause := errs.New("bar")
-	result := errs.NewWithCause("foo", cause)
-	c.Equal(3, strings.Count(result.Error(), "\n"))
-	result = errs.NewWithCausef(cause, "foo%d", 1)
-	c.Equal(3, strings.Count(result.Error(), "\n"))
+	for _, tc := range []struct {
+		err      error
+		name     string
+		newlines int
+	}{
+		{name: "New", err: errs.New("foo"), newlines: 1},
+		{name: "Wrap", err: errs.Wrap(errors.New("foo")), newlines: 1},
+		{name: "NewWithCause", err: errs.NewWithCause("foo", cause), newlines: 3},
+		{name: "NewWithCausef", err: errs.NewWithCausef(cause, "foo%d", 1), newlines: 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			check.New(t).Equal(tc.newlines, strings.Count(tc.err.Error(), "\n"))
+		})
+	}
 }
 
 func TestFormat(t *testing.T) {
@@ -265,12 +195,25 @@ func TestLogValue(t *testing.T) {
 	c.Contains(val.Group()[0].Value.String(), "foo")
 }
 
-func TestAppendWithNilMix(t *testing.T) {
-	c := check.New(t)
-	err1 := errs.New("foo")
+func TestAppendIgnoresNilAndEmpty(t *testing.T) {
 	var nilErr *errs.Error
-	result := errs.Append(err1, nilErr, errs.New("bar"), nil)
-	c.Equal(2, result.Count())
+	for _, tc := range []struct {
+		name  string
+		base  error
+		args  []error
+		count int
+	}{
+		{name: "nils between errors", base: errs.New("foo"), args: []error{nilErr, errs.New("bar"), nil}, count: 2},
+		{name: "empty base", base: &errs.Error{}, args: []error{errs.New("bar")}, count: 1},
+		{name: "typed nil base", base: nilErr, args: []error{errs.New("bar")}, count: 1},
+		{name: "untyped nil base", base: nil, args: []error{errs.New("bar")}, count: 1},
+		{name: "typed nil arg", base: nil, args: []error{nilErr}, count: 0},
+		{name: "untyped nil arg", base: nil, args: []error{nil}, count: 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			check.New(t).Equal(tc.count, errs.Append(tc.base, tc.args...).Count())
+		})
+	}
 }
 
 func TestMultiErrorMessage(t *testing.T) {

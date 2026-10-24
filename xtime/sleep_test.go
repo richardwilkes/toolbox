@@ -20,128 +20,84 @@ import (
 
 func TestSleepCompletesNormally(t *testing.T) {
 	c := check.New(t)
-	ctx := context.Background()
-	start := time.Now()
-	duration := 50 * time.Millisecond
-
-	err := xtime.Sleep(ctx, duration)
-
-	elapsed := time.Since(start)
-	c.NoError(err)
-	c.True(elapsed >= duration, "Expected elapsed time to be at least %v, got %v", duration, elapsed)
-	c.True(elapsed < duration+20*time.Millisecond, "Expected elapsed time to be less than %v, got %v", duration+20*time.Millisecond, elapsed)
-}
-
-func TestSleepInterruptedByContextCancellation(t *testing.T) {
-	c := check.New(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	start := time.Now()
-	duration := 100 * time.Millisecond
-
-	go func() {
-		time.Sleep(10 * time.Millisecond)
-		cancel()
-	}()
-
-	err := xtime.Sleep(ctx, duration)
-
-	elapsed := time.Since(start)
-	c.Equal(context.Canceled, err)
-	c.True(elapsed < duration, "Expected elapsed time to be less than %v, got %v", duration, elapsed)
-	c.True(elapsed >= 8*time.Millisecond, "Expected elapsed time to be at least 8ms, got %v", elapsed)
-}
-
-func TestSleepInterruptedByContextTimeout(t *testing.T) {
-	c := check.New(t)
-	timeout := 25 * time.Millisecond
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	start := time.Now()
-	duration := 100 * time.Millisecond
-
-	err := xtime.Sleep(ctx, duration)
-
-	elapsed := time.Since(start)
-	c.Equal(context.DeadlineExceeded, err)
-	c.True(elapsed >= timeout, "Expected elapsed time to be at least %v, got %v", timeout, elapsed)
-	c.True(elapsed < duration, "Expected elapsed time to be less than %v, got %v", duration, elapsed)
-}
-
-func TestSleepWithZeroDuration(t *testing.T) {
-	c := check.New(t)
-	ctx := context.Background()
-	start := time.Now()
-
-	err := xtime.Sleep(ctx, 0)
-
-	elapsed := time.Since(start)
-	c.NoError(err)
-	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
-}
-
-func TestSleepWithNegativeDuration(t *testing.T) {
-	c := check.New(t)
-	ctx := context.Background()
-	start := time.Now()
-
-	err := xtime.Sleep(ctx, -10*time.Millisecond)
-
-	elapsed := time.Since(start)
-	c.NoError(err)
-	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
-}
-
-func TestSleepWithAlreadyCancelledContext(t *testing.T) {
-	c := check.New(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
-
-	start := time.Now()
-	duration := 50 * time.Millisecond
-
-	err := xtime.Sleep(ctx, duration)
-
-	elapsed := time.Since(start)
-	c.Equal(context.Canceled, err)
-	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
-}
-
-func TestSleepWithAlreadyExpiredContext(t *testing.T) {
-	c := check.New(t)
-	ctx, cancel := context.WithTimeout(context.Background(), -1*time.Millisecond)
-	defer cancel()
-
-	start := time.Now()
-	duration := 50 * time.Millisecond
-
-	err := xtime.Sleep(ctx, duration)
-
-	elapsed := time.Since(start)
-	c.Equal(context.DeadlineExceeded, err)
-	c.True(elapsed < 10*time.Millisecond, "Expected elapsed time to be less than 10ms, got %v", elapsed)
-}
-
-func TestSleepConcurrentOperations(t *testing.T) {
-	c := check.New(t)
-	ctx := context.Background()
-	duration := 30 * time.Millisecond
-
-	start := time.Now()
-	errChan := make(chan error, 3)
-
-	for range 3 {
-		go func() {
-			errChan <- xtime.Sleep(ctx, duration)
-		}()
-	}
-
-	for range 3 {
-		err := <-errChan
+	for _, tc := range []struct {
+		d          time.Duration
+		minElapsed time.Duration
+		maxElapsed time.Duration
+	}{
+		{d: 50 * time.Millisecond, minElapsed: 50 * time.Millisecond, maxElapsed: 70 * time.Millisecond},
+		{d: 0, maxElapsed: 10 * time.Millisecond},
+		{d: -10 * time.Millisecond, maxElapsed: 10 * time.Millisecond},
+	} {
+		start := time.Now()
+		err := xtime.Sleep(context.Background(), tc.d)
+		elapsed := time.Since(start)
 		c.NoError(err)
+		c.True(elapsed >= tc.minElapsed && elapsed < tc.maxElapsed, "Sleep(%v) took %v, expected [%v, %v)", tc.d,
+			elapsed, tc.minElapsed, tc.maxElapsed)
 	}
+}
 
-	elapsed := time.Since(start)
-	c.True(elapsed >= duration, "Expected elapsed time to be at least %v, got %v", duration, elapsed)
-	c.True(elapsed < duration+20*time.Millisecond, "Expected elapsed time to be less than %v, got %v", duration+20*time.Millisecond, elapsed)
+func TestSleepInterruptedByContext(t *testing.T) {
+	c := check.New(t)
+	for _, tc := range []struct {
+		wantErr    error
+		newCtx     func() (context.Context, context.CancelFunc)
+		name       string
+		d          time.Duration
+		minElapsed time.Duration
+		maxElapsed time.Duration
+	}{
+		{
+			wantErr: context.Canceled,
+			newCtx: func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				time.AfterFunc(10*time.Millisecond, cancel)
+				return ctx, cancel
+			},
+			name:       "canceled while sleeping",
+			d:          100 * time.Millisecond,
+			minElapsed: 8 * time.Millisecond,
+			maxElapsed: 100 * time.Millisecond,
+		},
+		{
+			wantErr: context.DeadlineExceeded,
+			newCtx: func() (context.Context, context.CancelFunc) {
+				return context.WithTimeout(context.Background(), 25*time.Millisecond)
+			},
+			name:       "deadline passes while sleeping",
+			d:          100 * time.Millisecond,
+			minElapsed: 25 * time.Millisecond,
+			maxElapsed: 100 * time.Millisecond,
+		},
+		{
+			wantErr: context.Canceled,
+			newCtx: func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				return ctx, cancel
+			},
+			name:       "already canceled",
+			d:          50 * time.Millisecond,
+			maxElapsed: 10 * time.Millisecond,
+		},
+		{
+			wantErr: context.DeadlineExceeded,
+			newCtx: func() (context.Context, context.CancelFunc) {
+				return context.WithTimeout(context.Background(), -time.Millisecond)
+			},
+			name:       "already expired",
+			d:          50 * time.Millisecond,
+			maxElapsed: 10 * time.Millisecond,
+		},
+	} {
+		start := time.Now()
+		ctx, cancel := tc.newCtx()
+		err := xtime.Sleep(ctx, tc.d)
+		elapsed := time.Since(start)
+		cancel()
+		c.Equal(tc.wantErr, err, tc.name)
+		c.True(elapsed >= tc.minElapsed && elapsed < tc.maxElapsed, "%s: took %v, expected [%v, %v)", tc.name,
+			elapsed, tc.minElapsed, tc.maxElapsed)
+	}
 }

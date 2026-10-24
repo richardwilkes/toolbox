@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -21,201 +21,66 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-func TestUniquePaths_Empty(t *testing.T) {
-	c := check.New(t)
-	result, err := xfilepath.UniquePaths()
-	c.NoError(err)
-	c.Equal([]string{}, result)
-}
-
-func TestUniquePaths_SinglePath(t *testing.T) {
-	c := check.New(t)
-	tempDir := t.TempDir()
-	result, err := xfilepath.UniquePaths(tempDir)
-	c.NoError(err)
-	c.Equal(1, len(result))
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-}
-
 func TestUniquePaths_DuplicatePaths(t *testing.T) {
 	c := check.New(t)
-	tempDir := t.TempDir()
-	result, err := xfilepath.UniquePaths(tempDir, tempDir, tempDir)
-	c.NoError(err)
-	c.Equal(1, len(result))
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-}
-
-func TestUniquePaths_RelativeAndAbsolute(t *testing.T) {
-	c := check.New(t)
-	tempDir := t.TempDir()
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-
-	originalWd, err := os.Getwd()
-	c.NoError(err)
-	defer func() {
-		c.NoError(os.Chdir(originalWd))
-	}()
-
-	parentDir := filepath.Dir(tempDir)
-	c.NoError(os.Chdir(parentDir))
-	relPath := filepath.Base(tempDir)
-
-	result, err := xfilepath.UniquePaths(relPath, abs)
-	c.NoError(err)
-	c.Equal(1, len(result))
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-}
-
-// TestUniquePaths_DotDotPrefixedChild verifies that a child directory whose name merely begins with ".." is pruned as a
-// subset of its parent. The relative path from parent to child is "..foo", which an over-eager HasPrefix(rel, "..")
-// check mistook for an ascending path.
-func TestUniquePaths_DotDotPrefixedChild(t *testing.T) {
-	c := check.New(t)
-	tempDir := t.TempDir()
-
-	child := filepath.Join(tempDir, "..foo")
-	c.NoError(os.MkdirAll(child, 0o755))
-
-	result, err := xfilepath.UniquePaths(tempDir, child)
-	c.NoError(err)
-	c.Equal(1, len(result))
-
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-
-	// The order of the inputs must not change the outcome.
-	result, err = xfilepath.UniquePaths(child, tempDir)
-	c.NoError(err)
-	c.Equal(1, len(result))
-	c.Equal(noSymLinks, result[0])
+	dir := t.TempDir()
+	resolved := resolve(c, dir)
+	target := filepath.Join(dir, "target")
+	c.NoError(os.Mkdir(target, 0o755))
+	symlink := filepath.Join(dir, "symlink")
+	// Creating a symlink requires permissions that aren't available by default on Windows.
+	canSymlink := runtime.GOOS != xos.WindowsOS
+	if canSymlink {
+		c.NoError(os.Symlink(target, symlink))
+	}
+	t.Chdir(filepath.Dir(dir))
+	for _, tc := range []struct {
+		paths   []string
+		want    []string
+		symlink bool
+	}{
+		{want: []string{}},
+		{paths: []string{dir, dir, dir}, want: []string{resolved}},
+		{paths: []string{filepath.Base(dir), dir}, want: []string{resolved}},
+		{paths: []string{target, symlink}, want: []string{filepath.Join(resolved, "target")}, symlink: true},
+	} {
+		if tc.symlink && !canSymlink {
+			continue
+		}
+		result, err := xfilepath.UniquePaths(tc.paths...)
+		c.NoError(err)
+		c.Equal(tc.want, result, "UniquePaths(%q)", tc.paths)
+	}
 }
 
 func TestUniquePaths_NestedPaths(t *testing.T) {
 	c := check.New(t)
-	tempDir := t.TempDir()
-
-	subDir := filepath.Join(tempDir, "subdir")
-	c.NoError(os.MkdirAll(subDir, 0o755))
-
+	dir := t.TempDir()
+	other := t.TempDir()
+	subDir := filepath.Join(dir, "subdir")
 	subSubDir := filepath.Join(subDir, "subsubdir")
 	c.NoError(os.MkdirAll(subSubDir, 0o755))
-
-	result, err := xfilepath.UniquePaths(tempDir, subDir, subSubDir)
-	c.NoError(err)
-	c.Equal(1, len(result))
-
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-}
-
-func TestUniquePaths_SeparateDirectories(t *testing.T) {
-	c := check.New(t)
-	tempDir1 := t.TempDir()
-	tempDir2 := t.TempDir()
-	c.NotEqual(tempDir1, tempDir2)
-
-	result, err := xfilepath.UniquePaths(tempDir1, tempDir2)
-	c.NoError(err)
-	c.Equal(2, len(result))
-
-	abs1, err := filepath.Abs(tempDir1)
-	c.NoError(err)
-	noSymLinks1, err := filepath.EvalSymlinks(abs1)
-	c.NoError(err)
-	abs2, err := filepath.Abs(tempDir2)
-	c.NoError(err)
-	noSymLinks2, err := filepath.EvalSymlinks(abs2)
-	c.NoError(err)
-
-	found1, found2 := false, false
-	for _, path := range result {
-		if path == noSymLinks1 {
-			found1 = true
-		}
-		if path == noSymLinks2 {
-			found2 = true
-		}
+	// Relative to dir this child is "..foo", which must not be mistaken for an ascending path.
+	dotDotChild := filepath.Join(dir, "..foo")
+	c.NoError(os.Mkdir(dotDotChild, 0o755))
+	resolvedDir := resolve(c, dir)
+	resolvedOther := resolve(c, other)
+	for _, tc := range []struct {
+		paths []string
+		want  []string
+	}{
+		{paths: []string{dir, subDir, subSubDir}, want: []string{resolvedDir}},
+		{paths: []string{dir, dotDotChild}, want: []string{resolvedDir}},
+		{paths: []string{dotDotChild, dir}, want: []string{resolvedDir}},
+		{paths: []string{dir, other}, want: []string{resolvedDir, resolvedOther}},
+		{paths: []string{dir, other, subDir}, want: []string{resolvedDir, resolvedOther}},
+	} {
+		result, err := xfilepath.UniquePaths(tc.paths...)
+		c.NoError(err)
+		slices.Sort(result)
+		slices.Sort(tc.want)
+		c.Equal(tc.want, result, "UniquePaths(%q)", tc.paths)
 	}
-	c.True(found1)
-	c.True(found2)
-}
-
-func TestUniquePaths_MixedNestedAndSeparate(t *testing.T) {
-	c := check.New(t)
-	tempDir1 := t.TempDir()
-	tempDir2 := t.TempDir()
-	c.NotEqual(tempDir1, tempDir2)
-
-	subDir := filepath.Join(tempDir1, "subdir")
-	c.NoError(os.MkdirAll(subDir, 0o755))
-
-	result, err := xfilepath.UniquePaths(tempDir1, tempDir2, subDir)
-	c.NoError(err)
-	c.Equal(2, len(result))
-
-	abs1, err := filepath.Abs(tempDir1)
-	c.NoError(err)
-	noSymLinks1, err := filepath.EvalSymlinks(abs1)
-	c.NoError(err)
-	abs2, err := filepath.Abs(tempDir2)
-	c.NoError(err)
-	noSymLinks2, err := filepath.EvalSymlinks(abs2)
-	c.NoError(err)
-
-	found1, found2 := false, false
-	for _, path := range result {
-		if path == noSymLinks1 {
-			found1 = true
-		}
-		if path == noSymLinks2 {
-			found2 = true
-		}
-		c.NotEqual(filepath.Join(noSymLinks1, "subdir"), path)
-	}
-	c.True(found1)
-	c.True(found2)
-}
-
-func TestUniquePaths_WithSymlinks(t *testing.T) {
-	if runtime.GOOS == xos.WindowsOS {
-		t.Skip("This test requires permissions that aren't available by default on Windows")
-	}
-	c := check.New(t)
-	tempDir := t.TempDir()
-
-	targetDir := filepath.Join(tempDir, "target")
-	c.NoError(os.MkdirAll(targetDir, 0o755))
-
-	symlinkPath := filepath.Join(tempDir, "symlink")
-	c.NoError(os.Symlink(targetDir, symlinkPath))
-
-	result, err := xfilepath.UniquePaths(targetDir, symlinkPath)
-	c.NoError(err)
-	c.Equal(1, len(result))
-
-	absTarget, err := filepath.Abs(targetDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(absTarget)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
 }
 
 func TestUniquePaths_NonexistentPath(t *testing.T) {
@@ -225,70 +90,11 @@ func TestUniquePaths_NonexistentPath(t *testing.T) {
 	c.HasError(err)
 }
 
-func TestUniquePaths_CurrentDirectory(t *testing.T) {
-	c := check.New(t)
-	result, err := xfilepath.UniquePaths(".")
+func resolve(c check.Checker, path string) string {
+	c.Helper()
+	abs, err := filepath.Abs(path)
 	c.NoError(err)
-	c.Equal(1, len(result))
-
-	cwd, err := os.Getwd()
+	resolved, err := filepath.EvalSymlinks(abs)
 	c.NoError(err)
-	// Case-insensitive comparison for Windows
-	c.True(strings.EqualFold(cwd, result[0]), "Expected current directory (%q) to match result, got: %q", cwd, result[0])
-}
-
-func TestUniquePaths_ParentDirectory(t *testing.T) {
-	c := check.New(t)
-	tempDir := t.TempDir()
-
-	originalWd, err := os.Getwd()
-	c.NoError(err)
-	defer func() {
-		c.NoError(os.Chdir(originalWd))
-	}()
-	c.NoError(os.Chdir(tempDir))
-
-	result, err := xfilepath.UniquePaths("..")
-	c.NoError(err)
-	c.Equal(1, len(result))
-
-	parentDir := filepath.Dir(tempDir)
-	noSymLinks, err := filepath.EvalSymlinks(parentDir)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
-}
-
-func TestUniquePaths_ComplexNesting(t *testing.T) {
-	c := check.New(t)
-	tempDir := t.TempDir()
-
-	// Create a complex directory structure
-	// root/
-	//   ├── a/
-	//   │   └── b/
-	//   ├── c/
-	//   └── d/
-	//       └── e/
-	//           └── f/
-
-	pathA := filepath.Join(tempDir, "a")
-	pathB := filepath.Join(pathA, "b")
-	pathC := filepath.Join(tempDir, "c")
-	pathD := filepath.Join(tempDir, "d")
-	pathE := filepath.Join(pathD, "e")
-	pathF := filepath.Join(pathE, "f")
-
-	c.NoError(os.MkdirAll(pathB, 0o755))
-	c.NoError(os.MkdirAll(pathC, 0o755))
-	c.NoError(os.MkdirAll(pathF, 0o755))
-
-	result, err := xfilepath.UniquePaths(tempDir, pathA, pathB, pathC, pathD, pathE, pathF)
-	c.NoError(err)
-	c.Equal(1, len(result))
-
-	abs, err := filepath.Abs(tempDir)
-	c.NoError(err)
-	noSymLinks, err := filepath.EvalSymlinks(abs)
-	c.NoError(err)
-	c.Equal(noSymLinks, result[0])
+	return resolved
 }

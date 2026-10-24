@@ -34,37 +34,33 @@ func usageOutput(t *testing.T, hiddenFlags ...string) string {
 	return buffer.String()
 }
 
-func TestSetUsageWithoutHiddenFlags(t *testing.T) {
-	c := check.New(t)
-	out := usageOutput(t)
-	c.Contains(out, "[options]")
-	c.Contains(out, "Options:")
-	c.Contains(out, "-visible <path>")
-	c.Contains(out, "-secret")
-	c.Contains(out, "-internal")
-}
-
 func TestSetUsageHidesNamedFlags(t *testing.T) {
 	c := check.New(t)
-	out := usageOutput(t, "secret", "internal", "does-not-exist")
-	c.Contains(out, "[options]")
-	c.Contains(out, "Options:")
-	c.Contains(out, "-visible <path>")
-	c.NotContains(out, "-secret")
-	c.NotContains(out, "-internal")
-	c.NotContains(out, "Should not be listed")
-}
-
-func TestSetUsageOmitsOptionsWhenAllHidden(t *testing.T) {
-	c := check.New(t)
-	out := usageOutput(t, "visible", "secret", "internal")
-	c.NotContains(out, "[options]")
-	c.NotContains(out, "Options:")
-	c.NotContains(out, "-visible")
-	c.NotContains(out, "-secret")
-	c.NotContains(out, "-internal")
-	c.Contains(out, "Test description.")
-	c.Contains(out, "<arg>")
+	for _, tc := range []struct {
+		hidden   []string
+		contains []string
+		omits    []string
+	}{
+		{contains: []string{"[options]", "Options:", "-visible <path>", "-secret", "-internal"}},
+		{
+			hidden:   []string{"secret", "internal", "does-not-exist"},
+			contains: []string{"[options]", "Options:", "-visible <path>"},
+			omits:    []string{"-secret", "-internal", "Should not be listed"},
+		},
+		{
+			hidden:   []string{"visible", "secret", "internal"},
+			contains: []string{"Test description.", "<arg>"},
+			omits:    []string{"[options]", "Options:", "-visible", "-secret", "-internal"},
+		},
+	} {
+		out := usageOutput(t, tc.hidden...)
+		for _, s := range tc.contains {
+			c.Contains(out, s, "hidden %q", tc.hidden)
+		}
+		for _, s := range tc.omits {
+			c.NotContains(out, s, "hidden %q", tc.hidden)
+		}
+	}
 }
 
 func TestSetUsageHiddenFlagsStillParse(t *testing.T) {

@@ -17,16 +17,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xmath"
 )
 
-func TestNewRect(t *testing.T) {
-	c := check.New(t)
-
-	r := geom.NewRect(10, 20, 30, 40)
-	c.Equal(float32(10), r.X)
-	c.Equal(float32(20), r.Y)
-	c.Equal(float32(30), r.Width)
-	c.Equal(float32(40), r.Height)
-}
-
 func TestRectEmpty(t *testing.T) {
 	c := check.New(t)
 
@@ -61,51 +51,11 @@ func TestRectCenter(t *testing.T) {
 	// Center Y: 20 + 40/2 = 40
 	c.Equal(float32(25), center.X)
 	c.Equal(float32(40), center.Y)
+	c.Equal(float32(25), r.CenterX())
+	c.Equal(float32(40), r.CenterY())
 }
 
-func TestRectCenterX(t *testing.T) {
-	c := check.New(t)
-
-	r := geom.NewRect(10, 20, 30, 40)
-	centerX := r.CenterX()
-
-	// Center X: 10 + 30/2 = 25
-	c.Equal(float32(25), centerX)
-}
-
-func TestRectCenterY(t *testing.T) {
-	c := check.New(t)
-
-	r := geom.NewRect(10, 20, 30, 40)
-	centerY := r.CenterY()
-
-	// Center Y: 20 + 40/2 = 40
-	c.Equal(float32(40), centerY)
-}
-
-//nolint:gocritic // The "commented out code" is actually explanation
-func TestRectRight(t *testing.T) {
-	c := check.New(t)
-
-	r := geom.NewRect(10, 20, 30, 40)
-	right := r.Right()
-
-	// Right: 10 + 30 = 40
-	c.Equal(float32(40), right)
-}
-
-//nolint:gocritic // The "commented out code" is actually explanation
-func TestRectBottom(t *testing.T) {
-	c := check.New(t)
-
-	r := geom.NewRect(10, 20, 30, 40)
-	bottom := r.Bottom()
-
-	// Bottom: 20 + 40 = 60
-	c.Equal(float32(60), bottom)
-}
-
-func TestRectCornerPoints(t *testing.T) {
+func TestRectCornersAndEdges(t *testing.T) {
 	c := check.New(t)
 
 	r := geom.NewRect(10, 20, 30, 40)
@@ -125,6 +75,9 @@ func TestRectCornerPoints(t *testing.T) {
 	bottomLeft := r.BottomLeft()
 	c.Equal(float32(10), bottomLeft.X)
 	c.Equal(float32(60), bottomLeft.Y)
+
+	c.Equal(float32(40), r.Right())
+	c.Equal(float32(60), r.Bottom())
 }
 
 func TestRectContains(t *testing.T) {
@@ -245,33 +198,23 @@ func TestRectUnion(t *testing.T) {
 	c.True(emptyUnion.Empty())
 }
 
+// TestRectAlign pins the results of Align and checks its documented contract: the result is aligned to integer
+// coordinates and its size is at least as large as the original.
 func TestRectAlign(t *testing.T) {
 	c := check.New(t)
 
-	r := geom.NewRect(10.3, 20.7, 30.2, 40.8)
-	aligned := r.Align()
-
-	// Point should be floored, size should be ceiled
-	c.Equal(float32(10), aligned.X)
-	c.Equal(float32(20), aligned.Y)
-	c.Equal(float32(31), aligned.Width)
-	c.Equal(float32(41), aligned.Height)
-}
-
-// TestRectAlignGuarantees verifies the documented contract of Align: the result is aligned to integer coordinates and
-// its size is at least as large as the original.
-func TestRectAlignGuarantees(t *testing.T) {
-	c := check.New(t)
-
-	for _, r := range []geom.Rect{
-		geom.NewRect(10.3, 20.7, 30.2, 40.8),  // fractional origin and size
-		geom.NewRect(-1.5, -2.5, 3.5, 4.5),    // negative fractional origin
-		geom.NewRect(5, 6, 7, 8),              // already integer-aligned
-		geom.NewRect(1.2, 3.4, 0, 0),          // zero size
-		geom.NewRect(0.5, 0.5, 1, 1),          // fractional origin, integer size
-		geom.NewRect(-100.9, 0.1, 100.1, 0.9), // mixed signs
+	for _, tc := range []struct {
+		r, want geom.Rect
+	}{
+		{geom.NewRect(10.3, 20.7, 30.2, 40.8), geom.NewRect(10, 20, 31, 41)},   // fractional origin and size
+		{geom.NewRect(-1.5, -2.5, 3.5, 4.5), geom.NewRect(-2, -3, 4, 5)},       // negative fractional origin
+		{geom.NewRect(5, 6, 7, 8), geom.NewRect(5, 6, 7, 8)},                   // already integer-aligned
+		{geom.NewRect(1.2, 3.4, 0, 0), geom.NewRect(1, 3, 0, 0)},               // zero size
+		{geom.NewRect(0.5, 0.5, 1, 1), geom.NewRect(0, 0, 1, 1)},               // fractional origin, integer size
+		{geom.NewRect(-100.9, 0.1, 100.1, 0.9), geom.NewRect(-101, 0, 101, 1)}, // mixed signs
 	} {
-		aligned := r.Align()
+		aligned := tc.r.Align()
+		c.Equal(tc.want, aligned)
 
 		// Every coordinate of the result is an integer value.
 		c.Equal(xmath.Floor(aligned.X), aligned.X)
@@ -280,12 +223,12 @@ func TestRectAlignGuarantees(t *testing.T) {
 		c.Equal(xmath.Floor(aligned.Height), aligned.Height)
 
 		// The origin is the floor of the original origin.
-		c.Equal(xmath.Floor(r.X), aligned.X)
-		c.Equal(xmath.Floor(r.Y), aligned.Y)
+		c.Equal(xmath.Floor(tc.r.X), aligned.X)
+		c.Equal(xmath.Floor(tc.r.Y), aligned.Y)
 
 		// The size is at least as large as the original.
-		c.True(aligned.Width >= r.Width)
-		c.True(aligned.Height >= r.Height)
+		c.True(aligned.Width >= tc.r.Width)
+		c.True(aligned.Height >= tc.r.Height)
 	}
 }
 

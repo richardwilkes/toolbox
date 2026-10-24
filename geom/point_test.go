@@ -16,18 +16,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
-func TestNewPoint(t *testing.T) {
-	c := check.New(t)
-
-	p := geom.NewPoint(3, 4)
-	c.Equal(float32(3), p.X)
-	c.Equal(float32(4), p.Y)
-
-	pf := geom.NewPoint(3.5, 4.7)
-	c.Equal(float32(3.5), pf.X)
-	c.Equal(float32(4.7), pf.Y)
-}
-
 func TestPointAdd(t *testing.T) {
 	c := check.New(t)
 

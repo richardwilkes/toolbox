@@ -18,72 +18,38 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xterm"
 )
 
-func TestWrapTextMeasuresRunesNotBytes(t *testing.T) {
+// TestWrapTextWrapsAtVisibleWidth relies on a non-file writer being treated as 80 columns wide, which leaves a
+// 79-column budget with an empty prefix.
+func TestWrapTextWrapsAtVisibleWidth(t *testing.T) {
 	c := check.New(t)
-
-	// A non-file writer is treated as 80 columns wide. Nine 4-rune Cyrillic words are 44 visible columns (80 bytes),
-	// so they must stay on one line.
-	parts := make([]string, 9)
-	for i := range parts {
-		parts[i] = "абвг"
-	}
-	text := strings.Join(parts, " ")
-	var buf bytes.Buffer
-	xterm.NewAnsiWriter(&buf).WrapText("", text)
-	c.Equal(text+"\n", buf.String())
-
-	// "→ " is 2 columns (4 bytes), so continuation lines must be indented by 2 spaces.
-	a := strings.Repeat("a", 40)
-	b := strings.Repeat("b", 40)
-	buf.Reset()
-	xterm.NewAnsiWriter(&buf).WrapText("→ ", a+" "+b)
-	c.Equal("→ "+a+"\n  "+b+"\n", buf.String())
-}
-
-func TestWrapTextResetsBudgetPerLine(t *testing.T) {
-	c := check.New(t)
-
-	// The width budget (79 columns with an empty prefix) must reset for each input line: line 2 fits on its own even
-	// though line 1 nearly exhausted it.
-	first := strings.Repeat("w", 70)
-	var buf bytes.Buffer
-	xterm.NewAnsiWriter(&buf).WrapText("", first+"\naaaa bbbb")
-	c.Equal(first+"\naaaa bbbb\n", buf.String())
-
-	// Two 40-column words still cannot share a 79-column line.
-	a := strings.Repeat("a", 40)
-	b := strings.Repeat("b", 40)
-	buf.Reset()
-	xterm.NewAnsiWriter(&buf).WrapText("", a+" "+b)
-	c.Equal(a+"\n"+b+"\n", buf.String())
-}
-
-func TestWrapTextIgnoresNonSGREscapes(t *testing.T) {
-	c := check.New(t)
-
-	// word1 and word2 fit on one 79-column line (40 + 1 + 37 = 78) only if the 4-byte erase-line escape is treated as
-	// zero-width.
-	word1 := strings.Repeat("a", 40)
-	word2 := strings.Repeat("b", 37)
 	const eraseLine = "\033[2K"
-
-	var plain bytes.Buffer
-	xterm.NewAnsiWriter(&plain).WrapText("", word1+" "+word2)
-
-	var withEscape bytes.Buffer
-	xterm.NewAnsiWriter(&withEscape).WrapText("", word1+" "+eraseLine+word2)
-
-	// Stripping the escape from the escaped output must yield the plain output.
-	c.Equal(plain.String(), strings.ReplaceAll(withEscape.String(), eraseLine, ""))
-
-	// Both stay on a single line, with the escape passed through untouched.
-	c.Equal(word1+" "+word2+"\n", plain.String())
-	c.Equal(word1+" "+eraseLine+word2+"\n", withEscape.String())
-
-	// A non-SGR escape in the prefix is likewise zero-width, so it does not widen the continuation indent.
-	x := strings.Repeat("x", 40)
-	y := strings.Repeat("y", 40)
-	var buf bytes.Buffer
-	xterm.NewAnsiWriter(&buf).WrapText(eraseLine+"→ ", x+" "+y)
-	c.Equal(eraseLine+"→ "+x+"\n  "+y+"\n", buf.String())
+	cyrillic := strings.TrimSpace(strings.Repeat("абвг ", 9))
+	first := strings.Repeat("w", 70)
+	a := strings.Repeat("a", 40)
+	b := strings.Repeat("b", 40)
+	for _, tc := range []struct {
+		prefix string
+		text   string
+		want   string
+	}{
+		// The budget resets for each input line: line 2 fits on its own even though line 1 nearly exhausted it.
+		{text: first + "\naaaa bbbb", want: first + "\naaaa bbbb\n"},
+		// Two 40-column words cannot share a 79-column line.
+		{text: a + " " + b, want: a + "\n" + b + "\n"},
+		// Nine 4-rune Cyrillic words are 44 visible columns (80 bytes), so they stay on one line.
+		{text: cyrillic, want: cyrillic + "\n"},
+		// "→ " is 2 columns (4 bytes), so continuation lines are indented by 2 spaces.
+		{prefix: "→ ", text: a + " " + b, want: "→ " + a + "\n  " + b + "\n"},
+		// 40 + 1 + 37 columns fit on one line only if the 4-byte erase-line escape is zero-width.
+		{
+			text: a + " " + eraseLine + strings.Repeat("b", 37),
+			want: a + " " + eraseLine + strings.Repeat("b", 37) + "\n",
+		},
+		// A non-SGR escape in the prefix is likewise zero-width, so it does not widen the continuation indent.
+		{prefix: eraseLine + "→ ", text: a + " " + b, want: eraseLine + "→ " + a + "\n  " + b + "\n"},
+	} {
+		var buf bytes.Buffer
+		xterm.NewAnsiWriter(&buf).WrapText(tc.prefix, tc.text)
+		c.Equal(tc.want, buf.String(), "WrapText(%q, %q)", tc.prefix, tc.text)
+	}
 }

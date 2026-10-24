@@ -95,25 +95,6 @@ func TestBitSet(t *testing.T) {
 	c.Equal(-1, bs.NextSet(301))
 }
 
-// TestBitSetClearRangeBeyondStorage verifies that ClearRange fully clears its final allocated word when 'end' lies
-// beyond the backing storage. Previously that word's hi bound was still derived from 'end', so it was only partially
-// cleared, leaving set bits behind.
-func TestBitSetClearRangeBeyondStorage(t *testing.T) {
-	c := check.New(t)
-	var bs BitSet
-	bs.Set(230) // Allocates words 0..3; the highest allocated bit index is 255.
-	bs.ClearRange(168, 328)
-	c.False(bs.State(230), "bit 230 must be cleared")
-	c.Equal(0, bs.Count())
-
-	// A single set bit in the capped final word, cleared by a range that starts in that word and ends beyond storage.
-	bs.Reset()
-	bs.Set(200)
-	bs.ClearRange(200, 100000)
-	c.False(bs.State(200))
-	c.Equal(0, bs.Count())
-}
-
 // TestBitSetClearRangeBruteForce checks ClearRange against a per-bit reference across many start/end pairs, including
 // ranges that extend well past the allocated storage.
 func TestBitSetClearRangeBruteForce(t *testing.T) {

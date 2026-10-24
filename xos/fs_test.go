@@ -94,27 +94,6 @@ func TestMoveFile(t *testing.T) {
 	c.True(xos.FileExists(srcFile))
 }
 
-func TestCopySymlinkIntoMissingParent(t *testing.T) {
-	if runtime.GOOS == xos.WindowsOS { // Windows doesn't support symlinks without special permissions enabled first
-		t.Skip("symlinks not supported without special permissions on Windows")
-	}
-	c := check.New(t)
-
-	tmpDir := t.TempDir()
-	srcFile := filepath.Join(tmpDir, "target.txt")
-	c.NoError(os.WriteFile(srcFile, []byte("test content"), 0o644))
-	srcLink := filepath.Join(tmpDir, "link.txt")
-	c.NoError(os.Symlink(srcFile, srcLink))
-
-	// Destination's parent directory does not exist yet; linkCopy must create it.
-	dstLink := filepath.Join(tmpDir, "sub", "nested", "copylink.txt")
-	c.NoError(xos.Copy(srcLink, dstLink))
-
-	linkTarget, err := os.Readlink(dstLink)
-	c.NoError(err)
-	c.Equal(srcFile, linkTarget)
-}
-
 func TestCopy(t *testing.T) {
 	c := check.New(t)
 
@@ -246,10 +225,10 @@ func TestCopyRemovesDestinationOnError(t *testing.T) {
 	c.False(xos.FileExists(dstFile))
 }
 
-// TestCopySymlinkOverExisting verifies that copying a symlink onto an existing destination overwrites it, matching the
-// overwrite behavior of the regular-file path and making tree copies containing symlinks idempotent. Before the fix,
-// os.Symlink failed with EEXIST when the destination already existed.
-func TestCopySymlinkOverExisting(t *testing.T) {
+// TestCopySymlinkReplacesDestinationAndCreatesParents verifies that copying a symlink overwrites an existing
+// destination, matching the overwrite behavior of the regular-file path and making tree copies containing symlinks
+// idempotent, and that it creates any missing parent directories of the destination.
+func TestCopySymlinkReplacesDestinationAndCreatesParents(t *testing.T) {
 	if runtime.GOOS == xos.WindowsOS {
 		t.Skip("symlinks not supported without special permissions on Windows")
 	}
@@ -276,6 +255,13 @@ func TestCopySymlinkOverExisting(t *testing.T) {
 	c.NoError(os.WriteFile(dstFile, []byte("existing"), 0o644))
 	c.NoError(xos.Copy(srcLink, dstFile))
 	got, err = os.Readlink(dstFile)
+	c.NoError(err)
+	c.Equal(target, got)
+
+	// Destination's parent directories do not exist yet.
+	dstNested := filepath.Join(tmpDir, "sub", "nested", "dst-link")
+	c.NoError(xos.Copy(srcLink, dstNested))
+	got, err = os.Readlink(dstNested)
 	c.NoError(err)
 	c.Equal(target, got)
 }

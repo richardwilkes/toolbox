@@ -12,7 +12,6 @@ package xcrc64_test
 import (
 	"hash/crc64"
 	"math"
-	"strings"
 	"testing"
 
 	"github.com/richardwilkes/toolbox/v2/check"
@@ -29,6 +28,8 @@ func TestBool(t *testing.T) {
 
 	c.Equal(crcTrue, xcrc64.Bool(0, true))
 	c.Equal(crcFalse, xcrc64.Bool(0, false))
+	c.Equal(xcrc64.Num8(0, byte(1)), crcTrue)
+	c.Equal(xcrc64.Num8(0, byte(0)), crcFalse)
 
 	initialCRC := uint64(0x123456789ABCDEF0)
 	crcTrue2 := xcrc64.Bool(initialCRC, true)
@@ -68,6 +69,7 @@ func TestBytes(t *testing.T) {
 	table := crc64.MakeTable(crc64.ECMA)
 	expectedCRC := crc64.Update(0, table, data1)
 	c.Equal(expectedCRC, crc1)
+	c.Equal(crc64.Update(initialCRC, table, data1), crcWithInitial)
 }
 
 func TestString(t *testing.T) {
@@ -216,60 +218,6 @@ func TestChaining(t *testing.T) {
 	crc3 = xcrc64.Num8(crc3, singleByte)
 
 	c.Equal(crc, crc3)
-}
-
-func TestConsistencyWithStandardLibrary(t *testing.T) {
-	c := check.New(t)
-
-	table := crc64.MakeTable(crc64.ECMA)
-
-	testData := []byte("test data for consistency check")
-
-	crcXcrc64 := xcrc64.Bytes(0, testData)
-
-	crcStdLib := crc64.Update(0, table, testData)
-
-	c.Equal(crcStdLib, crcXcrc64)
-
-	initialCRC := uint64(0x123456789ABCDEF0)
-	crcXcrc64Initial := xcrc64.Bytes(initialCRC, testData)
-	crcStdLibInitial := crc64.Update(initialCRC, table, testData)
-
-	c.Equal(crcStdLibInitial, crcXcrc64Initial)
-}
-
-func TestEdgeCases(t *testing.T) {
-	c := check.New(t)
-
-	maxCRC := uint64(0xFFFFFFFFFFFFFFFF)
-	crc1 := xcrc64.String(maxCRC, "test")
-	crc2 := xcrc64.String(maxCRC, "test")
-	c.Equal(crc1, crc2)
-
-	c.NotEqual(uint64(0), xcrc64.String(0, strings.Repeat("ab", 10000)))
-
-	largeBytes := make([]byte, 100000)
-	for i := range largeBytes {
-		largeBytes[i] = byte(i % 256)
-	}
-	crcLargeBytes := xcrc64.Bytes(0, largeBytes)
-	c.NotEqual(uint64(0), crcLargeBytes)
-
-	specialChars := "™©®℠℗§¶†‡•‰‱⁂⁎⁏⁐⁑⁒⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞"
-	crcSpecial := xcrc64.String(0, specialChars)
-	c.NotEqual(uint64(0), crcSpecial)
-}
-
-func TestBooleanConsistency(t *testing.T) {
-	c := check.New(t)
-
-	crcBoolTrue := xcrc64.Bool(0, true)
-	crcByte1 := xcrc64.Num8(0, byte(1))
-	c.Equal(crcBoolTrue, crcByte1)
-
-	crcBoolFalse := xcrc64.Bool(0, false)
-	crcByte0 := xcrc64.Num8(0, byte(0))
-	c.Equal(crcBoolFalse, crcByte0)
 }
 
 func TestBytesWithLen(t *testing.T) {
@@ -573,26 +521,4 @@ func TestFloat64(t *testing.T) {
 	crcLowPrec := xcrc64.Float64(0, lowPrecision)
 	crcHighPrec := xcrc64.Float64(0, highPrecision)
 	c.NotEqual(crcLowPrec, crcHighPrec)
-}
-
-func TestNumericTypesConsistency(t *testing.T) {
-	c := check.New(t)
-
-	value8 := uint8(0xFF)
-
-	num8 := xcrc64.Num8(0, value8)
-	num16 := xcrc64.Num16(0, uint16(value8))
-	num32 := xcrc64.Num32(0, uint32(value8))
-	num64 := xcrc64.Num64(0, uint64(value8))
-
-	c.NotEqual(num8, num16)
-	c.NotEqual(num8, num32)
-	c.NotEqual(num8, num64)
-	c.NotEqual(num16, num32)
-	c.NotEqual(num16, num64)
-	c.NotEqual(num32, num64)
-
-	expectedBytes16 := []byte{0xFF, 0x00}
-	crcBytes16 := xcrc64.Bytes(0, expectedBytes16)
-	c.Equal(num16, crcBytes16)
 }

@@ -19,26 +19,30 @@ import (
 )
 
 func TestStackTrace(t *testing.T) {
-	stack := nextLevelStackTrace(0)
 	c := check.New(t)
-	c.True(len(stack) > 1, "stack trace should have more than one entry")
-	c.True(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "TestStackTrace") }),
-		"stack trace should contain TestStackTrace")
-	c.True(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, "nextLevelStackTrace") }),
-		"stack trace should contain nextLevelStackTrace")
+	for _, tc := range []struct {
+		want []string
+		omit []string
+		skip int
+	}{
+		{want: []string{"nextLevelStackTrace", "TestStackTrace"}},
+		{want: []string{"TestStackTrace"}, omit: []string{"nextLevelStackTrace"}, skip: 1},
+		{omit: []string{"nextLevelStackTrace", "TestStackTrace"}, skip: 2},
+	} {
+		stack := nextLevelStackTrace(tc.skip)
+		for _, name := range tc.want {
+			c.True(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, name) }),
+				"skip %d: stack trace should contain %s", tc.skip, name)
+		}
+		for _, name := range tc.omit {
+			c.False(slices.ContainsFunc(stack, func(s string) bool { return strings.Contains(s, name) }),
+				"skip %d: stack trace should not contain %s", tc.skip, name)
+		}
+	}
 }
 
 func nextLevelStackTrace(skip int) []string {
 	return xruntime.StackTrace(skip)
-}
-
-func TestStackTraceSkip(t *testing.T) {
-	stack0 := nextLevelStackTrace(0)
-	stack1 := nextLevelStackTrace(1)
-	stack2 := nextLevelStackTrace(2)
-	c := check.New(t)
-	c.True(len(stack0) > len(stack1))
-	c.True(len(stack1) > len(stack2))
 }
 
 func TestStackTracePath(t *testing.T) {

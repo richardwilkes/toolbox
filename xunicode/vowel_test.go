@@ -18,199 +18,37 @@ import (
 
 func TestIsVowel(t *testing.T) {
 	c := check.New(t)
-
-	c.True(xunicode.IsVowel('a'))
-	c.True(xunicode.IsVowel('e'))
-	c.True(xunicode.IsVowel('i'))
-	c.True(xunicode.IsVowel('o'))
-	c.True(xunicode.IsVowel('u'))
-
-	c.True(xunicode.IsVowel('A'))
-	c.True(xunicode.IsVowel('E'))
-	c.True(xunicode.IsVowel('I'))
-	c.True(xunicode.IsVowel('O'))
-	c.True(xunicode.IsVowel('U'))
-
-	c.False(xunicode.IsVowel('y'))
-	c.False(xunicode.IsVowel('Y'))
-
-	c.True(xunicode.IsVowel('à'))
-	c.True(xunicode.IsVowel('á'))
-	c.True(xunicode.IsVowel('â'))
-	c.True(xunicode.IsVowel('ä'))
-	c.True(xunicode.IsVowel('æ'))
-	c.True(xunicode.IsVowel('ã'))
-	c.True(xunicode.IsVowel('å'))
-	c.True(xunicode.IsVowel('ā'))
-
-	c.True(xunicode.IsVowel('À'))
-	c.True(xunicode.IsVowel('Á'))
-	c.True(xunicode.IsVowel('Â'))
-	c.True(xunicode.IsVowel('Ä'))
-	c.True(xunicode.IsVowel('Æ'))
-	c.True(xunicode.IsVowel('Ã'))
-	c.True(xunicode.IsVowel('Å'))
-	c.True(xunicode.IsVowel('Ā'))
-
-	c.True(xunicode.IsVowel('è'))
-	c.True(xunicode.IsVowel('é'))
-	c.True(xunicode.IsVowel('ê'))
-	c.True(xunicode.IsVowel('ë'))
-	c.True(xunicode.IsVowel('ē'))
-	c.True(xunicode.IsVowel('ė'))
-	c.True(xunicode.IsVowel('ę'))
-
-	c.True(xunicode.IsVowel('È'))
-	c.True(xunicode.IsVowel('É'))
-	c.True(xunicode.IsVowel('Ê'))
-	c.True(xunicode.IsVowel('Ë'))
-	c.True(xunicode.IsVowel('Ē'))
-	c.True(xunicode.IsVowel('Ė'))
-	c.True(xunicode.IsVowel('Ę'))
-
-	c.True(xunicode.IsVowel('î'))
-	c.True(xunicode.IsVowel('ï'))
-	c.True(xunicode.IsVowel('í'))
-	c.True(xunicode.IsVowel('ī'))
-	c.True(xunicode.IsVowel('į'))
-	c.True(xunicode.IsVowel('ì'))
-
-	c.True(xunicode.IsVowel('Î'))
-	c.True(xunicode.IsVowel('Ï'))
-	c.True(xunicode.IsVowel('Í'))
-	c.True(xunicode.IsVowel('Ī'))
-	c.True(xunicode.IsVowel('Į'))
-	c.True(xunicode.IsVowel('Ì'))
-
-	c.True(xunicode.IsVowel('ô'))
-	c.True(xunicode.IsVowel('ö'))
-	c.True(xunicode.IsVowel('ò'))
-	c.True(xunicode.IsVowel('ó'))
-	c.True(xunicode.IsVowel('œ'))
-	c.True(xunicode.IsVowel('ø'))
-	c.True(xunicode.IsVowel('ō'))
-	c.True(xunicode.IsVowel('õ'))
-
-	c.True(xunicode.IsVowel('Ô'))
-	c.True(xunicode.IsVowel('Ö'))
-	c.True(xunicode.IsVowel('Ò'))
-	c.True(xunicode.IsVowel('Ó'))
-	c.True(xunicode.IsVowel('Œ'))
-	c.True(xunicode.IsVowel('Ø'))
-	c.True(xunicode.IsVowel('Ō'))
-	c.True(xunicode.IsVowel('Õ'))
-
-	c.True(xunicode.IsVowel('û'))
-	c.True(xunicode.IsVowel('ü'))
-	c.True(xunicode.IsVowel('ù'))
-	c.True(xunicode.IsVowel('ú'))
-	c.True(xunicode.IsVowel('ū'))
-
-	c.True(xunicode.IsVowel('Û'))
-	c.True(xunicode.IsVowel('Ü'))
-	c.True(xunicode.IsVowel('Ù'))
-	c.True(xunicode.IsVowel('Ú'))
-	c.True(xunicode.IsVowel('Ū'))
-
-	c.False(xunicode.IsVowel('b'))
-	c.False(xunicode.IsVowel('c'))
-	c.False(xunicode.IsVowel('d'))
-	c.False(xunicode.IsVowel('f'))
-	c.False(xunicode.IsVowel('g'))
-	c.False(xunicode.IsVowel('h'))
-	c.False(xunicode.IsVowel('j'))
-	c.False(xunicode.IsVowel('k'))
-	c.False(xunicode.IsVowel('l'))
-	c.False(xunicode.IsVowel('m'))
-	c.False(xunicode.IsVowel('n'))
-	c.False(xunicode.IsVowel('p'))
-	c.False(xunicode.IsVowel('q'))
-	c.False(xunicode.IsVowel('r'))
-	c.False(xunicode.IsVowel('s'))
-	c.False(xunicode.IsVowel('t'))
-	c.False(xunicode.IsVowel('v'))
-	c.False(xunicode.IsVowel('w'))
-	c.False(xunicode.IsVowel('x'))
-	c.False(xunicode.IsVowel('z'))
-
-	c.False(xunicode.IsVowel('B'))
-	c.False(xunicode.IsVowel('C'))
-	c.False(xunicode.IsVowel('D'))
-	c.False(xunicode.IsVowel('F'))
-	c.False(xunicode.IsVowel('G'))
-	c.False(xunicode.IsVowel('H'))
-	c.False(xunicode.IsVowel('J'))
-	c.False(xunicode.IsVowel('K'))
-	c.False(xunicode.IsVowel('L'))
-	c.False(xunicode.IsVowel('M'))
-	c.False(xunicode.IsVowel('N'))
-	c.False(xunicode.IsVowel('P'))
-	c.False(xunicode.IsVowel('Q'))
-	c.False(xunicode.IsVowel('R'))
-	c.False(xunicode.IsVowel('S'))
-	c.False(xunicode.IsVowel('T'))
-	c.False(xunicode.IsVowel('V'))
-	c.False(xunicode.IsVowel('W'))
-	c.False(xunicode.IsVowel('X'))
-	c.False(xunicode.IsVowel('Z'))
-
-	c.False(xunicode.IsVowel('0'))
-	c.False(xunicode.IsVowel('1'))
-	c.False(xunicode.IsVowel('2'))
-	c.False(xunicode.IsVowel('3'))
-	c.False(xunicode.IsVowel('4'))
-	c.False(xunicode.IsVowel('5'))
-	c.False(xunicode.IsVowel('6'))
-	c.False(xunicode.IsVowel('7'))
-	c.False(xunicode.IsVowel('8'))
-	c.False(xunicode.IsVowel('9'))
-
-	c.False(xunicode.IsVowel(' '))
-	c.False(xunicode.IsVowel('!'))
-	c.False(xunicode.IsVowel('@'))
-	c.False(xunicode.IsVowel('#'))
-	c.False(xunicode.IsVowel('$'))
-	c.False(xunicode.IsVowel('%'))
-	c.False(xunicode.IsVowel('^'))
-	c.False(xunicode.IsVowel('&'))
-	c.False(xunicode.IsVowel('*'))
-	c.False(xunicode.IsVowel('('))
-	c.False(xunicode.IsVowel(')'))
-	c.False(xunicode.IsVowel('-'))
-	c.False(xunicode.IsVowel('_'))
-	c.False(xunicode.IsVowel('='))
-	c.False(xunicode.IsVowel('+'))
-	c.False(xunicode.IsVowel('['))
-	c.False(xunicode.IsVowel(']'))
-	c.False(xunicode.IsVowel('{'))
-	c.False(xunicode.IsVowel('}'))
-	c.False(xunicode.IsVowel('\\'))
-	c.False(xunicode.IsVowel('|'))
-	c.False(xunicode.IsVowel(';'))
-	c.False(xunicode.IsVowel(':'))
-	c.False(xunicode.IsVowel('\''))
-	c.False(xunicode.IsVowel('"'))
-	c.False(xunicode.IsVowel(','))
-	c.False(xunicode.IsVowel('.'))
-	c.False(xunicode.IsVowel('<'))
-	c.False(xunicode.IsVowel('>'))
-	c.False(xunicode.IsVowel('/'))
-	c.False(xunicode.IsVowel('?'))
-
-	c.False(xunicode.IsVowel('ñ'))
-	c.False(xunicode.IsVowel('ç'))
-	c.False(xunicode.IsVowel('ß'))
-	c.False(xunicode.IsVowel('ł'))
-
-	c.False(xunicode.IsVowel('😀'))
-	c.False(xunicode.IsVowel('🚀'))
-	c.False(xunicode.IsVowel('🎉'))
-
-	c.False(xunicode.IsVowel('\n'))
-	c.False(xunicode.IsVowel('\t'))
-	c.False(xunicode.IsVowel('\r'))
-
-	c.False(xunicode.IsVowel('\x00'))
+	for _, r := range []rune{
+		'a', 'e', 'i', 'o', 'u',
+		'A', 'E', 'I', 'O', 'U',
+		'à', 'á', 'â', 'ä', 'æ', 'ã', 'å', 'ā',
+		'À', 'Á', 'Â', 'Ä', 'Æ', 'Ã', 'Å', 'Ā',
+		'è', 'é', 'ê', 'ë', 'ē', 'ė', 'ę',
+		'È', 'É', 'Ê', 'Ë', 'Ē', 'Ė', 'Ę',
+		'î', 'ï', 'í', 'ī', 'į', 'ì',
+		'Î', 'Ï', 'Í', 'Ī', 'Į', 'Ì',
+		'ô', 'ö', 'ò', 'ó', 'œ', 'ø', 'ō', 'õ',
+		'Ô', 'Ö', 'Ò', 'Ó', 'Œ', 'Ø', 'Ō', 'Õ',
+		'û', 'ü', 'ù', 'ú', 'ū',
+		'Û', 'Ü', 'Ù', 'Ú', 'Ū',
+	} {
+		c.True(xunicode.IsVowel(r), "IsVowel(%q)", r)
+	}
+	for _, r := range []rune{
+		'y', 'Y',
+		'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z',
+		'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[',
+		']', '{', '}', '\\', '|', ';', ':', '\'', '"', ',', '.', '<', '>', '/', '?',
+		'ñ', 'Ñ', 'ç', 'Ç', 'ß', 'ł',
+		'ă', 'ą', 'ÿ',
+		'α', 'ε', 'ι', 'ο', 'υ', // Greek
+		'😀', '🚀', '🎉',
+		'\n', '\t', '\r', '\x00',
+	} {
+		c.False(xunicode.IsVowel(r), "IsVowel(%q)", r)
+	}
 }
 
 func TestIsVowely(t *testing.T) {
@@ -307,122 +145,4 @@ func TestIsVowely(t *testing.T) {
 	c.False(xunicode.IsVowely('😀'))
 	c.False(xunicode.IsVowely('🚀'))
 	c.False(xunicode.IsVowely('🎉'))
-}
-
-func TestVowelCheckerInterface(t *testing.T) {
-	c := check.New(t)
-
-	var vowelChecker xunicode.VowelChecker = xunicode.IsVowel
-	c.True(vowelChecker('a'))
-	c.True(vowelChecker('E'))
-	c.False(vowelChecker('y'))
-	c.False(vowelChecker('b'))
-
-	var vowelyChecker xunicode.VowelChecker = xunicode.IsVowely
-	c.True(vowelyChecker('a'))
-	c.True(vowelyChecker('E'))
-	c.True(vowelyChecker('y'))
-	c.True(vowelyChecker('Y'))
-	c.False(vowelyChecker('b'))
-
-	customChecker := func(ch rune) bool {
-		return ch == 'a' || ch == 'e' || ch == 'A' || ch == 'E'
-	}
-	c.True(customChecker('a'))
-	c.True(customChecker('e'))
-	c.True(customChecker('A'))
-	c.True(customChecker('E'))
-	c.False(customChecker('i'))
-	c.False(customChecker('o'))
-	c.False(customChecker('u'))
-	c.False(customChecker('y'))
-}
-
-func TestVowelEdgeCases(t *testing.T) {
-	c := check.New(t)
-
-	vowelPairs := map[rune]rune{
-		'a': 'A', 'e': 'E', 'i': 'I', 'o': 'O', 'u': 'U',
-		'à': 'À', 'á': 'Á', 'â': 'Â', 'ä': 'Ä', 'æ': 'Æ', 'ã': 'Ã', 'å': 'Å', 'ā': 'Ā',
-		'è': 'È', 'é': 'É', 'ê': 'Ê', 'ë': 'Ë', 'ē': 'Ē', 'ė': 'Ė', 'ę': 'Ę',
-		'î': 'Î', 'ï': 'Ï', 'í': 'Í', 'ī': 'Ī', 'į': 'Į', 'ì': 'Ì',
-		'ô': 'Ô', 'ö': 'Ö', 'ò': 'Ò', 'ó': 'Ó', 'œ': 'Œ', 'ø': 'Ø', 'ō': 'Ō', 'õ': 'Õ',
-		'û': 'Û', 'ü': 'Ü', 'ù': 'Ù', 'ú': 'Ú', 'ū': 'Ū',
-	}
-
-	for lower, upper := range vowelPairs {
-		c.True(xunicode.IsVowel(lower))
-		c.True(xunicode.IsVowel(upper))
-		c.True(xunicode.IsVowely(lower))
-		c.True(xunicode.IsVowely(upper))
-	}
-
-	c.True(xunicode.IsVowely('y'))
-	c.True(xunicode.IsVowely('Y'))
-	c.True(xunicode.IsVowely('ÿ'))
-	c.True(xunicode.IsVowely('Ÿ'))
-
-	c.False(xunicode.IsVowel('ñ'))
-	c.False(xunicode.IsVowel('Ñ'))
-	c.False(xunicode.IsVowel('ç'))
-	c.False(xunicode.IsVowel('Ç'))
-	c.False(xunicode.IsVowely('ñ'))
-	c.False(xunicode.IsVowely('Ñ'))
-	c.False(xunicode.IsVowely('ç'))
-	c.False(xunicode.IsVowely('Ç'))
-
-	c.True(xunicode.IsVowel('ā'))  // This is in the vowel list
-	c.False(xunicode.IsVowel('ă')) // This is not in the vowel list
-	c.False(xunicode.IsVowel('ą')) // This is not in the vowel list
-
-	c.False(xunicode.IsVowel('α')) // Greek alpha
-	c.False(xunicode.IsVowel('ε')) // Greek epsilon
-	c.False(xunicode.IsVowel('ι')) // Greek iota
-	c.False(xunicode.IsVowel('ο')) // Greek omicron
-	c.False(xunicode.IsVowel('υ')) // Greek upsilon
-	c.False(xunicode.IsVowely('α'))
-	c.False(xunicode.IsVowely('ε'))
-	c.False(xunicode.IsVowely('ι'))
-	c.False(xunicode.IsVowely('ο'))
-	c.False(xunicode.IsVowely('υ'))
-}
-
-func TestVowelComprehensiveCoverage(t *testing.T) {
-	c := check.New(t)
-
-	aVowels := []rune{'a', 'à', 'á', 'â', 'ä', 'æ', 'ã', 'å', 'ā'}
-	for _, vowel := range aVowels {
-		c.True(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
-
-	eVowels := []rune{'e', 'è', 'é', 'ê', 'ë', 'ē', 'ė', 'ę'}
-	for _, vowel := range eVowels {
-		c.True(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
-
-	iVowels := []rune{'i', 'î', 'ï', 'í', 'ī', 'į', 'ì'}
-	for _, vowel := range iVowels {
-		c.True(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
-
-	oVowels := []rune{'o', 'ô', 'ö', 'ò', 'ó', 'œ', 'ø', 'ō', 'õ'}
-	for _, vowel := range oVowels {
-		c.True(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
-
-	uVowels := []rune{'u', 'û', 'ü', 'ù', 'ú', 'ū'}
-	for _, vowel := range uVowels {
-		c.True(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
-
-	yVowels := []rune{'y', 'ÿ'}
-	for _, vowel := range yVowels {
-		c.False(xunicode.IsVowel(vowel))
-		c.True(xunicode.IsVowely(vowel))
-	}
 }

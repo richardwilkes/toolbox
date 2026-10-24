@@ -116,36 +116,25 @@ func TestInsertBuffer_Truncate(t *testing.T) {
 
 func TestInsertBuffer_WriteTo(t *testing.T) {
 	c := check.New(t)
-	var b xbytes.InsertBuffer
-	_, err := b.WriteString("hello")
-	c.NoError(err)
-	var buf bytes.Buffer
-	n, err := b.WriteTo(&buf)
-	c.NoError(err)
-	c.Equal(int64(5), n)
-	c.Equal("hello", buf.String())
-}
-
-func TestInsertBuffer_WriteToShortWrite(t *testing.T) {
-	c := check.New(t)
-	var b xbytes.InsertBuffer
-	_, err := b.WriteString("hello")
-	c.NoError(err)
-	w := &shortWriter{n: 2}
-	n, err := b.WriteTo(w)
-	c.Equal(io.ErrShortWrite, err)
-	c.Equal(int64(2), n)
-}
-
-func TestInsertBuffer_WriteToError(t *testing.T) {
-	c := check.New(t)
-	var b xbytes.InsertBuffer
-	_, err := b.WriteString("hello")
-	c.NoError(err)
-	w := &shortWriter{err: io.ErrClosedPipe, n: 2}
-	n, err := b.WriteTo(w)
-	c.Equal(io.ErrClosedPipe, err)
-	c.Equal(int64(0), n)
+	for _, tc := range []struct {
+		w       io.Writer
+		wantErr error
+		wantN   int64
+	}{
+		{w: &bytes.Buffer{}, wantN: 5},
+		{w: &shortWriter{n: 2}, wantErr: io.ErrShortWrite, wantN: 2},
+		{w: &shortWriter{err: io.ErrClosedPipe, n: 2}, wantErr: io.ErrClosedPipe},
+	} {
+		var b xbytes.InsertBuffer
+		_, err := b.WriteString("hello")
+		c.NoError(err)
+		n, err := b.WriteTo(tc.w)
+		c.Equal(tc.wantErr, err)
+		c.Equal(tc.wantN, n)
+		if buf, ok := tc.w.(*bytes.Buffer); ok {
+			c.Equal("hello", buf.String())
+		}
+	}
 }
 
 type shortWriter struct {

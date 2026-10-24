@@ -109,211 +109,336 @@ func TestNew(t *testing.T) {
 	c.Equal(before, v.PolygonFrom(geom.NewPoint(20, 20)))
 }
 
-func TestNewWithEmptyObstructions(t *testing.T) {
-	c := check.New(t)
-
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), nil)
-	c.NotNil(v)
-
-	// With no obstructions, the entire bounds is visible, so the polygon is exactly its four corners.
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 4, 10000, "no obstructions")
-}
-
 func TestBreakIntersections(t *testing.T) {
 	c := check.New(t)
 
-	// Two lines that never meet come back untouched.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 10)),
+	for _, tc := range []struct {
+		name  string
+		lines []geom.Line
+		want  []geom.Line // Compared after normalizing; nil means the lines come back unchanged and in input order.
+	}{
+		{"nil", nil, []geom.Line{}},
+		{"empty", []geom.Line{}, []geom.Line{}},
+		{
+			"lines that never meet",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 10)),
+			},
+			nil,
+		},
+		{
+			"collinear with a gap",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
+				geom.NewLine(geom.NewPoint(6, 0), geom.NewPoint(10, 0)),
+			},
+			nil,
+		},
+		{
+			"meeting end to end",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+			},
+			nil,
+		},
+		{
+			"crossing diagonals",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+			},
+		},
+		// Identical duplicates reduce to a single copy, which is still cut by everything it crosses.
+		{
+			"crossing diagonals with a duplicate",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+			},
+		},
+		{
+			"diagonal crossed by a vertical",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 10)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 10)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+			},
+		},
+		// Each line meets the shared point more than once, which must not turn into zero-length segments.
+		{
+			"three lines through one point",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 10)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 10)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+			},
+		},
+		// A tolerance derived from the raw coordinate magnitude (~1) treats this crossing, half a unit from the
+		// horizontal line's start, as coincident with it and leaves both lines uncut.
+		{
+			"crossing far from the origin",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10010, 10000)),
+				geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10001)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10000.5, 10000)),
+				geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10000)),
+				geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10000.5, 10001)),
+				geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10010, 10000)),
+			},
+		},
+		// A tolerance derived from the overall extent alone dwarfs the short wall, deleting it and leaving the
+		// crossing uncut.
+		{
+			"short wall crossing a long one",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0.025), geom.NewPoint(1000, 0.025)),
+				geom.NewLine(geom.NewPoint(500, 0), geom.NewPoint(500, 0.05)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0.025), geom.NewPoint(500, 0.025)),
+				geom.NewLine(geom.NewPoint(500, 0), geom.NewPoint(500, 0.025)),
+				geom.NewLine(geom.NewPoint(500, 0.025), geom.NewPoint(500, 0.05)),
+				geom.NewLine(geom.NewPoint(500, 0.025), geom.NewPoint(1000, 0.025)),
+			},
+		},
+		// A pillar much shorter than the corridor is long, but well above the tolerance the sweep works to, must come
+		// back untouched rather than vanish.
+		{
+			"short pillar in a long corridor",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(1000, 0)),
+				geom.NewLine(geom.NewPoint(0, 1), geom.NewPoint(1000, 1)),
+				geom.NewLine(geom.NewPoint(500, 0.4), geom.NewPoint(500, 0.49)),
+			},
+			nil,
+		},
+	} {
+		result := visibility.BreakIntersections(tc.lines)
+		if tc.want == nil {
+			c.Equal(tc.lines, result, tc.name)
+		} else {
+			c.Equal(tc.want, normalizedLines(result), tc.name)
+		}
 	}
-	c.Equal(lines, visibility.BreakIntersections(lines))
-
-	// Two that cross are each split at the crossing.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
-	})))
-}
-
-func TestBreakIntersectionsWithEmptySlice(t *testing.T) {
-	c := check.New(t)
-
-	c.Equal(0, len(visibility.BreakIntersections(nil)))
-	c.Equal(0, len(visibility.BreakIntersections([]geom.Line{})))
-}
-
-func TestBreakIntersectionsWithParallelLines(t *testing.T) {
-	c := check.New(t)
-
-	// Parallel lines never meet, so neither one is cut.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(0, 1), geom.NewPoint(10, 1)),
-	}
-	c.Equal(lines, visibility.BreakIntersections(lines))
-}
-
-func TestBreakIntersectionsWithDisjointCollinearLines(t *testing.T) {
-	c := check.New(t)
-
-	// Collinear but with a gap between them, so there is no shared portion to split out.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
-		geom.NewLine(geom.NewPoint(6, 0), geom.NewPoint(10, 0)),
-	}
-	c.Equal(lines, visibility.BreakIntersections(lines))
-}
-
-func TestBreakIntersectionsWithCrossingLines(t *testing.T) {
-	c := check.New(t)
-
-	// A diagonal crossed by a vertical: both are cut at the single shared point.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 10)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 10)),
-	})))
-}
-
-func TestBreakIntersectionsWithCollinearLines(t *testing.T) {
-	c := check.New(t)
-
-	// Three collinear segments covering 0-10, 5-15 and 12-20 of the same line. Every endpoint that falls inside
-	// another segment is a cut, so the result is the five spans between consecutive endpoints, each appearing once.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(10, 0), geom.NewPoint(12, 0)),
-		geom.NewLine(geom.NewPoint(12, 0), geom.NewPoint(15, 0)),
-		geom.NewLine(geom.NewPoint(15, 0), geom.NewPoint(20, 0)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
-		geom.NewLine(geom.NewPoint(12, 0), geom.NewPoint(20, 0)),
-	})))
 }
 
 func TestBreakIntersectionsSplitsCollinearOverlaps(t *testing.T) {
 	c := check.New(t)
 
-	// Partial overlap: each line must be split at the point where the other one starts or ends, and the shared portion
-	// must appear only once.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(10, 0), geom.NewPoint(15, 0)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
-	})))
-
-	// Full containment: the enclosing line must be split at both ends of the enclosed one.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(2, 0)),
-		geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
-		geom.NewLine(geom.NewPoint(8, 0), geom.NewPoint(10, 0)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
-	})))
-
-	// Diagonal overlap, to be sure the split is not limited to axis-aligned input.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(20, 20)),
-	})))
-
-	// An overlap boundary within the tolerance of one line's endpoint must merge with that endpoint for both lines,
-	// not be dropped for one and kept for the other, which used to leave two pieces overlapping by half the scene.
-	// This all-collinear input has a bounding box with no finer dimension, so its tolerance is the noise floor derived
-	// from the 100-unit span, 1e-4, and the offset sits just inside it.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(50, 0)),
-		geom.NewLine(geom.NewPoint(50, 0), geom.NewPoint(100, 0)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(100, 0)),
-		geom.NewLine(geom.NewPoint(0.00005, 0), geom.NewPoint(50, 0)),
-	})))
-
-	// Cut points come verbatim from the endpoints of the lines in an overlap, not from interpolation along whichever
-	// line happened to be examined first, so reversed input cannot produce a one-ULP-different duplicate of the
-	// shared portion.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(3, 0)),
-		geom.NewLine(geom.NewPoint(3, 0), geom.NewPoint(4, 0)),
-		geom.NewLine(geom.NewPoint(4, 0), geom.NewPoint(9, 0)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(3, 0), geom.NewPoint(4, 0)),
-		geom.NewLine(geom.NewPoint(9, 0), geom.NewPoint(0, 0)),
-	})))
+	// Each line is split wherever another line in its overlap starts or ends, and each shared portion appears once.
+	for _, tc := range []struct {
+		name  string
+		lines []geom.Line
+		want  []geom.Line
+	}{
+		{
+			"partial overlap",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(10, 0), geom.NewPoint(15, 0)),
+			},
+		},
+		{
+			"full containment",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(2, 0)),
+				geom.NewLine(geom.NewPoint(2, 0), geom.NewPoint(8, 0)),
+				geom.NewLine(geom.NewPoint(8, 0), geom.NewPoint(10, 0)),
+			},
+		},
+		{
+			"diagonal overlap",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(20, 20)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
+				geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20)),
+			},
+		},
+		// An overlap boundary within the tolerance of one line's endpoint must merge with that endpoint for both lines,
+		// not be dropped for one and kept for the other, which used to leave two pieces overlapping by half the scene.
+		// This all-collinear input has a bounding box with no finer dimension, so its tolerance is the noise floor
+		// derived from the 100-unit span, 1e-4, and the offset sits just inside it.
+		{
+			"overlap boundary within the tolerance of an endpoint",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(100, 0)),
+				geom.NewLine(geom.NewPoint(0.00005, 0), geom.NewPoint(50, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(50, 0)),
+				geom.NewLine(geom.NewPoint(50, 0), geom.NewPoint(100, 0)),
+			},
+		},
+		// Cut points come verbatim from the endpoints of the lines in an overlap, not from interpolation along
+		// whichever line happened to be examined first, so reversed input cannot produce a one-ULP-different duplicate
+		// of the shared portion.
+		{
+			"reversed enclosing line",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(3, 0), geom.NewPoint(4, 0)),
+				geom.NewLine(geom.NewPoint(9, 0), geom.NewPoint(0, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(3, 0)),
+				geom.NewLine(geom.NewPoint(3, 0), geom.NewPoint(4, 0)),
+				geom.NewLine(geom.NewPoint(4, 0), geom.NewPoint(9, 0)),
+			},
+		},
+		{
+			"chain of three",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(15, 0)),
+				geom.NewLine(geom.NewPoint(12, 0), geom.NewPoint(20, 0)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 0)),
+				geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(10, 0)),
+				geom.NewLine(geom.NewPoint(10, 0), geom.NewPoint(12, 0)),
+				geom.NewLine(geom.NewPoint(12, 0), geom.NewPoint(15, 0)),
+				geom.NewLine(geom.NewPoint(15, 0), geom.NewPoint(20, 0)),
+			},
+		},
+		// Points (t,t) lie exactly on y=x, but the cross products of the collinearity tests are inexact, and fused
+		// multiply-subtract on arm64 used to turn their zero results into rounding noise that left these overlaps
+		// uncut. The scene spans 0-20 so that re-centering to (10,10) is exact, letting the output be stated verbatim.
+		{
+			"non-integer diagonal overlap",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(20, 20)),
+				geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(20, 20)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(9, 9)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
+				geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5.848, 5.848)),
+				geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(9, 9)),
+				geom.NewLine(geom.NewPoint(9, 9), geom.NewPoint(20, 20)),
+			},
+		},
+		// The line at x=-12000 keeps the re-centered overlap near x=12000, where padding Line.Bounds() by a fixed
+		// epsilon below the float32 ULP gave the vertical lines a zero-thickness bounds the quadtree never matched.
+		{
+			"vertical overlap far from the batch center",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(12000, 3000), geom.NewPoint(12000, 0)),
+				geom.NewLine(geom.NewPoint(12000, 3000), geom.NewPoint(12000, 2000)),
+				geom.NewLine(geom.NewPoint(-12000, 0), geom.NewPoint(-12000, 10)),
+			},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(-12000, 0), geom.NewPoint(-12000, 10)),
+				geom.NewLine(geom.NewPoint(12000, 0), geom.NewPoint(12000, 2000)),
+				geom.NewLine(geom.NewPoint(12000, 2000), geom.NewPoint(12000, 3000)),
+			},
+		},
+	} {
+		c.Equal(tc.want, normalizedLines(visibility.BreakIntersections(tc.lines)), tc.name)
+	}
 }
 
 func TestBreakIntersectionsResultsNeverIntersect(t *testing.T) {
 	c := check.New(t)
 
-	// Random scenes on a small integer grid, dense enough in collinear overlaps and shared endpoints to exercise the
-	// overlap grouping hard, checked against the documented postcondition itself: no two result lines intersect
-	// anywhere but at their endpoints, and no two overlap.
-	rng := rand.New(rand.NewPCG(1, 5150)) //nolint:gosec // Yes, it is ok to use a weak prng here
-	for scene := range 2500 {
-		lines := make([]geom.Line, 2+rng.IntN(4))
-		for i := range lines {
-			lines[i] = geom.NewLine(
-				geom.NewPoint(float32(rng.IntN(21)), float32(rng.IntN(5))),
-				geom.NewPoint(float32(rng.IntN(21)), float32(rng.IntN(5))),
-			)
-		}
-		result := visibility.BreakIntersections(lines)
-		for a := range result {
-			for b := a + 1; b < len(result); b++ {
-				c.False(segmentsViolateNonIntersection(result[a], result[b], 0.01),
-					"scene %d: %v and %v intersect: input=%v result=%v", scene, result[a], result[b], lines, result)
-			}
-		}
-	}
-}
-
-func TestBreakIntersectionsResultsNeverIntersectNonInteger(t *testing.T) {
-	c := check.New(t)
-
-	// Scenes dense in exactly collinear overlaps whose coordinates are not exactly representable in the cross-product
-	// arithmetic: points of the form (t,t) lie exactly on y=x for any float32 t, but the products in the collinearity
-	// tests are inexact, which is precisely where fused multiply-subtract used to defeat the exact-zero comparisons.
-	// An integer grid never leaves the exactly-representable region, so the grid-based test above cannot catch that.
-	// A few unconstrained lines are mixed in to exercise the single-crossing paths at the same time.
-	rng := rand.New(rand.NewPCG(2, 5150)) //nolint:gosec // Yes, it is ok to use a weak prng here
-	for scene := range 2500 {
-		lines := make([]geom.Line, 0, 6)
-		for range 2 + rng.IntN(3) {
-			t1 := rng.Float32() * 20
-			t2 := rng.Float32() * 20
-			lines = append(lines, geom.NewLine(geom.NewPoint(t1, t1), geom.NewPoint(t2, t2)))
-		}
-		for range 1 + rng.IntN(2) {
-			lines = append(lines, geom.NewLine(
-				geom.NewPoint(rng.Float32()*20, rng.Float32()*5),
-				geom.NewPoint(rng.Float32()*20, rng.Float32()*5),
-			))
-		}
-		result := visibility.BreakIntersections(lines)
-		for a := range result {
-			for b := a + 1; b < len(result); b++ {
-				c.False(segmentsViolateNonIntersection(result[a], result[b], 0.01),
-					"scene %d: %v and %v intersect: input=%v result=%v", scene, result[a], result[b], lines, result)
+	// Random scenes checked against the documented postcondition itself: no two result lines intersect anywhere but at
+	// their endpoints, and no two overlap.
+	for _, gen := range []struct {
+		lines func(rng *rand.Rand) []geom.Line
+		name  string
+		seed  uint64
+	}{
+		// A small integer grid, dense enough in collinear overlaps and shared endpoints to exercise the overlap
+		// grouping hard.
+		{
+			name: "integer grid",
+			seed: 1,
+			lines: func(rng *rand.Rand) []geom.Line {
+				lines := make([]geom.Line, 2+rng.IntN(4))
+				for i := range lines {
+					lines[i] = geom.NewLine(
+						geom.NewPoint(float32(rng.IntN(21)), float32(rng.IntN(5))),
+						geom.NewPoint(float32(rng.IntN(21)), float32(rng.IntN(5))),
+					)
+				}
+				return lines
+			},
+		},
+		// Points (t,t) lie exactly on y=x for any float32 t, but the products in the collinearity tests are inexact,
+		// which is precisely where fused multiply-subtract used to defeat the exact-zero comparisons. An integer grid
+		// never leaves the exactly-representable region, so it cannot catch that. A few unconstrained lines are mixed
+		// in to exercise the single-crossing paths at the same time.
+		{
+			name: "non-integer points on y=x",
+			seed: 2,
+			lines: func(rng *rand.Rand) []geom.Line {
+				lines := make([]geom.Line, 0, 6)
+				for range 2 + rng.IntN(3) {
+					t1 := rng.Float32() * 20
+					t2 := rng.Float32() * 20
+					lines = append(lines, geom.NewLine(geom.NewPoint(t1, t1), geom.NewPoint(t2, t2)))
+				}
+				for range 1 + rng.IntN(2) {
+					lines = append(lines, geom.NewLine(
+						geom.NewPoint(rng.Float32()*20, rng.Float32()*5),
+						geom.NewPoint(rng.Float32()*20, rng.Float32()*5),
+					))
+				}
+				return lines
+			},
+		},
+	} {
+		rng := rand.New(rand.NewPCG(gen.seed, 5150)) //nolint:gosec // Yes, it is ok to use a weak prng here
+		for scene := range 2500 {
+			lines := gen.lines(rng)
+			result := visibility.BreakIntersections(lines)
+			for a := range result {
+				for b := a + 1; b < len(result); b++ {
+					c.False(segmentsViolateNonIntersection(result[a], result[b], 0.01),
+						"%s scene %d: %v and %v intersect: input=%v result=%v", gen.name, scene, result[a], result[b],
+						lines, result)
+				}
 			}
 		}
 	}
@@ -362,215 +487,58 @@ func signedLineDistance(l geom.Line, p geom.Point) float64 {
 	return (dx*(float64(p.Y)-float64(l.Start.Y)) - dy*(float64(p.X)-float64(l.Start.X))) / math.Hypot(dx, dy)
 }
 
-func TestBreakIntersectionsWithConcurrentLines(t *testing.T) {
-	c := check.New(t)
-
-	// Three lines meeting at (5,5) yield that same intersection point more than once per line, which must not turn into
-	// zero-length segments.
-	result := visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 10)),
-	})
-	for _, one := range result {
-		c.NotEqual(one.Start, one.End, "zero-length segment %v", one)
-	}
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 10)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
-	}, normalizedLines(result))
-}
-
-func TestBreakIntersectionsWithTouchingLines(t *testing.T) {
-	c := check.New(t)
-
-	// Meeting end to end is not an overlap, so neither line is cut.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
-	}
-	c.Equal(lines, visibility.BreakIntersections(lines))
-}
-
-func TestBreakIntersectionsWithDuplicateLines(t *testing.T) {
-	c := check.New(t)
-
-	// Identical duplicate lines reduce to a single copy, which must still be cut normally by everything it crosses.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(10, 10)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 10)),
-		geom.NewLine(geom.NewPoint(0, 10), geom.NewPoint(10, 0)),
-	})))
-}
-
-func TestPolygonFromOutsideBounds(t *testing.T) {
-	c := check.New(t)
-
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20)),
-	})
-
-	c.Nil(v.PolygonFrom(geom.NewPoint(-10, -10)))
-	c.Nil(v.PolygonFrom(geom.NewPoint(110, 110)))
-	c.Nil(v.PolygonFrom(geom.NewPoint(50, 110)))
-	c.Nil(v.PolygonFrom(geom.NewPoint(float32(math.NaN()), float32(math.NaN()))))
-}
-
-func TestPolygonFromInsideBounds(t *testing.T) {
-	c := check.New(t)
-
-	// A wall spanning x 10-90 at y=10, seen from (50,50). The rays grazing its ends reach the bottom corners of the
-	// bounds exactly, so the shadow is the quadrilateral (10,10)-(90,10)-(100,0)-(0,0), whose area is 900.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(90, 10)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 6, 10000-900, "wall at y=10")
-}
-
-func TestPolygonFromOnBounds(t *testing.T) {
+func TestPolygonFromRequiresViewPointInBounds(t *testing.T) {
 	c := check.New(t)
 
 	// Point.In treats the bounds as half-open, so the top and left edges are inside and the bottom and right are not.
 	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
 		geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(90, 10)),
 	})
-	c.NotNil(v.PolygonFrom(geom.NewPoint(0, 0)))
-	c.NotNil(v.PolygonFrom(geom.NewPoint(50, 0)))
-	c.Nil(v.PolygonFrom(geom.NewPoint(100, 100)))
-}
-
-func TestPolygonFromWithSquareObstruction(t *testing.T) {
-	c := check.New(t)
-
-	// The square's silhouette from (20,20) runs through (60,40) and (40,60); extending those rays reaches (100,60) and
-	// (60,100), so the shadow is (60,40)-(100,60)-(100,100)-(60,100)-(40,60)-(40,40), whose area is 2800.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(40, 40), geom.NewPoint(60, 40)),
-		geom.NewLine(geom.NewPoint(60, 40), geom.NewPoint(60, 60)),
-		geom.NewLine(geom.NewPoint(60, 60), geom.NewPoint(40, 60)),
-		geom.NewLine(geom.NewPoint(40, 60), geom.NewPoint(40, 40)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(20, 20)), 8, 10000-2800, "square obstruction")
+	nan := float32(math.NaN())
+	for _, tc := range []struct {
+		viewPt geom.Point
+		inside bool
+	}{
+		{geom.NewPoint(0, 0), true},
+		{geom.NewPoint(50, 0), true},
+		{geom.NewPoint(100, 100), false},
+		{geom.NewPoint(-10, -10), false},
+		{geom.NewPoint(110, 110), false},
+		{geom.NewPoint(50, 110), false},
+		{geom.NewPoint(nan, nan), false},
+	} {
+		c.Equal(tc.inside, v.PolygonFrom(tc.viewPt) != nil, "view point %v", tc.viewPt)
+	}
 }
 
 func TestPolygonFromWithNoObstructions(t *testing.T) {
 	c := check.New(t)
 
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), nil)
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 4, 10000, "no obstructions")
+	// With nothing in the way, the polygon is exactly the four corners of the bounds.
+	for _, tc := range []struct {
+		name     string
+		bounds   geom.Rect
+		viewPt   geom.Point
+		wantArea float64
+	}{
+		{"no obstructions", geom.NewRect(0, 0, 100, 100), geom.NewPoint(50, 50), 10000},
+		// The corner angles cover all four quadrants, including the pair that straddles the ±180° discontinuity the
+		// sweep starts from.
+		{"origin-centered bounds", geom.NewRect(-10, -10, 20, 20), geom.NewPoint(0, 0), 400},
+		// The comparison tolerance must track the short dimension of an elongated bounds. Derived from the long one, it
+		// swallows the short dimension entirely and the sweep returns a bogus three-vertex polygon.
+		{"wide bounds", geom.NewRect(0, 0, 1000, 0.05), geom.NewPoint(500, 0.025), 50},
+		{"tall bounds", geom.NewRect(0, 0, 0.05, 1000), geom.NewPoint(0.025, 500), 50},
+	} {
+		checkPolygon(c, visibility.New(tc.bounds, nil).PolygonFrom(tc.viewPt), 4, tc.wantArea, tc.name)
+	}
 }
 
-func TestPolygonFromWithOriginCenteredBounds(t *testing.T) {
+func TestPolygonFromIgnoresDegenerateObstructions(t *testing.T) {
 	c := check.New(t)
 
-	// The angles of the corners of a bounds centered on the view point cover all four quadrants, including the pair
-	// that straddles the ±180° discontinuity the sweep starts from.
-	v := visibility.New(geom.NewRect(-10, -10, 20, 20), nil)
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(0, 0)), 4, 400, "origin-centered bounds")
-}
-
-func TestPolygonFromBetweenTwoWalls(t *testing.T) {
-	c := check.New(t)
-
-	// Walls at y=3 and y=7 spanning x 3-7, with the view point between them at (5,5). Each wall casts a shadow of
-	// area 21 onto the edge beyond it.
-	v := visibility.New(geom.NewRect(0, 0, 10, 10), []geom.Line{
-		geom.NewLine(geom.NewPoint(3, 3), geom.NewPoint(7, 3)),
-		geom.NewLine(geom.NewPoint(3, 7), geom.NewPoint(7, 7)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(5, 5)), 8, 100-21-21, "between two walls")
-}
-
-func TestPolygonFromWithObstructionsOutsideBounds(t *testing.T) {
-	c := check.New(t)
-
-	v := visibility.New(geom.NewRect(10, 10, 80, 80), []geom.Line{
-		geom.NewLine(geom.NewPoint(-10, -10), geom.NewPoint(0, 0)),
-		geom.NewLine(geom.NewPoint(100, 100), geom.NewPoint(110, 110)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 4, 6400, "obstructions outside the bounds")
-}
-
-func TestPolygonFromWithObstructionsCrossingBounds(t *testing.T) {
-	c := check.New(t)
-
-	// A wall along y=50 running in from the left and one along x=50 running past both edges box the view point into
-	// the 50x50 upper-left quadrant. The parts of each wall lying outside the bounds must be discarded rather than
-	// merely clipped at their crossing, or the sweep casts rays out to their far endpoints.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(-10, 50), geom.NewPoint(50, 50)),
-		geom.NewLine(geom.NewPoint(50, -10), geom.NewPoint(50, 110)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(25, 25)), 4, 2500, "obstructions crossing the bounds")
-}
-
-func TestPolygonFromWithZeroBounds(t *testing.T) {
-	c := check.New(t)
-
-	// No point lies inside an empty rectangle, so there is nothing to see from anywhere.
-	v := visibility.New(geom.NewRect(0, 0, 0, 0), nil)
-	c.Nil(v.PolygonFrom(geom.NewPoint(0, 0)))
-
-	v = visibility.New(geom.NewRect(10, 10, -5, -5), nil)
-	c.Nil(v.PolygonFrom(geom.NewPoint(10, 10)))
-}
-
-func TestPolygonFromWithNegativeBounds(t *testing.T) {
-	c := check.New(t)
-
-	// A full-width wall along y=0 leaves the view point at (0,-25) seeing only the upper half of the bounds.
-	v := visibility.New(geom.NewRect(-50, -50, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(-50, 0), geom.NewPoint(50, 0)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(0, -25)), 4, 5000, "negative bounds")
-}
-
-func TestPolygonFromWithSmallObstruction(t *testing.T) {
-	c := check.New(t)
-
-	// A wall one hundredth of the bounds tall still casts its shadow: the rays grazing its ends reach (100,50) and
-	// (100,53), so the shadow is (50,50)-(50,51)-(100,53)-(100,50), whose area is 100.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(50, 50), geom.NewPoint(50, 51)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(25, 50)), 8, 10000-100, "small obstruction")
-}
-
-func TestPolygonFromWithZeroLengthObstruction(t *testing.T) {
-	c := check.New(t)
-
-	// A degenerate obstruction has no extent to block anything, so the whole bounds stays visible.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(50, 20), geom.NewPoint(50, 20)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 4, 10000, "zero-length obstruction")
-}
-
-func TestPolygonFromWithObstructionAlongBoundsEdge(t *testing.T) {
-	c := check.New(t)
-
-	// An obstruction lying on top of one of the implicit bounds segments blocks nothing that the bounds did not
-	// already block, so the whole area stays visible. Its endpoints do become vertices along that edge.
-	v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{
-		geom.NewLine(geom.NewPoint(20, 0), geom.NewPoint(80, 0)),
-	})
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(50, 50)), 6, 10000, "obstruction along a bounds edge")
-}
-
-func TestPolygonFromWithNonFiniteObstruction(t *testing.T) {
-	c := check.New(t)
-
-	// A coordinate that is not a number has neither an angle nor a distance, so such a line is ignored rather than
-	// left to corrupt the ordering of everything it is compared against.
+	// A NaN or infinite coordinate has no meaningful angle or distance, so such a line is ignored rather than left to
+	// corrupt the ordering of everything it is compared against. A zero-length line has no extent to block anything.
 	nan := float32(math.NaN())
 	inf := float32(math.Inf(1))
 	for _, obstruction := range []geom.Line{
@@ -578,55 +546,117 @@ func TestPolygonFromWithNonFiniteObstruction(t *testing.T) {
 		geom.NewLine(geom.NewPoint(50, nan), geom.NewPoint(50, 50)),
 		geom.NewLine(geom.NewPoint(inf, 20), geom.NewPoint(50, 20)),
 		geom.NewLine(geom.NewPoint(-inf, 20), geom.NewPoint(50, 20)),
+		geom.NewLine(geom.NewPoint(50, 20), geom.NewPoint(50, 20)),
 	} {
 		v := visibility.New(geom.NewRect(0, 0, 100, 100), []geom.Line{obstruction})
 		checkPolygon(c, v.PolygonFrom(geom.NewPoint(25, 25)), 4, 10000, fmt.Sprint(obstruction))
 	}
 }
 
-func TestPolygonFromHasNoDuplicateVertices(t *testing.T) {
+func TestPolygonFromComputesVisiblePolygon(t *testing.T) {
 	c := check.New(t)
 
-	// Beyond vertex distinctness, the view-point-on-obstruction cases pin the polygon itself: a zero-thickness wall
-	// through or touching the eye occludes only a measure-zero set of rays, so the whole bounds stays visible.
 	bounds := geom.NewRect(0, 0, 100, 100)
 	for _, tc := range []struct {
 		name         string
-		obstruction  geom.Line
+		obstructions []geom.Line
+		bounds       geom.Rect
 		viewPt       geom.Point
 		wantVertices int
 		wantArea     float64
 	}{
 		{
 			"wall across the middle",
-			geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50)),
+			[]geom.Line{geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50))},
+			bounds,
 			geom.NewPoint(50, 25),
 			4,
 			5000,
 		},
+		// A zero-thickness wall through or touching the eye occludes only a measure-zero set of rays, so the whole
+		// bounds stays visible.
 		{
 			"view point on a wall endpoint",
-			geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50)),
+			[]geom.Line{geom.NewLine(geom.NewPoint(0, 50), geom.NewPoint(100, 50))},
+			bounds,
 			geom.NewPoint(0, 50),
 			4,
 			10000,
 		},
 		{
 			"view point on a wall",
-			geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(100, 100)),
+			[]geom.Line{geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(100, 100))},
+			bounds,
 			geom.NewPoint(50, 50),
 			4,
 			10000,
 		},
 		{
 			"wall along a bounds edge",
-			geom.NewLine(geom.NewPoint(20, 0), geom.NewPoint(80, 0)),
+			[]geom.Line{geom.NewLine(geom.NewPoint(20, 0), geom.NewPoint(80, 0))},
+			bounds,
 			geom.NewPoint(50, 50),
 			6,
 			10000,
 		},
+		// The rays grazing the wall's ends reach the bottom corners of the bounds exactly, so the shadow is the
+		// quadrilateral (10,10)-(90,10)-(100,0)-(0,0), whose area is 900.
+		{
+			"wall at y=10",
+			[]geom.Line{geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(90, 10))},
+			bounds,
+			geom.NewPoint(50, 50),
+			6,
+			10000 - 900,
+		},
+		// Each wall casts a shadow of area 21 onto the edge beyond it.
+		{
+			"between two walls",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(3, 3), geom.NewPoint(7, 3)),
+				geom.NewLine(geom.NewPoint(3, 7), geom.NewPoint(7, 7)),
+			},
+			geom.NewRect(0, 0, 10, 10),
+			geom.NewPoint(5, 5),
+			8,
+			100 - 21 - 21,
+		},
+		{
+			"obstructions outside the bounds",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(-10, -10), geom.NewPoint(0, 0)),
+				geom.NewLine(geom.NewPoint(100, 100), geom.NewPoint(110, 110)),
+			},
+			geom.NewRect(10, 10, 80, 80),
+			geom.NewPoint(50, 50),
+			4,
+			6400,
+		},
+		// The walls box the view point into the 50x50 upper-left quadrant. Their parts outside the bounds must be
+		// discarded rather than merely clipped at their crossing, or the sweep casts rays out to their far endpoints.
+		{
+			"obstructions crossing the bounds",
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(-10, 50), geom.NewPoint(50, 50)),
+				geom.NewLine(geom.NewPoint(50, -10), geom.NewPoint(50, 110)),
+			},
+			bounds,
+			geom.NewPoint(25, 25),
+			4,
+			2500,
+		},
+		// A wall one hundredth of the bounds tall still casts its shadow: the rays grazing its ends reach (100,50) and
+		// (100,53), so the shadow is (50,50)-(50,51)-(100,53)-(100,50), whose area is 100.
+		{
+			"small obstruction",
+			[]geom.Line{geom.NewLine(geom.NewPoint(50, 50), geom.NewPoint(50, 51))},
+			bounds,
+			geom.NewPoint(25, 50),
+			8,
+			10000 - 100,
+		},
 	} {
-		result := visibility.New(bounds, []geom.Line{tc.obstruction}).PolygonFrom(tc.viewPt)
+		result := visibility.New(tc.bounds, tc.obstructions).PolygonFrom(tc.viewPt)
 		checkPolygon(c, result, tc.wantVertices, tc.wantArea, tc.name)
 	}
 }
@@ -686,44 +716,6 @@ func TestPolygonFromWithObstructionNearBoundsCorner(t *testing.T) {
 	want := 10000 - math.Abs(area)/2
 	got := polygonArea(polygon)
 	c.True(math.Abs(got-want) < 2, "area %v, want %v (polygon %v)", got, want, polygon)
-}
-
-func TestPolygonFromWithElongatedBounds(t *testing.T) {
-	c := check.New(t)
-
-	// The comparison tolerance must track the short dimension of an elongated bounds. Derived from the long one, it
-	// swallows the short dimension entirely and the sweep returns a bogus three-vertex polygon with roughly half the
-	// true area even with no obstructions at all.
-	v := visibility.New(geom.NewRect(0, 0, 1000, 0.05), nil)
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(500, 0.025)), 4, 50, "wide bounds")
-
-	v = visibility.New(geom.NewRect(0, 0, 0.05, 1000), nil)
-	checkPolygon(c, v.PolygonFrom(geom.NewPoint(0.025, 500)), 4, 50, "tall bounds")
-}
-
-func TestPolygonFromWithHugeBounds(t *testing.T) {
-	c := check.New(t)
-
-	// The sweep's starting ray direction is derived from the scene's extent. A fixed +1 offset vanishes below the
-	// float32 resolution of scene-local coordinates at 2^24 and beyond, degrading the seeded heap to insertion order
-	// and letting far walls show through near ones, so the same scene expressed at a huge scale has to produce the
-	// same shape.
-	obstructions := []geom.Line{
-		geom.NewLine(geom.NewPoint(48, 24), geom.NewPoint(48, 40)),
-		geom.NewLine(geom.NewPoint(40, 16), geom.NewPoint(40, 48)),
-	}
-	base := visibility.New(geom.NewRect(0, 0, 64, 64), obstructions).PolygonFrom(geom.NewPoint(56, 32))
-	baseArea := polygonArea(base)
-	c.True(baseArea > 0 && baseArea < 64*64, "base area %v", baseArea)
-
-	const scale = 1 << 20 // Puts the scaled view point's scene-local coordinates beyond 2^24.
-	scaled := make([]geom.Line, len(obstructions))
-	for i, line := range obstructions {
-		scaled[i] = geom.NewLine(line.Start.Mul(scale), line.End.Mul(scale))
-	}
-	huge := visibility.New(geom.NewRect(0, 0, 64*scale, 64*scale), scaled).PolygonFrom(geom.NewPoint(56*scale, 32*scale))
-	ratio := polygonArea(huge) / (scale * scale)
-	c.True(math.Abs(ratio-baseArea) <= baseArea*0.005, "scaled area ratio %v, want %v", ratio, baseArea)
 }
 
 // sightlineVisible reports whether p is visible from viewPt given the obstructions, along with whether the sample is
@@ -904,41 +896,82 @@ func TestPolygonFromIsConcurrencySafe(t *testing.T) {
 func TestPolygonFromIsScaleInvariant(t *testing.T) {
 	c := check.New(t)
 
-	// The same scene, expressed at wildly different scales, has to produce the same polygon shape. A tolerance fixed
-	// in world units instead makes small scenes silently collapse: at a bounds size of 0.01 the square's shadow used
-	// to disappear entirely, dropping the polygon from 8 vertices to 5.
-	const wantRatio = 0.72
-	for _, size := range []float32{1000, 100, 10, 1, 0.1, 0.01, 0.001} {
-		bounds := geom.NewRect(0, 0, size, size)
-		v := visibility.New(bounds, []geom.Line{
-			geom.NewLine(geom.NewPoint(size*0.4, size*0.4), geom.NewPoint(size*0.6, size*0.4)),
-			geom.NewLine(geom.NewPoint(size*0.6, size*0.4), geom.NewPoint(size*0.6, size*0.6)),
-			geom.NewLine(geom.NewPoint(size*0.6, size*0.6), geom.NewPoint(size*0.4, size*0.6)),
-			geom.NewLine(geom.NewPoint(size*0.4, size*0.6), geom.NewPoint(size*0.4, size*0.4)),
-		})
-		result := v.PolygonFrom(geom.NewPoint(size*0.2, size*0.2))
-		c.Equal(8, len(result), "bounds size %v", size)
-		ratio := polygonArea(result) / (float64(size) * float64(size))
-		c.True(math.Abs(ratio-wantRatio) < 0.001, "bounds size %v: area ratio %v, want %v", size, ratio, wantRatio)
+	// The same scene, expressed at wildly different scales, has to produce the same polygon shape. Each scene is given
+	// in the coordinates of a unit bounds and scaled up by every size.
+	for _, tc := range []struct {
+		name         string
+		sizes        []float32
+		obstructions []geom.Line
+		viewPt       geom.Point
+		wantVertices int
+		wantRatio    float64
+	}{
+		// A tolerance fixed in world units makes small scenes silently collapse: at a bounds size of 0.01 the square's
+		// shadow used to disappear entirely, dropping the polygon from 8 vertices to 5.
+		{
+			"square",
+			[]float32{1000, 100, 10, 1, 0.1, 0.01, 0.001},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0.4, 0.4), geom.NewPoint(0.6, 0.4)),
+				geom.NewLine(geom.NewPoint(0.6, 0.4), geom.NewPoint(0.6, 0.6)),
+				geom.NewLine(geom.NewPoint(0.6, 0.6), geom.NewPoint(0.4, 0.6)),
+				geom.NewLine(geom.NewPoint(0.4, 0.6), geom.NewPoint(0.4, 0.4)),
+			},
+			geom.NewPoint(0.2, 0.2),
+			8,
+			0.72,
+		},
+		// The sweep's starting ray direction is derived from the scene's extent. A fixed +1 offset vanishes below the
+		// float32 resolution of scene-local coordinates at 2^24 and beyond, degrading the seeded heap to insertion
+		// order and letting far walls show through near ones.
+		{
+			"far wall behind a near one",
+			[]float32{64, 64 << 20},
+			[]geom.Line{
+				geom.NewLine(geom.NewPoint(0.75, 0.375), geom.NewPoint(0.75, 0.625)),
+				geom.NewLine(geom.NewPoint(0.625, 0.25), geom.NewPoint(0.625, 0.75)),
+			},
+			geom.NewPoint(0.875, 0.5),
+			6,
+			0.390625,
+		},
+	} {
+		for _, size := range tc.sizes {
+			obstructions := make([]geom.Line, len(tc.obstructions))
+			for i, line := range tc.obstructions {
+				obstructions[i] = geom.NewLine(line.Start.Mul(size), line.End.Mul(size))
+			}
+			result := visibility.New(geom.NewRect(0, 0, size, size), obstructions).PolygonFrom(tc.viewPt.Mul(size))
+			c.Equal(tc.wantVertices, len(result), "%s: bounds size %v", tc.name, size)
+			ratio := polygonArea(result) / (float64(size) * float64(size))
+			c.True(math.Abs(ratio-tc.wantRatio) < 0.001, "%s: bounds size %v: area ratio %v, want %v", tc.name, size,
+				ratio, tc.wantRatio)
+		}
 	}
 }
 
-func TestNewWithNonFiniteBounds(t *testing.T) {
+func TestNewWithEmptyOrNonFiniteBounds(t *testing.T) {
 	c := check.New(t)
 
-	// A bounds with a NaN or infinite coordinate cannot yield finite vertices, so it is treated as empty and every
-	// polygon request returns nil rather than garbage such as [+Inf,+Inf NaN,NaN ...].
+	// No point lies inside an empty rectangle, so there is nothing to see from anywhere. A bounds with a NaN or
+	// infinite coordinate cannot yield finite vertices, so it is treated as empty and every polygon request returns nil
+	// rather than garbage such as [+Inf,+Inf NaN,NaN ...].
 	nan := float32(math.NaN())
 	inf := float32(math.Inf(1))
 	obstructions := []geom.Line{geom.NewLine(geom.NewPoint(10, 10), geom.NewPoint(20, 20))}
-	for _, bounds := range []geom.Rect{
-		geom.NewRect(0, 0, inf, inf),
-		geom.NewRect(nan, 0, 100, 100),
-		geom.NewRect(0, nan, 100, 100),
-		geom.NewRect(0, 0, 100, nan),
-		geom.NewRect(float32(math.Inf(-1)), 0, 100, 100),
+	for _, tc := range []struct {
+		bounds geom.Rect
+		viewPt geom.Point
+	}{
+		{geom.NewRect(0, 0, inf, inf), geom.NewPoint(50, 50)},
+		{geom.NewRect(nan, 0, 100, 100), geom.NewPoint(50, 50)},
+		{geom.NewRect(0, nan, 100, 100), geom.NewPoint(50, 50)},
+		{geom.NewRect(0, 0, 100, nan), geom.NewPoint(50, 50)},
+		{geom.NewRect(float32(math.Inf(-1)), 0, 100, 100), geom.NewPoint(50, 50)},
+		{geom.NewRect(0, 0, 0, 0), geom.NewPoint(0, 0)},
+		{geom.NewRect(10, 10, -5, -5), geom.NewPoint(10, 10)},
 	} {
-		c.Nil(visibility.New(bounds, obstructions).PolygonFrom(geom.NewPoint(50, 50)), "bounds %v", bounds)
+		c.Nil(visibility.New(tc.bounds, obstructions).PolygonFrom(tc.viewPt), "bounds %v", tc.bounds)
 	}
 }
 
@@ -964,8 +997,8 @@ func TestPolygonFromWithBoundsFarFromOrigin(t *testing.T) {
 		c.True(math.Abs(area-wantArea) <= wantArea*0.01, "%s: area %v, want %v", tc.name, area, wantArea)
 	}
 
-	// An obstruction in an offset scene still casts its shadow: this is the scene from TestPolygonFromInsideBounds
-	// translated by (10000,10000), so the visible area is the same 9100 square units.
+	// An obstruction in an offset scene still casts its shadow: this is the "wall at y=10" scene from
+	// TestPolygonFromComputesVisiblePolygon translated by (10000,10000), so the visible area is the same 9100.
 	v := visibility.New(geom.NewRect(10000, 10000, 100, 100), []geom.Line{
 		geom.NewLine(geom.NewPoint(10010, 10010), geom.NewPoint(10090, 10010)),
 	})
@@ -1001,87 +1034,6 @@ func TestPolygonFromWithSliverBounds(t *testing.T) {
 	// nil, never a degenerate one- or two-vertex slice.
 	v := visibility.New(geom.NewRect(0, 0, 100, 0.0001), nil)
 	c.Nil(v.PolygonFrom(geom.NewPoint(50, 0.00005)))
-}
-
-func TestBreakIntersectionsFarFromOrigin(t *testing.T) {
-	c := check.New(t)
-
-	// These cross at (10000.5,10000), half a unit from an endpoint of each line. A tolerance derived from the raw
-	// coordinate magnitude (~1) discards the crossing as coincident with those endpoints and returns both lines
-	// uncut, violating the postcondition that the results do not intersect.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10000.5, 10000)),
-		geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10000)),
-		geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10000.5, 10001)),
-		geom.NewLine(geom.NewPoint(10000.5, 10000), geom.NewPoint(10010, 10000)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(10000, 10000), geom.NewPoint(10010, 10000)),
-		geom.NewLine(geom.NewPoint(10000.5, 9999), geom.NewPoint(10000.5, 10001)),
-	})))
-}
-
-func TestBreakIntersectionsCollinearDiagonalNonInteger(t *testing.T) {
-	c := check.New(t)
-
-	// Exactly collinear diagonal segments with non-integer coordinates: every point of the form (t,t) lies exactly on
-	// y=x, but the cross products of the collinearity tests are inexact, and fused multiply-subtract on arm64 used to
-	// turn their mathematically zero results into rounding noise, sending these overlaps down the "not parallel"
-	// branch and returning them uncut and overlapping. The scene spans 0-20 so that re-centering to (10,10) is exact
-	// for every coordinate, letting the expected output be stated verbatim.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(5, 5)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5.848, 5.848)),
-		geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(9, 9)),
-		geom.NewLine(geom.NewPoint(9, 9), geom.NewPoint(20, 20)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(20, 20)),
-		geom.NewLine(geom.NewPoint(5.848, 5.848), geom.NewPoint(20, 20)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(9, 9)),
-	})))
-}
-
-func TestBreakIntersectionsLargeExtentCollinear(t *testing.T) {
-	c := check.New(t)
-
-	// Two overlapping vertical lines at x=12000 in a batch whose other geometry keeps the re-centered coordinates near
-	// ±12000. Line.Bounds() used to pad by a fixed epsilon that falls below the float32 ULP at that magnitude, giving
-	// an axis-aligned line a degenerate zero-thickness bounds that intersects nothing -- not even itself -- so the
-	// quadtree never offered the overlapping partner as a candidate and the pair came back uncut.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(-12000, 0), geom.NewPoint(-12000, 10)),
-		geom.NewLine(geom.NewPoint(12000, 0), geom.NewPoint(12000, 2000)),
-		geom.NewLine(geom.NewPoint(12000, 2000), geom.NewPoint(12000, 3000)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(12000, 3000), geom.NewPoint(12000, 0)),
-		geom.NewLine(geom.NewPoint(12000, 3000), geom.NewPoint(12000, 2000)),
-		geom.NewLine(geom.NewPoint(-12000, 0), geom.NewPoint(-12000, 10)),
-	})))
-}
-
-func TestBreakIntersectionsElongatedScene(t *testing.T) {
-	c := check.New(t)
-
-	// A short crossing wall in a much longer scene: the preprocessing tolerance used to be derived from the overall
-	// extent alone, so it dwarfed the wall, silently deleting it and leaving the crossing uncut, while PolygonFrom --
-	// whose tolerance tracks the finer dimension -- would have resolved the same wall's shadow correctly.
-	c.Equal([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0.025), geom.NewPoint(500, 0.025)),
-		geom.NewLine(geom.NewPoint(500, 0), geom.NewPoint(500, 0.025)),
-		geom.NewLine(geom.NewPoint(500, 0.025), geom.NewPoint(500, 0.05)),
-		geom.NewLine(geom.NewPoint(500, 0.025), geom.NewPoint(1000, 0.025)),
-	}, normalizedLines(visibility.BreakIntersections([]geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0.025), geom.NewPoint(1000, 0.025)),
-		geom.NewLine(geom.NewPoint(500, 0), geom.NewPoint(500, 0.05)),
-	})))
-
-	// A pillar much shorter than the corridor is long, but well above the tolerance the sweep works to, must survive
-	// the preprocessing untouched rather than vanish.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(1000, 0)),
-		geom.NewLine(geom.NewPoint(0, 1), geom.NewPoint(1000, 1)),
-		geom.NewLine(geom.NewPoint(500, 0.4), geom.NewPoint(500, 0.49)),
-	}
-	c.Equal(lines, visibility.BreakIntersections(lines))
 }
 
 func TestPolygonFromWithEyeNearLongWall(t *testing.T) {
@@ -1154,12 +1106,13 @@ func TestPolygonFromWithEyeNearWallLine(t *testing.T) {
 		"visible point missing from the polygon %v", polygon)
 }
 
-func TestBreakIntersectionsWithNonFiniteLines(t *testing.T) {
+func TestBreakIntersectionsDropsDegenerateLines(t *testing.T) {
 	c := check.New(t)
 
 	// A single non-finite line must not poison the batch: an infinite coordinate used to drive the tolerance to +Inf,
-	// making every point compare equal and dropping every segment, while a NaN collapsed the tolerance to its floor.
-	// The bad line is dropped and the rest of the batch is still split normally.
+	// making every point compare equal and dropping every segment, while a NaN collapsed the tolerance to its floor. A
+	// zero-length line has nothing to split and nothing to contribute as an obstruction. The bad line is dropped
+	// without cutting any line it lies on, and the rest of the batch is still split normally.
 	nan := float32(math.NaN())
 	inf := float32(math.Inf(1))
 	crossing := []geom.Line{
@@ -1177,29 +1130,11 @@ func TestBreakIntersectionsWithNonFiniteLines(t *testing.T) {
 		geom.NewLine(geom.NewPoint(-inf, 20), geom.NewPoint(30, 20)),
 		geom.NewLine(geom.NewPoint(nan, 20), geom.NewPoint(30, 20)),
 		geom.NewLine(geom.NewPoint(20, 20), geom.NewPoint(20, nan)),
+		geom.NewLine(geom.NewPoint(2, 2), geom.NewPoint(2, 2)),
 	} {
 		c.Equal(want, normalizedLines(visibility.BreakIntersections(append(slices.Clone(crossing), bad))),
 			"bad line %v", bad)
 	}
-}
-
-func TestBreakIntersectionsDropsZeroLengthLines(t *testing.T) {
-	c := check.New(t)
-
-	// Dropping degenerate input is documented behavior: a zero-length line has nothing to split and nothing to
-	// contribute as an obstruction.
-	lines := []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 5), geom.NewPoint(5, 5)),
-	}
-	c.Equal([]geom.Line{lines[0]}, visibility.BreakIntersections(lines))
-
-	// The same holds when the zero-length line lies on another line: it must be dropped without cutting that line.
-	lines = []geom.Line{
-		geom.NewLine(geom.NewPoint(0, 0), geom.NewPoint(10, 0)),
-		geom.NewLine(geom.NewPoint(5, 0), geom.NewPoint(5, 0)),
-	}
-	c.Equal([]geom.Line{lines[0]}, visibility.BreakIntersections(lines))
 }
 
 var (

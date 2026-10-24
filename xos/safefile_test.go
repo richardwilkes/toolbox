@@ -21,36 +21,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/xos"
 )
 
-func TestCreateSafeFile_AbortNonExisting(t *testing.T) {
-	c := check.New(t)
-	filename := filepath.Join(c.TempDir(), "abort.txt")
-	f, err := xos.CreateSafeFile(filename)
-	c.NoError(err)
-	var n int
-	n, err = f.WriteString("abort")
-	c.NoError(err)
-	c.Equal(5, n)
-	c.NoError(f.Close())
-	_, err = os.Stat(filename)
-	c.HasError(err)
-}
-
-func TestCreateSafeFile_CommitNonExisting(t *testing.T) {
-	c := check.New(t)
-	filename := filepath.Join(c.TempDir(), "commit.txt")
-	f, err := xos.CreateSafeFile(filename)
-	c.NoError(err)
-	var n int
-	n, err = f.WriteString("commit")
-	c.NoError(err)
-	c.Equal(6, n)
-	c.NoError(f.Commit())
-	c.NoError(f.Close())
-	_, err = os.Stat(filename)
-	c.NoError(err)
-	c.NoError(os.Remove(filename))
-}
-
 func TestCreateSafeFile_AbortExisting(t *testing.T) {
 	c := check.New(t)
 	filename := filepath.Join(c.TempDir(), "safe.txt")
@@ -118,23 +88,6 @@ func TestWriteSafeFile_WriterError(t *testing.T) {
 	c.Equal(expectedErr, err)
 	_, err = os.Stat(filename)
 	c.HasError(err)
-}
-
-func TestWriteSafeFile_ReplaceExisting(t *testing.T) {
-	c := check.New(t)
-	filename := filepath.Join(c.TempDir(), "replace.txt")
-	originalData := "original content"
-	c.NoError(os.WriteFile(filename, []byte(originalData), 0o640))
-	newData := "new content"
-	err := xos.WriteSafeFile(filename, func(w io.Writer) error {
-		_, writeErr := w.Write([]byte(newData))
-		return writeErr
-	})
-	c.NoError(err)
-	data, err := os.ReadFile(filename)
-	c.NoError(err)
-	c.Equal(newData, string(data))
-	c.NoError(os.Remove(filename))
 }
 
 // TestSafeFilePreservesExistingMode verifies that committing a SafeFile over an existing file preserves that file's

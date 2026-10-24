@@ -16,16 +16,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
-func TestNewSize(t *testing.T) {
-	c := check.New(t)
-	s := geom.NewSize(10, 20)
-	c.Equal(float32(10), s.Width)
-	c.Equal(float32(20), s.Height)
-	sf := geom.NewSize(10.5, 20.7)
-	c.Equal(float32(10.5), sf.Width)
-	c.Equal(float32(20.7), sf.Height)
-}
-
 func TestSizeAdd(t *testing.T) {
 	c := check.New(t)
 

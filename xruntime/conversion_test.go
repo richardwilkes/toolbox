@@ -34,17 +34,8 @@ func TestPtrFromUintptrHeapRoundTrip(t *testing.T) {
 	c.Equal(42, *p)
 	*p = 17
 	c.Equal(17, *v)
+	c.True(xruntime.PtrFromUintptr[int](namedUintptr(uintptr(unsafe.Pointer(v)))) == v)
 }
 
 // namedUintptr stands in for an OS handle alias, exercising the ~uintptr constraint.
 type namedUintptr uintptr
-
-func TestPtrFromUintptrNamedType(t *testing.T) {
-	c := check.New(t)
-	var pin runtime.Pinner
-	defer pin.Unpin()
-	v := new(uint32)
-	*v = 0xDEADBEEF
-	pin.Pin(v)
-	c.Equal(uint32(0xDEADBEEF), *xruntime.PtrFromUintptr[uint32](namedUintptr(uintptr(unsafe.Pointer(v)))))
-}

@@ -16,16 +16,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/geom"
 )
 
-func TestNewInsets(t *testing.T) {
-	c := check.New(t)
-
-	insets := geom.NewInsets(1, 2, 3, 4) // top, left, bottom, right
-	c.Equal(float32(1), insets.Top)
-	c.Equal(float32(2), insets.Left)
-	c.Equal(float32(3), insets.Bottom)
-	c.Equal(float32(4), insets.Right)
-}
-
 func TestNewUniformInsets(t *testing.T) {
 	c := check.New(t)
 
@@ -152,26 +142,8 @@ func TestInsetsSize(t *testing.T) {
 	// Height: top + bottom = 2 + 4 = 6
 	c.Equal(float32(8), size.Width)
 	c.Equal(float32(6), size.Height)
-}
-
-func TestInsetsWidth(t *testing.T) {
-	c := check.New(t)
-
-	insets := geom.NewInsets(2, 3, 4, 5)
-	width := insets.Width()
-
-	// Width: left + right = 3 + 5 = 8
-	c.Equal(float32(8), width)
-}
-
-func TestInsetsHeight(t *testing.T) {
-	c := check.New(t)
-
-	insets := geom.NewInsets(2, 3, 4, 5)
-	height := insets.Height()
-
-	// Height: top + bottom = 2 + 4 = 6
-	c.Equal(float32(6), height)
+	c.Equal(float32(8), insets.Width())
+	c.Equal(float32(6), insets.Height())
 }
 
 func TestInsetsString(t *testing.T) {

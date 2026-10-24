@@ -576,22 +576,3 @@ func TestFloat64(t *testing.T) {
 	hash17 := h17.Sum(nil)
 	c.Equal(hash16, hash17)
 }
-
-func TestConsistencyAcrossHashers(t *testing.T) {
-	c := check.New(t)
-
-	data := []byte("test data")
-
-	h1 := sha256.New()
-	h2 := crc32.NewIEEE()
-
-	xhash.BytesWithLen(h1, data)
-	xhash.BytesWithLen(h2, data)
-
-	// The sums differ by algorithm, so only verify that both hashers accept the writes and produce output.
-	hash1 := h1.Sum(nil)
-	hash2 := h2.Sum(nil)
-
-	c.NotEqual(len(hash1), 0)
-	c.NotEqual(len(hash2), 0)
-}

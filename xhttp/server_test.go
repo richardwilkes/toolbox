@@ -134,39 +134,33 @@ func newTestServerWithWriteTimeout(c check.Checker, writeTimeout time.Duration, 
 	return s
 }
 
-// TestServerWriteTimeoutAnchorsContextDeadlineAtRequestStart verifies that, when WriteTimeout is configured, the
-// request context handed to the handler carries a deadline of WriteTimeout anchored to the moment the request is
-// received (which is when net/http arms the socket's write deadline), not some later or earlier instant.
-func TestServerWriteTimeoutAnchorsContextDeadlineAtRequestStart(t *testing.T) {
+// TestServerContextDeadlineFollowsWriteTimeout verifies that, when WriteTimeout is configured, the request context
+// handed to the handler carries a deadline of WriteTimeout anchored to the moment the request is received (which is
+// when net/http arms the socket's write deadline), not some later or earlier instant, and that without WriteTimeout no
+// deadline is added.
+func TestServerContextDeadlineFollowsWriteTimeout(t *testing.T) {
 	c := check.New(t)
-	const writeTimeout = 200 * time.Millisecond
-	var gotDeadline time.Time
-	var gotOK bool
-	s := newTestServerWithWriteTimeout(c, writeTimeout, func(_ http.ResponseWriter, req *http.Request) {
-		gotDeadline, gotOK = req.Context().Deadline()
-	})
+	for _, writeTimeout := range []time.Duration{200 * time.Millisecond, 0} {
+		var gotDeadline time.Time
+		var gotOK bool
+		s := newTestServerWithWriteTimeout(c, writeTimeout, func(_ http.ResponseWriter, req *http.Request) {
+			gotDeadline, gotOK = req.Context().Deadline()
+		})
 
-	before := time.Now()
-	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
-	after := time.Now()
+		before := time.Now()
+		s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+		after := time.Now()
 
-	c.True(gotOK, "handler context should have a deadline when WriteTimeout is set")
-	// The anchor is the request-start instant captured inside ServeHTTP, which falls within [before, after], so the
-	// deadline must fall within [before+WriteTimeout, after+WriteTimeout].
-	c.False(gotDeadline.Before(before.Add(writeTimeout)), "deadline anchored before the request was received")
-	c.False(gotDeadline.After(after.Add(writeTimeout)), "deadline anchored after the request completed")
-}
-
-// TestServerNoWriteTimeoutLeavesContextWithoutDeadline verifies that when WriteTimeout is not configured, the handler's
-// request context is left without an added deadline.
-func TestServerNoWriteTimeoutLeavesContextWithoutDeadline(t *testing.T) {
-	c := check.New(t)
-	var gotOK bool
-	s := newTestServerWithWriteTimeout(c, 0, func(_ http.ResponseWriter, req *http.Request) {
-		_, gotOK = req.Context().Deadline()
-	})
-	s.ServeHTTP(&recordingWriter{}, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
-	c.False(gotOK, "handler context should not have a deadline when WriteTimeout is unset")
+		if writeTimeout == 0 {
+			c.False(gotOK, "handler context should not have a deadline when WriteTimeout is unset")
+			continue
+		}
+		c.True(gotOK, "handler context should have a deadline when WriteTimeout is set")
+		// The anchor is the request-start instant captured inside ServeHTTP, which falls within [before, after], so the
+		// deadline must fall within [before+WriteTimeout, after+WriteTimeout].
+		c.False(gotDeadline.Before(before.Add(writeTimeout)), "deadline anchored before the request was received")
+		c.False(gotDeadline.After(after.Add(writeTimeout)), "deadline anchored after the request completed")
+	}
 }
 
 // TestServerWriteTimeoutResetPerRequest verifies that the context deadline is derived fresh for each request rather

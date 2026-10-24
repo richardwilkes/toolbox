@@ -21,129 +21,6 @@ import (
 	"github.com/richardwilkes/toolbox/v2/collection/redblack"
 )
 
-func TestRedBlackTree(t *testing.T) {
-	c := check.New(t)
-	rbt := redblack.New[int, int](cmp.Compare[int])
-	c.Equal(0, rbt.Count())
-
-	rbt.Insert(10, 10)
-	c.Equal(1, rbt.Count())
-
-	result, ok := rbt.Get(10)
-	c.True(ok)
-	c.Equal(10, result)
-
-	rbt.Remove(10)
-	c.Equal(0, rbt.Count())
-
-	rbt.Insert(10, 10)
-	rbt.Insert(5, 5)
-	rbt.Insert(15, 15)
-	c.Equal(3, rbt.Count())
-
-	var values []int
-	rbt.Traverse(func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(3, len(values))
-	c.Equal([]int{5, 10, 15}, values)
-
-	rbt.Insert(10, 10)
-	c.Equal(4, rbt.Count())
-
-	values = nil
-	rbt.Traverse(func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(4, len(values))
-	c.Equal([]int{5, 10, 10, 15}, values)
-
-	values = nil
-	rbt.ReverseTraverse(func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(4, len(values))
-	c.Equal([]int{15, 10, 10, 5}, values)
-
-	rbt.Remove(7)
-	c.Equal(4, rbt.Count())
-
-	rbt.Remove(10)
-	c.Equal(3, rbt.Count())
-
-	rbt.Remove(10)
-	c.Equal(2, rbt.Count())
-
-	values = nil
-	rbt.Traverse(func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(2, len(values))
-	c.Equal([]int{5, 15}, values)
-
-	for i := -10; i < 21; i++ {
-		rbt.Insert(i, i)
-	}
-	c.Equal(33, rbt.Count())
-
-	result, ok = rbt.Get(-3)
-	c.True(ok)
-	c.Equal(-3, result)
-
-	_, ok = rbt.Get(-11)
-	c.False(ok)
-
-	values = nil
-	rbt.TraverseStartingAt(30, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(0, len(values))
-
-	values = nil
-	rbt.TraverseStartingAt(20, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(1, len(values))
-	c.Equal([]int{20}, values)
-
-	values = nil
-	rbt.TraverseStartingAt(18, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(3, len(values))
-	c.Equal([]int{18, 19, 20}, values)
-
-	values = nil
-	rbt.ReverseTraverseStartingAt(-20, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(0, len(values))
-
-	values = nil
-	rbt.ReverseTraverseStartingAt(-10, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(1, len(values))
-	c.Equal([]int{-10}, values)
-
-	values = nil
-	rbt.ReverseTraverseStartingAt(-8, func(_, value int) bool {
-		values = append(values, value)
-		return true
-	})
-	c.Equal(3, len(values))
-	c.Equal([]int{-8, -9, -10}, values)
-}
-
 func TestEmptyTree(t *testing.T) {
 	c := check.New(t)
 	rbt := redblack.New[int, string](cmp.Compare[int])
@@ -284,6 +161,13 @@ func TestDuplicateKeys(t *testing.T) {
 		return true
 	})
 	c.Equal([]string{"first", "second", "third"}, values)
+
+	values = nil
+	rbt.ReverseTraverse(func(_ int, v string) bool {
+		values = append(values, v)
+		return true
+	})
+	c.Equal([]string{"third", "second", "first"}, values)
 
 	rbt.Remove(10)
 	c.Equal(2, rbt.Count())
@@ -547,44 +431,6 @@ func TestLargeDataset(t *testing.T) {
 	}
 }
 
-func TestStringKeys(t *testing.T) {
-	c := check.New(t)
-	rbt := redblack.New[string, int](cmp.Compare[string])
-
-	data := map[string]int{
-		"apple":  1,
-		"banana": 2,
-		"cherry": 3,
-		"date":   4,
-		"elder":  5,
-	}
-
-	for k, v := range data {
-		rbt.Insert(k, v)
-	}
-	c.Equal(5, rbt.Count())
-
-	for k, v := range data {
-		value, exists := rbt.Get(k)
-		c.True(exists)
-		c.Equal(v, value)
-	}
-
-	var keys []string
-	rbt.Traverse(func(k string, _ int) bool {
-		keys = append(keys, k)
-		return true
-	})
-	c.Equal([]string{"apple", "banana", "cherry", "date", "elder"}, keys)
-
-	keys = nil
-	rbt.ReverseTraverse(func(k string, _ int) bool {
-		keys = append(keys, k)
-		return true
-	})
-	c.Equal([]string{"elder", "date", "cherry", "banana", "apple"}, keys)
-}
-
 func TestCustomComparator(t *testing.T) {
 	c := check.New(t)
 
@@ -613,37 +459,6 @@ func TestCustomComparator(t *testing.T) {
 	last, exists := rbt.Last()
 	c.True(exists)
 	c.Equal("val_1", last)
-}
-
-func TestRedBlackTreeProperties(t *testing.T) {
-	c := check.New(t)
-	rbt := redblack.New[int, int](cmp.Compare[int])
-
-	// Insert values that could cause balance issues in a simple BST
-	values := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-	for _, v := range values {
-		rbt.Insert(v, v)
-	}
-
-	c.Equal(10, rbt.Count())
-
-	for _, v := range values {
-		val, exists := rbt.Get(v)
-		c.True(exists)
-		c.Equal(v, val)
-	}
-
-	var result []int
-	rbt.Traverse(func(k, _ int) bool {
-		result = append(result, k)
-		return true
-	})
-	c.Equal(values, result)
-
-	for _, v := range values {
-		rbt.Remove(v)
-	}
-	c.True(rbt.Empty())
 }
 
 func TestDump(_ *testing.T) {

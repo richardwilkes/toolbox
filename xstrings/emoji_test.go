@@ -18,184 +18,107 @@ import (
 
 func TestSelectEmojiRegex(t *testing.T) {
 	c := check.New(t)
-
 	c.NotNil(xstrings.SelectEmojiRegex)
+	table := []struct {
+		In    string
+		Match bool
+	}{
+		{In: "😀", Match: true},
+		{In: "😊", Match: true},
+		{In: "🎉", Match: true},
+		{In: "🚀", Match: true},
+		{In: "❤️", Match: true},
+		{In: "👍", Match: true},
+		{In: "😂", Match: true},
+		{In: "😍", Match: true},
+		{In: "🤔", Match: true},
+		{In: "😭", Match: true},
+		{In: "👎", Match: true},
+		{In: "👋", Match: true},
+		{In: "🤝", Match: true},
+		{In: "👏", Match: true},
+		{In: "🚗", Match: true},
+		{In: "🏠", Match: true},
+		{In: "📱", Match: true},
+		{In: "💻", Match: true},
+		{In: "📝", Match: true},
+		{In: "🌳", Match: true},
+		{In: "🌸", Match: true},
+		{In: "☀️", Match: true},
+		{In: "🌙", Match: true},
+		{In: "⭐", Match: true},
+		{In: "🍕", Match: true},
+		{In: "🍔", Match: true},
+		{In: "🍎", Match: true},
+		{In: "🍰", Match: true},
+		{In: "☕", Match: true},
+		{In: "✨", Match: true},
+		{In: "⚡", Match: true},
+		// Skin tone modifiers, ZWJ sequences and regional indicator flags.
+		{In: "👋🏻", Match: true},
+		{In: "👋🏽", Match: true},
+		{In: "👋🏿", Match: true},
+		{In: "👨‍👩‍👧‍👦", Match: true},
+		{In: "👩‍💻", Match: true},
+		{In: "👨‍🚀", Match: true},
+		{In: "🇺🇸", Match: true},
+		{In: "🇬🇧", Match: true},
+		{In: "🇯🇵", Match: true},
 
-	c.True(xstrings.SelectEmojiRegex.MatchString("😀"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("😊"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("🎉"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("🚀"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("❤️"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("👍"))
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("Hello 😀 World"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("Great job! 👍"))
-	c.True(xstrings.SelectEmojiRegex.MatchString("🎉 Celebration time! 🎊"))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("Hello World"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("No emojis here"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("123 ABC"))
-	c.False(xstrings.SelectEmojiRegex.MatchString(""))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("@#$%^&*()"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("+-=[]{}|;':\"<>?"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("àáâãäåæçèéêë"))
+		{In: "Hello 😀 World", Match: true},
+		{In: "Great job! 👍", Match: true},
+		{In: "🎉 Celebration time! 🎊", Match: true},
+		{In: "Hello World"},
+		{In: "No emojis here"},
+		{In: "123 ABC"},
+		{In: ""},
+		{In: "@#$%^&*()"},
+		{In: "+-=[]{}|;':\"<>?"},
+		{In: "àáâãäåæçèéêë"},
+		{In: "Ñ"},
+		{In: "ü"},
+		{In: "ñoño"},
+		{In: "über"},
+		{In: "café"},
+		{In: "∑"},
+		{In: "∆"},
+		{In: "∞"},
+		{In: "π"},
+		{In: "$"},
+		{In: "€"},
+		{In: "£"},
+		{In: "¥"},
+		{In: " "},
+		{In: "\t"},
+		{In: "\n"},
+		{In: "\r"},
+		{In: "\u0000"},
+		{In: "\u0001"},
+		{In: "\u001F"},
+	}
+	for _, one := range table {
+		c.Equal(one.Match, xstrings.SelectEmojiRegex.MatchString(one.In), "%q", one.In)
+	}
 }
 
 func TestSelectEmojiRegexFindAllString(t *testing.T) {
+	table := []struct {
+		In  string
+		Out []string
+	}{
+		{In: "Hello 😀 World", Out: []string{"😀"}},
+		{In: "😀😊🎉", Out: []string{"😀", "😊", "🎉"}},
+		{In: "Start 🚀 middle 👍 end 🎊", Out: []string{"🚀", "👍", "🎊"}},
+		{In: "Hello 😀 World 👍", Out: []string{"😀", "👍"}},
+		{In: "Great work! 👏 Keep it up! 💪 You're awesome! 🌟", Out: []string{"👏", "💪", "🌟"}},
+		{In: "Hello😀World👍End", Out: []string{"😀", "👍"}},
+		{In: "😀Hello World", Out: []string{"😀"}},
+		{In: "Hello World😀", Out: []string{"😀"}},
+		{In: "No emojis here"},
+		{In: ""},
+	}
 	c := check.New(t)
-
-	matches := xstrings.SelectEmojiRegex.FindAllString("Hello 😀 World", -1)
-	c.Equal(1, len(matches))
-	c.Equal("😀", matches[0])
-
-	matches = xstrings.SelectEmojiRegex.FindAllString("😀😊🎉", -1)
-	c.Equal(3, len(matches))
-	c.Equal("😀", matches[0])
-	c.Equal("😊", matches[1])
-	c.Equal("🎉", matches[2])
-
-	matches = xstrings.SelectEmojiRegex.FindAllString("Start 🚀 middle 👍 end 🎊", -1)
-	c.Equal(3, len(matches))
-	c.Equal("🚀", matches[0])
-	c.Equal("👍", matches[1])
-	c.Equal("🎊", matches[2])
-
-	matches = xstrings.SelectEmojiRegex.FindAllString("No emojis here", -1)
-	c.Equal(0, len(matches))
-
-	matches = xstrings.SelectEmojiRegex.FindAllString("", -1)
-	c.Equal(0, len(matches))
-}
-
-func TestSelectEmojiRegexCommonEmojis(t *testing.T) {
-	c := check.New(t)
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("😀")) // grinning face
-	c.True(xstrings.SelectEmojiRegex.MatchString("😂")) // face with tears of joy
-	c.True(xstrings.SelectEmojiRegex.MatchString("😍")) // smiling face with heart-eyes
-	c.True(xstrings.SelectEmojiRegex.MatchString("🤔")) // thinking face
-	c.True(xstrings.SelectEmojiRegex.MatchString("😭")) // loudly crying face
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("👍")) // thumbs up
-	c.True(xstrings.SelectEmojiRegex.MatchString("👎")) // thumbs down
-	c.True(xstrings.SelectEmojiRegex.MatchString("👋")) // waving hand
-	c.True(xstrings.SelectEmojiRegex.MatchString("🤝")) // handshake
-	c.True(xstrings.SelectEmojiRegex.MatchString("👏")) // clapping hands
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("🚗")) // automobile
-	c.True(xstrings.SelectEmojiRegex.MatchString("🏠")) // house
-	c.True(xstrings.SelectEmojiRegex.MatchString("📱")) // mobile phone
-	c.True(xstrings.SelectEmojiRegex.MatchString("💻")) // laptop computer
-	c.True(xstrings.SelectEmojiRegex.MatchString("📝")) // memo
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("🌳"))  // deciduous tree
-	c.True(xstrings.SelectEmojiRegex.MatchString("🌸"))  // cherry blossom
-	c.True(xstrings.SelectEmojiRegex.MatchString("☀️")) // sun
-	c.True(xstrings.SelectEmojiRegex.MatchString("🌙"))  // crescent moon
-	c.True(xstrings.SelectEmojiRegex.MatchString("⭐"))  // star
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("🍕")) // pizza
-	c.True(xstrings.SelectEmojiRegex.MatchString("🍔")) // hamburger
-	c.True(xstrings.SelectEmojiRegex.MatchString("🍎")) // red apple
-	c.True(xstrings.SelectEmojiRegex.MatchString("🍰")) // shortcake
-	c.True(xstrings.SelectEmojiRegex.MatchString("☕")) // hot beverage
-}
-
-func TestSelectEmojiRegexComplexEmojis(t *testing.T) {
-	c := check.New(t)
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("👋🏻")) // waving hand: light skin tone
-	c.True(xstrings.SelectEmojiRegex.MatchString("👋🏽")) // waving hand: medium skin tone
-	c.True(xstrings.SelectEmojiRegex.MatchString("👋🏿")) // waving hand: dark skin tone
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("👨‍👩‍👧‍👦")) // family: man, woman, girl, boy
-	c.True(xstrings.SelectEmojiRegex.MatchString("👩‍💻"))     // woman technologist
-	c.True(xstrings.SelectEmojiRegex.MatchString("👨‍🚀"))     // man astronaut
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("🇺🇸")) // United States flag
-	c.True(xstrings.SelectEmojiRegex.MatchString("🇬🇧")) // United Kingdom flag
-	c.True(xstrings.SelectEmojiRegex.MatchString("🇯🇵")) // Japan flag
-
-	c.True(xstrings.SelectEmojiRegex.MatchString("❤️")) // red heart with variation selector
-	c.True(xstrings.SelectEmojiRegex.MatchString("✨"))  // sparkles
-	c.True(xstrings.SelectEmojiRegex.MatchString("⚡"))  // high voltage
-}
-
-func TestSelectEmojiRegexReplaceAllString(t *testing.T) {
-	c := check.New(t)
-
-	result := xstrings.SelectEmojiRegex.ReplaceAllString("Hello 😀 World 👍", "[EMOJI]")
-	c.Equal("Hello [EMOJI] World [EMOJI]", result)
-
-	result = xstrings.SelectEmojiRegex.ReplaceAllString("Start 🚀 middle 👍 end 🎊", "")
-	c.Equal("Start  middle  end ", result)
-
-	result = xstrings.SelectEmojiRegex.ReplaceAllString("No emojis here", "[EMOJI]")
-	c.Equal("No emojis here", result)
-
-	result = xstrings.SelectEmojiRegex.ReplaceAllString("😀😊🎉", "[E]")
-	c.Equal("[E][E][E]", result)
-
-	result = xstrings.SelectEmojiRegex.ReplaceAllString("Great work! 👏 Keep it up! 💪 You're awesome! 🌟", " ")
-	c.Equal("Great work!   Keep it up!   You're awesome!  ", result)
-}
-
-func TestSelectEmojiRegexSplit(t *testing.T) {
-	c := check.New(t)
-
-	parts := xstrings.SelectEmojiRegex.Split("Hello😀World👍End", -1)
-	c.Equal(3, len(parts))
-	c.Equal("Hello", parts[0])
-	c.Equal("World", parts[1])
-	c.Equal("End", parts[2])
-
-	parts = xstrings.SelectEmojiRegex.Split("Hello 😀 World 👍 End", -1)
-	c.Equal(3, len(parts))
-	c.Equal("Hello ", parts[0])
-	c.Equal(" World ", parts[1])
-	c.Equal(" End", parts[2])
-
-	parts = xstrings.SelectEmojiRegex.Split("No emojis here", -1)
-	c.Equal(1, len(parts))
-	c.Equal("No emojis here", parts[0])
-
-	parts = xstrings.SelectEmojiRegex.Split("😀Hello World", -1)
-	c.Equal(2, len(parts))
-	c.Equal("", parts[0])
-	c.Equal("Hello World", parts[1])
-
-	parts = xstrings.SelectEmojiRegex.Split("Hello World😀", -1)
-	c.Equal(2, len(parts))
-	c.Equal("Hello World", parts[0])
-	c.Equal("", parts[1])
-}
-
-func TestSelectEmojiRegexEdgeCases(t *testing.T) {
-	c := check.New(t)
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("Ñ"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("ü"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("ñoño"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("über"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("café"))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("∑"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("∆"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("∞"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("π"))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("$"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("€"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("£"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("¥"))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString(" "))
-	c.False(xstrings.SelectEmojiRegex.MatchString("\t"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("\n"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("\r"))
-
-	c.False(xstrings.SelectEmojiRegex.MatchString("\u0000"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("\u0001"))
-	c.False(xstrings.SelectEmojiRegex.MatchString("\u001F"))
+	for _, one := range table {
+		c.Equal(one.Out, xstrings.SelectEmojiRegex.FindAllString(one.In, -1), "%q", one.In)
+	}
 }
