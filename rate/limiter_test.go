@@ -221,8 +221,8 @@ func TestUseFIFOOrderingNoFastPathJump(t *testing.T) {
 	// This runs synchronously right after submission, well within one period, so no tick can have intervened.
 	assertPending := func(ch <-chan error, name string) {
 		select {
-		case <-ch:
-			t.Fatalf("%s slipped through the fast path ahead of an earlier queued request", name)
+		case err := <-ch:
+			t.Fatalf("%s slipped through the fast path ahead of an earlier queued request: %v", name, err)
 		default:
 		}
 	}
